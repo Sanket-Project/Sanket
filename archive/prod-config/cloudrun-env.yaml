@@ -1,0 +1,11 @@
+# REMOVED — this file contained real production secrets for the retired
+# "PRISMA" Firebase project and Cloud Run deployment (Firebase service-account
+# private key, Postgres/Supabase password, JWT secret, Redis credentials, ML
+# service token), checked into the repo in plaintext.
+#
+# That infrastructure has been disconnected. If any of these credentials
+# (Supabase DB password, Upstash Redis, JWT_SECRET, METRICS_TOKEN,
+# ML_SERVICE_TOKEN) are still live anywhere, rotate them — do not reuse them
+# under the new Sanket project. When you set up production config again under
+# the Sanket name, generate a fresh cloudrun-env.yaml with new values, and add
+# this path to .gitignore so it never gets committed in plaintext again.

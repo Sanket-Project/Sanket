@@ -1,0 +1,389 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://cdn.jsdelivr.net/npm/geist-sans@latest/dist/css/geist-sans.css');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SANKET Predictive OS — Premium AI OS Redesign
+   Display: Geist Sans, Space Grotesk · UI/body: Geist Sans, IBM Plex Sans · Data: IBM Plex Mono
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Design tokens ──────────────────────────────────────────────────────────── */
+:root {
+  color-scheme: light;
+  --sidebar-w: 260px;
+
+  /* Surfaces */
+  --canvas: #BDD9D7; /* Jet Stream canvas background */
+  --surface: #ffffff;
+  --surface-2: #f4f8f8;
+  --surface-3: #e1eeed;
+
+  /* Text */
+  --text: #022327; /* Blue Whale dark text */
+  --text-muted: #1a4950;
+  --text-subtle: #4b787e;
+
+  /* Lines */
+  --border: rgba(3, 54, 61, 0.08);
+  --border-strong: rgba(3, 54, 61, 0.16);
+
+  /* Accent — brand Blue Whale */
+  --accent: #03363D;
+  --accent-strong: #022429;
+  --accent-fg: #ffffff;
+  --accent-soft: rgba(3, 54, 61, 0.08);
+  --accent-ring: rgba(3, 54, 61, 0.2);
+
+  /* Elevation — premium soft layered shadows */
+  --shadow-sm: 0 1px 2px rgba(3, 54, 61, 0.02);
+  --shadow-md: 0 4px 20px -2px rgba(3, 54, 61, 0.05), 0 2px 8px -1px rgba(3, 54, 61, 0.02);
+  --shadow-lg: 0 12px 30px -4px rgba(3, 54, 61, 0.1), 0 4px 12px -2px rgba(3, 54, 61, 0.04);
+
+  /* Radii */
+  --radius: 20px;
+  --radius-sm: 12px;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --canvas: #021a1d; /* darker Blue Whale canvas */
+  --surface: #03363D; /* Blue Whale card surface */
+  --surface-2: #05454e;
+  --surface-3: #085560;
+
+  --text: #eef7f6;
+  --text-muted: rgba(189, 217, 215, 0.75);
+  --text-subtle: rgba(189, 217, 215, 0.45);
+
+  --border: rgba(189, 217, 215, 0.12);
+  --border-strong: rgba(189, 217, 215, 0.22);
+
+  --accent: #BDD9D7; /* Jet Stream active elements */
+  --accent-strong: #ffffff;
+  --accent-fg: #03363D;
+  --accent-soft: rgba(189, 217, 215, 0.12);
+  --accent-ring: rgba(189, 217, 215, 0.3);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px -6px rgba(0, 0, 0, 0.5), 0 4px 12px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 20px 48px -12px rgba(0, 0, 0, 0.6), 0 8px 20px -4px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Industry accent scopes (aligned to brand Jet Stream + Blue Whale) ── */
+[data-industry] {
+  --accent: #03363D; --accent-strong: #022429; --accent-fg: #ffffff;
+  --accent-soft: rgba(3, 54, 61, 0.08); --accent-ring: rgba(3, 54, 61, 0.20);
+}
+.dark [data-industry] {
+  --accent: #BDD9D7; --accent-strong: #ffffff; --accent-fg: #03363D;
+  --accent-soft: rgba(189, 217, 215, 0.12); --accent-ring: rgba(189, 217, 215, 0.30);
+}
+
+/* ── Base ───────────────────────────────────────────────────────────────────── */
+html,
+body,
+#root {
+  height: 100%;
+  background: var(--canvas);
+  color: var(--text);
+  font-family: "Geist Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-feature-settings: "cv05" 1, "ss01" 1;
+}
+
+/* Display / headings */
+h1, h2, h3, h4, h5, .font-heading, .font-display {
+  font-family: "Geist Sans", "SF Pro Display", "Space Grotesk", -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: -0.022em;
+  color: var(--text);
+}
+
+/* Numerals & data render with mono + tabular figures */
+.font-mono, .tabular, .metric {
+  font-family: "IBM Plex Mono", ui-monospace, "JetBrains Mono", monospace;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "zero" 1;
+}
+.tabular-figs { font-variant-numeric: tabular-nums; }
+
+/* ── Calm canvas (replaces animated mesh + noise slop) ──────────────────────── */
+.motion-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(900px 500px at 85% -10%, var(--accent-soft), transparent 60%),
+    var(--canvas);
+  pointer-events: none;
+}
+/* legacy noise hooks kept as no-ops so old class refs don't 404 */
+.noise-overlay, .bg-noise { background-image: none; }
+
+/* ── Scrollbar / selection ──────────────────────────────────────────────────── */
+@layer base {
+  ::selection { background: var(--accent-soft); color: var(--accent-strong); }
+  ::-webkit-scrollbar       { width: 9px; height: 9px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; border: 2px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-subtle); background-clip: padding-box; }
+}
+
+/* ── Motion (restrained, high-impact load only) ─────────────────────────────── */
+@keyframes fade-slide-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slide-in-left { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slide-up-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes draw-path { from { stroke-dashoffset: 1000; } to { stroke-dashoffset: 0; } }
+@keyframes bar-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes ring-fill { from { stroke-dasharray: 0 999; } to { stroke-dasharray: var(--ring-dash, 100) 999; } }
+@keyframes pulse-ring { 0% { transform: scale(0.9); opacity: 0.55; } 50% { transform: scale(1.25); opacity: 0; } 100% { transform: scale(0.9); opacity: 0; } }
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+@keyframes bell-shake { 0%,100% { transform: rotate(0); } 15% { transform: rotate(9deg);} 30% { transform: rotate(-9deg);} 45% { transform: rotate(5deg);} 60% { transform: rotate(-5deg);} 75% { transform: rotate(2deg);} }
+
+.animate-fade-in  { animation: fade-slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-slide-in { animation: slide-in-left 0.22s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-slide-up { animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-ring-fill { animation: ring-fill 1.1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.animate-draw-line { stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: draw-path 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.animate-bar-grow { transform-origin: left; animation: bar-grow 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.hover-bell-shake:hover svg { animation: bell-shake 0.6s ease-in-out; }
+
+.stagger-1 { animation-delay: 40ms; }
+.stagger-2 { animation-delay: 80ms; }
+.stagger-3 { animation-delay: 120ms; }
+.stagger-4 { animation-delay: 160ms; }
+.stagger-5 { animation-delay: 200ms; }
+
+.tactile-press { transition: transform 0.14s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.14s ease, background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease; }
+.tactile-press:active { transform: scale(0.975); }
+
+.heartbeat-dot { position: relative; }
+.heartbeat-dot::after {
+  content: ''; position: absolute; inset: -2px; border-radius: 50%;
+  border: 1px solid currentColor; animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   Components
+   ════════════════════════════════════════════════════════════════════════════ */
+@layer components {
+
+  /* Surfaces — `.glass`/`.glass-strong` kept as aliases (now flat & refined) */
+  .surface {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .glass {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .glass-strong {
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Card */
+  .card {
+    @apply rounded-2xl p-6;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  }
+  .card:hover { box-shadow: var(--shadow-md); }
+
+  .card-hover-premium { transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease; }
+  .card-hover-premium:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--border-strong);
+  }
+
+  .insight-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* Inputs */
+  .input {
+    @apply w-full rounded-xl px-3.5 py-2.5 text-sm outline-none transition-all duration-150;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+  }
+  .input::placeholder { color: var(--text-subtle); }
+  .input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-ring);
+  }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
+      text-sm font-semibold transition-all duration-150 outline-none
+      disabled:opacity-50 disabled:pointer-events-none select-none cursor-pointer;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary {
+    @apply btn;
+    background: var(--accent);
+    color: var(--accent-fg);
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-primary:hover { background: var(--accent-strong); }
+  .btn-primary:focus-visible { box-shadow: 0 0 0 3px var(--accent-ring); }
+  .btn-secondary {
+    @apply btn;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+  }
+  .btn-secondary:hover { background: var(--surface-2); border-color: var(--text-subtle); }
+  .btn-ghost {
+    @apply btn;
+    color: var(--text-muted);
+    background: transparent;
+  }
+  .btn-ghost:hover { background: var(--surface-3); color: var(--text); }
+
+  /* Label */
+  .label {
+    @apply block text-[11px] font-semibold uppercase tracking-wider mb-2;
+    color: var(--text-subtle);
+  }
+
+  /* Sidebar nav item */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+      transition-all duration-150 cursor-pointer select-none;
+    color: var(--text-muted);
+  }
+  .nav-item:active { transform: scale(0.99); }
+  .nav-item-inactive { @apply nav-item; }
+  .nav-item-inactive:hover { color: var(--text); background: var(--surface-3); }
+  .nav-item-active {
+    @apply nav-item font-semibold;
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  /* Stat chip */
+  .stat-chip {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+
+  /* Section heading */
+  .section-title {
+    @apply text-[11px] font-semibold uppercase tracking-wider px-3 mb-1 mt-3;
+    color: var(--text-subtle);
+  }
+
+  /* Segmented control / filter pills */
+  .tab-group-container {
+    @apply inline-flex items-center gap-1 p-1 rounded-xl;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+  }
+  .tab-item-active {
+    @apply px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 select-none cursor-pointer;
+    background: var(--surface);
+    color: var(--accent);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .tab-item-inactive {
+    @apply px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 select-none cursor-pointer;
+    color: var(--text-muted);
+    border: 1px solid transparent;
+  }
+  .tab-item-inactive:hover { color: var(--text); }
+
+  /* Sidebar dark surface override on desktop to prevent light-theme visibility collapse */
+  .sanket-sidebar {
+    background-color: var(--surface);
+    border-color: var(--border);
+  }
+  @media (min-width: 1024px) {
+    .sanket-sidebar {
+      background-color: rgba(3, 54, 61, 0.95) !important;
+      border-color: rgba(255, 255, 255, 0.08) !important;
+    }
+  }
+}
+
+/* ── Legacy dark-mode compatibility shim ────────────────────────────────────────
+   Pages not yet migrated to tokens still use literal Tailwind classes (bg-white,
+   text-slate-*, border-slate-*). Map the common ones onto tokens in dark mode so
+   nothing renders as a white card on the dark canvas during the migration. */
+.dark .bg-white { background-color: var(--surface) !important; }
+.dark .bg-slate-50,
+.dark .bg-slate-100 { background-color: var(--surface-2) !important; }
+.dark .bg-slate-200 { background-color: var(--surface-3) !important; }
+.dark .text-slate-950,
+.dark .text-slate-900,
+.dark .text-slate-800,
+.dark .text-slate-700 { color: var(--text) !important; }
+.dark .text-slate-600,
+.dark .text-slate-500 { color: var(--text-muted) !important; }
+.dark .text-slate-400 { color: var(--text-subtle) !important; }
+.dark .border-slate-100,
+.dark .border-slate-200,
+.dark .border-slate-300 { border-color: var(--border) !important; }
+
+/* ── Brand bridge: legacy violet utilities → active industry accent ──────────────
+   The OS was originally violet-branded; un-migrated pages still use violet-*
+   utilities for brand/primary accents. Remap them to the per-industry --accent so
+   every page is automatically on-brand for the active workspace. Semantic colors
+   (emerald/rose/amber/cyan) are untouched. */
+.text-violet-300, .text-violet-400, .text-violet-500, .text-violet-600,
+.text-violet-700, .text-violet-800, .text-violet-900,
+.dark .text-violet-300, .dark .text-violet-400, .dark .text-violet-500,
+.dark .text-violet-600, .dark .text-violet-700 { color: var(--accent) !important; }
+
+.bg-violet-50, .bg-violet-100,
+.dark .bg-violet-900, .dark .bg-violet-950 { background-color: var(--accent-soft) !important; }
+.bg-violet-400, .bg-violet-500, .bg-violet-600, .bg-violet-700 { background-color: var(--accent) !important; }
+
+.border-violet-100, .border-violet-200, .border-violet-300,
+.dark .border-violet-800, .dark .border-violet-900 {
+  border-color: color-mix(in srgb, var(--accent) 30%, transparent) !important;
+}
+.border-violet-400, .border-violet-500, .border-violet-600 { border-color: var(--accent) !important; }
+
+.ring-violet-300, .ring-violet-500 { --tw-ring-color: var(--accent-ring) !important; }
+.shadow-violet-500 { --tw-shadow-color: var(--accent-ring) !important; }
+
+.from-violet-500, .from-violet-600 {
+  --tw-gradient-from: var(--accent) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(255 255 255 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+.via-violet-500 {
+  --tw-gradient-stops: var(--tw-gradient-from), var(--accent) var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
+}
+.to-violet-600, .to-violet-700 { --tw-gradient-to: var(--accent-strong) var(--tw-gradient-to-position) !important; }
+
+/* ── Recharts dark tooltip ──────────────────────────────────────────────────── */
+.dark .recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: var(--surface) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text) !important;
+}

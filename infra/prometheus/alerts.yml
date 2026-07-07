@@ -1,0 +1,117 @@
+groups:
+  - name: sanket-api.rules
+    interval: 30s
+    rules:
+      - alert: SanketApiHighErrorRate
+        expr: |
+          sum by (service) (rate(sanket_http_requests_total{status=~"5.."}[5m]))
+            / sum by (service) (rate(sanket_http_requests_total[5m]))
+            > 0.02
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "5xx rate above 2% on {{ $labels.service }}"
+          description: "Investigate {{ $labels.service }} — 5xx ratio exceeded 2% for 5m."
+
+      - alert: SanketApiHighLatencyP95
+        expr: |
+          histogram_quantile(0.95,
+            sum by (le, service) (rate(sanket_http_request_duration_seconds_bucket[5m]))
+          ) > 2.0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "p95 latency > 2s on {{ $labels.service }}"
+
+      - alert: SanketForecastBacklog
+        expr: |
+          rate(sanket_forecast_runs_total[15m]) == 0
+            and on(industry) (group by (industry) (sanket_http_requests_total{route=~".*forecast.*"})) > 0
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Forecast requests are coming in but no runs are landing for 30m"
+
+      - alert: SanketGxPBatchRejectionSpike
+        expr: |
+          increase(sanket_gxp_batch_actions_total{action="reject"}[1h]) > 5
+        labels:
+          severity: warning
+        annotations:
+          summary: "More than 5 GxP batch rejections in the last hour — investigate QA process"
+
+  # ── Phase 1 hardening: database HA, backups, inference DoS protection ──────
+  - name: sanket-database.rules
+    interval: 30s
+    rules:
+      # CloudNativePG exports replication lag in bytes per replica.
+      - alert: SanketPostgresReplicationLagHigh
+        expr: |
+          max(cnpg_pg_replication_lag) > 64 * 1024 * 1024
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Postgres streaming replica lag > 64MB for 5m"
+          description: "A replica is falling behind — failover would lose recent commits if the primary dies."
+
+      - alert: SanketPostgresNoStandby
+        expr: |
+          min(cnpg_pg_replication_streaming_replicas) < 1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Postgres has no healthy streaming standby"
+          description: "HA is degraded to a single instance — a primary failure now causes downtime/data loss. Investigate replica health immediately."
+
+      - alert: SanketBackupStale
+        # CNPG sets last_successful_backup_timestamp; alert if no base backup in 26h.
+        expr: |
+          time() - max(cnpg_collector_last_successful_backup_timestamp) > 26 * 3600
+        for: 15m
+        labels:
+          severity: critical
+        annotations:
+          summary: "No successful Postgres base backup in over 26h (RPO breach)"
+          description: "Backups have stalled. PITR window is shrinking. Check the ScheduledBackup and barman object store."
+
+      - alert: SanketBackupValidationFailing
+        # The freshness-check / restore-drill CronJobs surface as failed K8s Jobs.
+        expr: |
+          kube_job_failed{job_name=~"postgres-backup-(freshness-check|restore-drill).*"} > 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "A Postgres backup-validation job failed"
+          description: "Backups may not be restorable. Inspect the failed Job logs (freshness-check or restore-drill)."
+
+  - name: sanket-inference.rules
+    interval: 30s
+    rules:
+      # Sustained admission-control rejections from the ML service mean capacity
+      # is saturated and forecasts are being shed (metric emitted by the ML API
+      # /metrics endpoint — see sanket_ml/inference/api.py).
+      - alert: SanketInferenceLoadShedding
+        expr: |
+          sum(rate(sanket_ml_inference_rejected_total[5m])) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "ML inference is shedding load (admission control rejecting requests)"
+          description: "Tenants are being rate-limited/queue-rejected. Scale ml-api replicas or raise ML_INFERENCE_MAX_CONCURRENT if CPU headroom allows."
+
+      - alert: SanketInferenceSaturated
+        expr: |
+          max(sanket_ml_inference_inflight) >= 20
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "ML inference queue persistently full"
+          description: "inflight has sat at capacity for 10m — latency is degraded. Add ml-api replicas."

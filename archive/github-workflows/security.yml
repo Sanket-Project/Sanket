@@ -1,0 +1,39 @@
+name: security
+
+# Repository-wide security scanning that is not tied to a specific service path.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1" # weekly Monday 06:00 UTC
+
+permissions:
+  contents: read
+
+jobs:
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so a secret added in any commit is caught
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Fail the build on any leaked secret (default behaviour).
+
+  # Static analysis for Python security anti-patterns (bandit ruleset via ruff
+  # "S" is already enforced in backend-ci; this adds a deeper, dedicated pass).
+  bandit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install bandit[toml]
+      - name: bandit
+        # -ll: report only medium+ severity, -ii: medium+ confidence. Skips tests/.
+        run: bandit -r backend/app backend/ml/prisma_ml -ll -ii -x '**/tests/**'

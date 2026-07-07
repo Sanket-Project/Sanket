@@ -1,0 +1,56 @@
+# Database migration Job — runs `alembic upgrade head` against the target DB.
+#
+# Deliberately NOT listed in kustomization.yaml resources: a Job's pod template
+# is immutable, so re-applying it on every deploy would fail. Instead the deploy
+# pipeline (.github/workflows/deploy.yml) deletes + re-applies + waits on this
+# Job *before* rolling out the app, so pods never start against an un-migrated
+# schema.
+#
+# Reuses the backend image, which already bundles alembic.ini + alembic/.
+# APP_ENV is intentionally NOT "production": the schema DDL is identical across
+# environments, and a neutral value skips the production Firebase/auth config
+# guard in app.config (migrations need only DATABASE_URL).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sanket-migrate
+  namespace: sanket
+  labels: { app: backend, component: migrate }
+spec:
+  backoffLimit: 1
+  activeDeadlineSeconds: 600
+  ttlSecondsAfterFinished: 3600   # auto-clean an hour after completion
+  template:
+    metadata:
+      labels: { app: backend, component: migrate }
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: migrate
+          image: ghcr.io/sanket-project/backend:latest
+          imagePullPolicy: IfNotPresent
+          command: ["alembic", "upgrade", "head"]
+          env:
+            - { name: APP_ENV, value: staging }
+            - { name: LOG_FORMAT, value: json }
+            # DDL must hit the primary directly, NOT the transaction pooler.
+            - name: DATABASE_URL
+              valueFrom: { secretKeyRef: { name: sanket-db-url, key: DATABASE_URL_DIRECT } }
+            - name: JWT_SECRET
+              valueFrom: { secretKeyRef: { name: sanket-secrets, key: JWT_SECRET } }
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits:   { cpu: "1",  memory: 512Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: tmp
+          emptyDir: {}

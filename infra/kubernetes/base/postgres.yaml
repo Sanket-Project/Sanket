@@ -1,0 +1,184 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# PostgreSQL — HIGH AVAILABILITY via CloudNativePG (replaces the prior single
+# StatefulSet, which was a single point of failure).
+#
+# What this gives us vs. the old single-pod StatefulSet:
+#   • 3 instances: 1 primary + 2 streaming replicas, on anti-affinity so they
+#     never share a node. Automatic failover promotes a replica in seconds if the
+#     primary dies — no more single point of failure.
+#   • Continuous WAL archiving to object storage → Point-In-Time Recovery (PITR)
+#     to any second within the retention window.
+#   • Scheduled physical base backups (see ScheduledBackup below).
+#   • Built-in Prometheus metrics (replication lag, backup status) via PodMonitor.
+#
+# PREREQUISITE: the CloudNativePG operator must be installed in the cluster:
+#   kubectl apply --server-side -f \
+#     https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/v1.24/releases/cnpg-1.24.0.yaml
+#
+# IMAGE: must include the pgvector extension. Build/publish an image from
+# `ghcr.io/cloudnative-pg/postgresql:16` with `pgvector` installed and reference
+# it below (ghcr.io/sanket/postgres-ha:16-pgvector). pgvector is required by
+# sql/001_extensions.sql.
+#
+# RLS SAFETY: the application connects as `sanket_app` (the initdb `owner`),
+# which CloudNativePG creates as a NOSUPERUSER, NOBYPASSRLS login role. The
+# postInitSQL below re-asserts those attributes so tenant isolation (FORCE ROW
+# LEVEL SECURITY) is actually enforced — a superuser/BYPASSRLS connection would
+# silently disable every RLS policy.
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres
+  namespace: sanket
+spec:
+  instances: 3
+  imageName: ghcr.io/sanket/postgres-ha:16-pgvector
+
+  # Synchronous replication to at least one replica so a committed write survives
+  # the loss of the primary (zero-data-loss failover). `dataDurability` keeps the
+  # cluster available (degrades to async) if too few replicas are healthy.
+  minSyncReplicas: 1
+  maxSyncReplicas: 1
+
+  primaryUpdateStrategy: unsupervised   # operator handles rolling failover
+
+  postgresql:
+    parameters:
+      max_connections: "200"
+      shared_buffers: 1GB
+      effective_cache_size: 3GB
+      work_mem: 16MB
+      wal_compression: "on"
+      # FORCE RLS depends on the app role never being superuser/bypassrls; we do
+      # not grant that anywhere.
+
+  bootstrap:
+    initdb:
+      database: sanket
+      owner: sanket_app          # the non-privileged app role (NOSUPERUSER/NOBYPASSRLS)
+      secret:
+        name: postgres-app-credentials
+      postInitSQL:
+        - CREATE EXTENSION IF NOT EXISTS vector;
+        - CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+        # Defence-in-depth: re-assert the app role can never bypass RLS.
+        - ALTER ROLE sanket_app NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE;
+
+  # Superuser secret — used ONLY by migrations/backups (which must bypass RLS to
+  # dump every tenant). The application never uses it.
+  superuserSecret:
+    name: postgres-superuser-credentials
+  enableSuperuserAccess: true
+
+  storage:
+    size: 50Gi
+    # storageClass: <your-fast-ssd-class>   # set per environment overlay
+
+  resources:
+    requests: { cpu: 500m, memory: 2Gi }
+    limits:   { cpu: "2",  memory: 4Gi }
+
+  affinity:
+    enablePodAntiAffinity: true
+    topologyKey: kubernetes.io/hostname   # never co-locate instances on a node
+    podAntiAffinityType: required
+
+  monitoring:
+    enablePodMonitor: true                # Prometheus scrapes replication lag etc.
+
+  # ── Continuous backup → object storage (enables PITR) ──────────────────────
+  backup:
+    retentionPolicy: "30d"
+    barmanObjectStore:
+      destinationPath: s3://sanket-backups/postgres-ha
+      s3Credentials:
+        accessKeyId:     { name: backup-aws, key: access_key_id }
+        secretAccessKey: { name: backup-aws, key: secret_access_key }
+      wal:
+        compression: gzip
+        maxParallel: 4
+      data:
+        compression: gzip
+---
+# Nightly physical base backup. Combined with continuous WAL archiving above,
+# this provides PITR: restore the most recent base backup then replay WAL up to
+# any target time (see docs/DISASTER_RECOVERY.md).
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: postgres-nightly
+  namespace: sanket
+spec:
+  schedule: "0 0 2 * * *"      # 02:00 UTC daily (CNPG uses 6-field cron)
+  backupOwnerReference: self
+  cluster:
+    name: postgres
+  method: barmanObjectStore
+---
+# ─────────────────────────────────────────────────────────────────────────────
+# PgBouncer connection pooler (read-write). The application connects HERE, not
+# directly to Postgres, so a fleet of API/worker replicas multiplexes onto a
+# bounded set of server connections instead of exhausting max_connections.
+#
+# poolMode: transaction is safe for SANKET because the per-request tenant GUC is
+# set with SET LOCAL inside an explicit transaction (no session-scoped state
+# leaks across pooled connections). The app sets DB_PGBOUNCER_MODE=true so
+# asyncpg disables server-side prepared statements (required under transaction
+# pooling).
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: postgresql.cnpg.io/v1
+kind: Pooler
+metadata:
+  name: postgres-pooler-rw
+  namespace: sanket
+spec:
+  cluster:
+    name: postgres
+  instances: 3                 # HA pooler — no single PgBouncer bottleneck
+  type: rw                     # routes to the current primary
+  pgbouncer:
+    poolMode: transaction
+    parameters:
+      max_client_conn: "1000"
+      default_pool_size: "25"
+      reserve_pool_size: "5"
+      reserve_pool_timeout: "3"
+  template:
+    spec:
+      containers:
+        - name: pgbouncer
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits:   { cpu: 500m, memory: 256Mi }
+---
+# Read-only pooler → routes to replicas. Use for heavy analytics/read queries to
+# offload the primary (optional; wire specific read paths to this service).
+apiVersion: postgresql.cnpg.io/v1
+kind: Pooler
+metadata:
+  name: postgres-pooler-ro
+  namespace: sanket
+spec:
+  cluster:
+    name: postgres
+  instances: 2
+  type: ro
+  pgbouncer:
+    poolMode: transaction
+    parameters:
+      max_client_conn: "1000"
+      default_pool_size: "25"
+---
+# Disruption budget: never let voluntary disruptions (node drains, upgrades)
+# take down a quorum of the pooler at once.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: postgres-pooler-rw-pdb
+  namespace: sanket
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      cnpg.io/poolerName: postgres-pooler-rw

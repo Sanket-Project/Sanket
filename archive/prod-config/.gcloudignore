@@ -1,0 +1,13 @@
+.gcloudignore
+.git
+.gitignore
+.venv/
+venv/
+test_venv/
+.ci_venv/
+__pycache__/
+*.pyc
+tests/
+ml/venv/
+ml/scripts/
+ml/tests/

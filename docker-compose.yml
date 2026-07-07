@@ -1,0 +1,229 @@
+# Local dev stack: postgres + backend + ML API + frontend + prometheus + grafana
+# Bring up:   docker compose up -d
+# Tear down:  docker compose down -v
+# Logs:       docker compose logs -f backend ml-api
+
+# SECURITY: Postgres bootstraps as the `postgres` superuser. The application
+# connects as `sanket_app`, a NOSUPERUSER NOBYPASSRLS role created by
+# sql/003_rls_policies.sql. This is required for row-level security to actually
+# apply — a superuser/owner connection bypasses every RLS policy. Never point
+# the app's DATABASE_URL at the `postgres` superuser.
+x-common-env: &common-env
+  POSTGRES_DB: sanket
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:-postgres}
+
+# App connection string — runs as the non-privileged sanket_app role.
+x-app-db-url: &app-db-url ${DATABASE_URL:-postgresql+asyncpg://sanket_app:changeme@postgres:5432/sanket}
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      <<: *common-env
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d sanket"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: sanket/backend:dev
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: *app-db-url
+      JWT_SECRET: "${JWT_SECRET:?JWT_SECRET must be set}"
+      APP_ENV: development
+      APP_DEBUG: "true"
+      ALLOWED_ORIGINS: '["http://localhost:5173","http://localhost:8080"]'
+      LOG_FORMAT: console
+      ML_API_URL: http://ml-api:8001
+      ML_API_TIMEOUT_S: "120"
+      # Matches ml-api's ML_SERVICE_TOKEN (both default to JWT_SECRET) so the
+      # backend authenticates to the internal ML service.
+      ML_SERVICE_TOKEN: ${ML_SERVICE_TOKEN:-}
+      REDIS_URL: redis://redis:6379/0
+      # Firebase Auth — blank in dev so the dev-login fallback is used. Set both
+      # (and mount the credentials file) to verify real Firebase ID tokens.
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-}
+      FIREBASE_CREDENTIALS_PATH: ${FIREBASE_CREDENTIALS_PATH:-}
+      FIREBASE_WEB_API_KEY: ${FIREBASE_WEB_API_KEY:-}
+      TRUSTED_PROXY_COUNT: ${TRUSTED_PROXY_COUNT:-1}
+      FRED_API_KEY: ${FRED_API_KEY:-}
+      REDDIT_CLIENT_ID: ${REDDIT_CLIENT_ID:-}
+      REDDIT_CLIENT_SECRET: ${REDDIT_CLIENT_SECRET:-}
+      # Billing — Razorpay (test keys via host env / .env)
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:-}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:-}
+      RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET:-}
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # arq worker — executes durable background hybrid forecast jobs. Shares the
+  # backend image; only the command differs.
+  worker:
+    image: sanket/backend:dev
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: ["python", "-m", "arq", "app.workers.forecast_worker.WorkerSettings"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: *app-db-url
+      JWT_SECRET: "${JWT_SECRET:?JWT_SECRET must be set}"
+      APP_ENV: development
+      LOG_FORMAT: console
+      ML_API_URL: http://ml-api:8001
+      ML_API_TIMEOUT_S: "120"
+      ML_SERVICE_TOKEN: ${ML_SERVICE_TOKEN:-}
+      REDIS_URL: redis://redis:6379/0
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-}
+      FIREBASE_CREDENTIALS_PATH: ${FIREBASE_CREDENTIALS_PATH:-}
+    healthcheck:
+      disable: true
+
+  ml-api:
+    build:
+      context: ./backend/ml
+      dockerfile: Dockerfile
+    image: sanket/ml-api:dev
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ML_DATABASE_URL: ${ML_DATABASE_URL:-postgresql://sanket_app:changeme@postgres:5432/sanket}
+      # Service-to-service auth: the ML API rejects any request without this
+      # bearer. Defaults to JWT_SECRET so it matches the backend's effective
+      # token in local dev (the backend falls back to JWT_SECRET when its own
+      # ML_SERVICE_TOKEN is unset). Set ML_SERVICE_TOKEN to override both.
+      ML_SERVICE_TOKEN: ${ML_SERVICE_TOKEN:-${JWT_SECRET:?JWT_SECRET must be set}}
+      ML_REQUIRE_AUTH: "true"
+      ML_CHRONOS_PRELOAD_ON_STARTUP: "true"
+      ML_CHRONOS_REPO: amazon/chronos-t5-small   # small = ~10x faster CPU inference than large
+      ML_ZERO_SHOT_NUM_SAMPLES: "20"             # 20 samples is plenty for p10/p50/p90; 100 was too slow on CPU
+      ML_DEVICE: cpu
+      ML_ARTIFACT_ROOT: /app/artifacts
+      ML_MODEL_REGISTRY_URI: "file:/app/mlruns"
+      # Newer MLflow refuses the filesystem tracking backend unless this opt-out
+      # is set. The local stack uses the file store under /app/mlruns on purpose.
+      MLFLOW_ALLOW_FILE_STORE: "true"
+      # Inference DoS protection / admission control (per replica). Heavy compute
+      # is offloaded to a thread pool and bounded by these limits; excess load is
+      # shed with HTTP 429 instead of growing latency unbounded.
+      ML_INFERENCE_MAX_CONCURRENT: "4"
+      ML_INFERENCE_MAX_QUEUED: "16"
+      ML_INFERENCE_TENANT_RATE_PER_MIN: "30"
+      ML_INFERENCE_TENANT_BURST: "10"
+      ML_INFERENCE_ACQUIRE_TIMEOUT_S: "20"
+    ports:
+      - "8001:8001"
+    volumes:
+      - ml_artifacts:/app/artifacts
+      - mlflow_runs:/app/mlruns
+      - hf_cache:/opt/hf-cache
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 8s
+      retries: 5
+      start_period: 90s   # Chronos preload can take a minute
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: /api/v1
+        VITE_ML_API_BASE_URL: /ml
+        # Public Firebase web config (blank in dev → dev-login fallback UI).
+        VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY:-}
+        VITE_FIREBASE_AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN:-}
+        VITE_FIREBASE_PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID:-}
+        VITE_FIREBASE_APP_ID: ${VITE_FIREBASE_APP_ID:-}
+    image: sanket/frontend:dev
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8080:8080"
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    restart: unless-stopped
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infra/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=15d
+      - --web.enable-lifecycle
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    environment:
+      # REQUIRED: set GRAFANA_PASSWORD in your local .env or CI secrets.
+      # The default 'sanket' is rejected in production environments.
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:?GRAFANA_PASSWORD must be set}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      # Anonymous access disabled — dashboards contain production metrics.
+      # Set GRAFANA_PASSWORD and use the admin login.
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infra/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+    ports:
+      - "3005:3000"
+
+volumes:
+  postgres_data:
+  ml_artifacts:
+  mlflow_runs:
+  hf_cache:
+  prometheus_data:
+  grafana_data:
+  redis_data:

@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: sanket
+  labels: { app: backend, component: api }
+spec:
+  replicas: 3
+  selector: { matchLabels: { app: backend } }
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxSurge: 1, maxUnavailable: 0 }
+  template:
+    metadata:
+      labels: { app: backend, component: api }
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: api
+          image: ghcr.io/sanket-project/backend:latest
+          imagePullPolicy: IfNotPresent
+          ports: [{ name: http, containerPort: 8000 }]
+          env:
+            - { name: APP_ENV, value: production }
+            - { name: LOG_FORMAT, value: json }
+            - name: DATABASE_URL
+              valueFrom: { secretKeyRef: { name: sanket-db-url, key: DATABASE_URL } }
+            - name: JWT_SECRET
+              valueFrom: { secretKeyRef: { name: sanket-secrets, key: JWT_SECRET } }
+            - { name: ALLOWED_ORIGINS, value: "https://app.sanket.example" }
+            - { name: OTLP_ENDPOINT, value: "http://otel-collector:4317" }
+            - { name: ML_API_URL, value: "http://ml-api:8001" }
+            - name: ML_SERVICE_TOKEN
+              valueFrom: { secretKeyRef: { name: sanket-secrets, key: ML_SERVICE_TOKEN } }
+            # Firebase auth. Required in production (APP_ENV=production) or the
+            # backend refuses to boot — see config.require_firebase_in_production.
+            # optional:true so dev/staging (which blank these) stay on dev-login.
+            - name: FIREBASE_PROJECT_ID
+              valueFrom: { secretKeyRef: { name: sanket-firebase, key: FIREBASE_PROJECT_ID, optional: true } }
+            - name: FIREBASE_CREDENTIALS_PATH
+              valueFrom: { secretKeyRef: { name: sanket-firebase, key: FIREBASE_CREDENTIALS_PATH, optional: true } }
+          resources:
+            requests: { cpu: 200m, memory: 512Mi }
+            limits:   { cpu: "1",  memory: 1Gi }
+          readinessProbe:
+            httpGet: { path: /health, port: http }
+            periodSeconds: 10
+            initialDelaySeconds: 10
+          livenessProbe:
+            httpGet: { path: /health, port: http }
+            periodSeconds: 20
+            initialDelaySeconds: 30
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            # Firebase service-account JSON (read-only). optional:true so the
+            # pod still starts when only Workload Identity / project-id is used.
+            - { name: firebase-credentials, mountPath: /var/run/secrets/firebase, readOnly: true }
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: firebase-credentials
+          secret:
+            secretName: sanket-firebase
+            optional: true
+            items:
+              - { key: service-account.json, path: service-account.json }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: sanket
+spec:
+  selector: { app: backend }
+  ports:
+    - { name: http, port: 8000, targetPort: http }
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: backend
+  namespace: sanket
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: { type: Utilization, averageUtilization: 70 }

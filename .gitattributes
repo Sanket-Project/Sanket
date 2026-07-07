@@ -1,0 +1,25 @@
+# Normalize all text files to LF in the repository, regardless of the OS the
+# contributor is on. This prevents Windows CRLF checkouts from producing noisy,
+# whole-file "line ending changed" diffs.
+* text=auto eol=lf
+
+# Windows batch scripts must keep CRLF to run correctly.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Treat binary assets as binary (never line-ending-normalized or diffed).
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.webp  binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.eot   binary
+*.pdf   binary
+*.pptx  binary
+*.xlsx  binary
+*.joblib binary
+*.ckpt  binary

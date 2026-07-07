@@ -1,0 +1,236 @@
+# BOOTSTRAP CONTRACT: namePrefix "stg-" is applied to all resources in this overlay.
+# The CNPG Postgres cluster becomes "stg-postgres", generating these services:
+#   stg-postgres-rw   (primary — use for direct connections and migrations)
+#   stg-postgres-ro   (read replica)
+#   stg-postgres-pooler-rw (PgBouncer — use for app DATABASE_URL once pooler is up)
+#
+# The out-of-band secret "sanket-db-url" MUST use stg-prefixed hostnames.
+# When re-bootstrapping, always use:
+#   DATABASE_URL        → stg-postgres-rw:5432  (or stg-postgres-pooler-rw once pooler is running)
+#   DATABASE_URL_DIRECT → stg-postgres-rw:5432
+#   ML_DATABASE_URL     → stg-postgres-rw:5432
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: sanket-staging
+
+resources:
+  - ../../base
+
+namePrefix: stg-
+
+commonLabels:
+  app.kubernetes.io/environment: staging
+
+patches:
+  - path: replicas.yaml
+  - target:
+      kind: Ingress
+      name: sanket
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: staging.sanket.example
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: staging.sanket.example
+  - target:
+      kind: Deployment
+      name: backend
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: backend
+      spec:
+        template:
+          spec:
+            containers:
+              - name: api
+                imagePullPolicy: Always   # mutable :staging tag — always re-pull so fixes land
+                env:
+                  - name: APP_ENV
+                    value: staging
+                  # namePrefix "stg-" renames the ml-api Service to stg-ml-api,
+                  # but env values are NOT rewritten by kustomize, so the base
+                  # default http://ml-api:8001 does not resolve here. Point the
+                  # backend at the prefixed service so ML inference works.
+                  - name: ML_API_URL
+                    value: http://stg-ml-api:8001
+  # Staging cluster storage is GCE Persistent Disk (RWO only — no RWX/Filestore
+  # class). The base ml-artifacts PVC requests ReadWriteMany, which the PD CSI
+  # rejects ("multi writer with mount access type"), leaving it Pending forever.
+  # Staging runs a single ml-api replica (see replicas.yaml), so RWO is correct.
+  - target:
+      kind: PersistentVolumeClaim
+      name: ml-artifacts
+    patch: |-
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: ml-artifacts
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests:
+            storage: 20Gi
+  # Keep staging on the dev-login fallback: blank the Firebase config so
+  # Settings.firebase_enabled stays False (APP_ENV=staging does not require it).
+  - target:
+      kind: Secret
+      name: sanket-firebase
+    patch: |-
+      - op: replace
+        path: /stringData/FIREBASE_PROJECT_ID
+        value: ""
+      - op: replace
+        path: /stringData/FIREBASE_CREDENTIALS_PATH
+        value: ""
+  - target:
+      kind: Cluster
+      name: postgres
+    patch: |-
+      apiVersion: postgresql.cnpg.io/v1
+      kind: Cluster
+      metadata:
+        name: postgres
+      spec:
+        instances: 1
+        imageName: ghcr.io/cloudnative-pg/postgresql:16-standard-bookworm
+        minSyncReplicas: 0
+        maxSyncReplicas: 0
+        postgresql:
+          parameters:
+            shared_buffers: 128MB
+            max_connections: "50"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 512Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+  - target:
+      kind: Deployment
+      name: ml-api
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: ml-api
+      spec:
+        # Staging nodes are tiny (~940m CPU / ~2.87Gi each) and run a single
+        # ml-api replica on an RWO volume. Recreate tears the old pod down before
+        # starting the new one, so the rollout never needs room for two pods at
+        # once (RollingUpdate maxSurge:1 could not schedule) and never hits the
+        # RWO multi-attach deadlock.
+        strategy:
+          type: Recreate
+          rollingUpdate: null
+        template:
+          spec:
+            containers:
+              - name: inference
+                imagePullPolicy: Always   # mutable :staging tag — always re-pull so fixes land
+                env:
+                  # Use the SMALL Chronos model in staging. chronos-t5-large
+                  # (~710M params) needs ~3 GB+ just for fp32 weights on CPU and
+                  # was OOMKilled under the staging limit. chronos-t5-small
+                  # (~46M params) fits easily AND is already pre-cached in the
+                  # image (backend/ml/Dockerfile ARG CHRONOS_REPO), so cold start
+                  # needs no Hugging Face download.
+                  - name: ML_CHRONOS_REPO
+                    value: amazon/chronos-t5-small
+                resources:
+                  requests:
+                    cpu: 100m      # keep low so it fits the small staging nodes;
+                    memory: 1Gi    # the OOM fix is the 4Gi *limit* + small model
+                  limits:
+                    cpu: "1"
+                    memory: 4Gi
+  # Frontend serves a mutable :staging image; force re-pull so the baked-in
+  # nginx config (and any other build-time fix) is actually picked up.
+  - target:
+      kind: Deployment
+      name: frontend
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: frontend
+      spec:
+        template:
+          spec:
+            containers:
+              - name: web
+                imagePullPolicy: Always   # mutable :staging tag — always re-pull so fixes land
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: backend
+    patch: |-
+      apiVersion: autoscaling/v2
+      kind: HorizontalPodAutoscaler
+      metadata:
+        name: backend
+      spec:
+        minReplicas: 1
+        maxReplicas: 2
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: ml-api
+    patch: |-
+      apiVersion: autoscaling/v2
+      kind: HorizontalPodAutoscaler
+      metadata:
+        name: ml-api
+      spec:
+        minReplicas: 1
+        maxReplicas: 2
+  - target:
+      kind: PodDisruptionBudget
+      name: backend-pdb
+    patch: |-
+      apiVersion: policy/v1
+      kind: PodDisruptionBudget
+      metadata:
+        name: backend-pdb
+      spec:
+        minAvailable: 1
+  - target:
+      kind: Pooler
+      name: postgres-pooler-rw
+    patch: |-
+      apiVersion: postgresql.cnpg.io/v1
+      kind: Pooler
+      metadata:
+        name: postgres-pooler-rw
+      spec:
+        instances: 1
+  - target:
+      kind: Pooler
+      name: postgres-pooler-ro
+    patch: |-
+      apiVersion: postgresql.cnpg.io/v1
+      kind: Pooler
+      metadata:
+        name: postgres-pooler-ro
+      spec:
+        instances: 1
+  - target:
+      kind: PodDisruptionBudget
+      name: postgres-pooler-rw-pdb
+    patch: |-
+      apiVersion: policy/v1
+      kind: PodDisruptionBudget
+      metadata:
+        name: postgres-pooler-rw-pdb
+      spec:
+        minAvailable: 1
+
+images:
+  - name: ghcr.io/sanket-project/backend
+    newTag: staging
+  - name: ghcr.io/sanket-project/ml-api
+    newTag: staging
+  - name: ghcr.io/sanket-project/frontend
+    newTag: staging

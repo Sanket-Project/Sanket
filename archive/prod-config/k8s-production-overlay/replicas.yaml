@@ -1,0 +1,14 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: backend, namespace: prisma }
+spec: { replicas: 5 }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: ml-api, namespace: prisma }
+spec: { replicas: 3 }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: frontend, namespace: prisma }
+spec: { replicas: 3 }

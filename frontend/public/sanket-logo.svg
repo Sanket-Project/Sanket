@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="SANKET">
+  <rect width="64" height="64" rx="14" fill="#03363D"/>
+  <line x1="13" y1="46" x2="51" y2="46" stroke="#BDD9D7" stroke-width="1.8" stroke-linecap="round" opacity="0.22"/>
+  <path d="M13 42 C22 42 24 23 32 21 C40 19 43 33 51 30" fill="none" stroke="#BDD9D7" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="32" cy="21" r="3.4" fill="#ffffff"/>
+</svg>

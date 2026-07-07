@@ -1,0 +1,15 @@
+# Production replica floors (base defaults are lower; HPA scales up from here).
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: backend, namespace: sanket }
+spec: { replicas: 5 }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: ml-api, namespace: sanket }
+spec: { replicas: 3 }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: frontend, namespace: sanket }
+spec: { replicas: 3 }

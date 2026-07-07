@@ -1,0 +1,97 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sanket-ml"
+version = "0.1.0"
+description = "SANKET ML stack — forecasting, causal inference, supply-chain optimization"
+requires-python = ">=3.12"
+dependencies = [
+    # core scientific
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "scipy>=1.13",
+    "scikit-learn>=1.5",
+    "pyarrow>=17.0",
+    "polars>=1.7",
+
+    # data access
+    "sqlalchemy[asyncio]>=2.0.36",
+    "asyncpg>=0.30",
+    "psycopg2-binary>=2.9",
+
+    # statistical / classical
+    "statsforecast>=1.7",
+    "utilsforecast>=0.2",
+
+    # gradient boosting
+    "lightgbm>=4.5",
+    "mlforecast>=0.13",
+
+    # deep learning forecasters
+    "torch>=2.4",
+    "pytorch-lightning>=2.4",
+    "darts[torch]>=0.31",
+    "neuralforecast>=1.7",
+
+    # foundation models
+    "transformers>=4.45",
+    "accelerate>=0.34",
+    "chronos-forecasting>=1.4",
+    "huggingface-hub>=0.25",
+
+    # causal inference
+    "dowhy>=0.12",
+    "econml>=0.15",
+
+    # supply optimization
+    "ortools>=9.11",
+    "ray[rllib]>=2.37",
+    "gymnasium>=0.29",
+
+    # explainability
+    "shap>=0.46",
+
+    # tracking & serving
+    "mlflow>=2.16",
+    "joblib>=1.4",
+    "structlog>=24.4",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.5",
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+
+    # workflow
+    "prefect>=3.0",
+]
+
+[project.optional-dependencies]
+gpu = [
+    "torch>=2.4",
+]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "ipykernel>=6.29",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["sanket_ml"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "S", "B", "A", "C4", "PT"]
+ignore = [
+    "S101", "S104", "E501", "S311", "N817", "S110", "S112", "B905", "A003",
+    "B904", "S105", "S324", "E741",
+    # ML mathematical naming conventions (uppercase X, Y, P, T, H)
+    "N803", "N806",
+    # Parameterized SQL string checks (Bandit false positives on dynamic filters)
+    "S608"
+]

@@ -1,0 +1,71 @@
+# ── Kubernetes secrets (real values — template is secrets.yaml.example) ───────
+# Never commit a filled-in secrets.yaml — bootstrap via kubectl create secret.
+infra/**/secrets.yaml
+
+# ── Secrets / environment ────────────────────────────────────────────────
+# Never commit real secrets. Use .env.example as the documented template.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+# Firebase service-account credentials — must NEVER be committed.
+# The private key in these files gives full Firebase Admin access.
+**/firebase-service-account*.json
+**/serviceAccount*.json
+firebase-credentials*.json
+# Explicit absolute path guard (belt + suspenders)
+backend/firebase-credentials.json
+
+# ── Python ───────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# ── Node / frontend ──────────────────────────────────────────────────────
+node_modules/
+dist/
+*.tsbuildinfo
+
+# ── Editor / OS ──────────────────────────────────────────────────────────
+.DS_Store
+.idea/
+.vscode/
+
+# ── ML artifacts / experiment tracking ────────────────────────────────────
+mlruns/
+artifacts/
+.cache/
+**/*.joblib
+*.ckpt
+
+# ── Database / backups ─────────────────────────────────────────────────────
+*.dump
+*.sql.gz
+
+# ── Local agent / tooling state ────────────────────────────────────────────
+.claude/settings.local.json
+
+# ── Build output ───────────────────────────────────────────────────────────
+*.log
+
+# ── Local secrets/configs (Cloud Run deployments) ──────────────────────────
+backend/cloudrun-env.yaml
+backend/ml/mlrun-env.yaml
+.firebase/
+
+# ── Sensitive cluster files — never commit ─────────────────────────────────
+kubeconfig-base64.txt
+*.kubeconfig
+kubeconfig*
+backend_logs*.json
+backend_logs_utf8.json
+
+
+# Decoupled production secrets (do not commit)
+archive/secrets/

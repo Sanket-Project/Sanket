@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PRISMA — Enterprise Predictive Analytics & Supply Chain Intelligence</title>
+  <meta name="description" content="The unified predictive intelligence platform for global enterprises. Industry-tuned forecasting, supply chain optimization, and AI-driven decision support across Fashion, Consumer Electronics, and Pharmaceuticals.">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:        #05060e;
+      --bg-s:      #090b18;
+      --bg-c:      #0f1124;
+      --bg-ch:     #161930;
+      --border:    rgba(255,255,255,0.07);
+      --border-h:  rgba(255,255,255,0.15);
+
+      /* Brand */
+      --blue:      #5b8def;
+      --blue-l:    #8ab1ff;
+      --blue-d:    #3a6dd0;
+      --violet:    #8b5cf6;
+      --violet-l:  #b39bff;
+      --violet-d:  #6841d0;
+      --cyan:      #22d3ee;
+      --amber:     #fbbf24;
+
+      /* Industry accents */
+      --i-fashion:    #ec4899;
+      --i-fashion-l:  #f9a8d4;
+      --i-electronics:#06b6d4;
+      --i-electronics-l:#67e8f9;
+      --i-pharma:     #10b981;
+      --i-pharma-l:   #6ee7b7;
+
+      /* Text */
+      --t1: #f4f5fa;
+      --t2: #9aa0bd;
+      --t3: #5a607c;
+      --t4: #3d4358;
+
+      --max: 1240px;
+      --r: 16px;
+      --rs: 10px;
+      --mono: 'SF Mono', 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg); color: var(--t1); line-height: 1.65; overflow-x: hidden;
+      -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* ───────── UTILS ───────── */
+    .container { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--blue-l); padding: 6px 14px;
+      background: rgba(91,141,239,.08); border: 1px solid rgba(91,141,239,.25); border-radius: 100px;
+      font-family: var(--mono);
+    }
+    .eyebrow.violet { color: var(--violet-l); background: rgba(139,92,246,.08); border-color: rgba(139,92,246,.25); }
+    .eyebrow.amber  { color: var(--amber);    background: rgba(251,191,36,.08); border-color: rgba(251,191,36,.25); }
+    .gtext { background: linear-gradient(135deg, var(--blue-l) 0%, var(--violet-l) 50%, var(--cyan) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .sec-hd { text-align: center; margin-bottom: 64px; max-width: 760px; margin-left: auto; margin-right: auto; }
+    .sec-hd .eyebrow { margin-bottom: 20px; }
+    .sec-ttl { font-size: clamp(32px,5vw,52px); font-weight: 800; letter-spacing: -.025em; margin-bottom: 20px; line-height: 1.12; }
+    .sec-sub { font-size: 18px; color: var(--t2); line-height: 1.7; max-width: 640px; margin: 0 auto; }
+
+    /* ───────── BUTTONS ───────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 22px; border-radius: 8px; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: all .2s; border: none; font-family: inherit;
+    }
+    .btn-lg { padding: 14px 32px; font-size: 15px; border-radius: 10px; }
+    .btn-primary { background: linear-gradient(135deg, var(--blue), var(--blue-d)); color: #fff; box-shadow: 0 6px 24px rgba(91,141,239,.35); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 32px rgba(91,141,239,.45); }
+    .btn-violet { background: linear-gradient(135deg, var(--violet), var(--violet-d)); color: #fff; box-shadow: 0 6px 24px rgba(139,92,246,.35); }
+    .btn-violet:hover { transform: translateY(-1px); box-shadow: 0 10px 32px rgba(139,92,246,.45); }
+    .btn-outline { background: transparent; color: var(--t1); border: 1px solid var(--border-h); }
+    .btn-outline:hover { border-color: rgba(255,255,255,.28); background: rgba(255,255,255,.04); }
+    .btn-ghost { color: var(--t2); background: transparent; }
+    .btn-ghost:hover { color: var(--t1); }
+
+    /* ───────── NAV ───────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: 68px; padding: 0 24px; display: flex; align-items: center;
+      background: rgba(5,6,14,.75); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
+      border-bottom: 1px solid var(--border); transition: background .3s;
+    }
+    .nav-in { max-width: var(--max); margin: 0 auto; width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 32px; }
+    .nav-logo { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 800; letter-spacing: -.02em; }
+    .nav-logo-mark { width: 26px; height: 26px; display: inline-block; }
+    .nav-links { display: flex; align-items: center; gap: 28px; list-style: none; }
+    .nav-links a { font-size: 13.5px; font-weight: 500; color: var(--t2); transition: color .2s; }
+    .nav-links a:hover { color: var(--t1); }
+    .nav-cta { display: flex; align-items: center; gap: 10px; }
+
+    /* ───────── HERO ───────── */
+    .hero { position: relative; padding: 132px 24px 80px; overflow: hidden; }
+    .hero-bg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+    .orb { position: absolute; border-radius: 50%; filter: blur(90px); }
+    .o1 { width: 700px; height: 700px; background: radial-gradient(circle, var(--blue) 0%, transparent 70%); top: -260px; left: -180px; opacity: .25; animation: fl1 12s ease-in-out infinite; }
+    .o2 { width: 600px; height: 600px; background: radial-gradient(circle, var(--violet) 0%, transparent 70%); top: 50px; right: -160px; opacity: .22; animation: fl2 14s ease-in-out infinite; }
+    .o3 { width: 500px; height: 500px; background: radial-gradient(circle, var(--cyan) 0%, transparent 70%); bottom: -160px; left: 35%; opacity: .14; animation: fl1 16s ease-in-out infinite reverse; }
+    .grid-bg {
+      position: absolute; inset: 0;
+      background-image: linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: radial-gradient(ellipse 85% 75% at 50% 40%, black 0%, transparent 100%);
+    }
+    .hero-in { position: relative; z-index: 1; max-width: var(--max); margin: 0 auto; display: grid; grid-template-columns: 1fr 1.05fr; gap: 56px; align-items: center; }
+    .hero-content .eyebrow { margin-bottom: 24px; }
+    .hero-ttl { font-size: clamp(42px,5.6vw,68px); font-weight: 900; letter-spacing: -.035em; line-height: 1.05; margin-bottom: 22px; }
+    .hero-sub { font-size: 17.5px; color: var(--t2); line-height: 1.75; margin-bottom: 28px; max-width: 540px; }
+    .hero-acts { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 36px; }
+    .hero-meta { display: flex; gap: 24px; flex-wrap: wrap; color: var(--t3); font-size: 13px; }
+    .hero-meta-item { display: flex; align-items: center; gap: 8px; }
+    .hero-meta-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--blue); box-shadow: 0 0 8px var(--blue); }
+
+    /* ───────── INDUSTRY SWITCHER (in dashboard) ───────── */
+    .hero-vis { position: relative; padding: 16px; }
+    .dash-shell { background: var(--bg-c); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; box-shadow: 0 40px 80px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.04), inset 0 1px 0 rgba(255,255,255,.04); }
+    .dash-bar { padding: 12px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,.015); }
+    .dots { display: flex; gap: 6px; }
+    .dots span { width: 10px; height: 10px; border-radius: 50%; }
+    .dots span:nth-child(1) { background: #ff5f57; }
+    .dots span:nth-child(2) { background: #febc2e; }
+    .dots span:nth-child(3) { background: #28c840; }
+    .dash-title { font-size: 12px; color: var(--t3); font-family: var(--mono); }
+    .dash-title strong { color: var(--t1); font-weight: 600; }
+
+    .ind-tabs { display: flex; gap: 4px; padding: 14px 18px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,.015); }
+    .ind-tab {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 7px 13px; font-size: 12px; font-weight: 600;
+      background: transparent; border: 1px solid transparent; border-radius: 7px;
+      color: var(--t2); cursor: pointer; transition: all .2s;
+    }
+    .ind-tab:hover { color: var(--t1); }
+    .ind-tab.active { color: var(--t1); background: rgba(255,255,255,.05); border-color: var(--border-h); }
+    .ind-tab .tdot { width: 7px; height: 7px; border-radius: 50%; }
+    .ind-tab[data-ind="fashion"]    .tdot { background: var(--i-fashion); }
+    .ind-tab[data-ind="electronics"] .tdot { background: var(--i-electronics); }
+    .ind-tab[data-ind="pharma"]     .tdot { background: var(--i-pharma); }
+
+    .dash-body { padding: 20px; min-height: 380px; }
+    .dash-section { display: none; }
+    .dash-section.active { display: block; animation: fadeIn .4s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    .kpi-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 18px; }
+    .kpi { padding: 12px 14px; background: rgba(255,255,255,.02); border: 1px solid var(--border); border-radius: 9px; }
+    .kpi-l { font-size: 10.5px; color: var(--t3); text-transform: uppercase; letter-spacing: .06em; font-family: var(--mono); }
+    .kpi-v { font-size: 20px; font-weight: 800; letter-spacing: -.02em; margin-top: 4px; }
+    .kpi-d { font-size: 11px; margin-top: 2px; color: var(--t3); }
+
+    .chart-wrap { height: 110px; background: rgba(255,255,255,.02); border-radius: 9px; overflow: hidden; margin-bottom: 16px; padding: 8px; border: 1px solid var(--border); }
+    .chart-wrap svg { width: 100%; height: 100%; display: block; }
+
+    .row-hd { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--t3); text-transform: uppercase; letter-spacing: .06em; font-family: var(--mono); margin-bottom: 8px; }
+    .row-item { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+    .row-item:last-child { border-bottom: none; }
+    .rdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .r-txt { flex: 1; }
+    .r-name { font-size: 13px; font-weight: 600; }
+    .r-det { font-size: 11px; color: var(--t3); margin-top: 1px; }
+    .r-val { font-size: 13px; font-weight: 700; }
+    .pill { font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 4px; font-family: var(--mono); letter-spacing: .05em; }
+    .p-hot   { background: rgba(236,72,153,.15); color: var(--i-fashion-l); }
+    .p-rising{ background: rgba(34,211,238,.15); color: var(--cyan); }
+    .p-watch { background: rgba(251,191,36,.15); color: var(--amber); }
+    .p-ok    { background: rgba(16,185,129,.15); color: var(--i-pharma-l); }
+    .p-risk  { background: rgba(239,68,68,.15); color: #fca5a5; }
+
+    /* ───────── TRUST STRIP ───────── */
+    .trust { padding: 36px 24px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: rgba(255,255,255,.01); }
+    .trust-in { max-width: var(--max); margin: 0 auto; display: flex; align-items: center; gap: 56px; flex-wrap: wrap; justify-content: center; }
+    .trust-lbl { font-size: 11.5px; color: var(--t3); font-weight: 600; letter-spacing: .1em; text-transform: uppercase; font-family: var(--mono); white-space: nowrap; }
+    .trust-logos { display: flex; align-items: center; gap: 44px; flex-wrap: wrap; justify-content: center; }
+    .tlogo { font-size: 13px; font-weight: 700; color: var(--t3); letter-spacing: .12em; text-transform: uppercase; opacity: .7; transition: opacity .2s; }
+    .tlogo:hover { opacity: 1; color: var(--t2); }
+
+    /* ───────── SECTIONS ───────── */
+    section { padding: 110px 24px; }
+    #industries  { background: var(--bg); }
+    #platform    { background: var(--bg-s); }
+    #onboarding  { background: var(--bg); }
+    #intelligence{ background: var(--bg-s); }
+    #usecases    { background: var(--bg); }
+    #enterprise  { background: var(--bg-s); }
+    #customers   { background: var(--bg); }
+    #pricing     { background: var(--bg-s); }
+    #faq         { background: var(--bg); }
+    #cta         { background: var(--bg-s); }
+
+    /* ───────── INDUSTRIES (3 verticals) ───────── */
+    .ind-grid { max-width: var(--max); margin: 0 auto; display: grid; grid-template-columns: repeat(3,1fr); gap: 22px; }
+    .ind-card {
+      background: var(--bg-c); border: 1px solid var(--border); border-radius: var(--r);
+      padding: 32px; display: flex; flex-direction: column; transition: all .3s;
+      position: relative; overflow: hidden;
+    }
+    .ind-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      transform: scaleX(0); transform-origin: left; transition: transform .35s;
+    }
+    .ind-card[data-ind="fashion"]::before     { background: linear-gradient(90deg, var(--i-fashion), var(--i-fashion-l)); }
+    .ind-card[data-ind="electronics"]::before { background: linear-gradient(90deg, var(--i-electronics), var(--i-electronics-l)); }
+    .ind-card[data-ind="pharma"]::before      { background: linear-gradient(90deg, var(--i-pharma), var(--i-pharma-l)); }
+    .ind-card:hover { border-color: var(--border-h); transform: translateY(-4px); background: var(--bg-ch); }
+    .ind-card:hover::before { transform: scaleX(1); }
+    .ind-icon { width: 56px; height: 56px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 26px; margin-bottom: 22px; }
+    .ind-card[data-ind="fashion"]     .ind-icon { background: rgba(236,72,153,.1); color: var(--i-fashion-l); }
+    .ind-card[data-ind="electronics"] .ind-icon { background: rgba(6,182,212,.1);  color: var(--i-electronics-l); }
+    .ind-card[data-ind="pharma"]      .ind-icon { background: rgba(16,185,129,.1); color: var(--i-pharma-l); }
+    .ind-tag { font-size: 10.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; font-family: var(--mono); margin-bottom: 8px; }
+    .ind-card[data-ind="fashion"]     .ind-tag { color: var(--i-fashion-l); }
+    .ind-card[data-ind="electronics"] .ind-tag { color: var(--i-electronics-l); }
+    .ind-card[data-ind="pharma"]      .ind-tag { color: var(--i-pharma-l); }
+    .ind-ttl { font-size: 22px; font-weight: 700; letter-spacing: -.02em; margin-bottom: 14px; }
+    .ind-dsc { font-size: 14px; color: var(--t2); line-height: 1.7; margin-bottom: 20px; }
+    .ind-spec { margin-top: auto; }
+    .ind-spec-row { display: flex; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--border); font-size: 13px; }
+    .ind-spec-l { color: var(--t3); font-family: var(--mono); font-size: 11.5px; }
+    .ind-spec-v { color: var(--t1); font-weight: 600; text-align: right; }
+
+    /* ───────── PLATFORM ARCHITECTURE ───────── */
+    .arch-wrap { max-width: 1100px; margin: 0 auto; }
+    .arch-stack { display: flex; flex-direction: column; gap: 14px; }
+    .arch-layer {
+      background: var(--bg-c); border: 1px solid var(--border); border-radius: var(--r);
+      padding: 24px 28px; display: grid; grid-template-columns: 220px 1fr; gap: 32px;
+      align-items: center; position: relative; transition: all .25s;
+    }
+    .arch-layer:hover { border-color: var(--border-h); }
+    .arch-layer-lbl { display: flex; align-items: center; gap: 14px; }
+    .arch-layer-ico { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .arch-layer-tt { font-size: 14px; font-weight: 700; letter-spacing: -.01em; }
+    .arch-layer-st { font-size: 11px; color: var(--t3); font-family: var(--mono); margin-top: 2px; }
+    .arch-layer-content { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+    .arch-pill {
+      padding: 10px 14px; background: rgba(255,255,255,.02);
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 12.5px; color: var(--t2); display: flex; align-items: center; gap: 8px;
+      transition: all .2s;
+    }
+    .arch-pill:hover { background: rgba(91,141,239,.06); border-color: rgba(91,141,239,.25); color: var(--t1); }
+    .arch-pill-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--blue); flex-shrink: 0; }
+    .arch-l1 .arch-layer-ico { background: linear-gradient(135deg, var(--i-fashion), var(--violet)); }
+    .arch-l2 .arch-layer-ico { background: linear-gradient(135deg, var(--violet), var(--blue)); }
+    .arch-l3 .arch-layer-ico { background: linear-gradient(135deg, var(--blue), var(--cyan)); }
+    .arch-l4 .arch-layer-ico { background: linear-gradient(135deg, var(--cyan), var(--i-pharma)); }
+    .arch-l5 .arch-layer-ico { background: rgba(255,255,255,.08); color: var(--t2); }
+
+    .arch-note {
+      max-width: 760px; margin: 56px auto 0; text-align: center;
+      padding: 24px; background: rgba(255,255,255,.02);
+      border: 1px solid var(--border); border-radius: var(--r);
+    }
+    .arch-note-l { font-size: 11px; color: var(--blue-l); font-family: var(--mono); letter-spacing: .12em; text-transform: uppercase; margin-bottom: 10px; }
+    .arch-note-d { font-size: 14.5px; color: var(--t2); line-height: 1.7; }
+
+    /* ───────── ONBOARDING FLOW ───────── */
+    .ob-steps { max-width: 960px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+    .ob-step {
+      background: var(--bg-c); border: 1px solid var(--border); border-radius: var(--r);
+      padding: 28px 22px; position: relative; transition: all .25s;
+    }
+    .ob-step:hover { border-color: var(--border-h); background: var(--bg-ch); transform: translateY(-3px); }
+    .ob-step::after {
+      content: '→'; position: absolute; top: 50%; right: -20px; transform: translateY(-50%);
+      color: var(--t4); font-size: 18px; z-index: 1;
+    }
+    .ob-step:last-child::after { display: none; }
+    .ob-num { font-family: var(--mono); font-size: 11px; color: var(--blue-l); font-weight: 700; letter-spacing: .12em; margin-bottom: 14px; }
+    .ob-ttl { font-size: 15.5px; font-weight: 700; margin-bottom: 10px; letter-spacing: -.01em; }
+    .ob-dsc { font-size: 13px; color: var(--t2); line-height: 1.65; }
+
+    /* ───────── AI / INTELLIGENCE ───────── */
+    .intel-grid { max-width: var(--max); margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; }
+    .intel-layers { display: flex; flex-direction: column; gap: 14px; }
+    .intel-layer { background: var(--bg-c); border: 1px solid var(--border); border-radius: var(--rs); padding: 22px 26px; display: flex; gap: 18px; align-items: flex-start; transition: all .25s; }
+    .intel-layer:hover { border-color: var(--border-h); background: var(--bg-ch); }
+    .intel-ico { width: 42px; height: 42px; border-radius: 10px; background: linear-gradient(135deg, var(--blue), var(--blue-d)); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 18px; }
+    .intel-ico.v { background: linear-gradient(135deg, var(--violet), var(--violet-d)); }
+    .intel-ico.c { background: linear-gradient(135deg, var(--cyan), #0891b2); }
+    .intel-ico.g { background: linear-gradient(135deg, var(--i-pharma), #047857); }
+    .intel-ttl { font-size: 15.5px; font-weight: 700; margin-bottom: 5px; }
+    .intel-dsc { font-size: 13px; color: var(--t2); line-height: 1.65; }
+
+    .intel-vis { position: sticky; top: 92px; }
+    .intel-diag { background: var(--bg-c); border: 1px solid var(--border); border-radius: var(--r); padding: 28px; }
+    .pipe-lbl { font-size: 11px; font-weight: 700; color: var(--blue-l); text-transform: uppercase; letter-spacing: .12em; font-family: var(--mono); margin-bottom: 18px; }
+    .pipe-stack { display: flex; flex-direction: column; gap: 8px; }
+    .pipe-node { display: grid; grid-template-columns: 10px 1fr auto; gap: 12px; align-items: center; padding: 12px 14px; background: rgba(255,255,255,.025); border: 1px solid var(--border); border-radius: 8px; transition: all .25s; }
+    .pipe-node:hover { background: rgba(91,141,239,.07); border-color: rgba(91,141,239,.25); }
+    .pipe-dot { width: 9px; height: 9px; border-radius: 50%; }
+    .pipe-l { font-size: 13px; font-weight: 600; }
+    .pipe-r { font-size: 10.5px; color: var(--t3); font-family: var(--mono); }
+    .pipe-arrow { text-align: center; color: var(--t4); font-size: 12px; line-height: 1; padding: 1px 0; }
+    .intel-metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 22px; }
+    .imet { padding: 14px; background: rgba(255,255,255,.025); border: 1px solid var(--border); border-radius: 8px; text-align: center; }
+    .imet-v { font-size: 22px; font-weight: 800; letter-spacing: -.02em; background: linear-gradient(135deg, var(--blue-l), var(--violet-l)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .imet-l { font-size: 10.5px; color: var(--t3); margin-top: 3px; font-family: var(--mono); text-transform: uppercase; letter-spacing: .06em; }
+
+    /* ───────── USE CASES (TABS) ───────── */
+    .uc-wrap { max-width: var(--max); margin: 0 auto; }
+    .uc-tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: 40px; padding: 6px; background: var(--bg-c); border: 1px solid var(--border); border-radius: 12px; width: fit-content; margin-left: auto; margin-right: auto; }
+    .uc-tab {
+      padding: 10px 22px; font-size: 13px; font-weight: 600;
+      background: transparent; border: none; border-radius: 8px; color: var(--t2);
+      cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 8px;
+      font-family: inherit;
+    }
+    .uc-tab:hover { color: var(--t1); }
+    .uc-tab.active { background: var(--bg-ch); color: var(--t1); box-shadow: 0 0 0 1px var(--border-h); }
+    .uc-tab .uc-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .uc-tab[data-uc="fashion"]    .uc-dot { background: var(--i-fashion); }
+    .uc-tab[data-uc="electronics"] .uc-dot { background: var(--i-electronics); }
+    .uc-tab[data-uc="pharma"]     .uc-dot { background: var(--i-pharma); }
+    .uc-panel { display: none; }
+    .uc-panel.active { display: grid; animation: fadeIn .4s ease; }
+    .uc-panel { grid-template-columns: repeat(3,1fr); gap: 22px; }
+    .uc-card { background: var(--bg-c); border: 1px solid var(--border); border-radius: var(--r); padding: 30px; transition: all .3s; }
+    .uc-card:hover { border-color: var(--border-h); background: var(--bg-ch); transform: translateY(-3px); }
+    .uc-ico { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 18px; }
+    .uc-panel[data-uc="fashion"]    .uc-ico { background: rgba(236,72,153,.1); color: var(--i-fashion-l); }
+    .uc-panel[data-uc="electronics"] .uc-ico { background: rgba(6,182,212,.1); color: var(--i-electronics-l); }
+    .uc-panel[data-uc="pharma"]     .uc-ico { background: rgba(16,185,129,.1); color: var(--i-pharma-l); }
+    .uc-ttl { font-size: 17px; font-weight: 700; margin-bottom: 10px; letter-spacing: -.01em; }
+    .uc-dsc { font-size: 13.5px; color: var(--t2); line-height: 1.7; margin-bottom: 16px; }
+    .uc-metric { display: flex; align-items: baseline; gap: 8px; padding-top: 14px; border-top: 1px solid var(--border); }
+    .uc-metric-v { font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+    .uc-panel[data-uc="fashion"]    .uc-metric-v { color: var(--i-fashion-l); }
+    .uc-panel[data-uc="electronics"] .uc-metric-v { color: var(--i-electronics-l); }
+    .uc-panel[data-uc="pharma"]     .uc-metric-v { color: var(--i-pharma-l); }
+    .uc-metric-l { font-size: 12px; color: var(--t3); }
+
+    /* ───────── ENTERPRISE ───────── */
+    .ent-grid { max-width: var(--max); margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 56px; }
+    .ent-card { background: var(--bg-c); border: 1px solid var(--border); border-radius: var(--r); padding: 28px 24px; transition: all .25s; }
+    .ent-card:hover { border-color: var(--border-h); transform: translateY(-3px); background: var(--bg-ch); }
+    .ent-ico { width: 40px; height: 40px; border-radius: 10px; background: rgba(91,141,239,.1); color: var(--blue-l); display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 16px; }
+    .ent-ttl { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+    .ent-dsc { font-size: 13px; color: var(--t2); line-height: 1.6; }
+
+    .compliance {
+      max-width: var(--max); margin: 0 auto; padding: 32px;
+      background: var(--bg-c); border: 1px solid var(--border); border-radius: var(--r);
+      display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: center;
+    }
+    .comp-l-title { font-size: 11px; color: var(--blue-l); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-family: var(--mono); margin-bottom: 8px; }
+    .comp-l-text { font-size: 15px; color: var(--t1); line-height: 1.6; max-width: 540px; }
+    .comp-badges { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+    .comp-badge {
+      padding: 8px 14px; background: rgba(255,255,255,.04);
+      border: 1px solid var(--border-h); border-radius: 8px;
+      font-size: 11.5px; font-weight: 700; color: var(--t1);
+      font-family: var(--mono); letter-spacing: .04em;
+    }
+
+    /* ───────── CUSTOMERS ───────── */
+    .cust-grid { max-width: var(--max); margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+    .cust-card {
+      background: var(--bg-c); border: 1px solid var(--border); border-radius: var(--r);
+      padding: 32px; display: flex; flex-direction: column; transition: all .3s;
+      position: relative; overflow: hidden;
+    }
+    .cust-card::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; transform: scaleX(0); transform-origin: left; transition: transform .35s; }
+    .cust-card[data-ind="fashion"]::after { background: linear-gradient(90deg, var(--i-fashion), var(--i-fashion-l)); }
+    .cust-card[data-ind="electronics"]::after { background: linear-gradient(90deg, var(--i-electronics), var(--i-electronics-l)); }
+    .cust-card[data-ind="pharma"]::after { background: linear-gradient(90deg, var(--i-pharma), var(--i-pharma-l)); }
+    .cust-card:hover { border-color: var(--border-h); transform: translateY(-4px); }
+    .cust-card:hover::after { transform: scaleX(1); }
+    .cust-brand { font-size: 10.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; font-family: var(--mono); margin-bottom: 16px; }
+    .cust-card[data-ind="fashion"] .cust-brand { color: var(--i-fashion-l); }
+    .cust-card[data-ind="electronics"] .cust-brand { color: var(--i-electronics-l); }
+    .cust-card[data-ind="pharma"] .cust-brand { color: var(--i-pharma-l); }
+    .cust-ttl { font-size: 18px; font-weight: 700; margin-bottom: 14px; line-height: 1.35; letter-spacing: -.01em; }
+    .cust-q { font-size: 13.5px; color: var(--t2); line-height: 1.75; flex: 1; margin-bottom: 22px; font-style: italic; }
+    .cust-q::before { content: '"'; color: var(--blue-l); font-style: normal; font-weight: 700; }
+    .cust-q::after { content: '"'; color: var(--blue-l); font-style: normal; font-weight: 700; }
+    .cust-mets { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+    .cmet { padding: 12px 14px; background: rgba(255,255,255,.025); border: 1px solid var(--border); border-radius: 8px; }
+    .cmet-v { font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
+    .cmet-l { font-size: 10.5px; color: var(--t3); margin-top: 2px; font-family: var(--mono); text-transform: uppercase; letter-spacing: .06em; }
+    .cust-auth { display: flex; align-items: center; gap: 12px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .cust-av { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; flex-shrink: 0; color: #fff; }
+    .cust-card[data-ind="fashion"] .cust-av { background: linear-gradient(135deg, var(--i-fashion), var(--violet)); }
+    .cust-card[data-ind="electronics"] .cust-av { background: linear-gradient(135deg, var(--i-electronics), var(--blue)); }
+    .cust-card[data-ind="pharma"] .cust-av { background: linear-gradient(135deg, var(--i-pharma), var(--cyan)); }
+    .cust-name { font-size: 13px; font-weight: 700; }
+    .cust-role { font-size: 11.5px; color: var(--t3); margin-top: 1px; }
+
+    /* ───────── PRICING ───────── */
+    .price-grid { max-width: 1080px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; align-items: start; }
+    .pc { background: var(--bg-c); border: 1px solid var(--border); border-radius: var(--r); padding: 36px; position: relative; transition: all .25s; }
+    .pc:hover { border-color: var(--border-h); }
+    .pc.feat { border-color: var(--violet); box-shadow: 0 0 0 1px var(--violet), 0 30px 70px rgba(139,92,246,.18); transform: scale(1.025); }
+    .pc-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; padding: 5px 16px; background: linear-gradient(135deg, var(--violet), var(--violet-d)); border-radius: 100px; white-space: nowrap; color: #fff; font-family: var(--mono); }
+    .pc-tier { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--blue-l); margin-bottom: 12px; font-family: var(--mono); }
+    .pc-amt { font-size: 44px; font-weight: 900; letter-spacing: -.04em; line-height: 1; }
+    .pc-per { font-size: 13px; color: var(--t3); margin-left: 4px; }
+    .pc-dsc { font-size: 13.5px; color: var(--t2); margin: 14px 0 26px; line-height: 1.65; }
+    .pc-feats { list-style: none; margin-bottom: 28px; }
+    .pc-feats li { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; color: var(--t2); padding: 9px 0; border-bottom: 1px solid var(--border); }
+    .pc-feats li:last-child { border-bottom: none; }
+    .chk { width: 16px; height: 16px; border-radius: 4px; background: rgba(91,141,239,.12); color: var(--blue-l); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 9px; font-weight: 800; margin-top: 2px; }
+    .pc-note { display: block; text-align: center; margin-top: 36px; font-size: 12.5px; color: var(--t3); }
+
+    /* ───────── FAQ ───────── */
+    .faq-list { max-width: 760px; margin: 0 auto; }
+    .faq-item { border-bottom: 1px solid var(--border); }
+    .faq-q { display: flex; justify-content: space-between; align-items: center; padding: 22px 0; cursor: pointer; user-select: none; font-size: 15.5px; font-weight: 600; transition: color .2s; gap: 16px; }
+    .faq-q:hover { color: var(--blue-l); }
+    .faq-tog { width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,.06); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; transition: all .3s; color: var(--t2); line-height: 1; }
+    .faq-item.open .faq-tog { background: var(--blue); border-color: var(--blue); color: #fff; transform: rotate(45deg); }
+    .faq-a { display: none; padding: 0 0 24px; font-size: 14.5px; color: var(--t2); line-height: 1.75; }
+    .faq-item.open .faq-a { display: block; }
+
+    /* ───────── CTA ───────── */
+    #cta { padding: 120px 24px; text-align: center; position: relative; overflow: hidden; }
+    .cta-in { position: relative; z-index: 1; max-width: 640px; margin: 0 auto; }
+    .cta-ttl { font-size: clamp(36px,5vw,56px); font-weight: 900; letter-spacing: -.03em; margin: 24px 0 18px; line-height: 1.1; }
+    .cta-sub { font-size: 17px; color: var(--t2); margin-bottom: 36px; line-height: 1.7; }
+    .cta-acts { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; }
+    .cta-note { margin-top: 18px; font-size: 12.5px; color: var(--t3); font-family: var(--mono); }
+
+    /* ───────── FOOTER ───────── */
+    footer { background: var(--bg); border-top: 1px solid var(--border); padding: 64px 24px 36px; }
+    .ft-in { max-width: var(--max); margin: 0 auto; }
+    .ft-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 48px; margin-bottom: 48px; }
+    .ft-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; font-size: 18px; font-weight: 800; letter-spacing: -.02em; }
+    .ft-tag { font-size: 13.5px; color: var(--t3); line-height: 1.7; max-width: 280px; margin-bottom: 22px; }
+    .ft-certs { display: flex; gap: 8px; flex-wrap: wrap; }
+    .ft-cert { font-size: 10.5px; font-weight: 700; padding: 4px 10px; background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 4px; color: var(--t3); font-family: var(--mono); letter-spacing: .04em; }
+    .ft-col-ttl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: var(--blue-l); margin-bottom: 16px; font-family: var(--mono); }
+    .ft-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .ft-links a { font-size: 13.5px; color: var(--t3); transition: color .2s; }
+    .ft-links a:hover { color: var(--t1); }
+    .ft-bot { border-top: 1px solid var(--border); padding-top: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
+    .ft-copy { font-size: 12.5px; color: var(--t3); font-family: var(--mono); }
+    .ft-legal { display: flex; gap: 22px; }
+    .ft-legal a { font-size: 12.5px; color: var(--t3); transition: color .2s; }
+    .ft-legal a:hover { color: var(--t2); }
+
+    /* ───────── ANIMATIONS ───────── */
+    @keyframes fl1 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(30px,-30px) scale(1.05)} 66%{transform:translate(-20px,20px) scale(.95)} }
+    @keyframes fl2 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(-40px,20px) scale(1.05)} 66%{transform:translate(20px,-30px) scale(.95)} }
+    @keyframes pulse { 0%,100%{opacity:1; transform:scale(1)} 50%{opacity:.45; transform:scale(.78)} }
+    .pulse { animation: pulse 2s ease-in-out infinite; }
+
+    /* ───────── REVEAL ───────── */
+    .rv { opacity: 0; transform: translateY(28px); transition: opacity .6s ease, transform .6s ease; }
+    .rv.vis { opacity: 1; transform: translateY(0); }
+    .d1{transition-delay:.08s} .d2{transition-delay:.16s} .d3{transition-delay:.24s} .d4{transition-delay:.32s}
+
+    /* ───────── RESPONSIVE ───────── */
+    @media(max-width:1024px) {
+      .hero-in { grid-template-columns: 1fr; gap: 48px; }
+      .hero-vis { display: none; }
+      .ind-grid, .cust-grid { grid-template-columns: 1fr; }
+      .ent-grid { grid-template-columns: repeat(2,1fr); }
+      .ob-steps { grid-template-columns: repeat(2,1fr); }
+      .ob-step::after { display: none; }
+      .arch-layer { grid-template-columns: 1fr; gap: 18px; }
+      .intel-grid { grid-template-columns: 1fr; }
+      .uc-panel { grid-template-columns: 1fr; }
+      .ft-top { grid-template-columns: 1fr 1fr; gap: 32px; }
+      .compliance { grid-template-columns: 1fr; }
+      .comp-badges { justify-content: flex-start; }
+    }
+    @media(max-width:768px) {
+      section { padding: 72px 20px; }
+      .nav-links { display: none; }
+      .price-grid { grid-template-columns: 1fr; }
+      .pc.feat { transform: none; }
+      .kpi-row { grid-template-columns: 1fr; }
+      .ent-grid { grid-template-columns: 1fr; }
+      .ind-tabs { padding: 10px 12px; overflow-x: auto; }
+    }
+    @media(max-width:480px) {
+      .ob-steps { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════ NAV -->
+<nav id="topnav">
+  <div class="nav-in">
+    <a href="#" class="nav-logo">
+      <svg class="nav-logo-mark" viewBox="0 0 32 32" fill="none">
+        <defs>
+          <linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#5b8def"/><stop offset="50%" stop-color="#8b5cf6"/><stop offset="100%" stop-color="#22d3ee"/>
+          </linearGradient>
+        </defs>
+        <path d="M16 3 L28 10 L28 22 L16 29 L4 22 L4 10 Z" stroke="url(#lg1)" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M16 3 L16 29 M4 10 L28 22 M28 10 L4 22" stroke="url(#lg1)" stroke-width="1" opacity=".5"/>
+      </svg>
+      <span>PRISMA</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#industries">Industries</a></li>
+      <li><a href="#platform">Platform</a></li>
+      <li><a href="#intelligence">Intelligence</a></li>
+      <li><a href="#enterprise">Enterprise</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="/login" class="btn btn-ghost">Sign in</a>
+      <a href="/login?mode=signup" class="btn btn-outline">Sign up</a>
+      <a href="#cta" class="btn btn-primary">Request Demo</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════ HERO -->
+<section class="hero">
+  <div class="hero-bg">
+    <div class="orb o1"></div>
+    <div class="orb o2"></div>
+    <div class="orb o3"></div>
+    <div class="grid-bg"></div>
+  </div>
+  <div class="hero-in">
+    <div class="hero-content">
+      <div class="eyebrow"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--blue);box-shadow:0 0 8px var(--blue)" class="pulse"></span> Enterprise Predictive Intelligence Platform</div>
+      <h1 class="hero-ttl">One Platform.<br>Every Industry.<br><span class="gtext">Infinite Foresight.</span></h1>
+      <p class="hero-sub">PRISMA is the unified predictive analytics &amp; supply chain optimization layer for global enterprises. Industry-tuned forecasting for Fashion, Consumer Electronics, and Pharmaceuticals — built on a shared AI foundation, configured to your vertical in minutes.</p>
+      <div class="hero-acts">
+        <a href="#cta" class="btn btn-primary btn-lg">Request Enterprise Demo</a>
+        <a href="#platform" class="btn btn-outline btn-lg">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 4h10M3 8h10M3 12h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Explore Architecture
+        </a>
+      </div>
+      <div class="hero-meta">
+        <div class="hero-meta-item"><span class="hero-meta-dot"></span>SOC 2 Type II</div>
+        <div class="hero-meta-item"><span class="hero-meta-dot" style="background:var(--i-pharma);box-shadow:0 0 8px var(--i-pharma)"></span>HIPAA &amp; GxP-ready</div>
+        <div class="hero-meta-item"><span class="hero-meta-dot" style="background:var(--violet);box-shadow:0 0 8px var(--violet)"></span>99.99% SLA</div>
+        <div class="hero-meta-item"><span class="hero-meta-dot" style="background:var(--cyan);box-shadow:0 0 8px var(--cyan)"></span>VPC &amp; on-prem</div>
+      </div>
+    </div>
+
+    <!-- Interactive Industry Dashboard -->
+    <div class="hero-vis">
+      <div class="dash-shell">
+        <div class="dash-bar">
+          <div class="dots"><span></span><span></span><span></span></div>
+          <div class="dash-title">prisma.app / <strong>workspace</strong> / <span id="indLabel">apparel-fashion</span></div>
+        </div>
+        <div class="ind-tabs" role="tablist">
+          <button class="ind-tab active" data-ind="fashion"><span class="tdot"></span>Apparel &amp; Fashion</button>
+          <button class="ind-tab" data-ind="electronics"><span class="tdot"></span>Consumer Electronics</button>
+          <button class="ind-tab" data-ind="pharma"><span class="tdot"></span>Pharmaceuticals</button>
+        </div>
+        <div class="dash-body">
+
+          <!-- FASHION -->
+          <div class="dash-section active" data-ind="fashion">
+            <div class="kpi-row">
+              <div class="kpi"><div class="kpi-l">Sell-Through</div><div class="kpi-v" style="color:var(--i-fashion-l)">94.2%</div><div class="kpi-d">↑ 12.4 pp vs LY</div></div>
+              <div class="kpi"><div class="kpi-l">Markdown Rate</div><div class="kpi-v" style="color:var(--i-pharma-l)">−38%</div><div class="kpi-d">$1.2M margin saved</div></div>
+              <div class="kpi"><div class="kpi-l">Forecast MAPE</div><div class="kpi-v">5.8%</div><div class="kpi-d">SKU-level, weekly</div></div>
+            </div>
+            <div class="chart-wrap">
+              <svg viewBox="0 0 400 90" preserveAspectRatio="none">
+                <defs><linearGradient id="cg-f" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ec4899" stop-opacity=".45"/><stop offset="100%" stop-color="#ec4899" stop-opacity="0"/></linearGradient></defs>
+                <path d="M0 70 C30 60 50 72 80 56 C110 42 130 50 160 32 C190 14 220 24 250 18 C280 12 305 26 335 20 C358 16 378 28 400 22 L400 90 L0 90Z" fill="url(#cg-f)"/>
+                <path d="M0 70 C30 60 50 72 80 56 C110 42 130 50 160 32 C190 14 220 24 250 18 C280 12 305 26 335 20 C358 16 378 28 400 22" fill="none" stroke="#ec4899" stroke-width="1.8"/>
+                <path d="M400 22 C418 18 432 12 452 8" fill="none" stroke="#fbbf24" stroke-width="1.8" stroke-dasharray="4 3"/>
+                <circle cx="400" cy="22" r="4" fill="#ec4899"/>
+              </svg>
+            </div>
+            <div class="row-hd"><span>Trending SKUs · Regional</span><span>Signal</span></div>
+            <div class="row-item"><div class="rdot" style="background:var(--i-fashion)"></div><div class="r-txt"><div class="r-name">Wide-Leg Linen Trouser</div><div class="r-det">SKU-4821 · NYC, LA, Miami</div></div><div class="r-val" style="color:var(--i-fashion-l)">↑ 89%</div><div class="pill p-hot">HOT</div></div>
+            <div class="row-item"><div class="rdot" style="background:var(--cyan)"></div><div class="r-txt"><div class="r-name">Oversized Denim Jacket</div><div class="r-det">SKU-2204 · Global</div></div><div class="r-val" style="color:var(--cyan)">↑ 67%</div><div class="pill p-rising">RISING</div></div>
+            <div class="row-item"><div class="rdot" style="background:var(--amber)"></div><div class="r-txt"><div class="r-name">Utility Cargo Mini</div><div class="r-det">SKU-3309 · London, Paris</div></div><div class="r-val" style="color:var(--amber)">↑ 44%</div><div class="pill p-watch">WATCH</div></div>
+          </div>
+
+          <!-- ELECTRONICS -->
+          <div class="dash-section" data-ind="electronics">
+            <div class="kpi-row">
+              <div class="kpi"><div class="kpi-l">NPI Ramp Accuracy</div><div class="kpi-v" style="color:var(--i-electronics-l)">96.1%</div><div class="kpi-d">vs 71% baseline</div></div>
+              <div class="kpi"><div class="kpi-l">DOI Reduction</div><div class="kpi-v" style="color:var(--i-pharma-l)">−24%</div><div class="kpi-d">days inventory on-hand</div></div>
+              <div class="kpi"><div class="kpi-l">BOM Risk</div><div class="kpi-v" style="color:var(--amber)">Low</div><div class="kpi-d">3 components flagged</div></div>
+            </div>
+            <div class="chart-wrap">
+              <svg viewBox="0 0 400 90" preserveAspectRatio="none">
+                <defs><linearGradient id="cg-e" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#06b6d4" stop-opacity=".45"/><stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/></linearGradient></defs>
+                <path d="M0 78 C25 75 50 65 80 50 C110 38 135 25 165 20 C195 18 220 22 250 28 C280 35 305 30 335 24 C360 19 380 26 400 30 L400 90 L0 90Z" fill="url(#cg-e)"/>
+                <path d="M0 78 C25 75 50 65 80 50 C110 38 135 25 165 20 C195 18 220 22 250 28 C280 35 305 30 335 24 C360 19 380 26 400 30" fill="none" stroke="#06b6d4" stroke-width="1.8"/>
+                <path d="M400 30 C418 32 432 30 452 28" fill="none" stroke="#fbbf24" stroke-width="1.8" stroke-dasharray="4 3"/>
+                <circle cx="400" cy="30" r="4" fill="#06b6d4"/>
+              </svg>
+            </div>
+            <div class="row-hd"><span>Product Lines · Lifecycle Stage</span><span>Outlook</span></div>
+            <div class="row-item"><div class="rdot" style="background:var(--cyan)"></div><div class="r-txt"><div class="r-name">Pro Series Laptop · Q3 NPI</div><div class="r-det">SKU-LP14X · 8 channels</div></div><div class="r-val" style="color:var(--cyan)">+38%</div><div class="pill p-rising">RAMP</div></div>
+            <div class="row-item"><div class="rdot" style="background:var(--i-pharma)"></div><div class="r-txt"><div class="r-name">Earbuds Gen-3</div><div class="r-det">SKU-EB30 · APAC peak</div></div><div class="r-val" style="color:var(--i-pharma-l)">Stable</div><div class="pill p-ok">PEAK</div></div>
+            <div class="row-item"><div class="rdot" style="background:#fca5a5"></div><div class="r-txt"><div class="r-name">Smart Display v2</div><div class="r-det">SKU-SD20 · EOL planning</div></div><div class="r-val" style="color:#fca5a5">−22%</div><div class="pill p-risk">DECLINE</div></div>
+          </div>
+
+          <!-- PHARMA -->
+          <div class="dash-section" data-ind="pharma">
+            <div class="kpi-row">
+              <div class="kpi"><div class="kpi-l">Service Level</div><div class="kpi-v" style="color:var(--i-pharma-l)">99.4%</div><div class="kpi-d">14 therapeutic areas</div></div>
+              <div class="kpi"><div class="kpi-l">Expiry Waste</div><div class="kpi-v" style="color:var(--i-pharma-l)">−61%</div><div class="kpi-d">$4.8M recovered YTD</div></div>
+              <div class="kpi"><div class="kpi-l">Forecast Bias</div><div class="kpi-v">+1.2%</div><div class="kpi-d">batch-level, 26 wk</div></div>
+            </div>
+            <div class="chart-wrap">
+              <svg viewBox="0 0 400 90" preserveAspectRatio="none">
+                <defs><linearGradient id="cg-p" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10b981" stop-opacity=".45"/><stop offset="100%" stop-color="#10b981" stop-opacity="0"/></linearGradient></defs>
+                <path d="M0 60 C30 58 55 50 85 45 C115 42 140 40 170 38 C200 36 225 35 255 32 C285 28 310 26 340 22 C365 19 385 17 400 16 L400 90 L0 90Z" fill="url(#cg-p)"/>
+                <path d="M0 60 C30 58 55 50 85 45 C115 42 140 40 170 38 C200 36 225 35 255 32 C285 28 310 26 340 22 C365 19 385 17 400 16" fill="none" stroke="#10b981" stroke-width="1.8"/>
+                <path d="M400 16 C418 14 432 10 452 8" fill="none" stroke="#fbbf24" stroke-width="1.8" stroke-dasharray="4 3"/>
+                <circle cx="400" cy="16" r="4" fill="#10b981"/>
+              </svg>
+            </div>
+            <div class="row-hd"><span>Therapeutic Lines · Service Risk</span><span>Status</span></div>
+            <div class="row-item"><div class="rdot" style="background:var(--i-pharma)"></div><div class="r-txt"><div class="r-name">Cardiology · Statins (40mg)</div><div class="r-det">Batch-2024-Q3 · cold chain</div></div><div class="r-val" style="color:var(--i-pharma-l)">99.7%</div><div class="pill p-ok">ON-TRACK</div></div>
+            <div class="row-item"><div class="rdot" style="background:var(--amber)"></div><div class="r-txt"><div class="r-name">Oncology · Targeted Therapy</div><div class="r-det">Limited supply · APAC</div></div><div class="r-val" style="color:var(--amber)">96.2%</div><div class="pill p-watch">MONITOR</div></div>
+            <div class="row-item"><div class="rdot" style="background:#fca5a5"></div><div class="r-txt"><div class="r-name">Pediatric Vaccine v4</div><div class="r-det">Q1 cold-chain alert</div></div><div class="r-val" style="color:#fca5a5">91.8%</div><div class="pill p-risk">ALERT</div></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ TRUST -->
+<div class="trust">
+  <div class="trust-in">
+    <div class="trust-lbl">Trusted by global enterprises</div>
+    <div class="trust-logos">
+      <div class="tlogo">Arden &amp; Co.</div>
+      <div class="tlogo">Helix Devices</div>
+      <div class="tlogo">Veridian Pharma</div>
+      <div class="tlogo">Nordic Lattice</div>
+      <div class="tlogo">Meridian Group</div>
+      <div class="tlogo">Apex Therapeutics</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ INDUSTRIES -->
+<section id="industries">
+  <div class="container">
+    <div class="sec-hd rv">
+      <div class="eyebrow">Vertical Coverage</div>
+      <h2 class="sec-ttl">Three Industries.<br><span class="gtext">One Predictive Engine.</span></h2>
+      <p class="sec-sub">PRISMA's industry modules are purpose-built for the operational realities of each vertical — different data signals, different decision cadences, different regulatory constraints. The underlying AI foundation is shared; the workspace is bespoke.</p>
+    </div>
+    <div class="ind-grid">
+      <div class="ind-card rv" data-ind="fashion">
+        <div class="ind-icon">◈</div>
+        <div class="ind-tag">Module 01 · Apparel &amp; Fashion</div>
+        <h3 class="ind-ttl">Hyper-personalized demand forecasting for clothing brands</h3>
+        <p class="ind-dsc">Predict regional, channel, and SKU-level demand by fusing your sales data with real-time signals from social media, runways, and search trends. Reduce overproduction; capture trend windows before they close.</p>
+        <div class="ind-spec">
+          <div class="ind-spec-row"><span class="ind-spec-l">Signals</span><span class="ind-spec-v">Social · Runway · Search</span></div>
+          <div class="ind-spec-row"><span class="ind-spec-l">Granularity</span><span class="ind-spec-v">SKU × Region × Week</span></div>
+          <div class="ind-spec-row"><span class="ind-spec-l">Horizon</span><span class="ind-spec-v">12 – 52 weeks</span></div>
+          <div class="ind-spec-row"><span class="ind-spec-l">Key outcome</span><span class="ind-spec-v">−40% markdowns</span></div>
+        </div>
+      </div>
+      <div class="ind-card rv d1" data-ind="electronics">
+        <div class="ind-icon">◆</div>
+        <div class="ind-tag">Module 02 · Consumer Electronics</div>
+        <h3 class="ind-ttl">Lifecycle-aware planning for hardware portfolios</h3>
+        <p class="ind-dsc">Model product S-curves, NPI ramps, channel sell-through, and EOL decay across global markets. Cross-reference semiconductor availability and component lead times to surface BOM risk before it impacts production.</p>
+        <div class="ind-spec">
+          <div class="ind-spec-row"><span class="ind-spec-l">Signals</span><span class="ind-spec-v">Sell-through · BOM · Reviews</span></div>
+          <div class="ind-spec-row"><span class="ind-spec-l">Granularity</span><span class="ind-spec-v">SKU × Channel × Region</span></div>
+          <div class="ind-spec-row"><span class="ind-spec-l">Horizon</span><span class="ind-spec-v">4 – 78 weeks</span></div>
+          <div class="ind-spec-row"><span class="ind-spec-l">Key outcome</span><span class="ind-spec-v">−24% DOI</span></div>
+        </div>
+      </div>
+      <div class="ind-card rv d2" data-ind="pharma">
+        <div class="ind-icon">⬡</div>
+        <div class="ind-tag">Module 03 · Pharmaceuticals</div>
+        <h3 class="ind-ttl">Patient-demand forecasting &amp; cold-chain optimization</h3>
+        <p class="ind-dsc">Forecast patient demand by therapeutic area, geography, and formulary effects. Optimize cold-chain logistics, expiry management, and batch-level service levels while maintaining GxP audit-readiness end-to-end.</p>
+        <div class="ind-spec">
+          <div class="ind-spec-row"><span class="ind-spec-l">Signals</span><span class="ind-spec-v">Rx · Epidemiology · Filings</span></div>
+          <div class="ind-spec-row"><span class="ind-spec-l">Granularity</span><span class="ind-spec-v">SKU × Batch × Territory</span></div>
+          <div class="ind-spec-row"><span class="ind-spec-l">Horizon</span><span class="ind-spec-v">8 – 104 weeks</span></div>
+          <div class="ind-spec-row"><span class="ind-spec-l">Key outcome</span><span class="ind-spec-v">−61% expiry waste</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ PLATFORM ARCHITECTURE -->
+<section id="platform">
+  <div class="container">
+    <div class="sec-hd rv">
+      <div class="eyebrow violet">Platform Architecture</div>
+      <h2 class="sec-ttl">A modular, multi-tenant<br><span class="gtext">predictive intelligence platform.</span></h2>
+      <p class="sec-sub">PRISMA is built on a 5-layer architecture that separates industry-specific workflows from the underlying AI foundation. Industry modules are pluggable. The core data infrastructure is shared. Your data stays isolated, encrypted, and resident in the region of your choice.</p>
+    </div>
+    <div class="arch-wrap">
+      <div class="arch-stack">
+        <div class="arch-layer arch-l1 rv">
+          <div class="arch-layer-lbl">
+            <div class="arch-layer-ico">⊟</div>
+            <div>
+              <div class="arch-layer-tt">Presentation Layer</div>
+              <div class="arch-layer-st">L05 · industry-tailored UX</div>
+            </div>
+          </div>
+          <div class="arch-layer-content">
+            <div class="arch-pill"><span class="arch-pill-dot" style="background:var(--i-fashion)"></span>Fashion workspace</div>
+            <div class="arch-pill"><span class="arch-pill-dot" style="background:var(--i-electronics)"></span>Electronics workspace</div>
+            <div class="arch-pill"><span class="arch-pill-dot" style="background:var(--i-pharma)"></span>Pharma workspace</div>
+            <div class="arch-pill"><span class="arch-pill-dot"></span>Role-based dashboards</div>
+            <div class="arch-pill"><span class="arch-pill-dot"></span>Embedded BI &amp; reports</div>
+          </div>
+        </div>
+        <div class="arch-layer arch-l2 rv">
+          <div class="arch-layer-lbl">
+            <div class="arch-layer-ico">⊠</div>
+            <div>
+              <div class="arch-layer-tt">Industry Modules</div>
+              <div class="arch-layer-st">L04 · pluggable vertical logic</div>
+            </div>
+          </div>
+          <div class="arch-layer-content">
+            <div class="arch-pill"><span class="arch-pill-dot" style="background:var(--i-fashion)"></span>Trend-lifecycle modeling</div>
+            <div class="arch-pill"><span class="arch-pill-dot" style="background:var(--i-electronics)"></span>NPI &amp; lifecycle planning</div>
+            <div class="arch-pill"><span class="arch-pill-dot" style="background:var(--i-pharma)"></span>Cold-chain optimizer</div>
+            <div class="arch-pill"><span class="arch-pill-dot"></span>Vertical schemas</div>
+            <div class="arch-pill"><span class="arch-pill-dot"></span>Regulatory templates</div>
+          </div>
+        </div>
+        <div class="arch-layer arch-l3 rv">
+          <div class="arch-layer-lbl">
+            <div class="arch-layer-ico">◐</div>
+            <div>
+              <div class="arch-layer-tt">AI &amp; ML Foundation</div>
+              <div class="arch-layer-st">L03 · shared intelligence engine</div>
+            </div>
+          </div>
+          <div class="arch-layer-content">
+            <div class="arch-pill"><span class="arch-pill-dot"></span>Foundation model</div>
+            <div class="arch-pill"><span class="arch-pill-dot"></span>Vertical fine-tunes</div>
+            <div class="arch-pill"><span class="arch-pill-dot"></span>Time-series ensemble</div>
+            <div class="arch-pill"><span class="arch-pill-dot"></span>Causal inference</div>
+            <div class="arch-pill"><span class="arch-pill-dot"></span>RL optimizer</div>
+          </div>
+        </div>
+        <div class="arch-layer arch-l4 rv">
+          <div class="arch-layer-lbl">
+            <div class="arch-layer-ico">≣</div>
+            <div>
+              <div class="arch-layer-tt">Data &amp; Signal Layer</div>
+              <div class="arch-layer-st">L02 · ingestion &amp; feature store</div>
+            </div>
+          </div>
+          <div class="arch-layer-content">
+            <div class="arch-pill"><span class="arch-pill-dot"></span>ERP &amp; POS connectors</div>
+            <div class="arch-pill"><span class="arch-pill-dot"></span>External signal APIs</div>
+            <div class="arch-pill"><span class="arch-pill-dot"></span>Vector + relational store</div>
+            <div class="arch-pill"><span class="arch-pill-dot"></span>Streaming Kafka pipelines</div>
+            <div class="arch-pill"><span class="arch-pill-dot"></span>Lineage &amp; governance</div>
+          </div>
+        </div>
+        <div class="arch-layer arch-l5 rv">
+          <div class="arch-layer-lbl">
+            <div class="arch-layer-ico">⌬</div>
+            <div>
+              <div class="arch-layer-tt">Infrastructure</div>
+              <div class="arch-layer-st">L01 · multi-tenant &amp; isolated</div>
+            </div>
+          </div>
+          <div class="arch-layer-content">
+            <div class="arch-pill"><span class="arch-pill-dot"></span>AWS · GCP · Azure</div>
+            <div class="arch-pill"><span class="arch-pill-dot"></span>Single-tenant VPC</div>
+            <div class="arch-pill"><span class="arch-pill-dot"></span>Hybrid &amp; on-prem</div>
+            <div class="arch-pill"><span class="arch-pill-dot"></span>Region pinning</div>
+            <div class="arch-pill"><span class="arch-pill-dot"></span>Disaster recovery</div>
+          </div>
+        </div>
+      </div>
+      <div class="arch-note rv">
+        <div class="arch-note-l">Architect's note</div>
+        <p class="arch-note-d">Industry modules are isolated at the application tier but share the AI foundation. New verticals (CPG, automotive, agriculture) can be onboarded as additional L04 modules without disrupting existing tenants — a design choice that lets PRISMA's intelligence compound across customer cohorts while preserving strict tenant isolation.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ ONBOARDING FLOW -->
+<section id="onboarding">
+  <div class="container">
+    <div class="sec-hd rv">
+      <div class="eyebrow">Dynamic Onboarding</div>
+      <h2 class="sec-ttl">Select your industry.<br><span class="gtext">Your workspace adapts.</span></h2>
+      <p class="sec-sub">PRISMA's onboarding flow tailors the entire analytical workspace, data ingestion pipelines, KPI definitions, and ML model selection to your vertical — typically in under 14 days from first connection to first live forecast.</p>
+    </div>
+    <div class="ob-steps">
+      <div class="ob-step rv">
+        <div class="ob-num">STEP 01</div>
+        <div class="ob-ttl">Select your industry</div>
+        <p class="ob-dsc">Choose your vertical (or multiple, for conglomerates). PRISMA loads the appropriate schemas, KPI definitions, and dashboard templates instantly.</p>
+      </div>
+      <div class="ob-step rv d1">
+        <div class="ob-num">STEP 02</div>
+        <div class="ob-ttl">Connect data sources</div>
+        <p class="ob-dsc">200+ pre-built connectors for ERPs, POS, distribution platforms, EDI feeds, and external signal sources. Custom connectors built by our team within 5 business days.</p>
+      </div>
+      <div class="ob-step rv d2">
+        <div class="ob-num">STEP 03</div>
+        <div class="ob-ttl">Train vertical models</div>
+        <p class="ob-dsc">PRISMA fine-tunes foundation models on your historical data. Per-tenant model weights — your data shapes your forecasts and never trains shared models without consent.</p>
+      </div>
+      <div class="ob-step rv d3">
+        <div class="ob-num">STEP 04</div>
+        <div class="ob-ttl">Deploy &amp; iterate</div>
+        <p class="ob-dsc">Live forecasts and recommendations within your dashboards, ERPs, or via API. Continuous weekly recalibration based on actuals; accuracy compounds every cycle.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ AI / INTELLIGENCE -->
+<section id="intelligence">
+  <div class="container">
+    <div class="sec-hd rv">
+      <div class="eyebrow violet">AI &amp; ML Engine</div>
+      <h2 class="sec-ttl">A foundation model<br><span class="gtext">refracted for every vertical.</span></h2>
+      <p class="sec-sub">PRISMA's core is a multi-modal foundation model trained on $400B+ in cross-industry transactional history, refined per-vertical through supervised fine-tuning and reinforced through continuous learning on your real-world outcomes.</p>
+    </div>
+    <div class="intel-grid">
+      <div class="intel-layers">
+        <div class="intel-layer rv">
+          <div class="intel-ico">⚛</div>
+          <div><div class="intel-ttl">Multi-Modal Foundation Model</div><p class="intel-dsc">Trained jointly on time-series, text, visual, and structured business data. The base model has cross-industry "world knowledge" of demand patterns and supply dynamics before any customer-specific training occurs.</p></div>
+        </div>
+        <div class="intel-layer rv">
+          <div class="intel-ico v">∿</div>
+          <div><div class="intel-ttl">Vertical Fine-Tuning Pipeline</div><p class="intel-dsc">Each industry module ships with a pre-trained vertical head (Fashion / Electronics / Pharma). On deployment, we further fine-tune on your tenant data for SKU-, batch-, or component-level precision.</p></div>
+        </div>
+        <div class="intel-layer rv">
+          <div class="intel-ico c">⊕</div>
+          <div><div class="intel-ttl">Time-Series Ensemble</div><p class="intel-dsc">A 24-model ensemble — NeuralProphet, DeepAR, N-HiTS, Temporal Fusion Transformer, plus industry-specific decomposition methods — with automatic model selection per series based on data characteristics.</p></div>
+        </div>
+        <div class="intel-layer rv">
+          <div class="intel-ico">∮</div>
+          <div><div class="intel-ttl">Causal Inference Engine</div><p class="intel-dsc">Separates genuine demand signals from promotions, anomalies, and confounders. Provides counterfactual analysis — what would have happened — so leaders can audit AI recommendations.</p></div>
+        </div>
+        <div class="intel-layer rv">
+          <div class="intel-ico g">⇆</div>
+          <div><div class="intel-ttl">RL Supply Optimizer</div><p class="intel-dsc">A reinforcement-learning agent that translates forecasts into supply chain actions — reorder points, allocations, transfers — under your specific cost, lead-time, and service-level constraints.</p></div>
+        </div>
+      </div>
+      <div class="intel-vis rv">
+        <div class="intel-diag">
+          <div class="pipe-lbl">⌁ Inference Pipeline</div>
+          <div class="pipe-stack">
+            <div class="pipe-node"><div class="pipe-dot" style="background:var(--blue)"></div><div class="pipe-l">Signal Ingestion</div><div class="pipe-r">~ 280M /day</div></div>
+            <div class="pipe-arrow">▼</div>
+            <div class="pipe-node"><div class="pipe-dot" style="background:var(--blue-l)"></div><div class="pipe-l">Feature Store</div><div class="pipe-r">vector + relational</div></div>
+            <div class="pipe-arrow">▼</div>
+            <div class="pipe-node"><div class="pipe-dot" style="background:var(--violet)"></div><div class="pipe-l">Foundation Model Inference</div><div class="pipe-r">8b params</div></div>
+            <div class="pipe-arrow">▼</div>
+            <div class="pipe-node"><div class="pipe-dot" style="background:var(--violet-l)"></div><div class="pipe-l">Vertical Head</div><div class="pipe-r">per-tenant FT</div></div>
+            <div class="pipe-arrow">▼</div>
+            <div class="pipe-node"><div class="pipe-dot" style="background:var(--cyan)"></div><div class="pipe-l">Time-Series Ensemble</div><div class="pipe-r">24-model</div></div>
+            <div class="pipe-arrow">▼</div>
+            <div class="pipe-node"><div class="pipe-dot" style="background:var(--i-pharma)"></div><div class="pipe-l">RL Action Layer</div><div class="pipe-r">recs &amp; POs</div></div>
+          </div>
+          <div class="intel-metrics">
+            <div class="imet"><div class="imet-v">24</div><div class="imet-l">Models in ensemble</div></div>
+            <div class="imet"><div class="imet-v">280M+</div><div class="imet-l">Daily signals</div></div>
+            <div class="imet"><div class="imet-v">104 wk</div><div class="imet-l">Max horizon</div></div>
+            <div class="imet"><div class="imet-v">Hourly</div><div class="imet-l">Re-inference</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ USE CASES (Tabbed) -->
+<section id="usecases">
+  <div class="container">
+    <div class="sec-hd rv">
+      <div class="eyebrow">Use Cases by Vertical</div>
+      <h2 class="sec-ttl">Built for the<br><span class="gtext">decisions you actually face.</span></h2>
+      <p class="sec-sub">Switch between verticals to see how PRISMA's industry modules surface the right insights at the right cadence — from rapid social-trend signals in fashion to multi-year regulatory pipeline modeling in pharma.</p>
+    </div>
+    <div class="uc-wrap">
+      <div class="uc-tabs" role="tablist">
+        <button class="uc-tab active" data-uc="fashion"><span class="uc-dot"></span>Apparel &amp; Fashion</button>
+        <button class="uc-tab" data-uc="electronics"><span class="uc-dot"></span>Consumer Electronics</button>
+        <button class="uc-tab" data-uc="pharma"><span class="uc-dot"></span>Pharmaceuticals</button>
+      </div>
+      <div class="uc-panel active" data-uc="fashion">
+        <div class="uc-card rv">
+          <div class="uc-ico">◈</div>
+          <div class="uc-ttl">Hyper-regional buying</div>
+          <p class="uc-dsc">SKU-by-region demand predictions reveal why the same colorway sells through in LA but lingers in London. Buying teams allocate depth precisely.</p>
+          <div class="uc-metric"><span class="uc-metric-v">+38%</span><span class="uc-metric-l">margin recovered per season</span></div>
+        </div>
+        <div class="uc-card rv d1">
+          <div class="uc-ico">◈</div>
+          <div class="uc-ttl">Trend lifecycle modeling</div>
+          <p class="uc-dsc">Forecast when a trend peaks and when it fades. Time production windows to capture velocity without holding end-of-season inventory.</p>
+          <div class="uc-metric"><span class="uc-metric-v">−40%</span><span class="uc-metric-l">markdown rate vs. baseline</span></div>
+        </div>
+        <div class="uc-card rv d2">
+          <div class="uc-ico">◈</div>
+          <div class="uc-ttl">Social signal intelligence</div>
+          <p class="uc-dsc">Real-time monitoring of TikTok, Instagram, Pinterest, and runway coverage — translated into actionable inventory decisions weeks before peak search.</p>
+          <div class="uc-metric"><span class="uc-metric-v">11 wk</span><span class="uc-metric-l">average trend lead-time</span></div>
+        </div>
+      </div>
+      <div class="uc-panel" data-uc="electronics">
+        <div class="uc-card rv">
+          <div class="uc-ico">◆</div>
+          <div class="uc-ttl">New Product Introduction</div>
+          <p class="uc-dsc">Model NPI ramps across channels, regions, and segments. Avoid early-launch stockouts and late-stage overproduction with channel-specific forecasts.</p>
+          <div class="uc-metric"><span class="uc-metric-v">96%</span><span class="uc-metric-l">launch-week accuracy</span></div>
+        </div>
+        <div class="uc-card rv d1">
+          <div class="uc-ico">◆</div>
+          <div class="uc-ttl">BOM &amp; component risk</div>
+          <p class="uc-dsc">Cross-reference semiconductor markets and supplier lead times. Surface BOM risks weeks before they impact production lines.</p>
+          <div class="uc-metric"><span class="uc-metric-v">−24%</span><span class="uc-metric-l">days inventory on-hand</span></div>
+        </div>
+        <div class="uc-card rv d2">
+          <div class="uc-ico">◆</div>
+          <div class="uc-ttl">End-of-Life planning</div>
+          <p class="uc-dsc">Predict EOL decay curves to optimize last-time-buy decisions, channel allocation, and inventory wind-down without service disruption.</p>
+          <div class="uc-metric"><span class="uc-metric-v">−68%</span><span class="uc-metric-l">EOL obsolete writeoffs</span></div>
+        </div>
+      </div>
+      <div class="uc-panel" data-uc="pharma">
+        <div class="uc-card rv">
+          <div class="uc-ico">⬡</div>
+          <div class="uc-ttl">Patient-demand forecasting</div>
+          <p class="uc-dsc">Forecast by therapeutic area, geography, and prescriber behavior. Anticipate formulary effects, generic entries, and demographic shifts.</p>
+          <div class="uc-metric"><span class="uc-metric-v">99.4%</span><span class="uc-metric-l">service level achieved</span></div>
+        </div>
+        <div class="uc-card rv d1">
+          <div class="uc-ico">⬡</div>
+          <div class="uc-ttl">Cold-chain optimization</div>
+          <p class="uc-dsc">Route, batch, and stage temperature-sensitive products with full GxP-grade audit trails. Minimize excursions; protect product integrity.</p>
+          <div class="uc-metric"><span class="uc-metric-v">−61%</span><span class="uc-metric-l">expiry waste reduction</span></div>
+        </div>
+        <div class="uc-card rv d2">
+          <div class="uc-ico">⬡</div>
+          <div class="uc-ttl">Regulatory &amp; batch governance</div>
+          <p class="uc-dsc">Full lot-level traceability and 21 CFR Part 11-compliant audit trails. Forecasts and supply decisions are fully reproducible for regulators.</p>
+          <div class="uc-metric"><span class="uc-metric-v">100%</span><span class="uc-metric-l">audit-ready, every cycle</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ ENTERPRISE -->
+<section id="enterprise">
+  <div class="container">
+    <div class="sec-hd rv">
+      <div class="eyebrow amber">Enterprise-Ready</div>
+      <h2 class="sec-ttl">Built for the demands of<br><span class="gtext">global enterprises.</span></h2>
+      <p class="sec-sub">Security, compliance, deployment flexibility, and integration depth that meet the requirements of Fortune 500 supply chain, IT, and risk teams.</p>
+    </div>
+    <div class="ent-grid">
+      <div class="ent-card rv">
+        <div class="ent-ico">⊕</div>
+        <div class="ent-ttl">Single-tenant isolation</div>
+        <p class="ent-dsc">Enterprise customers run on dedicated infrastructure with full data, network, and compute isolation. No noisy neighbors, no cross-tenant inference.</p>
+      </div>
+      <div class="ent-card rv d1">
+        <div class="ent-ico">⊠</div>
+        <div class="ent-ttl">Flexible deployment</div>
+        <p class="ent-dsc">SaaS multi-tenant, single-tenant VPC, hybrid, or fully on-premises for regulated workloads. Deploy in AWS, GCP, Azure, or your private cloud.</p>
+      </div>
+      <div class="ent-card rv d2">
+        <div class="ent-ico">⌖</div>
+        <div class="ent-ttl">Data residency</div>
+        <p class="ent-dsc">Pin data and inference to specific regions (EU, US, APAC, etc.) to satisfy GDPR, data localization mandates, and corporate policies.</p>
+      </div>
+      <div class="ent-card rv d3">
+        <div class="ent-ico">⊜</div>
+        <div class="ent-ttl">SSO &amp; RBAC</div>
+        <p class="ent-dsc">SAML 2.0, OIDC, and SCIM provisioning. Role-based access control down to individual report and data-domain granularity. Full audit logging.</p>
+      </div>
+      <div class="ent-card rv">
+        <div class="ent-ico">⊙</div>
+        <div class="ent-ttl">99.99% SLA</div>
+        <p class="ent-dsc">Enterprise tier ships with 99.99% uptime SLA, 24/7 priority support, dedicated TAM, and quarterly business reviews.</p>
+      </div>
+      <div class="ent-card rv d1">
+        <div class="ent-ico">⊡</div>
+        <div class="ent-ttl">300+ integrations</div>
+        <p class="ent-dsc">SAP, Oracle, NetSuite, Shopify, EDI, Snowflake, Databricks, Tableau, Power BI, Salesforce, Workday — production-grade, monitored connectors.</p>
+      </div>
+      <div class="ent-card rv d2">
+        <div class="ent-ico">⊛</div>
+        <div class="ent-ttl">Explainable AI</div>
+        <p class="ent-dsc">Every forecast and recommendation is traceable to its driving signals and model components. Auditable, defensible, regulator-friendly.</p>
+      </div>
+      <div class="ent-card rv d3">
+        <div class="ent-ico">⊞</div>
+        <div class="ent-ttl">Migration support</div>
+        <p class="ent-dsc">Dedicated implementation team, certified partner network, and white-glove migrations from legacy platforms (Anaplan, Blue Yonder, o9).</p>
+      </div>
+    </div>
+    <div class="compliance rv">
+      <div>
+        <div class="comp-l-title">Compliance &amp; Certifications</div>
+        <p class="comp-l-text">PRISMA is independently audited and certified across the standards that matter to enterprise legal, security, and compliance teams — including HIPAA-eligible workloads and GxP-validated environments for pharma deployments.</p>
+      </div>
+      <div class="comp-badges">
+        <span class="comp-badge">SOC 2 Type II</span>
+        <span class="comp-badge">ISO 27001</span>
+        <span class="comp-badge">ISO 27701</span>
+        <span class="comp-badge">HIPAA</span>
+        <span class="comp-badge">GxP</span>
+        <span class="comp-badge">GDPR</span>
+        <span class="comp-badge">21 CFR Part 11</span>
+        <span class="comp-badge">PCI DSS</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════ PRICING -->
+<section id="pricing">
+  <div class="container">
+    <div class="sec-hd rv">
+      <div class="eyebrow">Pricing</div>
+      <h2 class="sec-ttl">Transparent tiers,<br><span class="gtext">scaled for the enterprise.</span></h2>
+      <p class="sec-sub">All plans include one industry module. Add additional verticals as your business expands. Annual contracts only at the Scale and Enterprise tiers.</p>
+    </div>
+    <div class="price-grid">
+      <div class="pc rv">
+        <div class="pc-tier">Growth</div>
+        <div><span class="pc-amt">$4,995</span><span class="pc-per">/month</span></div>
+        <p class="pc-dsc">For mid-market brands and manufacturers establishing data-driven planning in a single vertical.</p>
+        <ul class="pc-feats">
+          <li><span class="chk">✓</span>One industry module</li>
+          <li><span class="chk">✓</span>Up to 50,000 active SKUs</li>
+          <li><span class="chk">✓</span>5 user seats</li>
+          <li><span class="chk">✓</span>50+ standard integrations</li>
+          <li><span class="chk">✓</span>26-week forecast horizon</li>
+          <li><span class="chk">✓</span>Email &amp; chat support</li>
+        </ul>
+        <a href="#cta" class="btn btn-outline" style="width:100%;justify-content:center">Start Trial</a>
+      </div>
+      <div class="pc feat rv d1">
+        <div class="pc-badge">Most Adopted</div>
+        <div class="pc-tier">Scale</div>
+        <div><span class="pc-amt">$14,995</span><span class="pc-per">/month</span></div>
+        <p class="pc-dsc">For enterprises operating across regions and channels with complex supply chain dependencies.</p>
+        <ul class="pc-feats">
+          <li><span class="chk">✓</span>Up to 2 industry modules</li>
+          <li><span class="chk">✓</span>Unlimited SKUs</li>
+          <li><span class="chk">✓</span>25 user seats · SSO</li>
+          <li><span class="chk">✓</span>All 300+ integrations</li>
+          <li><span class="chk">✓</span>52-week forecast horizon</li>
+          <li><span class="chk">✓</span>Scenario planning module</li>
+          <li><span class="chk">✓</span>Dedicated CSM &amp; priority support</li>
+        </ul>
+        <a href="#cta" class="btn btn-violet" style="width:100%;justify-content:center">Talk to Sales</a>
+      </div>
+      <div class="pc rv d2">
+        <div class="pc-tier">Enterprise</div>
+        <div><span class="pc-amt" style="font-size:34px">Custom</span></div>
+        <p class="pc-dsc">For Fortune 500 enterprises and regulated industries requiring dedicated infrastructure and bespoke deployment.</p>
+        <ul class="pc-feats">
+          <li><span class="chk">✓</span>Unlimited industry modules</li>
+          <li><span class="chk">✓</span>Single-tenant VPC · on-prem</li>
+          <li><span class="chk">✓</span>Unlimited seats</li>
+          <li><span class="chk">✓</span>Custom model fine-tuning</li>
+          <li><span class="chk">✓</span>104-week forecast horizon</li>
+          <li><span class="chk">✓</span>99.99% SLA &amp; dedicated TAM</li>
+          <li><span class="chk">✓</span>HIPAA / GxP / on-prem options</li>
+          <li><span class="chk">✓</span>On-site onboarding</li>
+        </ul>
+        <a href="#cta" class="btn btn-primary" style="width:100%;justify-content:center">Contact Sales</a>
+      </div>
+    </div>
+    <p class="pc-note">All tiers include SOC 2 Type II security, GDPR compliance, and 99.9% baseline uptime SLA. Annual billing discounts up to 20%.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ FAQ -->
+<section id="faq">
+  <div class="container">
+    <div class="sec-hd rv">
+      <div class="eyebrow">FAQ</div>
+      <h2 class="sec-ttl">Questions, <span class="gtext">answered.</span></h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item rv">
+        <div class="faq-q" onclick="toggleFaq(this)">How does PRISMA tailor itself to my specific industry?<div class="faq-tog">+</div></div>
+        <div class="faq-a">On onboarding, you select one or more industry modules (Apparel &amp; Fashion, Consumer Electronics, Pharmaceuticals, with more verticals on the roadmap). Each module ships with vertical-specific data schemas, KPI definitions, dashboard templates, model architectures, and external signal feeds. The same shared AI foundation drives all verticals — but the workspace, the metrics, and the recommendations are bespoke to your industry's operational reality.</div>
+      </div>
+      <div class="faq-item rv">
+        <div class="faq-q" onclick="toggleFaq(this)">Can we operate multiple industries within one tenant?<div class="faq-tog">+</div></div>
+        <div class="faq-a">Yes. Conglomerates with multiple verticals (e.g., a holding company spanning fashion and consumer electronics) can enable multiple modules under a single tenant. Each module operates in its own workspace with its own KPIs, dashboards, and access controls, but rolls up into consolidated executive reporting.</div>
+      </div>
+      <div class="faq-item rv">
+        <div class="faq-q" onclick="toggleFaq(this)">How do you handle regulated environments like pharma?<div class="faq-tog">+</div></div>
+        <div class="faq-a">For pharmaceutical and life-sciences deployments, PRISMA operates in GxP-validated environments with 21 CFR Part 11-compliant audit trails, full lot/batch-level traceability, and HIPAA-eligible infrastructure. We support fully on-premises deployments for the strictest regulatory contexts. Our compliance team works directly with your QA/regulatory team during onboarding.</div>
+      </div>
+      <div class="faq-item rv">
+        <div class="faq-q" onclick="toggleFaq(this)">Is our data used to train shared models?<div class="faq-tog">+</div></div>
+        <div class="faq-a">No — never, without explicit written consent. The PRISMA foundation model is trained on public, licensed, and anonymized datasets. Your tenant data is used exclusively for your own fine-tuned models. We offer federated learning options for customers who want to contribute (and benefit from) aggregate intelligence without sharing raw data.</div>
+      </div>
+      <div class="faq-item rv">
+        <div class="faq-q" onclick="toggleFaq(this)">What's the typical implementation timeline?<div class="faq-tog">+</div></div>
+        <div class="faq-a">Most customers reach first live forecasts within 14 days for Growth-tier deployments and 30–60 days for Enterprise deployments involving multiple modules, custom integrations, or VPC/on-prem environments. Full ROI is typically realized within one buying cycle — usually 3–6 months depending on your operational cadence.</div>
+      </div>
+      <div class="faq-item rv">
+        <div class="faq-q" onclick="toggleFaq(this)">What if our industry isn't currently supported?<div class="faq-tog">+</div></div>
+        <div class="faq-a">PRISMA's architecture is designed for vertical extensibility. We're actively building modules for CPG, automotive, and agriculture — these will ship in the next 12 months. For Enterprise customers in unsupported verticals, our solutions team can co-develop a custom module on a dedicated engagement basis.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ CTA -->
+<section id="cta">
+  <div class="hero-bg"><div class="orb o1" style="opacity:.15;top:-180px;left:50%;transform:translateX(-50%)"></div></div>
+  <div class="cta-in rv">
+    <div class="eyebrow violet" style="margin:0 auto;display:inline-flex">Start with your industry</div>
+    <h2 class="cta-ttl">See PRISMA configured<br><span class="gtext">for your vertical.</span></h2>
+    <p class="cta-sub">Book a 30-minute demo with a vertical specialist. We'll show you a live PRISMA workspace pre-configured for your industry, using a real dataset from a comparable enterprise.</p>
+    <div class="cta-acts">
+      <a href="#" class="btn btn-primary btn-lg">Request Enterprise Demo</a>
+      <a href="#" class="btn btn-outline btn-lg">Download Technical Brief</a>
+    </div>
+    <p class="cta-note">Demos available for Fashion · Electronics · Pharma — and any combination thereof.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ FOOTER -->
+<footer>
+  <div class="ft-in">
+    <div class="ft-top">
+      <div>
+        <div class="ft-logo">
+          <svg viewBox="0 0 32 32" fill="none" style="width:26px;height:26px"><defs><linearGradient id="lg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#5b8def"/><stop offset="50%" stop-color="#8b5cf6"/><stop offset="100%" stop-color="#22d3ee"/></linearGradient></defs><path d="M16 3 L28 10 L28 22 L16 29 L4 22 L4 10 Z" stroke="url(#lg2)" stroke-width="2" stroke-linejoin="round"/><path d="M16 3 L16 29 M4 10 L28 22 M28 10 L4 22" stroke="url(#lg2)" stroke-width="1" opacity=".5"/></svg>
+          <span>PRISMA</span>
+        </div>
+        <p class="ft-tag">Enterprise predictive analytics, trend forecasting, and supply chain optimization — purpose-built for global industries.</p>
+        <div class="ft-certs">
+          <span class="ft-cert">SOC 2 Type II</span>
+          <span class="ft-cert">ISO 27001</span>
+          <span class="ft-cert">HIPAA</span>
+          <span class="ft-cert">GxP</span>
+          <span class="ft-cert">GDPR</span>
+        </div>
+      </div>
+      <div>
+        <div class="ft-col-ttl">Platform</div>
+        <ul class="ft-links">
+          <li><a href="#industries">Industries</a></li>
+          <li><a href="#platform">Architecture</a></li>
+          <li><a href="#intelligence">AI Engine</a></li>
+          <li><a href="#enterprise">Enterprise</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="ft-col-ttl">Industries</div>
+        <ul class="ft-links">
+          <li><a href="#">Apparel &amp; Fashion</a></li>
+          <li><a href="#">Consumer Electronics</a></li>
+          <li><a href="#">Pharmaceuticals</a></li>
+          <li><a href="#">CPG (Q3 2026)</a></li>
+          <li><a href="#">Automotive (Q4 2026)</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="ft-col-ttl">Resources</div>
+        <ul class="ft-links">
+          <li><a href="#">Documentation</a></li>
+          <li><a href="#">API Reference</a></li>
+          <li><a href="#">Customer Stories</a></li>
+          <li><a href="#">Security Center</a></li>
+          <li><a href="#">Blog</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="ft-col-ttl">Company</div>
+        <ul class="ft-links">
+          <li><a href="#">About</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Press</a></li>
+          <li><a href="#">Partners</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="ft-bot">
+      <div class="ft-copy">© 2026 PRISMA Technologies, Inc. All rights reserved.</div>
+      <div class="ft-legal">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Security</a>
+        <a href="#">DPA</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Industry switcher (hero dashboard)
+  document.querySelectorAll('.ind-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const ind = tab.dataset.ind;
+      document.querySelectorAll('.ind-tab').forEach(t => t.classList.toggle('active', t === tab));
+      document.querySelectorAll('.dash-section').forEach(s => s.classList.toggle('active', s.dataset.ind === ind));
+      const label = { fashion: 'apparel-fashion', electronics: 'consumer-electronics', pharma: 'pharmaceuticals' }[ind];
+      document.getElementById('indLabel').textContent = label;
+    });
+  });
+
+  // Use case tabs
+  document.querySelectorAll('.uc-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const uc = tab.dataset.uc;
+      document.querySelectorAll('.uc-tab').forEach(t => t.classList.toggle('active', t === tab));
+      document.querySelectorAll('.uc-panel').forEach(p => p.classList.toggle('active', p.dataset.uc === uc));
+    });
+  });
+
+  // FAQ accordion
+  function toggleFaq(el) {
+    const item = el.parentElement;
+    const open = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if (!open) item.classList.add('open');
+  }
+
+  // Scroll reveal
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.rv').forEach(el => obs.observe(el));
+
+  // Nav scroll effect
+  window.addEventListener('scroll', () => {
+    document.getElementById('topnav').style.background =
+      window.scrollY > 50 ? 'rgba(5,6,14,.95)' : 'rgba(5,6,14,.75)';
+  });
+</script>
+</body>
+</html>

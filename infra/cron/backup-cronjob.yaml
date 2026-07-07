@@ -1,0 +1,94 @@
+# Nightly logical backup of Postgres → S3-compatible storage.
+# RPO target: 24h (combined with WAL streaming for near-zero RPO in prod).
+# RTO target: 30min via point-in-time restore from the most recent base + WAL.
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+  namespace: sanket
+spec:
+  schedule: "0 2 * * *"        # 02:00 UTC daily
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: OnFailure
+          securityContext: { runAsNonRoot: true, runAsUser: 1000 }
+          containers:
+            - name: dump
+              image: postgres:16-alpine
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -euo pipefail
+                  TS=$(date -u +%Y%m%dT%H%M%SZ)
+                  DUMP=/tmp/sanket-${TS}.dump
+                  echo "[$TS] starting pg_dump"
+                  # MUST dump as the superuser, not sanket_app. sanket_app is
+                  # NOSUPERUSER and every tenant table has FORCE ROW LEVEL
+                  # SECURITY, so a sanket_app dump with no tenant GUC set would
+                  # be filtered to ZERO rows — a silently empty backup. The
+                  # superuser bypasses RLS and captures every tenant's data.
+                  # postgres-rw always resolves to the current primary (CNPG).
+                  pg_dump -h postgres-rw -U postgres -d sanket -Fc -f "$DUMP"
+                  echo "[$TS] uploading to s3://$BACKUP_BUCKET/$BACKUP_PREFIX/"
+                  apk add --no-cache aws-cli >/dev/null
+                  aws s3 cp "$DUMP" "s3://$BACKUP_BUCKET/$BACKUP_PREFIX/sanket-${TS}.dump" \
+                    --storage-class STANDARD_IA \
+                    --sse aws:kms
+                  rm -f "$DUMP"
+                  echo "[$TS] complete"
+              env:
+                - name: PGPASSWORD
+                  valueFrom: { secretKeyRef: { name: sanket-secrets, key: POSTGRES_PASSWORD } }
+                - { name: BACKUP_BUCKET, value: "sanket-backups" }
+                - { name: BACKUP_PREFIX, value: "postgres" }
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom: { secretKeyRef: { name: backup-aws, key: access_key_id } }
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom: { secretKeyRef: { name: backup-aws, key: secret_access_key } }
+                - { name: AWS_DEFAULT_REGION, value: "us-east-1" }
+              resources:
+                requests: { cpu: 200m, memory: 256Mi }
+                limits:   { cpu: "1",  memory: 1Gi }
+---
+# Weekly: list S3 objects, prune anything older than 30 days
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup-prune
+  namespace: sanket
+spec:
+  schedule: "0 4 * * 0"     # 04:00 UTC Sunday
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: prune
+              image: amazon/aws-cli:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  CUTOFF=$(date -u -d '30 days ago' +%Y-%m-%d)
+                  aws s3 ls "s3://$BACKUP_BUCKET/$BACKUP_PREFIX/" | \
+                    awk -v cutoff="$CUTOFF" '$1 < cutoff {print $4}' | \
+                    while read f; do
+                      aws s3 rm "s3://$BACKUP_BUCKET/$BACKUP_PREFIX/$f"
+                    done
+              env:
+                - { name: BACKUP_BUCKET, value: "sanket-backups" }
+                - { name: BACKUP_PREFIX, value: "postgres" }
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom: { secretKeyRef: { name: backup-aws, key: access_key_id } }
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom: { secretKeyRef: { name: backup-aws, key: secret_access_key } }
+                - { name: AWS_DEFAULT_REGION, value: "us-east-1" }

@@ -1,0 +1,148 @@
+name: deploy
+
+on:
+  workflow_run:
+    workflows: [build-images]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        default: staging
+        type: choice
+        options: [staging, production]
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-${{ github.event.inputs.environment || 'staging' }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event.inputs.environment || 'staging' }}
+      url: https://${{ vars.DEPLOY_DOMAIN || (github.event.inputs.environment == 'production' && 'app.prisma.example' || 'staging.prisma.example') }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install kubectl + kustomize
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.30.2'
+
+      - name: Check KUBECONFIG presence
+        id: check_kubeconfig
+        run: |
+          if [ -z "${{ secrets.KUBECONFIG }}" ]; then
+            echo "has_kubeconfig=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::The KUBECONFIG secret is missing in your GitHub Repository settings. Skipping deployment."
+          else
+            echo "has_kubeconfig=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set kubeconfig
+        if: steps.check_kubeconfig.outputs.has_kubeconfig == 'true'
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Diff before apply
+        if: steps.check_kubeconfig.outputs.has_kubeconfig == 'true'
+        run: |
+          OVERLAY=infra/kubernetes/overlays/${{ github.event.inputs.environment || 'staging' }}
+          kubectl diff -k "$OVERLAY" || true
+
+      # Run schema migrations BEFORE rolling out the app so pods never start
+      # against an un-migrated database. Assumes the namespace + secrets have
+      # been bootstrapped (they are, since secrets are provisioned out-of-band).
+      - name: Run database migrations
+        if: steps.check_kubeconfig.outputs.has_kubeconfig == 'true'
+        run: |
+          ENV=${{ github.event.inputs.environment || 'staging' }}
+          if [ "$ENV" = "production" ]; then NS=prisma; TAG=stable; else NS=prisma-staging; TAG=staging; fi
+          # Job pod templates are immutable — delete any prior run first.
+          kubectl -n "$NS" delete job prisma-migrate --ignore-not-found
+          # Point the Job at the target namespace + the same image tag being
+          # deployed (base manifest defaults to namespace: prisma / tag: latest).
+          sed -e "s/^  namespace: prisma$/  namespace: $NS/" \
+              -e "s#ghcr.io/baltejgoud/backend:latest#ghcr.io/baltejgoud/backend:$TAG#" \
+            infra/kubernetes/base/migrate-job.yaml | kubectl apply -f -
+          if ! kubectl -n "$NS" wait --for=condition=complete job/prisma-migrate --timeout=5m; then
+            echo "::error::Database migration failed — aborting deploy."
+            kubectl -n "$NS" logs job/prisma-migrate --tail=200 || true
+            exit 1
+          fi
+          echo "Migration complete:"
+          kubectl -n "$NS" logs job/prisma-migrate --tail=50
+
+      - name: Apply
+        if: steps.check_kubeconfig.outputs.has_kubeconfig == 'true'
+        run: |
+          OVERLAY=infra/kubernetes/overlays/${{ github.event.inputs.environment || 'staging' }}
+          kubectl apply -k "$OVERLAY"
+
+      - name: Wait for rollout
+        if: steps.check_kubeconfig.outputs.has_kubeconfig == 'true'
+        run: |
+          ENV=${{ github.event.inputs.environment || 'staging' }}
+          # The staging overlay applies `namePrefix: stg-`, so its Deployments
+          # are named stg-backend/stg-ml-api/stg-frontend. Production has no
+          # namePrefix, so its Deployments are unprefixed.
+          if [ "$ENV" = "production" ]; then NS=prisma; PREFIX=; else NS=prisma-staging; PREFIX=stg-; fi
+          for dep in backend ml-api frontend; do
+            kubectl -n "$NS" rollout status deployment/${PREFIX}${dep} --timeout=5m
+          done
+
+      - name: Smoke test
+        if: steps.check_kubeconfig.outputs.has_kubeconfig == 'true'
+        run: |
+          HOST=${{ vars.DEPLOY_DOMAIN || (github.event.inputs.environment == 'production' && 'app.prisma.example' || 'staging.prisma.example') }}
+          
+          # Check if the domain is a mock domain or DNS resolution fails
+          if [[ "$HOST" == *".prisma.example" ]] || ! nslookup "$HOST" >/dev/null 2>&1; then
+            echo "DNS resolution failed or using mock domain ($HOST)."
+            echo "Attempting to resolve via Ingress service IP..."
+            
+            # Find the ingress controller external IP
+            IP=$(kubectl -n ingress-nginx get svc ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
+            
+            if [ -n "$IP" ]; then
+              echo "Found Ingress IP: $IP. Using curl --resolve."
+              curl -k -fsS --resolve "$HOST:443:$IP" "https://$HOST/healthz"
+              curl -k -fsS --resolve "$HOST:443:$IP" "https://$HOST/api/v1/health"
+            else
+              echo "Ingress IP not allocated or ingress service not found."
+              echo "Falling back to service port-forward check..."
+              
+              ENV=${{ github.event.inputs.environment || 'staging' }}
+              if [ "$ENV" = "production" ]; then NS=prisma; PREFIX=; else NS=prisma-staging; PREFIX=stg-; fi
+              
+              kubectl -n "$NS" port-forward svc/${PREFIX}frontend 8080:8080 &
+              FTPID=$!
+              kubectl -n "$NS" port-forward svc/${PREFIX}backend 8000:8000 &
+              BKPID=$!
+              
+              # Wait for port-forwarding to establish
+              sleep 5
+              
+              echo "Testing frontend directly..."
+              curl -fsS "http://localhost:8080/healthz"
+              
+              echo "Testing backend directly..."
+              curl -fsS "http://localhost:8000/api/v1/health"
+              
+              kill $FTPID $BKPID
+            fi
+          else
+            echo "Resolved $HOST successfully. Testing external ingress..."
+            curl -fsS "https://$HOST/healthz"
+            curl -fsS "https://$HOST/api/v1/health"
+          fi

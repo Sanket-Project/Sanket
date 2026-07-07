@@ -1,0 +1,35 @@
+# PodDisruptionBudgets — keep a quorum of each stateless tier up during
+# voluntary disruptions (node drains, cluster upgrades, autoscaler churn).
+# These complement the HA database + pooler so no single tier is a SPOF.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: backend-pdb
+  namespace: sanket
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: backend
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ml-api-pdb
+  namespace: sanket
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: ml-api
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: frontend-pdb
+  namespace: sanket
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: frontend

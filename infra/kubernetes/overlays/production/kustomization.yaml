@@ -1,0 +1,82 @@
+# PRODUCTION overlay.
+#
+# The `base` manifests ARE the production baseline (replicas: 3, HPA 3→20,
+# resource limits, HA CloudNativePG). The staging overlay *downsizes* base;
+# production therefore needs almost no changes — only:
+#   • namespace `sanket` (no namePrefix, unlike staging's `stg-`)
+#   • the real public host on the Ingress + ALLOWED_ORIGINS (placeholders below)
+#   • immutable image tags — CI stamps the exact git SHA via `kustomize edit
+#     set image` before apply, so a rollback is a re-apply of a known SHA
+#     (never the mutable `:latest`). `stable` here is only the manual-apply
+#     fallback for a released `vX.Y.Z` tag.
+#
+# BOOTSTRAP CONTRACT (run once per cluster, out-of-band — secrets are never
+# committed; see base/secrets.yaml.example):
+#   kubectl create ns sanket
+#   kubectl -n sanket create secret generic sanket-secrets      --from-literal=...
+#   kubectl -n sanket create secret generic sanket-db-url       --from-literal=...
+#   kubectl -n sanket create secret generic sanket-firebase     --from-literal=...  # REQUIRED in prod
+#   kubectl -n sanket create secret generic backup-aws          --from-literal=...
+# Production sets APP_ENV=production (base/backend.yaml), so the backend refuses
+# to boot unless Firebase is configured — the sanket-firebase secret is required.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: sanket
+
+resources:
+  - ../../base
+
+commonLabels:
+  app.kubernetes.io/environment: production
+
+patches:
+  # Production capacity: replica floors + resource envelopes larger than base.
+  - path: replicas.yaml
+  - path: resources.yaml
+  # ── Public host — REPLACE app.example.com with your real domain ────────────
+  # cert-manager issues the TLS cert for this host (see base/ingress.yaml).
+  - target:
+      kind: Ingress
+      name: sanket
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: app.example.com          # REPLACE_ME
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: app.example.com          # REPLACE_ME
+  # Backend production env:
+  #   • ALLOWED_ORIGINS — kept in lock-step with the Ingress host above.
+  #   • DB_PGBOUNCER_MODE=true — REQUIRED because production routes DATABASE_URL
+  #     through the PgBouncer *transaction* pooler (postgres-pooler-rw). asyncpg's
+  #     server-side prepared statements break under transaction pooling, so this
+  #     disables the statement cache. Omitting it corrupts queries under load.
+  - target:
+      kind: Deployment
+      name: backend
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: backend
+      spec:
+        template:
+          spec:
+            containers:
+              - name: api
+                env:
+                  - name: ALLOWED_ORIGINS
+                    value: https://app.example.com   # REPLACE_ME (match Ingress host)
+                  - name: DB_PGBOUNCER_MODE
+                    value: "true"
+
+# CI overrides newTag with `sha-<commit>` for an immutable, rollback-safe deploy.
+# `stable` is the manual-apply fallback (points at the latest released vX.Y.Z tag).
+images:
+  - name: ghcr.io/sanket-project/backend
+    newTag: stable
+  - name: ghcr.io/sanket-project/ml-api
+    newTag: stable
+  - name: ghcr.io/sanket-project/frontend
+    newTag: stable

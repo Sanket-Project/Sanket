@@ -1,0 +1,205 @@
+name: deploy
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GKE deploy via Workload Identity Federation (keyless — no long-lived JSON key
+# in GitHub). Staging deploys automatically after images build on main;
+# production is a manual, gated dispatch.
+#
+# ONE-TIME GCP SETUP (until these repo *Variables* + *Secrets* exist, this
+# workflow SKIPS with a warning so the pipeline stays green):
+#
+#   Repository → Settings → Secrets and variables → Actions → Variables:
+#     GCP_PROJECT_ID                    e.g. sanket-prod-1234
+#     GCP_WORKLOAD_IDENTITY_PROVIDER    projects/<num>/locations/global/workloadIdentityPools/<pool>/providers/<provider>
+#     GCP_SERVICE_ACCOUNT               deployer@<project>.iam.gserviceaccount.com
+#     GKE_CLUSTER                       e.g. sanket
+#     GKE_LOCATION                      e.g. us-central1  (region) or us-central1-a (zone)
+#
+#   Optional Secret (only if the GHCR packages are PRIVATE — simplest is to make
+#   them public in the org's Packages settings and skip this):
+#     GHCR_PULL_TOKEN                   a read:packages PAT; used to create an
+#                                       image-pull secret in the target namespace
+#
+# The deployer service account must be granted (WIF binding + roles):
+#   roles/container.developer   on the GKE cluster/project
+# See infra/kubernetes/DEPLOY.md for the full gcloud bootstrap commands.
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  # Auto-deploy STAGING after images are built+scanned on main.
+  workflow_run:
+    workflows: [build-images]
+    types: [completed]
+    branches: [main]
+  # Manual, gated deploy — the ONLY path to production.
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        default: staging
+        type: choice
+        options: [staging, production]
+
+permissions:
+  contents: read
+  id-token: write # required for Workload Identity Federation
+
+concurrency:
+  group: deploy-${{ github.event.inputs.environment || 'staging' }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Only run on a successful build (auto path) or an explicit dispatch.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event.inputs.environment || 'staging' }}
+    env:
+      ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
+      # The immutable commit to deploy: the SHA that produced the images.
+      DEPLOY_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+      GHCR_PULL_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # ── Gate: skip cleanly until the GCP/GKE config exists ──────────────────
+      - name: Check deploy config
+        id: cfg
+        run: |
+          missing=""
+          [ -z "${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}" ] && missing="$missing GCP_WORKLOAD_IDENTITY_PROVIDER"
+          [ -z "${{ vars.GCP_SERVICE_ACCOUNT }}" ]            && missing="$missing GCP_SERVICE_ACCOUNT"
+          [ -z "${{ vars.GKE_CLUSTER }}" ]                    && missing="$missing GKE_CLUSTER"
+          [ -z "${{ vars.GKE_LOCATION }}" ]                   && missing="$missing GKE_LOCATION"
+          if [ -n "$missing" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Deploy config not set — skipping. Add repo Variables:$missing (see .github/workflows/deploy.yml header)."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Resolve target
+        if: steps.cfg.outputs.configured == 'true'
+        id: target
+        run: |
+          if [ "$ENVIRONMENT" = "production" ]; then
+            echo "ns=sanket"          >> "$GITHUB_OUTPUT"
+            echo "prefix="            >> "$GITHUB_OUTPUT"
+            echo "overlay=production" >> "$GITHUB_OUTPUT"
+          else
+            echo "ns=sanket-staging"  >> "$GITHUB_OUTPUT"
+            echo "prefix=stg-"        >> "$GITHUB_OUTPUT"
+            echo "overlay=staging"    >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Authenticate to Google Cloud (Workload Identity)
+        if: steps.cfg.outputs.configured == 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Get GKE credentials
+        if: steps.cfg.outputs.configured == 'true'
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ vars.GKE_CLUSTER }}
+          location: ${{ vars.GKE_LOCATION }}
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+
+      - name: Install kustomize
+        if: steps.cfg.outputs.configured == 'true'
+        run: |
+          curl -sSL "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+
+      # ── Optional: image-pull secret for PRIVATE GHCR packages ───────────────
+      - name: Ensure GHCR pull secret
+        if: steps.cfg.outputs.configured == 'true' && env.GHCR_PULL_TOKEN != ''
+        run: |
+          NS=${{ steps.target.outputs.ns }}
+          kubectl create namespace "$NS" --dry-run=client -o yaml | kubectl apply -f -
+          kubectl -n "$NS" create secret docker-registry ghcr-pull \
+            --docker-server=ghcr.io \
+            --docker-username=${{ github.actor }} \
+            --docker-password="$GHCR_PULL_TOKEN" \
+            --dry-run=client -o yaml | kubectl apply -f -
+          kubectl -n "$NS" patch serviceaccount default \
+            -p '{"imagePullSecrets":[{"name":"ghcr-pull"}]}'
+
+      # ── Stamp the immutable SHA image tags into the overlay ─────────────────
+      # Rollback = re-run this workflow_dispatch pointing at a prior commit's
+      # images; never the mutable :latest.
+      - name: Pin images to deployed SHA
+        if: steps.cfg.outputs.configured == 'true'
+        run: |
+          SHA=${DEPLOY_SHA}
+          cd infra/kubernetes/overlays/${{ steps.target.outputs.overlay }}
+          kustomize edit set image \
+            ghcr.io/sanket-project/backend=ghcr.io/sanket-project/backend:sha-${SHA} \
+            ghcr.io/sanket-project/ml-api=ghcr.io/sanket-project/ml-api:sha-${SHA} \
+            ghcr.io/sanket-project/frontend=ghcr.io/sanket-project/frontend:sha-${SHA}
+
+      - name: Diff (informational)
+        if: steps.cfg.outputs.configured == 'true'
+        run: kubectl diff -k infra/kubernetes/overlays/${{ steps.target.outputs.overlay }} || true
+
+      # ── Migrate BEFORE rollout so pods never start on an un-migrated schema ──
+      - name: Run database migrations
+        if: steps.cfg.outputs.configured == 'true'
+        run: |
+          NS=${{ steps.target.outputs.ns }}
+          SHA=${DEPLOY_SHA}
+          # A Job's pod template is immutable — delete any prior run first.
+          kubectl -n "$NS" delete job sanket-migrate --ignore-not-found
+          sed -e "s/^  namespace: sanket$/  namespace: $NS/" \
+              -e "s#ghcr.io/sanket-project/backend:latest#ghcr.io/sanket-project/backend:sha-${SHA}#" \
+            infra/kubernetes/base/migrate-job.yaml | kubectl apply -f -
+          if ! kubectl -n "$NS" wait --for=condition=complete job/sanket-migrate --timeout=5m; then
+            echo "::error::Database migration failed — aborting deploy."
+            kubectl -n "$NS" logs job/sanket-migrate --tail=200 || true
+            exit 1
+          fi
+          kubectl -n "$NS" logs job/sanket-migrate --tail=50
+
+      - name: Apply
+        if: steps.cfg.outputs.configured == 'true'
+        run: kubectl apply -k infra/kubernetes/overlays/${{ steps.target.outputs.overlay }}
+
+      - name: Wait for rollout
+        if: steps.cfg.outputs.configured == 'true'
+        run: |
+          NS=${{ steps.target.outputs.ns }}
+          PREFIX=${{ steps.target.outputs.prefix }}
+          for dep in backend ml-api frontend; do
+            kubectl -n "$NS" rollout status deployment/${PREFIX}${dep} --timeout=5m
+          done
+
+      - name: Smoke test
+        if: steps.cfg.outputs.configured == 'true'
+        run: |
+          NS=${{ steps.target.outputs.ns }}
+          PREFIX=${{ steps.target.outputs.prefix }}
+          # Cluster-internal checks (no dependency on public DNS/TLS being live).
+          kubectl -n "$NS" port-forward "svc/${PREFIX}frontend" 8080:8080 &
+          FPID=$!
+          kubectl -n "$NS" port-forward "svc/${PREFIX}backend" 8000:8000 &
+          BPID=$!
+          sleep 5
+          curl -fsS "http://localhost:8080/healthz"
+          curl -fsS "http://localhost:8000/api/v1/health"
+          kill $FPID $BPID || true
+
+      - name: Rollback on failure
+        if: failure() && steps.cfg.outputs.configured == 'true'
+        run: |
+          NS=${{ steps.target.outputs.ns }}
+          PREFIX=${{ steps.target.outputs.prefix }}
+          echo "::warning::Deploy failed — rolling back deployments to previous revision."
+          for dep in backend ml-api frontend; do
+            kubectl -n "$NS" rollout undo deployment/${PREFIX}${dep} || true
+          done

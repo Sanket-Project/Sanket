@@ -1,0 +1,103 @@
+{
+  "title": "SANKET — Platform Overview",
+  "tags": ["sanket", "overview"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Request rate by service",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum by (service) (rate(sanket_http_requests_total[1m]))",
+          "legendFormat": "{{service}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Error ratio (5xx)",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 0 },
+      "options": { "colorMode": "background", "graphMode": "area" },
+      "targets": [
+        {
+          "expr": "sum(rate(sanket_http_requests_total{status=~\"5..\"}[5m])) / clamp_min(sum(rate(sanket_http_requests_total[5m])), 1)",
+          "legendFormat": "5xx ratio"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.01 },
+              { "color": "red", "value": 0.02 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "In-flight requests",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 0 },
+      "targets": [
+        { "expr": "sum(sanket_http_in_flight_requests)", "legendFormat": "in-flight" }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Latency (p50 / p95 / p99)",
+      "type": "timeseries",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(sanket_http_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(sanket_http_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(sanket_http_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "p99"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    },
+    {
+      "id": 5,
+      "title": "Forecast runs by industry × mode",
+      "type": "timeseries",
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum by (industry, mode) (rate(sanket_forecast_runs_total[10m]))",
+          "legendFormat": "{{industry}} · {{mode}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "GxP batch actions",
+      "type": "table",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 17 },
+      "targets": [
+        {
+          "expr": "sum by (action, result) (increase(sanket_gxp_batch_actions_total[24h]))",
+          "format": "table",
+          "instant": true
+        }
+      ]
+    }
+  ]
+}

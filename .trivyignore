@@ -1,0 +1,23 @@
+# .trivyignore — Trivy CVE waiver list for SANKET images
+#
+# FORMAT: one CVE ID per line. Blank lines and lines starting with # are ignored.
+# POLICY: Only add a CVE here when ALL of the following are true:
+#   1. Trivy reports it as CRITICAL.
+#   2. The affected package has NO fixed version available upstream ("unfixed").
+#   3. The CVE has been reviewed and confirmed not exploitable in this context.
+#   4. A comment below documents the rationale and the reviewer.
+#
+# To find gate-blocking CVEs, run locally:
+#   docker build -t sanket/backend:local ./backend
+#   trivy image --severity CRITICAL --ignore-unfixed --format table sanket/backend:local
+#
+# ─── Reviewed Waivers ────────────────────────────────────────────────────────
+#
+# Add entries in this format:
+#   # CVE-YYYY-NNNNN: <package> <affected-version>
+#   # Rationale: <why it's not exploitable / no fix available>
+#   # Reviewed by: <name/handle> on <date>
+#   CVE-YYYY-NNNNN
+#
+# No waivers currently active. Run Trivy locally to identify fixable vs.
+# unfixable CRITICAL CVEs and update this file with reviewed entries only.

@@ -1,0 +1,49 @@
+# Keeps the rolling window of quarterly partitions ahead of ingest.
+#
+# historical_sales / forecast_results are RANGE-partitioned by quarter. Without
+# this, the first row whose timestamp falls past the last declared partition
+# fails with "no partition of relation ... found for row". sanket_maintain_
+# partitions() (Alembic migration 0013) creates any missing partitions in a
+# rolling [-1q, +4q] window; it is idempotent so re-running is a no-op once the
+# next four quarters exist. We run it daily — far more often than strictly
+# needed (quarters change 4x/year) so a missed run is never load-bearing.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-partition-maintenance
+  namespace: sanket
+spec:
+  schedule: "30 1 * * *"        # 01:30 UTC daily, before the 02:00 backup
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: OnFailure
+          securityContext: { runAsNonRoot: true, runAsUser: 1000 }
+          containers:
+            - name: maintain-partitions
+              image: postgres:16-alpine
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -euo pipefail
+                  TS=$(date -u +%Y%m%dT%H%M%SZ)
+                  echo "[$TS] ensuring quarterly partitions exist"
+                  # Run as sanket_app — sanket_maintain_partitions() is
+                  # SECURITY DEFINER so it can create partitions without the
+                  # runtime role owning the parent table. postgres-rw resolves
+                  # to the current primary (CNPG).
+                  psql -h postgres-rw -U sanket_app -d sanket -v ON_ERROR_STOP=1 \
+                    -c "SELECT * FROM sanket_maintain_partitions();"
+                  echo "[$TS] partition maintenance complete"
+              env:
+                - name: PGPASSWORD
+                  valueFrom: { secretKeyRef: { name: postgres-app-credentials, key: password } }
+              resources:
+                requests: { cpu: 50m, memory: 64Mi }
+                limits:   { cpu: 250m, memory: 128Mi }

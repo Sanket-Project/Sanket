@@ -1,0 +1,73 @@
+name: backend-ci
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+  pull_request:
+    paths: ["backend/**", ".github/workflows/backend-ci.yml"]
+
+defaults:
+  run:
+    working-directory: backend
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  lint-type:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - run: pip install ".[dev]"
+      - name: Ruff
+        run: ruff check app
+      - name: Ruff format check
+        run: ruff format --check app
+      - name: Mypy
+        run: mypy app
+
+  dependency-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - run: pip install ".[dev]"
+      - name: Install pip-audit
+        run: pip install pip-audit
+      # Audit the resolved dependency tree for known CVEs. Fails the build on a
+      # vulnerable dependency. `--ignore-vuln` can be used to waive a reviewed,
+      # non-applicable advisory with an explicit justification in the PR.
+      - name: pip-audit
+        run: pip-audit --progress-spinner off
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint-type
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - run: pip install ".[dev]"
+      - name: Pytest
+        env:
+          JWT_SECRET: ci-secret-min-32-chars-please-rotate-1234
+          PYTHONPATH: .:ml
+        run: pytest --cov=app --cov-report=xml --cov-report=term --maxfail=1 -q
+      - uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: coverage.xml
+          flags: backend
+          fail_ci_if_error: false

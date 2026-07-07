@@ -1,0 +1,25 @@
+# False positives in SANKET
+# FORMAT: <commitSHA>:<filepath>:<rule-id>:<line>
+#
+# IMPORTANT: Gitleaks fingerprints are tied to the commit SHA where the finding
+# first appeared. When a file is modified, gitleaks recomputes the fingerprint
+# using the new commit SHA. Run `gitleaks detect --report-format json` locally
+# to get updated fingerprints after touching any file listed below.
+#
+# hybrid_forecast.py — contains an ML service bearer token variable name
+# that triggers the generic-api-key rule; the value is a runtime secret ref,
+# not a hardcoded key. Updated to SHA 11b0c9b (latest commit touching this file).
+11b0c9b:backend/app/routers/hybrid_forecast.py:generic-api-key:63
+cc982e1c2d01d7fc83b1710324814ec56136fff1:backend/app/routers/hybrid_forecast.py:generic-api-key:63
+#
+# generate_firebase_credentials.py — contains Firebase credential template
+# strings used as examples; not real credentials.
+# Line 20: updated to d86cf933 (latest commit touching this file).
+# Line 29: d86cf933 was the introducing commit, fingerprint is current.
+d86cf9336ff2eb1259e1dfaed685ed450ea92cec:backend/app/scripts/generate_firebase_credentials.py:generic-api-key:20
+cc982e1c2d01d7fc83b1710324814ec56136fff1:backend/app/scripts/generate_firebase_credentials.py:generic-api-key:20
+d86cf9336ff2eb1259e1dfaed685ed450ea92cec:backend/app/scripts/generate_firebase_credentials.py:generic-api-key:29
+#
+# run_forecast.py — contains a placeholder API key used in forecast
+# script examples; f96111d is the latest commit touching this file.
+f96111d8853bc663f3487db6e2da9640eff7314e:run_forecast.py:generic-api-key:18

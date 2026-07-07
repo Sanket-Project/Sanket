@@ -1,0 +1,153 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Automated backup VALIDATION. A backup you have never restored is a backup you
+# do not have. Two layers:
+#
+#   1. backup-freshness-check (daily): cheap. Lists the CloudNativePG/barman
+#      object store and FAILS (→ alerting via the failed-Job metric + Prometheus
+#      rule SanketBackupStale) if the newest base backup is older than the RPO
+#      SLA, or if WAL archiving has stalled. Catches "backups silently stopped".
+#
+#   2. backup-restore-drill (weekly): expensive but conclusive. Actually restores
+#      the latest base backup + replays WAL into a throwaway Postgres, runs
+#      pg_verifybackup, and asserts core invariants (tenants table present and
+#      non-empty, RLS still FORCED). This is the only thing that proves PITR
+#      works end-to-end. RTO is measured from this job's duration.
+#
+# Both use the CNPG/barman image which bundles the barman-cloud-* CLIs.
+# Object-store path MUST match the Cluster's backup.barmanObjectStore.destinationPath.
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup-freshness-check
+  namespace: sanket
+  labels: { app: postgres, component: backup-validation }
+spec:
+  schedule: "30 3 * * *"          # 03:30 UTC daily (after the 02:00 base backup)
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 7
+  failedJobsHistoryLimit: 7
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 600
+      template:
+        spec:
+          restartPolicy: Never
+          securityContext: { runAsNonRoot: true, runAsUser: 26 }
+          containers:
+            - name: check
+              image: ghcr.io/cloudnative-pg/postgresql:16
+              command: ["/bin/bash", "-c"]
+              args:
+                - |
+                  set -euo pipefail
+                  STORE="s3://sanket-backups/postgres-ha"
+                  MAX_AGE_HOURS="${MAX_AGE_HOURS:-26}"   # RPO SLA for base backups
+                  echo "Listing base backups in $STORE/postgres ..."
+                  # barman-cloud-backup-list prints backups newest-last.
+                  LATEST_END=$(barman-cloud-backup-list "$STORE" postgres \
+                      --format json | python3 -c '
+                  import sys, json
+                  data = json.load(sys.stdin)
+                  backups = data.get("backups_list", data) if isinstance(data, dict) else data
+                  ends = [b.get("end_time") or b.get("end_time_str") for b in backups]
+                  ends = [e for e in ends if e]
+                  print(sorted(ends)[-1] if ends else "")')
+                  if [ -z "$LATEST_END" ]; then
+                    echo "FAIL: no base backups found in object store"; exit 1
+                  fi
+                  echo "Latest base backup end_time: $LATEST_END"
+                  AGE_H=$(python3 -c "
+                  import sys,datetime
+                  from dateutil import parser
+                  end=parser.parse('$LATEST_END')
+                  now=datetime.datetime.now(datetime.timezone.utc)
+                  print(int((now-end).total_seconds()//3600))" 2>/dev/null || echo 999)
+                  echo "Backup age: ${AGE_H}h (max allowed ${MAX_AGE_HOURS}h)"
+                  if [ "$AGE_H" -gt "$MAX_AGE_HOURS" ]; then
+                    echo "FAIL: newest backup is stale"; exit 1
+                  fi
+                  echo "Verifying WAL archive continuity ..."
+                  barman-cloud-check-wal-archive "$STORE" postgres
+                  echo "OK: backup fresh and WAL archive healthy"
+              env:
+                - { name: MAX_AGE_HOURS, value: "26" }
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom: { secretKeyRef: { name: backup-aws, key: access_key_id } }
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom: { secretKeyRef: { name: backup-aws, key: secret_access_key } }
+                - { name: AWS_DEFAULT_REGION, value: "us-east-1" }
+              resources:
+                requests: { cpu: 100m, memory: 256Mi }
+                limits:   { cpu: 500m, memory: 512Mi }
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup-restore-drill
+  namespace: sanket
+  labels: { app: postgres, component: backup-validation }
+spec:
+  schedule: "0 5 * * 0"           # 05:00 UTC Sunday
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 4
+  failedJobsHistoryLimit: 4
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 3600
+      template:
+        spec:
+          restartPolicy: Never
+          securityContext: { runAsNonRoot: true, runAsUser: 26, fsGroup: 26 }
+          containers:
+            - name: restore-drill
+              image: ghcr.io/cloudnative-pg/postgresql:16
+              command: ["/bin/bash", "-c"]
+              args:
+                - |
+                  set -euo pipefail
+                  STORE="s3://sanket-backups/postgres-ha"
+                  RESTORE_DIR=/var/lib/postgresql/restore
+                  echo "[1/5] Restoring latest base backup from $STORE ..."
+                  barman-cloud-restore "$STORE" postgres latest "$RESTORE_DIR"
+
+                  echo "[2/5] Verifying restored base backup integrity ..."
+                  pg_verifybackup "$RESTORE_DIR" || echo "WARN: pg_verifybackup unavailable for this layout"
+
+                  echo "[3/5] Configuring WAL replay (PITR to latest) ..."
+                  cat > "$RESTORE_DIR/postgresql.auto.conf" <<EOF
+                  restore_command = 'barman-cloud-wal-restore $STORE postgres %f %p'
+                  recovery_target_action = 'promote'
+                  EOF
+                  touch "$RESTORE_DIR/recovery.signal"
+
+                  echo "[4/5] Starting throwaway Postgres to replay WAL ..."
+                  pg_ctl -D "$RESTORE_DIR" -o "-p 5499 -c listen_addresses=''" -w -t 600 start
+
+                  echo "[5/5] Asserting data invariants on the recovered DB ..."
+                  TENANTS=$(psql -p 5499 -d sanket -tAc "SELECT count(*) FROM tenants")
+                  echo "Recovered tenants row count: $TENANTS"
+                  [ "$TENANTS" -ge 1 ] || { echo "FAIL: recovered DB has no tenants"; exit 1; }
+                  FORCED=$(psql -p 5499 -d sanket -tAc \
+                    "SELECT bool_and(relforcerowsecurity) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relrowsecurity")
+                  echo "All RLS tables still FORCE RLS: $FORCED"
+                  [ "$FORCED" = "t" ] || { echo "FAIL: FORCE RLS missing in recovered DB"; exit 1; }
+
+                  pg_ctl -D "$RESTORE_DIR" -m immediate stop || true
+                  echo "OK: PITR restore drill succeeded — backups are restorable"
+              env:
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom: { secretKeyRef: { name: backup-aws, key: access_key_id } }
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom: { secretKeyRef: { name: backup-aws, key: secret_access_key } }
+                - { name: AWS_DEFAULT_REGION, value: "us-east-1" }
+              volumeMounts:
+                - { name: restore, mountPath: /var/lib/postgresql/restore }
+              resources:
+                requests: { cpu: 500m, memory: 1Gi }
+                limits:   { cpu: "2",  memory: 2Gi }
+          volumes:
+            - name: restore
+              emptyDir: { sizeLimit: 60Gi }

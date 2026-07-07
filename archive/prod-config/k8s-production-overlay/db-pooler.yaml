@@ -1,0 +1,14 @@
+# Production: route app + worker traffic through the PgBouncer pooler and tell
+# asyncpg it is behind a transaction-mode pooler (disable prepared statements).
+# Applied as a strategic-merge patch over the base backend Deployment.
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: backend, namespace: prisma }
+spec:
+  template:
+    spec:
+      containers:
+        - name: api
+          env:
+            - name: DB_PGBOUNCER_MODE
+              value: "true"

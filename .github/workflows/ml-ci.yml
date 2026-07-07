@@ -1,0 +1,33 @@
+name: ml-ci
+
+on:
+  push:
+    branches: [main]
+    paths: ["backend/ml/**", ".github/workflows/ml-ci.yml"]
+  pull_request:
+    paths: ["backend/ml/**", ".github/workflows/ml-ci.yml"]
+
+defaults:
+  run:
+    working-directory: backend/ml
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install (CPU torch + ML deps)
+        run: |
+          pip install --extra-index-url https://download.pytorch.org/whl/cpu "torch==2.6.*"
+          pip install ".[dev]"
+      - name: Ruff
+        run: ruff check sanket_ml
+      - name: Pytest
+        run: pytest -q --maxfail=1

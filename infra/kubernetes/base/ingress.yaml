@@ -1,0 +1,122 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sanket
+  namespace: sanket
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    # Modest baseline rate limit; the app also enforces per-IP at the FastAPI layer.
+    nginx.ingress.kubernetes.io/limit-rpm: "1200"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [app.sanket.example]
+      secretName: sanket-tls
+  rules:
+    - host: app.sanket.example
+      http:
+        paths:
+          - path: /api/
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port: { name: http }
+          # The ML inference service is intentionally NOT exposed through the
+          # ingress. It is cluster-internal only, reached exclusively by the
+          # backend (ml-api ClusterIP service) with a service token. Request
+          # bodies carry a tenant_id pushed into the RLS GUC, so internet
+          # exposure would be a cross-tenant data-leak surface.
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port: { name: http }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all-default
+  namespace: sanket
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-frontend
+  namespace: sanket
+spec:
+  podSelector: { matchLabels: { app: frontend } }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: ingress-nginx } }
+      ports: [{ port: 8080, protocol: TCP }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-backend-traffic
+  namespace: sanket
+spec:
+  podSelector: { matchLabels: { app: backend } }
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: ingress-nginx } }
+        - podSelector: { matchLabels: { app: frontend } }
+      ports: [{ port: 8000, protocol: TCP }]
+  egress:
+    - to: [{ podSelector: { matchLabels: { app: postgres } } }]
+      ports: [{ port: 5432, protocol: TCP }]
+    - to: [{ podSelector: { matchLabels: { app: ml-api } } }]
+      ports: [{ port: 8001, protocol: TCP }]
+    - to: [{ podSelector: { matchLabels: { app: redis } } }]
+      ports: [{ port: 6379, protocol: TCP }]
+    - to: [{ namespaceSelector: {} }]   # External APIs (Firebase, Shopify, Razorpay)
+      ports:
+        - { port: 443, protocol: TCP }
+        - { port: 80, protocol: TCP }
+    - to:           # DNS
+        - namespaceSelector: {}
+          podSelector: { matchLabels: { k8s-app: kube-dns } }
+      ports:
+        - { port: 53, protocol: UDP }
+        - { port: 53, protocol: TCP }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ml-api-traffic
+  namespace: sanket
+spec:
+  podSelector: { matchLabels: { app: ml-api } }
+  policyTypes: [Ingress, Egress]
+  ingress:
+    # ML inference is reachable ONLY from the backend — not from the ingress
+    # controller and not from the (static) frontend. Defense-in-depth on top of
+    # the service-token auth so the tenant-scoped forecast endpoints can never
+    # be hit directly from outside the cluster.
+    - from:
+        - podSelector: { matchLabels: { app: backend } }
+      ports: [{ port: 8001, protocol: TCP }]
+  egress:
+    - to: [{ podSelector: { matchLabels: { app: postgres } } }]
+      ports: [{ port: 5432, protocol: TCP }]
+    - to: [{ namespaceSelector: {} }]   # huggingface.co downloads
+      ports:
+        - { port: 443, protocol: TCP }
+        - { port: 80, protocol: TCP }
+    - to:
+        - namespaceSelector: {}
+          podSelector: { matchLabels: { k8s-app: kube-dns } }
+      ports:
+        - { port: 53, protocol: UDP }
