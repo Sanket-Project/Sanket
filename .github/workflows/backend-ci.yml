@@ -64,7 +64,9 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
-      - run: pip install ".[dev]"
+      # The `signals` extra brings feedparser/praw/pytrends so connector tests
+      # that patch them (e.g. RegionalDemandConnector -> pytrends) can import them.
+      - run: pip install ".[dev,signals]"
       - name: Pytest
         env:
           # CI-only throwaway secret so config validation passes; never a real key.

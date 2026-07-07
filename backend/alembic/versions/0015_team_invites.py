@@ -73,6 +73,11 @@ def upgrade() -> None:
     )
 
     op.execute("ALTER TABLE invites ENABLE ROW LEVEL SECURITY")
+    # FORCE so the table owner is also subject to the policy. Without it a role
+    # that owns the table bypasses tenant isolation entirely — the exact gap the
+    # test_force_rls_enabled_on_all_tenant_tables guard catches, and how earlier
+    # tables were hardened in migration 0011.
+    op.execute("ALTER TABLE invites FORCE ROW LEVEL SECURITY")
     op.execute(
         "CREATE POLICY invites_isolation ON invites "
         "USING (bypass_rls() OR tenant_id = current_tenant_id())"
