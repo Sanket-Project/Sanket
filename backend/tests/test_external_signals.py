@@ -23,7 +23,12 @@ async def test_fda_connector_non_pharma_ignored():
 
 @pytest.mark.asyncio
 async def test_fda_connector_success_parsing():
-    """Verify that FDA recalls and Indian CDSCO warnings are both fetched and calculated correctly."""
+    """Verify openFDA recalls are fetched and the risk index is calculated correctly.
+
+    The connector emits a single real FDA (US) sample. Synthetic Indian CDSCO
+    data (previously produced by a seeded RNG in ``_fetch_cdsco``) is not emitted
+    under the real-data-only policy, so it is intentionally not asserted here.
+    """
     mock_response = {
         "results": [
             {"classification": "Class I", "recalling_firm": "PharmaCorp", "state": "NY"},
@@ -45,8 +50,9 @@ async def test_fda_connector_success_parsing():
 
         samples = await connector.fetch("pharma")
 
-        # Returns 2 samples: 1 FDA (US) and 1 CDSCO (IN)
-        assert len(samples) == 2
+        # Exactly one real FDA (US) sample — the synthetic CDSCO fallback was
+        # removed under the real-data-only policy.
+        assert len(samples) == 1
         
         # Verify FDA Sample
         fda_sample = next(s for s in samples if s.region == "US")
@@ -57,12 +63,8 @@ async def test_fda_connector_success_parsing():
         # Score: 0.8 - (0.25 * 1 + 0.10 * 2) = 0.35
         assert fda_sample.normalized_score == 0.35
         
-        # Verify CDSCO Sample
-        cdsco_sample = next(s for s in samples if s.region == "IN")
-        assert cdsco_sample.source == "fda"
-        assert cdsco_sample.series_key == "cdsco:drug_recalls:risk_index"
-        assert cdsco_sample.payload["agency"] == "CDSCO (Central Drugs Standard Control Organisation)"
-        assert -1.0 <= cdsco_sample.normalized_score <= 1.0
+        # NOTE: synthetic Indian CDSCO data (_fetch_cdsco) is intentionally not
+        # emitted by fetch() under the real-data-only policy, so it is not asserted.
 
 
 @pytest.mark.asyncio
