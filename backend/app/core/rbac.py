@@ -26,14 +26,14 @@ removal, workspace deletion) must require the ``owner`` role.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from typing import Any
 
 from fastapi import Depends, Request
 
 from app.core.exceptions import AuthenticationError, PermissionDeniedError
 
 
-def require_role(roles: list[str]) -> Callable:
+def require_role(roles: list[str]) -> Any:
     """Return a FastAPI dependency that enforces the user has one of ``roles``.
 
     Raises:
