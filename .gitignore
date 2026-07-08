@@ -32,6 +32,11 @@ node_modules/
 dist/
 *.tsbuildinfo
 
+# Playwright E2E run artifacts (screenshots, traces, HTML report)
+frontend/test-results/
+frontend/playwright-report/
+frontend/blob-report/
+
 # ── Editor / OS ──────────────────────────────────────────────────────────
 .DS_Store
 .idea/
