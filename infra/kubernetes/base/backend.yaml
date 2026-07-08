@@ -39,6 +39,10 @@ spec:
             - { name: ML_API_URL, value: "http://ml-api:8001" }
             - name: ML_SERVICE_TOKEN
               valueFrom: { secretKeyRef: { name: sanket-secrets, key: ML_SERVICE_TOKEN } }
+            - name: METRICS_TOKEN
+              valueFrom: { secretKeyRef: { name: sanket-secrets, key: METRICS_TOKEN } }
+            - name: INTEGRATION_ENCRYPTION_KEY
+              valueFrom: { secretKeyRef: { name: sanket-secrets, key: INTEGRATION_ENCRYPTION_KEY } }
             # Firebase auth. Required in production (APP_ENV=production) or the
             # backend refuses to boot — see config.require_firebase_in_production.
             # optional:true so dev/staging (which blank these) stay on dev-login.

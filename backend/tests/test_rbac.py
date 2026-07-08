@@ -26,10 +26,10 @@ async def _seed_tenant(db: AsyncSession, slug: str, name: str) -> uuid.UUID:
         text(
             """
             INSERT INTO tenants (id, slug, display_name, tier, status,
-                                 industries, active_industry)
+                                 industries, active_industry, max_users)
             VALUES (:id, :slug, :name, 'enterprise', 'active',
                     ARRAY['fashion','electronics','pharma']::industry_code[],
-                    'fashion')
+                    'fashion', 100)
             """
         ),
         {"id": str(tid), "slug": slug, "name": name},
@@ -119,23 +119,23 @@ async def test_rbac_roles_enforce_admin_restrictions(
     password = "StrongPassword123!"
 
     # Seed users for each role
-    await _seed_user(db_session, tenant_a, "owner@rbac.test", password, UserRole.owner)
-    await _seed_user(db_session, tenant_a, "admin@rbac.test", password, UserRole.admin)
-    await _seed_user(db_session, tenant_a, "analyst@rbac.test", password, UserRole.analyst)
-    await _seed_user(db_session, tenant_a, "viewer@rbac.test", password, UserRole.viewer)
+    await _seed_user(db_session, tenant_a, "owner@rbac.com", password, UserRole.owner)
+    await _seed_user(db_session, tenant_a, "admin@rbac.com", password, UserRole.admin)
+    await _seed_user(db_session, tenant_a, "analyst@rbac.com", password, UserRole.analyst)
+    await _seed_user(db_session, tenant_a, "viewer@rbac.com", password, UserRole.viewer)
 
     # Login and acquire tokens
-    owner_token = await _get_token(client, "owner@rbac.test", password, "tenant-rbac-test")
-    admin_token = await _get_token(client, "admin@rbac.test", password, "tenant-rbac-test")
-    analyst_token = await _get_token(client, "analyst@rbac.test", password, "tenant-rbac-test")
-    viewer_token = await _get_token(client, "viewer@rbac.test", password, "tenant-rbac-test")
+    owner_token = await _get_token(client, "owner@rbac.com", password, "tenant-rbac-test")
+    admin_token = await _get_token(client, "admin@rbac.com", password, "tenant-rbac-test")
+    analyst_token = await _get_token(client, "analyst@rbac.com", password, "tenant-rbac-test")
+    viewer_token = await _get_token(client, "viewer@rbac.com", password, "tenant-rbac-test")
 
     # We will test two endpoints that require admin role:
     # 1. POST /api/v1/invites (Create invite)
     # 2. DELETE /api/v1/products/{id} (Delete product)
 
     # --- Test 1: CREATE INVITE (POST /invites) ---
-    invite_payload = {"email": "new-user@rbac.test", "role": "analyst"}
+    invite_payload = {"email": "new-user@rbac.com", "role": "analyst"}
 
     # Viewer gets 403
     r_viewer = await client.post(
@@ -162,7 +162,7 @@ async def test_rbac_roles_enforce_admin_restrictions(
     assert r_admin.status_code == 201
 
     # Owner gets 201 (after revoking or using different email due to conflicts)
-    invite_payload_owner = {"email": "another-new-user@rbac.test", "role": "analyst"}
+    invite_payload_owner = {"email": "another-new-user@rbac.com", "role": "analyst"}
     r_owner = await client.post(
         "/api/v1/invites",
         json=invite_payload_owner,
@@ -207,12 +207,12 @@ async def test_tenant_isolation_at_api_level(client: AsyncClient, db_session: As
     password = "StrongPassword123!"
 
     # Seed users
-    await _seed_user(db_session, tenant_a, "owner@tenanta.test", password, UserRole.owner)
-    await _seed_user(db_session, tenant_b, "owner@tenantb.test", password, UserRole.owner)
+    await _seed_user(db_session, tenant_a, "owner@tenanta.com", password, UserRole.owner)
+    await _seed_user(db_session, tenant_b, "owner@tenantb.com", password, UserRole.owner)
 
     # Login and acquire tokens
-    token_a = await _get_token(client, "owner@tenanta.test", password, "tenant-a-iso")
-    token_b = await _get_token(client, "owner@tenantb.test", password, "tenant-b-iso")
+    token_a = await _get_token(client, "owner@tenanta.com", password, "tenant-a-iso")
+    token_b = await _get_token(client, "owner@tenantb.com", password, "tenant-b-iso")
 
     # Seed products under Tenant A
     product_a_id = await _seed_product(db_session, tenant_a, "Tenant A Exclusive Product")

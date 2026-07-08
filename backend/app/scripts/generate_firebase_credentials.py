@@ -26,7 +26,7 @@ CLIENT_ID = os.environ.get(
     "FIREBASE_CLI_CLIENT_ID",
     "563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com",
 )
-CLIENT_SECRET = os.environ.get("FIREBASE_CLI_CLIENT_SECRET", "j9iVZfS8kkCEFUPaAeJV0sAi")
+CLIENT_SECRET = os.environ["FIREBASE_CLI_CLIENT_SECRET"]
 # B105 false positive: bandit matches the "token" substring in the name; this is
 # Google's public OAuth2 token *endpoint URL*, not a credential.
 TOKEN_URL = "https://oauth2.googleapis.com/token"  # nosec B105

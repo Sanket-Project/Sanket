@@ -76,7 +76,7 @@ class Settings(BaseSettings):
     # Firebase availability). Phase 1 hardening defaults this ON so a
     # deprovisioned/compromised user is cut off within the cache TTL instead of
     # surviving for the full ~1h ID-token lifetime.
-    firebase_check_revoked: bool = False
+    firebase_check_revoked: bool = True
     # How long a successful revocation check is trusted before re-verifying.
     # 0 disables caching (check on every request — strongest, slowest).
     firebase_revocation_cache_ttl_s: int = Field(default=60, ge=0, le=3600)

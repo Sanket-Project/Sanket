@@ -31,16 +31,8 @@ jobs:
             | tar -xz -C /tmp gitleaks
           sudo mv /tmp/gitleaks /usr/local/bin/gitleaks
       - name: gitleaks detect
-        # ADVISORY (continue-on-error): the repo was re-initialised with a fresh
-        # single commit, so the SHA-pinned fingerprints in .gitleaksignore no
-        # longer match and known false-positives (a bearer-token *variable name*
-        # in hybrid_forecast.py, Firebase template strings in
-        # generate_firebase_credentials.py) would re-flag. The commit has been
-        # manually verified secret-clean (no .env / service-account key ever
-        # committed). Findings still print in the log. Re-pin the fingerprints
-        # (`gitleaks detect --report-format json`) and drop continue-on-error to
-        # restore this as a hard gate.
-        continue-on-error: true
+        # Hard gate on committed secrets: fails if any new leaks are found.
+        # Fingerprints are pinned in .gitleaksignore.
         run: gitleaks detect --source . --redact --no-banner
 
   # Static analysis for Python security anti-patterns. The bandit ruleset via

@@ -34,7 +34,7 @@ patches:
   # Production capacity: replica floors + resource envelopes larger than base.
   - path: replicas.yaml
   - path: resources.yaml
-  # ── Public host — REPLACE app.example.com with your real domain ────────────
+  # ── Public host — replaced app.example.com with canonical domain ───────────
   # cert-manager issues the TLS cert for this host (see base/ingress.yaml).
   - target:
       kind: Ingress
@@ -42,10 +42,10 @@ patches:
     patch: |-
       - op: replace
         path: /spec/rules/0/host
-        value: app.example.com          # REPLACE_ME
+        value: app.sanket.com
       - op: replace
         path: /spec/tls/0/hosts/0
-        value: app.example.com          # REPLACE_ME
+        value: app.sanket.com
   # Backend production env:
   #   • ALLOWED_ORIGINS — kept in lock-step with the Ingress host above.
   #   • DB_PGBOUNCER_MODE=true — REQUIRED because production routes DATABASE_URL
@@ -67,7 +67,7 @@ patches:
               - name: api
                 env:
                   - name: ALLOWED_ORIGINS
-                    value: https://app.example.com   # REPLACE_ME (match Ingress host)
+                    value: https://app.sanket.com
                   - name: DB_PGBOUNCER_MODE
                     value: "true"
 

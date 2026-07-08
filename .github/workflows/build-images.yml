@@ -92,7 +92,7 @@ jobs:
       # scanning/patch cadence is established.
       - name: Trivy vuln scan (report SARIF)
         continue-on-error: true
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
         with:
           image-ref: ${{ steps.img.outputs.scan }}
           format: sarif
@@ -109,8 +109,8 @@ jobs:
           category: trivy-${{ matrix.name }}
 
       - name: Trivy gate (report fixable CRITICAL)
-        continue-on-error: true
-        uses: aquasecurity/trivy-action@master
+        # Drop continue-on-error to make the gate blocking
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
         with:
           image-ref: ${{ steps.img.outputs.scan }}
           format: table

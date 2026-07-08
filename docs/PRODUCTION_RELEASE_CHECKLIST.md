@@ -56,7 +56,7 @@ Replace every `REPLACE_ME` in `infra/kubernetes/base/secrets.yaml` (via
 sealed-secrets / Vault / External Secrets — do not commit real values):
 
 - `sanket-secrets`: `JWT_SECRET`, `ML_SERVICE_TOKEN`, `POSTGRES_PASSWORD`
-  (superuser, for the backup job), `METRICS_TOKEN`.
+  (superuser, for the backup job), `METRICS_TOKEN`, `INTEGRATION_ENCRYPTION_KEY`.
 - `sanket-db-url`: `DATABASE_URL` (sanket_app), `ML_DATABASE_URL` (sanket_app).
 - `sanket-firebase`: `FIREBASE_PROJECT_ID` and either Workload Identity (ADC) or
   the rotated service-account JSON. Prefer `FIREBASE_CREDENTIALS_JSON`

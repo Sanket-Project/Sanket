@@ -7,6 +7,7 @@ Requires: pip install pyjwt requests psycopg2-binary
 """
 
 import json
+import os
 import time
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -15,7 +16,7 @@ import jwt           # PyJWT
 import psycopg2
 import requests
 
-JWT_SECRET = "816cca177167179ff91376c76ab22dae7e6a81f27fd2032df2c4a7466db11ac9"
+JWT_SECRET = os.environ["JWT_SECRET"]
 DB_DSN     = "host=localhost port=5432 dbname=sanket user=postgres password=postgres"
 API_BASE   = "http://localhost:8000/api/v1"
 

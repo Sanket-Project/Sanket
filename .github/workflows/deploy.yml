@@ -77,7 +77,12 @@ jobs:
           [ -z "${{ vars.GKE_LOCATION }}" ]                   && missing="$missing GKE_LOCATION"
           if [ -n "$missing" ]; then
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Deploy config not set — skipping. Add repo Variables:$missing (see .github/workflows/deploy.yml header)."
+            if [ "$ENVIRONMENT" = "production" ]; then
+              echo "::error::Production deploy config missing: $missing. Failing deployment."
+              exit 1
+            else
+              echo "::warning::Deploy config not set — skipping. Add repo Variables:$missing (see .github/workflows/deploy.yml header)."
+            fi
           else
             echo "configured=true" >> "$GITHUB_OUTPUT"
           fi
@@ -138,11 +143,13 @@ jobs:
         if: steps.cfg.outputs.configured == 'true'
         run: |
           SHA=${DEPLOY_SHA}
+          OWNER="${{ github.repository_owner }}"
+          OWNER_LOWER=$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')
           cd infra/kubernetes/overlays/${{ steps.target.outputs.overlay }}
           kustomize edit set image \
-            ghcr.io/sanket-project/backend=ghcr.io/sanket-project/backend:sha-${SHA} \
-            ghcr.io/sanket-project/ml-api=ghcr.io/sanket-project/ml-api:sha-${SHA} \
-            ghcr.io/sanket-project/frontend=ghcr.io/sanket-project/frontend:sha-${SHA}
+            ghcr.io/sanket-project/backend=ghcr.io/${OWNER_LOWER}/backend:sha-${SHA} \
+            ghcr.io/sanket-project/ml-api=ghcr.io/${OWNER_LOWER}/ml-api:sha-${SHA} \
+            ghcr.io/sanket-project/frontend=ghcr.io/${OWNER_LOWER}/frontend:sha-${SHA}
 
       - name: Diff (informational)
         if: steps.cfg.outputs.configured == 'true'
@@ -154,10 +161,12 @@ jobs:
         run: |
           NS=${{ steps.target.outputs.ns }}
           SHA=${DEPLOY_SHA}
+          OWNER="${{ github.repository_owner }}"
+          OWNER_LOWER=$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')
           # A Job's pod template is immutable — delete any prior run first.
           kubectl -n "$NS" delete job sanket-migrate --ignore-not-found
           sed -e "s/^  namespace: sanket$/  namespace: $NS/" \
-              -e "s#ghcr.io/sanket-project/backend:latest#ghcr.io/sanket-project/backend:sha-${SHA}#" \
+              -e "s#ghcr.io/sanket-project/backend:latest#ghcr.io/${OWNER_LOWER}/backend:sha-${SHA}#" \
             infra/kubernetes/base/migrate-job.yaml | kubectl apply -f -
           if ! kubectl -n "$NS" wait --for=condition=complete job/sanket-migrate --timeout=5m; then
             echo "::error::Database migration failed — aborting deploy."
