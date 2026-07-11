@@ -45,15 +45,11 @@ jobs:
       - name: Install pip-audit
         run: pip install pip-audit
       # Audit the resolved dependency tree for known CVEs.
-      # ADVISORY (continue-on-error): a newly-disclosed CVE in a transitive
-      # dependency can turn this red with no code change, which would break an
-      # otherwise-green pipeline. It runs on every push + weekly, and the result
-      # is visible in the job log for review — but it does not block. Promote it
-      # back to a hard gate (remove continue-on-error) once a triage cadence for
-      # advisories is in place.
+      # HARD GATE: fails on any vulnerability not suppressed in pip-audit-ignore.txt.
+      # Unfixable transitive CVEs can be suppressed there with an expiry comment
+      # and a link to the upstream issue — treat every entry as tracked debt.
       - name: pip-audit
-        continue-on-error: true
-        run: pip-audit --progress-spinner off
+        run: pip-audit --progress-spinner off --ignore-vuln-file ../pip-audit-ignore.txt
 
   test:
     runs-on: ubuntu-latest

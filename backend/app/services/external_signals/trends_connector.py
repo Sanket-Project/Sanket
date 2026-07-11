@@ -51,6 +51,12 @@ INDUSTRY_KEYWORDS: dict[str, list[tuple[str, list[str]]]] = {
         ("animal feed cost", ["feed", "livestock"]),
         ("crop disease alert", ["plant_health", "seasonal"]),
     ],
+    "hardware": [
+        ("cordless drill", ["power_tool", "tool"]),
+        ("circular saw", ["power_tool", "tool"]),
+        ("pvc pipe", ["plumbing", "material"]),
+        ("safety helmet", ["safety_gear"]),
+    ],
 }
 
 

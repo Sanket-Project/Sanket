@@ -81,15 +81,14 @@ jobs:
           cache-to: type=gha,scope=${{ matrix.name }},mode=max
           platforms: linux/amd64
 
-      # ── Image vulnerability scanning (fully ADVISORY) ───────────────────────
-      # The build + push above is the hard deliverable; scanning must never fail
-      # it. Every step here is continue-on-error because: (a) trivy-action prunes
-      # pinned patch tags (0.28.0 was removed → "unable to resolve action"), so
-      # we track @master; (b) base-image CVEs are disclosed daily; and (c)
-      # upload-sarif needs code scanning (GHAS), which a private repo may lack.
-      # Findings still surface in the logs / Security tab, but never turn the
-      # pipeline red. Pin @master to a SHA and promote to hard gates once a
-      # scanning/patch cadence is established.
+      # ── Image vulnerability scanning ────────────────────────────────────────
+      # Step 1 (ADVISORY): generate a SARIF report and upload to the Security tab.
+      # Uses continue-on-error so a GHAS-unavailable repo or a transient network
+      # blip never kills the build over a reporting side-effect. Findings are still
+      # visible in logs. The SHA-pinned action avoids the "pruned tag" 404 problem.
+      # Step 2 (HARD GATE): runs with if:always() so a step-1 failure cannot
+      # prevent the gate from executing. Fails the build on any fixable CRITICAL
+      # CVE — no continue-on-error.
       - name: Trivy vuln scan (report SARIF)
         continue-on-error: true
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
@@ -108,8 +107,13 @@ jobs:
           sarif_file: trivy-${{ matrix.name }}.sarif
           category: trivy-${{ matrix.name }}
 
-      - name: Trivy gate (report fixable CRITICAL)
-        # Drop continue-on-error to make the gate blocking
+      - name: Trivy gate (block on fixable CRITICAL)
+        # HARD GATE: if:always() ensures this step runs even when the SARIF
+        # upload above failed (e.g. GHAS unavailable). Fails the job on any
+        # fixable CRITICAL CVE. Suppress specific CVEs in .trivyignore only
+        # after documented triage — treat every suppression as tracked debt.
+        if: always()
+        continue-on-error: false
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
         with:
           image-ref: ${{ steps.img.outputs.scan }}

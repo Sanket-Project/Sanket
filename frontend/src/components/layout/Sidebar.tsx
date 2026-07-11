@@ -11,6 +11,7 @@ import {
   Settings as SettingsIcon,
   ShieldCheck,
   Activity,
+  TrendingUp,
   Sparkles,
   AlertOctagon,
   Warehouse,
@@ -37,18 +38,18 @@ const NAV_MAIN: NavEntry[] = [
   { to: "/workspace/products", label: "Products", icon: Package },
   { to: "/workspace/skus", label: "SKUs", icon: Boxes },
   { to: "/workspace/inventory", label: "Inventory", icon: Warehouse },
-  { to: "/workspace/signals", label: "Signals", icon: Radio },
+  { to: "/workspace/signals", label: "External Signals", icon: Radio },
 ];
 
 const NAV_INTELLIGENCE: NavEntry[] = [
-  { to: "/workspace/trends", label: "Market Trends", icon: Activity },
+  { to: "/workspace/trends", label: "Trend Analysis", icon: TrendingUp },
   { to: "/workspace/forecasts", label: "Forecasts", icon: LineChart, exact: true },
   { to: "/workspace/forecasts/hybrid", label: "Hybrid Forecasts", icon: Sparkles },
   { to: "/workspace/alerts", label: "Shortage Alerts", icon: AlertOctagon },
 ];
 
 const NAV_ANALYTICS: NavEntry[] = [
-  { to: "/workspace/live-sales", label: "Live Sales", icon: ShoppingCart },
+  { to: "/workspace/live-sales", label: "Live Sales Feed", icon: ShoppingCart },
   { to: "/workspace/sales-analytics", label: "Sales Analytics", icon: Activity },
   { to: "/workspace/financial", label: "Financial Impact", icon: DollarSign },
   { to: "/workspace/forecast-accuracy", label: "Forecast Accuracy", icon: BarChart3 },

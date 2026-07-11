@@ -179,6 +179,18 @@ TO sanket_app;
 
 GRANT SELECT ON industries TO sanket_app;
 
+-- Read access to Alembic's bookkeeping table so the app's startup
+-- migration-drift check can run as sanket_app instead of silently failing on
+-- InsufficientPrivilege. Guarded: alembic_version only exists once migrations
+-- have stamped the database. (Kept in sync by migration 0013 for existing DBs.)
+DO $$
+BEGIN
+    IF to_regclass('public.alembic_version') IS NOT NULL THEN
+        GRANT SELECT ON alembic_version TO sanket_app;
+    END IF;
+END;
+$$;
+
 GRANT USAGE, SELECT ON SEQUENCE audit_log_id_seq TO sanket_app;
 
 -- Allow sanket_app to SET LOCAL session parameters (required for RLS)

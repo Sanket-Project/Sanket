@@ -2064,7 +2064,7 @@ export const LandingPage = () => {
         <div className="relative h-full rounded-2xl md:rounded-3xl overflow-hidden flex flex-col justify-end">
           {reducedMotion ? (
             <img
-              src="/assets/predictive_model.png"
+              src={`${import.meta.env.BASE_URL}assets/predictive_model.png`}
               alt=""
               className="absolute inset-0 w-full h-full object-cover"
             />
@@ -2074,7 +2074,7 @@ export const LandingPage = () => {
                 <video
                   src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260405_170732_8a9ccda6-5cff-4628-b164-059c500a2b41.mp4"
                   autoPlay loop muted playsInline
-                  poster="/assets/predictive_model.png"
+                  poster={`${import.meta.env.BASE_URL}assets/predictive_model.png`}
                   preload="metadata"
                   className="absolute inset-0 w-full h-full object-cover"
                 />
@@ -2250,7 +2250,7 @@ export const LandingPage = () => {
               <div className="relative rounded-xl overflow-hidden min-h-[380px] lg:min-h-[520px] border border-white/[0.06] group hover:border-[#DEDBC8]/25 transition-colors duration-300">
                 {reducedMotion ? (
                   <img
-                    src="/assets/data_pipeline.png"
+                    src={`${import.meta.env.BASE_URL}assets/data_pipeline.png`}
                     alt=""
                     className="absolute inset-0 w-full h-full object-cover"
                   />
@@ -2258,7 +2258,7 @@ export const LandingPage = () => {
                   <video
                     src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260406_133058_0504132a-0cf3-4450-a370-8ea3b05c95d4.mp4"
                     autoPlay loop muted playsInline
-                    poster="/assets/data_pipeline.png"
+                    poster={`${import.meta.env.BASE_URL}assets/data_pipeline.png`}
                     preload="none"
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1600ms] ease-out group-hover:scale-[1.06]"
                   />
@@ -2274,7 +2274,7 @@ export const LandingPage = () => {
             </FadeCard>
             <FadeCard index={1}>
               <FeatureCard
-                icon="/assets/sanket_forecast_run.png"
+                icon={`${import.meta.env.BASE_URL}assets/sanket_forecast_run.png`}
                 num="01" title="Forecast every SKU."
                 items={["A demand forecast for every product", "Best-case, likely, and worst-case ranges", "Plan for the scenario you choose", "Forecasts from day one — no history needed"]}
                 onClick={() => setModal("sandbox")}
@@ -2282,7 +2282,7 @@ export const LandingPage = () => {
             </FadeCard>
             <FadeCard index={2}>
               <FeatureCard
-                icon="/assets/sanket_trend_engine.png"
+                icon={`${import.meta.env.BASE_URL}assets/sanket_trend_engine.png`}
                 num="02" title="Catch demand shifts early."
                 items={["Tracks search, social, and economic signals", "Spots trends before they hit your sales", "Adjusts the forecast automatically"]}
                 onClick={() => setModal("sandbox")}
@@ -2290,7 +2290,7 @@ export const LandingPage = () => {
             </FadeCard>
             <FadeCard index={3}>
               <FeatureCard
-                icon="/assets/sanket_secure_architecture.png"
+                icon={`${import.meta.env.BASE_URL}assets/sanket_secure_architecture.png`}
                 num="03" title="Secure by design."
                 items={["Your data stays isolated from every other tenant", "Audit trails built for regulated industries", "Architected for SOC 2, HIPAA & GxP workflows"]}
                 onClick={() => setModal("sandbox")}

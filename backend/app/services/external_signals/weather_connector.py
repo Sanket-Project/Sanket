@@ -62,6 +62,15 @@ INDUSTRY_LOCATIONS: dict[str, list[tuple[str, float, float]]] = {
         ("Bhopal", 23.25, 77.41),
         ("Patna", 25.59, 85.14),
     ],
+    # Construction/industrial demand is weather-sensitive. Locations reuse
+    # existing SEASONAL_TEMP_BASELINE keys so no new baselines are required.
+    "hardware": [
+        ("NYC", 40.71, -74.01),
+        ("San Jose", 37.34, -121.89),
+        ("Delhi NCR", 28.61, 77.21),
+        ("Mumbai", 19.08, 72.88),
+        ("Pune", 18.52, 73.85),
+    ],
 }
 
 # Blended Seasonal temperature baselines (°C) per month for each location key

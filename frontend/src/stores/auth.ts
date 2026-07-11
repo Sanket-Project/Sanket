@@ -8,6 +8,7 @@ import {
 import { authApi } from "@/api/auth";
 import { firebaseAuth, firebaseEnabled } from "@/lib/firebase";
 import toast from "react-hot-toast";
+import { useIndustryStore } from "@/stores/industry";
 import { getErrorMessage } from "@/utils/errors";
 import type {
   IndustryCode,
@@ -272,6 +273,18 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     try {
       localStorage.removeItem(DEV_TOKEN_KEY);
       localStorage.removeItem(DEV_SESSION_KEY);
+    } catch {
+      /* ignore */
+    }
+    // The active-industry store persists to localStorage independently of the
+    // session and is NOT cleared above. Left alone, the next login (same
+    // browser, possibly a different tenant/account) briefly renders with the
+    // previous account's industry — e.g. a stale "GxP · 21 CFR Part 11" badge
+    // flashing on a Fashion tenant right after login — until the post-login
+    // sync overwrites it a moment later. Reset it here so every fresh session
+    // starts from the same default the store itself defines.
+    try {
+      useIndustryStore.getState().reset();
     } catch {
       /* ignore */
     }

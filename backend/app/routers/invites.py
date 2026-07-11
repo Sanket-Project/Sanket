@@ -22,7 +22,7 @@ from fastapi import APIRouter, Request
 from sqlalchemy import func, select
 
 from app.core.exceptions import AuthenticationError, ConflictError, NotFoundError
-from app.core.rbac import require_admin
+from app.core.rbac import require_admin_db
 from app.models.enums import UserRole
 from app.models.invite import Invite, InviteStatus
 from app.models.tenant import Tenant, User
@@ -83,7 +83,7 @@ async def create_invite(
     request: Request,
     tenant_id: TenantId,
     user_id: UserId,
-    _rbac: None = require_admin,
+    _rbac: None = require_admin_db,
 ) -> InviteCreated:
     email = str(body.email).lower()
     db = request.app.state.db
@@ -140,7 +140,7 @@ async def revoke_invite(
     invite_id: uuid.UUID,
     request: Request,
     tenant_id: TenantId,
-    _rbac: None = require_admin,
+    _rbac: None = require_admin_db,
 ) -> InviteOut:
     db = request.app.state.db
     async with db.session(str(tenant_id)) as session:

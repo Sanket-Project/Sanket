@@ -52,6 +52,12 @@ INDUSTRY_SUBREDDITS: dict[str, list[tuple[str, list[str]]]] = {
         ("homesteading", ["smallholder"]),
         ("pesticides", ["pesticide", "input"]),
     ],
+    "hardware": [
+        ("Tools", ["power_tool", "general"]),
+        ("HomeImprovement", ["diy", "demand"]),
+        ("electricians", ["trade", "electrical"]),
+        ("Construction", ["trade", "construction"]),
+    ],
 }
 
 

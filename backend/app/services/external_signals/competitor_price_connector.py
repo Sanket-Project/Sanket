@@ -45,6 +45,12 @@ INDUSTRY_BASKETS: dict[str, list[tuple[str, list[str], float]]] = {
         ("herbicide concentrate", ["pesticide", "input"], 38.0),
         ("poultry feed 25kg", ["feed", "livestock"], 22.0),
     ],
+    "hardware": [
+        ("cordless drill 20v", ["power_tool", "tool"], 90.0),
+        ("hex bolts assorted box", ["fastener"], 15.0),
+        ("safety helmet hard hat", ["safety_gear"], 20.0),
+        ("pvc pipe 10ft", ["plumbing", "material"], 12.0),
+    ],
 }
 
 SERPAPI_URL = "https://serpapi.com/search.json"

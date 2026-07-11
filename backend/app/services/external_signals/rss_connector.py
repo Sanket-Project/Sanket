@@ -82,6 +82,18 @@ INDUSTRY_FEEDS: dict[str, list[tuple[str, list[str], str]]] = {
         # India feeds
         ("https://krishijagran.com/rss/news/", ["trade", "agri_news"], "IN"),
     ],
+    "hardware": [
+        # Global — industrial supply, construction demand, manufacturing macro
+        ("https://www.hardwareretailing.com/feed/", ["trade", "retail"], "US"),
+        ("https://www.constructiondive.com/feeds/news/", ["construction", "demand"], "US"),
+        ("https://www.industryweek.com/rss.xml", ["manufacturing", "macro"], "WW"),
+        # India feeds
+        (
+            "https://www.constructionworld.in/rss.php",
+            ["construction", "trade"],
+            "IN",
+        ),
+    ],
 }
 
 # Extended lexicon — covers news framing beyond social slang

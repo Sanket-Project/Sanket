@@ -45,6 +45,13 @@ SUPPLY_LANES: dict[str, list[tuple[str, str, str, float, str]]] = {
         ("Siddipet_to_Hyderabad_Agri", "78.85,18.10", "78.48,17.38", 2.0, "IN"),
         ("Punjab_to_Delhi_NCR_Grain", "74.87,31.63", "77.20,28.61", 8.0, "IN"),
     ],
+    "hardware": [
+        # Global (industrial supply corridors)
+        ("Houston_Industrial_to_Dallas_Hub", "-95.36,29.76", "-96.80,32.78", 4.0, "US"),
+        ("Yiwu_Hardware_Market_to_Shanghai_Port", "120.07,29.31", "121.47,31.23", 4.0, "WW"),
+        # India (Ludhiana tools/fasteners hub → Delhi NCR distribution)
+        ("Ludhiana_Tools_to_Delhi_NCR", "75.85,30.90", "77.20,28.61", 6.0, "IN"),
+    ],
 }
 
 OSRM_ROUTE_URL = "http://router.project-osrm.org/route/v1/driving"

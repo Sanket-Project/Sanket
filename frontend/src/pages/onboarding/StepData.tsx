@@ -35,9 +35,24 @@ const ImportCard = ({ icon, title, description, kind, onImported }: ImportCardPr
     setBusy(true);
     try {
       const res = await integrationsApi.upload(file, kind, industry);
+      const main = kind === "products" ? res.skus_created : res.sales_rows;
+      if (main === 0) {
+        // Nothing was imported, even though the request itself returned 200 —
+        // this is a failure, not a success. Two cases: an empty/headers-only
+        // file (rows_total === 0), or a file whose every row failed to map
+        // (e.g. no recognizable SKU/name columns). Surface the actual reason
+        // so the user knows what to fix instead of seeing "Imported 0 SKUs".
+        const message =
+          res.rows_total === 0
+            ? "No rows found — check the file has a header row and at least one data row"
+            : res.errors.length
+              ? `Import failed: ${res.errors.slice(0, 2).join("; ")}`
+              : "No rows could be imported — check the file's columns";
+        toast.error(message);
+        return;
+      }
       setResult(res);
       onImported(kind, res);
-      const main = kind === "products" ? res.skus_created : res.sales_rows;
       toast.success(`Imported ${main.toLocaleString()} ${kind === "products" ? "SKUs" : "sales rows"}`);
     } catch {
       /* interceptor surfaces the toast */

@@ -105,6 +105,13 @@ apiClient.interceptors.response.use(
 
     if (status >= 500) {
       dedupeToast("server_error", "Server error — try again shortly");
+    } else if (status === 400) {
+      // Bad request (e.g. file-import validation failures) has no other
+      // handler in the app, so without this branch these errors fail
+      // completely silently — the caller's local catch swallows them on
+      // the assumption this interceptor surfaces a toast. See getErrorMessage
+      // for why FastAPI's `detail` payload needs safe extraction here.
+      dedupeToast("bad_request", getErrorMessage(error, "Request failed"));
     } else if (status === 403) {
       dedupeToast("forbidden", "You do not have permission for that action");
     } else if (status === 404) {

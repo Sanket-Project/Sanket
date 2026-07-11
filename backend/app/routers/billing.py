@@ -10,6 +10,7 @@ from sqlalchemy import select
 
 from app.config import Settings, get_settings
 from app.core.exceptions import NotFoundError, PermissionDeniedError
+from app.core.rbac import require_admin_db
 from app.models.billing import MeterKind, Plan, Subscription
 from app.routers.industry_router import TenantId, UserId
 from app.services import usage
@@ -86,10 +87,8 @@ async def start_subscription(
     tenant_id: TenantId,
     user_id: UserId,
     settings: SettingsDep,
+    _rbac: None = require_admin_db,
 ) -> dict[str, Any]:
-    role = getattr(request.state, "role", "viewer")
-    if role not in ("owner", "admin"):
-        raise PermissionDeniedError("Only owner/admin can manage billing")
     db = request.app.state.db
     mgr = SubscriptionManager(get_razorpay_client(settings))
     async with db.session(str(tenant_id)) as session:
@@ -122,10 +121,8 @@ async def cancel_subscription(
     request: Request,
     tenant_id: TenantId,
     settings: SettingsDep,
+    _rbac: None = require_admin_db,
 ) -> dict[str, Any]:
-    role = getattr(request.state, "role", "viewer")
-    if role not in ("owner", "admin"):
-        raise PermissionDeniedError("Only owner/admin can manage billing")
     db = request.app.state.db
     mgr = SubscriptionManager(get_razorpay_client(settings))
     async with db.session(str(tenant_id)) as session:

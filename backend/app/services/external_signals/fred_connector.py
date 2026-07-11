@@ -56,6 +56,11 @@ INDUSTRY_SERIES: dict[str, list[tuple[str, float, list[str]]]] = {
         ("PPIACO", -0.6, ["commodity_price"]),  # PPI: All Commodities
         ("UMCSENT", 0.5, ["consumer_sentiment"]),  # Rural demand proxy
     ],
+    "hardware": [
+        ("HOUST", 0.9, ["housing_starts", "construction_demand"]),  # Housing Starts
+        ("INDPRO", 0.8, ["industrial_production"]),  # Industrial Production Index
+        ("PPIACO", -0.7, ["commodity_price"]),  # PPI: All Commodities (input cost)
+    ],
 }
 
 

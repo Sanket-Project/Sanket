@@ -1,0 +1,11 @@
+# pip-audit suppression file
+# FORMAT: one PYSEC-YYYY-NNNN or CVE-YYYY-NNNN per line.
+# REQUIRED fields in the comment:
+#   Reason:  why this cannot be fixed right now (e.g. "upstream has no fix")
+#   Ticket:  internal tracking issue
+#   Expires: date after which the suppression must be re-triaged (max 90 days)
+#
+# Example:
+# PYSEC-2024-12345  # Reason: transitive dep of foo; no fix released. Ticket: #1234. Expires: 2025-10-01
+#
+# Keep this file SHORT. Every entry is a tracked security debt.

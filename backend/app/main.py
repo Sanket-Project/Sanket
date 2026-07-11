@@ -243,8 +243,25 @@ def create_app() -> FastAPI:
     # ── Middleware (order matters: outermost = last added) ───────────────────
     # Added innermost → outermost. On the way IN a request traverses them in the
     # reverse order it was added (CORS first, route last):
-    #   CORS → security headers → metrics → rate limit → usage metering
-    #        → region router → tenant context → idempotency → route
+    #
+    #   CORS → SecurityHeaders → metrics → RateLimit(ip_only=True)
+    #        → UsageMetering → RegionRouter → TenantContext
+    #        → RateLimit(ip_only=False) → Idempotency → route
+    #
+    # RateLimitMiddleware is registered TWICE — a deliberate split:
+    #
+    #   ip_only=True  (outermost, before auth): enforces the per-IP bucket.
+    #     This must run BEFORE TenantContextMiddleware so unauthenticated floods
+    #     are dropped before any Firebase token verification occurs. With
+    #     firebase_check_revoked=True, skipping this gate would mean every flood
+    #     request triggers a Firebase round-trip — a DoS amplifier.
+    #
+    #   ip_only=False (just inside TenantContext, after auth): enforces the
+    #     per-user and heavy-endpoint buckets. These require request.state.user_id,
+    #     which TenantContextMiddleware populates. Running here means a user who
+    #     approaches from two different IPs still hits a single shared quota keyed
+    #     on their user_id — the correct multi-IP enforcement.
+    #
     # Idempotency is the INNERMOST app middleware so (a) tenant context has
     # already set request.state.tenant_id (keys are tenant-scoped) and (b) it
     # directly wraps the route — on a replay it returns the cached response
@@ -254,11 +271,23 @@ def create_app() -> FastAPI:
         ttl_s=settings.idempotency_ttl_s,
         enabled=settings.idempotency_enabled,
     )
+    # Per-user + heavy-endpoint buckets — MUST be inside (added before) TenantContext
+    # so that request.state.user_id is already populated when this runs inbound.
+    app.add_middleware(
+        RateLimitMiddleware,
+        ip_only=False,
+        per_user_per_minute=settings.rate_limit_per_user_per_minute,
+        heavy_per_minute=settings.rate_limit_heavy_per_minute,
+        heavy_fail_closed=settings.rate_limit_heavy_fail_closed,
+    )
     app.add_middleware(TenantContextMiddleware)
     app.add_middleware(RegionRouterMiddleware, deploy_region=settings.deploy_region)
     app.add_middleware(UsageMeteringMiddleware)
+    # Per-IP bucket — MUST be outside (added after) TenantContext so unauthenticated
+    # floods are dropped before Firebase verification runs.
     app.add_middleware(
         RateLimitMiddleware,
+        ip_only=True,
         per_minute=settings.rate_limit_per_minute,
         trusted_proxy_count=settings.trusted_proxy_count,
     )

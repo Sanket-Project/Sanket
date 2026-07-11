@@ -17,7 +17,9 @@ and "price" all resolve to the same field.
 from __future__ import annotations
 
 import csv
+import hashlib
 import io
+import re
 import uuid
 from datetime import UTC, date, datetime
 from decimal import Decimal, InvalidOperation
@@ -52,9 +54,25 @@ def _norm(header: str) -> str:
     return "".join(ch for ch in header.lower() if ch.isalnum())
 
 
+def _slugify(value: str) -> str:
+    """Best-effort URL/code-safe slug used to derive a SKU code from a name."""
+    slug = "-".join(re.findall(r"[a-z0-9]+", value.lower()))
+    return slug[:40] or "item"
+
+
 # Each canonical field maps to a set of accepted (normalized) header aliases.
 _ALIASES: dict[str, set[str]] = {
-    "sku": {"sku", "skucode", "skuid", "item", "itemcode", "productcode", "variantsku", "code"},
+    "sku": {
+        "sku",
+        "skucode",
+        "skuid",
+        "item",
+        "itemcode",
+        "productcode",
+        "variantsku",
+        "code",
+        "externalid",
+    },
     "quantity": {"quantity", "qty", "units", "unitssold", "sold", "count", "volume"},
     "price": {"sellingprice", "price", "unitprice", "saleprice", "amount", "rate"},
     "revenue": {"revenue", "grossrevenue", "totalrevenue", "sales", "total", "linetotal"},
@@ -291,9 +309,20 @@ def map_inventory_row(row: dict[str, Any], hmap: dict[str, str]) -> dict[str, An
 
 def map_product_row(row: dict[str, Any], hmap: dict[str, str]) -> dict[str, Any]:
     sku = str(row.get(hmap.get("sku", ""), "") or "").strip()
+    name = str(row.get(hmap.get("name", ""), "") or "").strip()
+    if not sku and not name:
+        raise RowError("missing SKU or product name")
     if not sku:
-        raise RowError("missing SKU")
-    name = str(row.get(hmap.get("name", ""), "") or "").strip() or sku
+        # Common real-world catalog exports (and the in-app Products importer)
+        # only require a name/category — not an explicit SKU code. Derive a
+        # deterministic code from the name rather than rejecting the row, so
+        # the two import paths accept the same files. The hash suffix is a pure
+        # function of the name, so re-importing the same file upserts the same
+        # sku_code (idempotent) instead of creating duplicate SKUs each run,
+        # while still keeping distinct full names that slugify alike apart.
+        digest = hashlib.sha1(name.encode("utf-8")).hexdigest()[:6]
+        sku = f"{_slugify(name)}-{digest}"
+    name = name or sku
     return {
         "_sku_code": sku,
         "name": name,
@@ -309,7 +338,11 @@ def map_product_row(row: dict[str, Any], hmap: dict[str, str]) -> dict[str, Any]
 _REQUIRED: dict[str, set[str]] = {
     "sales": {"sku", "quantity", "timestamp"},
     "inventory": {"sku", "available"},
-    "products": {"sku"},
+    # "sku" is NOT required here: map_product_row accepts either a sku/code
+    # column or a name column (deriving a SKU code from the name when no
+    # explicit code is given), matching what the in-app Products importer
+    # already accepts. The per-row check still rejects rows with neither.
+    "products": set(),
 }
 
 

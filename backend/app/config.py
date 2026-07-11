@@ -73,9 +73,17 @@ class Settings(BaseSettings):
     # revocation list. This is a signature+revocation check; the result is cached
     # for `firebase_revocation_cache_ttl_s` so we do not pay a Firebase
     # round-trip on every single request (which would couple request latency to
-    # Firebase availability). Phase 1 hardening defaults this ON so a
-    # deprovisioned/compromised user is cut off within the cache TTL instead of
-    # surviving for the full ~1h ID-token lifetime.
+    # Firebase availability). Defaults ON so a deprovisioned/compromised user is
+    # cut off within the cache TTL instead of surviving for the full ~1h ID-token
+    # lifetime.
+    #
+    # Multi-replica note: the revocation cache is in-process (not shared via
+    # Redis). Each replica maintains its own cache, so a revoked user may still
+    # pass through replicas that have a fresh "ok" cache entry for up to
+    # `firebase_revocation_cache_ttl_s` seconds after the revoke event. The
+    # default 60s TTL bounds this window to ≤ 60s per replica. Set to 0 to
+    # re-check on every request (strongest, but adds a Firebase round-trip per
+    # request per replica).
     firebase_check_revoked: bool = True
     # How long a successful revocation check is trusted before re-verifying.
     # 0 disables caching (check on every request — strongest, slowest).
@@ -138,6 +146,23 @@ class Settings(BaseSettings):
 
     # ── Rate limiting ────────────────────────────────────────────────────────
     rate_limit_per_minute: int = 600  # per IP per minute on /api/*
+    # Tighter per-authenticated-user limit. Applied in addition to the per-IP
+    # bucket so a single user can't drive expensive traffic from a shared IP
+    # (corporate NAT, VPN exit node). The sandbox account is subject to this
+    # too — important because many anonymous visitors share one IP but each
+    # gets their own authenticated user_id.
+    rate_limit_per_user_per_minute: int = 300
+    # Low-quota bucket for expensive endpoints: /forecasts, /export, and
+    # /integrations uploads. These trigger ML inference, large DB scans, or
+    # file parsing — the compute cost per call is orders of magnitude higher
+    # than a simple read.
+    rate_limit_heavy_per_minute: int = 30
+    # When True (default), a Redis error on the heavy-endpoint bucket returns
+    # 503 (fail-closed) instead of allowing the call through (fail-open).
+    # Rationale: a Redis outage during high-load is exactly when we most need
+    # to protect the ML/DB layer. Non-heavy endpoints still fail-open so
+    # ordinary API traffic is not interrupted.
+    rate_limit_heavy_fail_closed: bool = True
     # Number of trusted reverse-proxy / load-balancer hops in front of the app.
     # The client IP is taken as the Nth-from-rightmost entry of X-Forwarded-For
     # so callers cannot spoof their IP by injecting extra header values.

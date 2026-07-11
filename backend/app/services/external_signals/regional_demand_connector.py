@@ -38,6 +38,11 @@ INDUSTRY_DEMAND_KEYWORDS: dict[str, list[tuple[str, str]]] = {
         ("urea fertilizer", "Commodity Inputs"),
         ("tractors", "Machinery"),
     ],
+    "hardware": [
+        ("power tools", "Power Tools"),
+        ("cement", "Building Materials"),
+        ("pvc pipes", "Plumbing"),
+    ],
 }
 
 # Municipal City Tier definitions for classification

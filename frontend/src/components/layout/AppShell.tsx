@@ -12,6 +12,7 @@ export const AppShell = () => {
 
   return (
     <div
+      id="app-shell-root"
       className="flex h-screen w-screen overflow-hidden relative bg-canvas lg:p-3 lg:gap-3"
       data-industry={industry}
       style={{ "--sidebar-w": collapsed ? "76px" : "260px" } as React.CSSProperties}

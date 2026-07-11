@@ -116,36 +116,49 @@ const NARRATIVE = [
 ];
 
 const NarrativePanel = () => (
-  <div className="relative hidden h-full flex-col justify-between overflow-hidden bg-accent px-12 py-12 lg:flex">
-    <div className="flex items-center gap-2.5">
+  <div className="relative hidden h-full flex-col justify-between overflow-hidden px-12 py-14 text-white lg:flex bg-[linear-gradient(160deg,#03363D_0%,#022429_100%)]">
+    {/* Ambient decoration — a soft glow + faint grid, purely aesthetic */}
+    <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[#BDD9D7]/10 blur-3xl" />
+    <div aria-hidden className="pointer-events-none absolute -bottom-32 -left-16 h-72 w-72 rounded-full bg-[#BDD9D7]/[0.06] blur-3xl" />
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-0 opacity-[0.05]"
+      style={{
+        backgroundImage:
+          "linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)",
+        backgroundSize: "44px 44px",
+      }}
+    />
+
+    <div className="relative flex items-center gap-2.5">
       <LogoMark size={36} variant="tile" className="rounded-xl" />
-      <span className="font-heading text-lg font-bold tracking-tight text-accent-fg">SANKET</span>
+      <span className="font-heading text-lg font-bold tracking-tight" style={{ color: "#ffffff" }}>SANKET</span>
     </div>
 
-    <div className="max-w-md">
-      <h2 className="font-heading text-3xl font-bold leading-tight tracking-tight text-accent-fg">
+    <div className="relative max-w-md">
+      <h2 className="font-heading text-[2rem] font-bold leading-[1.15] tracking-tight" style={{ color: "#ffffff" }}>
         The planning system of record for modern supply chains.
       </h2>
       <ul className="mt-9 space-y-6">
         {NARRATIVE.map((n) => (
           <li key={n.title} className="flex gap-3.5">
-            <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[var(--accent-fg)]/10 text-accent-fg">
+            <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/10 text-[#BDD9D7] ring-1 ring-white/10">
               {n.icon}
             </span>
             <div>
-              <div className="text-sm font-semibold text-accent-fg">{n.title}</div>
-              <div className="mt-0.5 text-sm leading-relaxed text-[var(--accent-fg)]/70">{n.body}</div>
+              <div className="text-sm font-semibold text-white">{n.title}</div>
+              <div className="mt-1 text-sm leading-relaxed text-white/70">{n.body}</div>
             </div>
           </li>
         ))}
       </ul>
     </div>
 
-    <div className="flex items-center gap-6 font-mono text-xs text-[var(--accent-fg)]/60">
+    <div className="relative flex items-center gap-3 font-mono text-xs text-white/60">
       <span>SOC 2-aligned</span>
-      <span>·</span>
+      <span className="text-white/25">·</span>
       <span>Role-based access</span>
-      <span>·</span>
+      <span className="text-white/25">·</span>
       <span>Tenant-isolated</span>
     </div>
   </div>
@@ -333,10 +346,10 @@ export const LoginPage = () => {
       {/* Form column */}
       <main
         id="login-form"
-        className="flex items-center justify-center px-6 py-12 sm:px-10"
+        className="flex items-center justify-center px-6 py-8 sm:px-10"
         role="main"
       >
-        <div className="w-full max-w-sm">
+        <div className={clsx("w-full", isSignUp ? "max-w-md" : "max-w-sm")}>
           {/* Brand (mobile + small) */}
           <div className="mb-8 flex items-center gap-2.5 lg:hidden">
             <LogoMark size={36} variant="tile" className="rounded-xl" />
@@ -344,7 +357,7 @@ export const LoginPage = () => {
           </div>
 
           {/* Segmented toggle */}
-          <div className="tab-group-container mb-7 w-full">
+          <div className="tab-group-container mb-5 w-full">
             <button
               type="button"
               onClick={() => setIsSignUp(false)}
@@ -450,29 +463,31 @@ export const LoginPage = () => {
                 <p className="mt-1 text-sm text-content-subtle">Start planning with predictive supply-chain intelligence.</p>
               </div>
 
-              <Input
-                id="signup-name"
-                name="signup-name"
-                label="Full name"
-                value={signUpName}
-                onChange={(e) => setSignUpName(e.target.value)}
-                icon={<User size={15} aria-hidden="true" />}
-                placeholder="Jane Smith"
-                required
-                autoComplete="name"
-              />
-              <Input
-                id="signup-workspace"
-                name="signup-workspace"
-                label="Workspace"
-                value={signUpSlug}
-                onChange={(e) => setSignUpSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
-                icon={<Building2 size={15} aria-hidden="true" />}
-                placeholder="acme-co"
-                hint="Lowercase letters, numbers and hyphens only"
-                required
-                autoComplete="off"
-              />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Input
+                  id="signup-name"
+                  name="signup-name"
+                  label="Full name"
+                  value={signUpName}
+                  onChange={(e) => setSignUpName(e.target.value)}
+                  icon={<User size={15} aria-hidden="true" />}
+                  placeholder="Jane Smith"
+                  required
+                  autoComplete="name"
+                />
+                <Input
+                  id="signup-workspace"
+                  name="signup-workspace"
+                  label="Workspace"
+                  value={signUpSlug}
+                  onChange={(e) => setSignUpSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                  icon={<Building2 size={15} aria-hidden="true" />}
+                  placeholder="acme-co"
+                  hint="Lowercase, numbers & hyphens"
+                  required
+                  autoComplete="off"
+                />
+              </div>
               <Input
                 id="signup-email"
                 name="signup-email"
@@ -485,27 +500,47 @@ export const LoginPage = () => {
                 required
                 autoComplete="email"
               />
-              <div className="relative">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="relative">
+                  <Input
+                    id="signup-password"
+                    name="signup-password"
+                    label="Password"
+                    type={showSignUpPassword ? "text" : "password"}
+                    value={signUpPassword}
+                    onChange={(e) => setSignUpPassword(e.target.value)}
+                    icon={<Lock size={15} aria-hidden="true" />}
+                    placeholder="Min. 8 characters"
+                    required
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSignUpPassword((v) => !v)}
+                    className="absolute right-3 top-[34px] text-content-subtle transition hover:text-content"
+                    aria-label={showSignUpPassword ? "Hide password" : "Show password"}
+                  >
+                    {showSignUpPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
                 <Input
-                  id="signup-password"
-                  name="signup-password"
-                  label="Password"
-                  type={showSignUpPassword ? "text" : "password"}
-                  value={signUpPassword}
-                  onChange={(e) => setSignUpPassword(e.target.value)}
+                  id="signup-confirm-password"
+                  name="signup-confirm-password"
+                  label="Confirm password"
+                  type="password"
+                  value={signUpConfirmPassword}
+                  onChange={(e) => setSignUpConfirmPassword(e.target.value)}
                   icon={<Lock size={15} aria-hidden="true" />}
-                  placeholder="Min. 8 characters"
+                  placeholder="Repeat password"
                   required
                   autoComplete="new-password"
+                  error={
+                    (error && isSignUp ? error : undefined) ||
+                    (signUpConfirmPassword && signUpPassword !== signUpConfirmPassword
+                      ? "Passwords do not match"
+                      : undefined)
+                  }
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowSignUpPassword((v) => !v)}
-                  className="absolute right-3 top-[34px] text-content-subtle transition hover:text-content"
-                  aria-label={showSignUpPassword ? "Hide password" : "Show password"}
-                >
-                  {showSignUpPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                </button>
               </div>
 
               {signUpPassword && (
@@ -529,25 +564,6 @@ export const LoginPage = () => {
                   </p>
                 </div>
               )}
-
-              <Input
-                id="signup-confirm-password"
-                name="signup-confirm-password"
-                label="Confirm password"
-                type="password"
-                value={signUpConfirmPassword}
-                onChange={(e) => setSignUpConfirmPassword(e.target.value)}
-                icon={<Lock size={15} aria-hidden="true" />}
-                placeholder="Repeat password"
-                required
-                autoComplete="new-password"
-                error={
-                  (error && isSignUp ? error : undefined) ||
-                  (signUpConfirmPassword && signUpPassword !== signUpConfirmPassword
-                    ? "Passwords do not match"
-                    : undefined)
-                }
-              />
 
               <Button
                 type="submit"

@@ -22,17 +22,20 @@ jobs:
       # which requires a paid GITLEAKS_LICENSE for organization repos and would
       # otherwise fail this job. Respects the committed .gitleaksignore.
       - name: Install gitleaks
-        # Advisory: a pinned release asset can 404 if upstream prunes it, so
-        # tolerate a failed install (the detect step is also continue-on-error).
-        continue-on-error: true
+        # Hard gate: if the download fails this job fails — a broken install must
+        # NOT silently pass the secret scan. Pin the version; bump deliberately
+        # when a new release is needed.
         run: |
           VERSION=8.21.2
-          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz" \
+          curl -fsSL "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz" \
             | tar -xz -C /tmp gitleaks
           sudo mv /tmp/gitleaks /usr/local/bin/gitleaks
+          # Verify the binary is actually present — fail fast if the extract missed it.
+          command -v gitleaks || { echo "gitleaks binary not found after install"; exit 1; }
+          gitleaks version
       - name: gitleaks detect
         # Hard gate on committed secrets: fails if any new leaks are found.
-        # Fingerprints are pinned in .gitleaksignore.
+        # Fingerprints for known false-positives are pinned in .gitleaksignore.
         run: gitleaks detect --source . --redact --no-banner
 
   # Static analysis for Python security anti-patterns. The bandit ruleset via

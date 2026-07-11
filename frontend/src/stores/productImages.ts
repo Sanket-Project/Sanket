@@ -42,7 +42,7 @@ export function getProductImage(
 
   // 2. Otherwise, fall back to the beautiful 3D vertical illustrations
   const lowerInd = (industry ?? "electronics").toLowerCase();
-  if (lowerInd === "fashion") return "/assets/3d_fashion.png";
-  if (lowerInd === "pharma") return "/assets/3d_pharma.png";
-  return "/assets/3d_electronics.png";
+  if (lowerInd === "fashion") return `${import.meta.env.BASE_URL}assets/3d_fashion.png`;
+  if (lowerInd === "pharma") return `${import.meta.env.BASE_URL}assets/3d_pharma.png`;
+  return `${import.meta.env.BASE_URL}assets/3d_electronics.png`;
 }
