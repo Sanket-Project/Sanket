@@ -44,6 +44,29 @@ class RazorpaySubscriptionResult:
     short_url: str | None
 
 
+@dataclass(frozen=True, slots=True)
+class RazorpayPaymentResult:
+    payment_id: str
+    status: str  # created | authorized | captured | refunded | failed
+    amount: int  # in paise
+    currency: str
+    subscription_id: str | None
+
+
+def _signature_errors() -> tuple[type[BaseException], ...]:
+    """The SDK's signature-mismatch exception types, if the SDK is importable.
+
+    Kept narrow on purpose: catching bare `Exception` around signature
+    verification masks configuration and transport failures as forgeries.
+    """
+    try:
+        from razorpay.errors import SignatureVerificationError  # type: ignore
+
+        return (SignatureVerificationError,)
+    except ImportError:  # pragma: no cover - SDK always present in prod
+        return ()
+
+
 class RazorpayClient:
     def __init__(
         self,
@@ -94,8 +117,25 @@ class RazorpayClient:
         return await asyncio.to_thread(_impl)
 
     # ── Subscription ──
+    def cycles_for(self, billing_interval: str) -> int:
+        """Number of billing cycles to request for a given plan interval.
+
+        `total_count` is a count of *cycles*, not months. Sending the monthly
+        default (120) on a yearly plan asked Razorpay for 120 years of billing.
+        Yearly plans get the equivalent span in years instead.
+        """
+        if billing_interval == "year":
+            return max(1, self.total_count // 12)
+        return self.total_count
+
     async def create_subscription(
-        self, *, customer_id: str, plan_id: str, trial_days: int | None = None
+        self,
+        *,
+        customer_id: str,
+        plan_id: str,
+        trial_days: int | None = None,
+        redirect_url: str | None = None,
+        billing_interval: str = "month",
     ) -> RazorpaySubscriptionResult:
         client = self._module()
 
@@ -103,11 +143,14 @@ class RazorpayClient:
             data: dict[str, Any] = {
                 "plan_id": plan_id,
                 "customer_id": customer_id,
-                "total_count": self.total_count,
+                "total_count": self.cycles_for(billing_interval),
                 "customer_notify": 1,
             }
             if trial_days:
                 data["start_at"] = utc_now_sec() + trial_days * 86400
+            if redirect_url:
+                data["callback_url"] = redirect_url
+                data["callback_method"] = "get"
             s = client.subscription.create(data=data)
             return RazorpaySubscriptionResult(
                 subscription_id=s["id"],
@@ -146,7 +189,68 @@ class RazorpayClient:
 
         return await asyncio.to_thread(_impl)
 
-    # ── Webhook signature verification ──
+    # ── Signature Verification ──
+    def verify_payment_signature(
+        self, subscription_id: str, payment_id: str, signature: str
+    ) -> bool:
+        """Verify Razorpay payment signature for subscription authorization.
+
+        Only a genuine signature mismatch returns False. Everything else —
+        missing config, SDK import failure, transport errors — propagates.
+        The previous `except Exception` swallowed the RuntimeError raised by
+        `_module()` when Razorpay was unconfigured and silently fell through to
+        the manual HMAC, so an operator misconfiguration was indistinguishable
+        from a forged signature.
+        """
+        if not self.key_secret:
+            raise RuntimeError("Cannot verify payment signature — RAZORPAY_KEY_SECRET is not set.")
+
+        # `_module()` raising here is a config error and must not be caught.
+        client = self._module()
+        try:
+            client.utility.verify_subscription_payment_signature(
+                {
+                    "razorpay_subscription_id": subscription_id,
+                    "razorpay_payment_id": payment_id,
+                    "razorpay_signature": signature,
+                }
+            )
+            return True
+        except _signature_errors():
+            return False
+
+    def _hmac_signature(self, subscription_id: str, payment_id: str) -> str:
+        """Reference HMAC for a subscription payment. Test/offline helper."""
+        if not self.key_secret:
+            raise RuntimeError("RAZORPAY_KEY_SECRET is not set")
+        return hmac.new(
+            self.key_secret.encode("utf-8"),
+            f"{payment_id}|{subscription_id}".encode(),
+            "sha256",
+        ).hexdigest()
+
+    # ── Payment ──
+    async def fetch_payment(self, payment_id: str) -> RazorpayPaymentResult:
+        """Fetch a payment so its captured state and amount can be checked.
+
+        A valid signature only proves the (payment_id, subscription_id) pair was
+        signed with our key. It says nothing about whether money actually moved,
+        or how much. Activation must be gated on this call, not the signature.
+        """
+        client = self._module()
+
+        def _impl() -> RazorpayPaymentResult:
+            p = client.payment.fetch(payment_id)
+            return RazorpayPaymentResult(
+                payment_id=p["id"],
+                status=p.get("status", ""),
+                amount=int(p.get("amount") or 0),
+                currency=p.get("currency") or "",
+                subscription_id=p.get("subscription_id"),
+            )
+
+        return await asyncio.to_thread(_impl)
+
     def verify_webhook_signature(self, payload: bytes, signature: str, webhook_secret: str) -> None:
         """Raise razorpay.errors.SignatureVerificationError if invalid."""
         client = self._module()

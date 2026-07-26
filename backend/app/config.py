@@ -189,8 +189,27 @@ class Settings(BaseSettings):
     razorpay_key_secret: str | None = None
     razorpay_webhook_secret: str | None = None
     # Billing cycles a new subscription runs for before completing (Razorpay
-    # requires a finite total_count; ~10 years of monthly billing).
+    # requires a finite total_count). Interpreted per billing interval:
+    # monthly plans get this many months, yearly plans this many years — see
+    # RazorpayClient.cycles_for(). 120 monthly cycles is ~10 years.
     razorpay_total_count: int = 120
+
+    # Public origin of the SPA, used to build the Razorpay `callback_url`
+    # server-side. The callback carries `razorpay_payment_id` and
+    # `razorpay_signature` as query params, so it must never be attacker-chosen:
+    # a tenant admin supplying their own `redirect_url` would have signed
+    # payment results delivered to a host they control. Falls back to the first
+    # entry in `allowed_origins` when unset.
+    app_base_url: str | None = None
+
+    @property
+    def billing_callback_base(self) -> str:
+        """Trusted origin for payment-provider callbacks. Never client-derived."""
+        if self.app_base_url:
+            return self.app_base_url.rstrip("/")
+        if self.allowed_origins:
+            return self.allowed_origins[0].rstrip("/")
+        return "http://localhost:5173"
 
     # ── Webhook delivery ─────────────────────────────────────────────────────
     webhook_retry_worker_enabled: bool = True

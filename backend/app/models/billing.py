@@ -41,6 +41,8 @@ class Plan(Base):
     base_price_cents: Mapped[int] = mapped_column(Integer, nullable=False)
     billing_interval: Mapped[str] = mapped_column(Text, nullable=False, default="month")
     razorpay_plan_id: Mapped[str | None] = mapped_column(Text)
+    # Trial length is a property of the plan, never client-supplied. See 0017.
+    trial_days: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     included_quotas: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     overage_rates_cents: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
