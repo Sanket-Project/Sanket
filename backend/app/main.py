@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 
 import structlog
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -319,6 +320,32 @@ def create_app() -> FastAPI:
             content={"detail": exc.detail},
             headers=exc.headers or {},
         )
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_error_handler(
+        request: Request, exc: RequestValidationError
+    ) -> JSONResponse:
+        """Return validation errors without echoing what the caller submitted.
+
+        FastAPI's default handler serialises the offending value under
+        `input`. On any endpoint that takes a password — signup, dev-login,
+        password reset — that puts the plaintext password in the response
+        body, and from there into browser devtools, error-tracking SDKs,
+        proxy logs, CDN logs, and support screenshots. A 422 is a routine
+        client mistake; it must not be a credential disclosure.
+
+        `ctx` goes too: for several pydantic error types it carries the
+        rejected value or an exception object built from it.
+
+        `loc`, `msg` and `type` are preserved, because the frontend maps
+        errors onto form fields by `loc`. Removing `input` is not a
+        behavioural change for any correct client.
+        """
+        safe_errors = [
+            {"type": err.get("type", ""), "loc": err.get("loc", []), "msg": err.get("msg", "")}
+            for err in exc.errors()
+        ]
+        return JSONResponse(status_code=422, content={"detail": safe_errors})
 
     @app.exception_handler(Exception)
     async def generic_error_handler(request: Request, exc: Exception) -> JSONResponse:
