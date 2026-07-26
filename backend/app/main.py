@@ -403,14 +403,26 @@ def create_app() -> FastAPI:
     async def health(request: Request) -> JSONResponse:
         """Minimal liveness probe for load balancer health checks.
 
-        Returns only {"status": "ok" | "degraded"} — no version or environment
-        information is exposed to unauthenticated callers. See /health/detailed
-        for the full diagnostic view (requires authentication).
+        Returns liveness plus `git_sha`, the commit this build was produced
+        from. The SHA is here rather than only on /health/detailed so that a
+        deploy smoke test, a CI job, or a human with curl can confirm what is
+        actually running without needing a token — the gap that let two rounds
+        of payment fixes be reviewed as "shipped" while the running build
+        predated all of them.
+
+        Everything else (version, environment, per-subsystem status) stays
+        behind /health/detailed. Note the tradeoff: a commit SHA fingerprints
+        the exact build. That is the point, and it is also disclosure. Move
+        this line to /health/detailed if you would rather not publish it.
         """
         db_ok = await request.app.state.db.healthcheck()
         status_code = 200 if db_ok else 503
         return JSONResponse(
-            status_code=status_code, content={"status": "ok" if db_ok else "degraded"}
+            status_code=status_code,
+            content={
+                "status": "ok" if db_ok else "degraded",
+                "git_sha": settings.git_sha,
+            },
         )
 
     @app.get("/api/v1/health", tags=["ops"])
@@ -435,6 +447,7 @@ def create_app() -> FastAPI:
             status_code=status_code,
             content={
                 "status": status,
+                "git_sha": settings.git_sha,
                 "db": "ok" if db_ok else "unreachable",
                 "ml": "ok" if ml_ok else "unreachable",
             },
@@ -466,6 +479,7 @@ def create_app() -> FastAPI:
         return {
             "status": "ok" if db_ok else "degraded",
             "version": settings.app_version,
+            "git_sha": settings.git_sha,
             "env": settings.app_env,
             "db": "ok" if db_ok else "unreachable",
             "redis": "ok" if redis_ok else "unavailable",

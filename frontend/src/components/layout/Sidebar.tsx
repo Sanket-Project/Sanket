@@ -23,8 +23,45 @@ import {
   ChevronRight,
   type LucideIcon,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useIndustryStore } from "@/stores/industry";
 import { useSidebarStore } from "@/stores/sidebar";
+import { buildApi, shortSha } from "@/api/build";
+
+/**
+ * The commit the running backend was built from.
+ *
+ * Deliberately visible rather than buried in an admin page: the failure this
+ * guards against is a reviewer believing a fix is live when the running build
+ * predates it, and that belief is only corrected by something they see without
+ * looking for it. "unknown" means the build did not come from CI.
+ */
+const BuildStamp = () => {
+  const { data } = useQuery({
+    queryKey: ["build-info"],
+    queryFn: buildApi.info,
+    staleTime: 5 * 60_000,
+    retry: false,
+  });
+  if (!data) return null;
+  const sha = shortSha(data.git_sha);
+  const untrusted = sha === "unknown" || sha === "dev-local";
+  return (
+    <p
+      className={clsx(
+        "px-4 pt-2 font-mono text-[10px] leading-none tracking-wide",
+        untrusted ? "text-amber-500/70" : "text-content-muted/60 lg:text-[#BDD9D7]/40",
+      )}
+      title={
+        untrusted
+          ? `Backend build ${data.git_sha} — not produced by CI, so its provenance is unverified`
+          : `Backend build ${data.git_sha}`
+      }
+    >
+      build {sha}
+    </p>
+  );
+};
 
 interface NavEntry {
   to: string;
@@ -242,6 +279,8 @@ export const Sidebar = () => {
           {c ? <ChevronRight size={18} className="shrink-0" aria-hidden="true" /> : <ChevronLeft size={18} className="shrink-0" aria-hidden="true" />}
           {!c && <span className="animate-slide-in">Collapse</span>}
         </button>
+
+        {!c && <BuildStamp />}
       </div>
       </aside>
     </>

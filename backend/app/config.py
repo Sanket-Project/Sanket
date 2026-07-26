@@ -28,6 +28,15 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     app_env: Literal["development", "staging", "production"] = "development"
     app_debug: bool = False
+    # Git commit this build was produced from, baked in at image build time
+    # (Dockerfile ARG GIT_SHA ← build-images.yml). Surfaced on /health so a
+    # stale running build is detectable without guessing.
+    #
+    # This exists because it was not: security fixes sat uncommitted for five
+    # days while two reviews assumed they were deployed, and nothing in the
+    # running system could contradict that. "unknown" means the build did not
+    # go through CI — treat it as untrusted provenance, not as a default.
+    git_sha: str = "unknown"
     # NoDecode: stop pydantic-settings from JSON-decoding this list field at the
     # source level (which fails on a bare value like "https://app.example") and
     # let parse_origins handle both JSON arrays and comma-separated strings.

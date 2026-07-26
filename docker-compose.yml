@@ -37,6 +37,12 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      args:
+        # Reported by GET /health. Locally this is only as fresh as your last
+        # `docker compose build`, which is exactly the staleness it exists to
+        # expose. Set it explicitly for an accurate reading:
+        #   GIT_SHA=$(git rev-parse HEAD) docker compose up -d --build backend
+        GIT_SHA: ${GIT_SHA:-dev-local}
     image: sanket/backend:dev
     restart: unless-stopped
     depends_on:

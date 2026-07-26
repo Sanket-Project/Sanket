@@ -28,10 +28,18 @@ RUN pip install --no-cache-dir uv==0.10.11 \
 
 # ── runtime ─────────────────────────────────────────────────────────────────
 FROM python:${PYTHON_VERSION} AS runtime
+
+# Commit this image was built from. Passed by build-images.yml; surfaced on
+# /health so a stale deployment is detectable. Declared after the builder
+# stage on purpose — it changes every commit, and putting it earlier would
+# invalidate the dependency-install layer on every build.
+ARG GIT_SHA=unknown
+
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/opt/venv/bin:$PATH" \
-    APP_ENV=production
+    APP_ENV=production \
+    GIT_SHA=${GIT_SHA}
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
