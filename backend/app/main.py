@@ -503,6 +503,12 @@ def create_app() -> FastAPI:
                 redis_ok = True
             except Exception:
                 pass
+        # Schema drift, queryable rather than buried in a boot-time warning.
+        # check_migration_version() already computes this at startup and only
+        # logs it, which is how the database sat one migration behind long
+        # enough that every read of the `plans` table 500'd and the cause was
+        # attributed to application code for two audit rounds. Never raises.
+        migrations_ok = await request.app.state.db.check_migration_version()
         return {
             "status": "ok" if db_ok else "degraded",
             "version": settings.app_version,
@@ -510,6 +516,7 @@ def create_app() -> FastAPI:
             "env": settings.app_env,
             "db": "ok" if db_ok else "unreachable",
             "redis": "ok" if redis_ok else "unavailable",
+            "migrations": "ok" if migrations_ok else "behind",
         }
 
     @app.get("/", tags=["ops"], include_in_schema=False)
