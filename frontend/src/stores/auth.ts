@@ -6,6 +6,7 @@ import {
   signOut,
 } from "firebase/auth";
 import { authApi } from "@/api/auth";
+import { onboardingApi } from "@/api/onboarding";
 import { firebaseAuth, firebaseEnabled } from "@/lib/firebase";
 import toast from "react-hot-toast";
 import { useIndustryStore } from "@/stores/industry";
@@ -22,6 +23,26 @@ import type {
 // (IndexedDB), so we never persist a bearer token in localStorage there.
 const DEV_TOKEN_KEY = "sanket.dev.token";
 const DEV_SESSION_KEY = "sanket.dev.session";
+
+/**
+ * Keep the persisted session snapshot's onboarding slice in step with the store.
+ *
+ * The snapshot is written at login/signup and was never rewritten afterwards,
+ * so it went stale the moment the wizard advanced. Anything that reloads the
+ * page reads this blob, which is why a completed setup could still bounce to
+ * step 1.
+ */
+function persistOnboarding(o: OnboardingState | null): void {
+  try {
+    const raw = localStorage.getItem(DEV_SESSION_KEY);
+    if (!raw) return;
+    const session = JSON.parse(raw) as SessionInfo;
+    session.onboarding = o ?? undefined;
+    localStorage.setItem(DEV_SESSION_KEY, JSON.stringify(session));
+  } catch {
+    /* storage unavailable or corrupt — the in-memory slice is still correct */
+  }
+}
 
 interface AuthState {
   ready: boolean; // bootstrap finished — gates route guards to avoid flicker
@@ -49,6 +70,21 @@ interface AuthState {
   setSession: (s: SessionInfo, token: string | null) => void;
   /** Update just the onboarding slice (after a wizard step persists). */
   setOnboarding: (o: OnboardingState | null) => void;
+  /**
+   * Swap in a re-minted bearer without re-running the whole session bootstrap.
+   * Used after the industry step, which returns a token carrying the new `ind`
+   * claim. Persists so a reload keeps the corrected claim.
+   */
+  replaceToken: (token: string) => void;
+  /**
+   * Re-read setup readiness from the server and persist it.
+   *
+   * The `onboarding` slice used to come only from the login-time
+   * `sanket.dev.session` snapshot, which the wizard never rewrote — so a full
+   * page load after finishing setup rehydrated `in_progress` and
+   * OnboardingGate bounced the tenant back to step 1.
+   */
+  refreshOnboarding: () => Promise<OnboardingState | null>;
   /** Back-compat shim for TopBar: identity fields from store state. */
   decodeToken: () => {
     sub: string | null;
@@ -107,7 +143,36 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     });
   },
 
-  setOnboarding: (o) => set({ onboarding: o }),
+  // Also rewrite the persisted snapshot. Without this the update was
+  // in-memory only: SPA navigation looked correct, but F5 / a typed URL / a
+  // new tab rehydrated the stale login-time blob and OnboardingGate sent a
+  // tenant who had just finished setup back to step 1 (docs/audit/02 P0-3).
+  setOnboarding: (o) => {
+    set({ onboarding: o });
+    persistOnboarding(o);
+  },
+
+  replaceToken: (token) => {
+    set({ accessToken: token });
+    try {
+      localStorage.setItem(DEV_TOKEN_KEY, token);
+    } catch {
+      /* storage may be unavailable; the in-memory token still works */
+    }
+  },
+
+  refreshOnboarding: async () => {
+    try {
+      const state = await onboardingApi.getState();
+      get().setOnboarding(state);
+      return state;
+    } catch {
+      // Never block the app on this: the persisted snapshot is a usable
+      // fallback, and a hard failure here would lock the user out of a
+      // workspace they can legitimately reach.
+      return get().onboarding;
+    }
+  },
 
   bootstrap: () => {
     if (bootstrapped) return;
@@ -126,6 +191,8 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
           if (!get().isAuthenticated) {
             const s = await verifySessionOnce(token);
             get().setSession(s, token);
+            // Server is authoritative for setup readiness — see below.
+            void get().refreshOnboarding();
           }
         } catch (err) {
           const status = (err as { response?: { status?: number } })?.response?.status;
@@ -174,6 +241,12 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
           } else {
             const s = JSON.parse(raw) as SessionInfo;
             get().setSession(s, token);
+            // The snapshot gets the UI on screen without a round-trip, but the
+            // server owns the truth. Re-read it so a stale `in_progress` from
+            // signup cannot bounce a tenant who has since finished setup back
+            // into the wizard (docs/audit/02 P0-3). Fire-and-forget: the guard
+            // re-renders when the slice updates.
+            void get().refreshOnboarding();
           }
         }
       } catch {

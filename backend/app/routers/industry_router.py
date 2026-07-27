@@ -7,7 +7,9 @@ import structlog
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy import select
 
+from app.config import get_settings
 from app.core.exceptions import AuthenticationError, IndustryNotEnabledError
+from app.core.firebase_auth import get_verifier
 from app.core.rbac import require_admin
 from app.models.enums import IndustryCode
 from app.models.industry import IndustryProfile
@@ -181,9 +183,43 @@ async def activate_industry(
     Validates the code against the tenant's licensed industries, then updates
     both ``Tenant.active_industry`` and the calling ``User.active_industry``.
 
-    Note: the new industry takes effect on the next token refresh — the auth
-    session handler re-syncs the stale ``ind`` claim. The SPA also applies the
-    choice to its local industry store for immediate UI effect.
+    Returns a re-minted access token carrying the new ``ind`` claim
+    (dev-fallback mode only — see below).
+
+    Why re-mint here
+    ----------------
+    ``ind`` is baked into the token at login and read straight off the claim by
+    ``TenantContextMiddleware`` (``middleware/tenant_context.py:107``). Choosing
+    an industry during onboarding wrote the database but left the claim alone,
+    so for the remainder of that session every request that did *not* carry an
+    ``X-Industry-Code`` override was served the signup default — for a pharma
+    tenant that means a 26-week horizon, fashion signals, and **standard audit
+    level**, while the header renders ``GXP · 21 CFR PART 11``
+    (docs/audit/02 P0-4, narrowed by 04). The first session is when a tenant
+    runs their baseline forecast, so the window is small and badly placed.
+
+    Re-minting was chosen over resolving ``ind`` from the database on every
+    request for three reasons:
+
+    * the deny-by-default ``X-Industry-Code`` validation
+      (``tenant_context.py:114-138``) is built on the token being authoritative
+      for both ``ind`` and ``industries``; making one of them DB-derived and
+      the other claim-derived splits the trust model of a control that
+      currently works;
+    * a per-request lookup adds a database round-trip to the hot path that the
+      claim design exists specifically to avoid;
+    * industry changes are rare and funnel through this one endpoint, so the
+      staleness window is enumerable rather than open-ended.
+
+    The trade-off: any *other* future writer of ``active_industry`` must
+    re-mint too, or reintroduce the bug. If industry ever becomes mutable from
+    several places, switch to DB resolution and accept the round-trip.
+
+    Firebase mode is unchanged and still stale: ``ind`` is a custom claim set
+    at provisioning, so the equivalent fix is ``set_custom_user_claims`` plus a
+    client-side ``getIdToken(true)``. Not implemented here because there is no
+    Firebase project configured to verify it against — tracked in
+    docs/audit/00-open-questions.md.
     """
     code = body.code.value if hasattr(body.code, "value") else str(body.code)
     db = request.app.state.db
@@ -201,5 +237,33 @@ async def activate_industry(
             user.active_industry = body.code
         await session.flush()
 
-    log.info("industry.activated", tenant_id=str(tenant_id), code=code)
-    return {"active_industry": code}
+        industries = [i.value if hasattr(i, "value") else str(i) for i in tenant.industries]
+        user_email = user.email if user is not None else None
+        user_role = user.role.value if user is not None else None
+
+    result: dict = {"active_industry": code}
+
+    # Dev-fallback only. In Firebase mode the SDK owns the token and
+    # mint_dev_token refuses to run, so the claim stays stale until the
+    # provisioning claims are updated — see the docstring.
+    settings = get_settings()
+    if not settings.firebase_enabled and user_role is not None:
+        token, expires_in = get_verifier().mint_dev_token(
+            uid=str(user_id),
+            puid=str(user_id),
+            email=user_email,
+            tid=str(tenant_id),
+            role=user_role,
+            ind=code,
+            industries=industries,
+        )
+        result["access_token"] = token
+        result["expires_in"] = expires_in
+
+    log.info(
+        "industry.activated",
+        tenant_id=str(tenant_id),
+        code=code,
+        token_reissued="access_token" in result,
+    )
+    return result

@@ -9,8 +9,12 @@ import {
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { industryApi } from "@/api/industry";
 import { planningApi } from "@/api/onboarding";
 import type { StepHandle, StepProps } from "./types";
+
+/** Last-resort default, used only until the industry profile resolves. */
+const DEFAULT_HORIZON_WEEKS = 13;
 
 const schema = z.object({
   calendar: z.object({
@@ -47,17 +51,43 @@ export const StepCalendar = forwardRef<StepHandle, StepProps>(function StepCalen
 ) {
   const { data } = useQuery({ queryKey: ["planning", "config"], queryFn: planningApi.getConfig });
 
+  // Step 1 advertises the industry's horizon on the card the user just picked
+  // ("52-wk horizon" for Pharmaceuticals, StepIndustry.tsx:109). This step used
+  // to hardcode 13 for every industry, so the wizard contradicted itself two
+  // screens apart and quietly wrote the wrong horizon (docs/audit/02 P1-7).
+  // `effective_horizon` is the resolved value, including any tenant override.
+  const { data: profile } = useQuery({
+    queryKey: ["industry", "profile"],
+    queryFn: industryApi.profile,
+    staleTime: 5 * 60_000,
+  });
+  const industryHorizon = profile?.effective_horizon;
+
   const { register, handleSubmit, reset } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      calendar: { fiscal_year_start_month: 1, period: "weekly", week_start: "monday", horizon_weeks: 13 },
+      calendar: {
+        fiscal_year_start_month: 1,
+        period: "weekly",
+        week_start: "monday",
+        horizon_weeks: DEFAULT_HORIZON_WEEKS,
+      },
       rules: { min_history_weeks: 8, default_service_level: 0.95, review_cadence: "weekly" },
     },
   });
 
   useEffect(() => {
-    if (data) reset(data as FormValues);
-  }, [data, reset]);
+    // A saved planning config always wins — the tenant chose it deliberately.
+    // Otherwise seed from the industry so the field agrees with step 1.
+    if (data) {
+      reset(data as FormValues);
+    } else if (industryHorizon) {
+      reset((prev) => ({
+        ...prev,
+        calendar: { ...prev.calendar, horizon_weeks: industryHorizon },
+      }));
+    }
+  }, [data, industryHorizon, reset]);
 
   useImperativeHandle(ref, () => ({
     submit: () =>

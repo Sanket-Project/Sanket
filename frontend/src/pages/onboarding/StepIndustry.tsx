@@ -11,6 +11,7 @@ import {
 import toast from "react-hot-toast";
 
 import { industryApi } from "@/api/industry";
+import { useAuthStore } from "@/stores/auth";
 import { useIndustryStore } from "@/stores/industry";
 import type { IndustryCode } from "@/types/api";
 import type { StepHandle, StepProps } from "./types";
@@ -28,6 +29,7 @@ export const StepIndustry = forwardRef<StepHandle, StepProps>(function StepIndus
   ref,
 ) {
   const setIndustry = useIndustryStore((s) => s.setIndustry);
+  const replaceToken = useAuthStore((s) => s.replaceToken);
   const activeIndustry = useIndustryStore((s) => s.activeIndustry);
   const [selected, setSelected] = useState<IndustryCode | null>(activeIndustry ?? null);
 
@@ -47,7 +49,13 @@ export const StepIndustry = forwardRef<StepHandle, StepProps>(function StepIndus
         return false;
       }
       try {
-        await industryApi.activate(selected);
+        const res = await industryApi.activate(selected);
+        // Swap in the re-minted bearer before anything else runs. `ind` is
+        // baked into the token at login, so without this the rest of the
+        // session carries the signup default and a pharma tenant is served
+        // the fashion archetype and standard audit level while the header
+        // renders "GXP · 21 CFR PART 11" (docs/audit/02 P0-4).
+        if (res.access_token) replaceToken(res.access_token);
         setIndustry(selected);
         await save({
           mark_step: thisStep,
