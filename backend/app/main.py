@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import get_settings
 from app.core.database import Database
+from app.core.entitlement import require_active_subscription
 from app.core.exceptions import SanketBaseError
 from app.core.logging import configure_logging
 from app.core.observability import configure_observability
@@ -389,39 +390,70 @@ def create_app() -> FastAPI:
 
     api_prefix = "/api/v1"
 
+    # ── Entitlement ──────────────────────────────────────────────────────────
+    # Every router carrying tenant data is gated on a live subscription. This
+    # is THE paywall; SubscriptionGate.tsx is only its presentation. Applied at
+    # include_router so a new endpoint inherits the gate by construction rather
+    # than by the author remembering a decorator.
+    #
+    # Ungated, deliberately — each of these must work for a tenant that has not
+    # paid, or the tenant can never reach the point of paying:
+    #   auth          sign in / sign up / session bootstrap
+    #   industry      the shell and the paywall render from /industry/profile
+    #   onboarding    setup precedes purchase
+    #   invites       onboarding's team step calls it
+    #   planning      onboarding's calendar step reads and writes /planning/config;
+    #                 it is tenant configuration and returns no product value
+    #   demo_request  public lead capture, pre-tenant
+    #   billing       gating the checkout behind a subscription is a deadlock
+    #   websocket     realtime is push-only and carries no data the REST API
+    #                 does not already gate; see docs/audit/05
+    #
+    # The boundary is deliberately "you can set up and put data in, you cannot
+    # get anything out": onboarding's file upload stays open (the wizard runs
+    # before the paywall), while every read of products, SKUs, forecasts,
+    # signals and analytics is gated — so an unsubscribed tenant can finish
+    # setup and import a catalogue, and see none of it.
+    gated = [require_active_subscription()]
+
     app.include_router(auth_router, prefix=api_prefix)
     app.include_router(industry_router, prefix=api_prefix)
     app.include_router(onboarding_router, prefix=api_prefix)
     app.include_router(planning_router, prefix=api_prefix)
     app.include_router(invites_router, prefix=api_prefix)
-    app.include_router(products_router, prefix=api_prefix)
-    app.include_router(skus_router, prefix=api_prefix)
-    app.include_router(signals_router, prefix=api_prefix)
-    app.include_router(fashion_router, prefix=api_prefix)
-    app.include_router(electronics_router, prefix=api_prefix)
-    app.include_router(pharma_router, prefix=api_prefix)
-    app.include_router(agrocenter_router, prefix=api_prefix)
-    app.include_router(hardware_router, prefix=api_prefix)
+    app.include_router(products_router, prefix=api_prefix, dependencies=gated)
+    app.include_router(skus_router, prefix=api_prefix, dependencies=gated)
+    app.include_router(signals_router, prefix=api_prefix, dependencies=gated)
+    app.include_router(fashion_router, prefix=api_prefix, dependencies=gated)
+    app.include_router(electronics_router, prefix=api_prefix, dependencies=gated)
+    app.include_router(pharma_router, prefix=api_prefix, dependencies=gated)
+    app.include_router(agrocenter_router, prefix=api_prefix, dependencies=gated)
+    app.include_router(hardware_router, prefix=api_prefix, dependencies=gated)
     app.include_router(demo_request_router, prefix=api_prefix)
     app.include_router(billing_router, prefix=api_prefix)
-    app.include_router(webhooks_router, prefix=api_prefix)
+    app.include_router(webhooks_router, prefix=api_prefix, dependencies=gated)
     # Phase 6: trend signals, hybrid forecasts, shortage alerts
-    app.include_router(trends_router, prefix=api_prefix)
-    app.include_router(hybrid_forecast_router, prefix=api_prefix)
-    app.include_router(shortage_alerts_router, prefix=api_prefix)
+    app.include_router(trends_router, prefix=api_prefix, dependencies=gated)
+    app.include_router(hybrid_forecast_router, prefix=api_prefix, dependencies=gated)
+    app.include_router(shortage_alerts_router, prefix=api_prefix, dependencies=gated)
     # Analytics improvements
-    app.include_router(cross_industry_router, prefix=api_prefix)  # before shortage_alerts catch-all
-    app.include_router(anomaly_router, prefix=api_prefix)
-    app.include_router(inventory_router, prefix=api_prefix)
-    app.include_router(financial_router, prefix=api_prefix)
-    app.include_router(sales_analytics_router, prefix=api_prefix)
-    app.include_router(export_router, prefix=api_prefix)
-    app.include_router(forecast_accuracy_router, prefix=api_prefix)
-    app.include_router(forecasts_router, prefix=api_prefix)
+    app.include_router(
+        cross_industry_router, prefix=api_prefix, dependencies=gated
+    )  # before shortage_alerts catch-all
+    app.include_router(anomaly_router, prefix=api_prefix, dependencies=gated)
+    app.include_router(inventory_router, prefix=api_prefix, dependencies=gated)
+    app.include_router(financial_router, prefix=api_prefix, dependencies=gated)
+    app.include_router(sales_analytics_router, prefix=api_prefix, dependencies=gated)
+    app.include_router(export_router, prefix=api_prefix, dependencies=gated)
+    app.include_router(forecast_accuracy_router, prefix=api_prefix, dependencies=gated)
+    app.include_router(forecasts_router, prefix=api_prefix, dependencies=gated)
     # Shopify (literal routes) must be registered before the Hub's generic
     # /integrations/{provider} routes so the dedicated flow isn't shadowed.
-    app.include_router(integrations_router, prefix=api_prefix)
-    app.include_router(integrations_hub_router, prefix=api_prefix)
+    # The Shopify webhook and the push-ingest endpoint are in the auth
+    # middleware's public set, and onboarding's two upload paths are in
+    # entitlement._SETUP_PATHS — the dependency short-circuits on all of them.
+    app.include_router(integrations_router, prefix=api_prefix, dependencies=gated)
+    app.include_router(integrations_hub_router, prefix=api_prefix, dependencies=gated)
     # WebSocket is mounted at /ws, not under /api/v1
     app.include_router(ws_router)
 

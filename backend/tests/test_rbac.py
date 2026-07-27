@@ -34,6 +34,23 @@ async def _seed_tenant(db: AsyncSession, slug: str, name: str) -> uuid.UUID:
         ),
         {"id": str(tid), "slug": slug, "name": name},
     )
+    # RBAC is tested through gated endpoints (/products), so the tenant needs a
+    # live subscription or entitlement 402s before the role check ever runs.
+    # See app/core/entitlement.py. Inlined rather than imported from conftest:
+    # `tests.conftest` resolves to backend/ml/tests/conftest.py on this path.
+    await db.execute(
+        text(
+            """
+            INSERT INTO subscriptions (id, tenant_id, plan_id, status,
+                                       current_period_start, current_period_end,
+                                       cancel_at_period_end, metadata)
+            VALUES (:sid, :tid, 'enterprise_monthly', 'active',
+                    now() - interval '1 day', now() + interval '365 days',
+                    FALSE, '{}'::jsonb)
+            """
+        ),
+        {"sid": str(uuid.uuid4()), "tid": str(tid)},
+    )
     await db.commit()
     return tid
 

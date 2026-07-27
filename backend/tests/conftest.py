@@ -51,9 +51,9 @@ def postgres_container():
     """Start a real PostgreSQL with pgvector for the test session."""
     from testcontainers.postgres import PostgresContainer
 
-    with PostgresContainer(
-        image="pgvector/pgvector:pg16", driver="asyncpg"
-    ).with_env("POSTGRES_DB", "sanket_test") as pg:
+    with PostgresContainer(image="pgvector/pgvector:pg16", driver="asyncpg").with_env(
+        "POSTGRES_DB", "sanket_test"
+    ) as pg:
         os.environ["DATABASE_URL"] = pg.get_connection_url().replace(
             "postgresql+asyncpg://", "postgresql+asyncpg://"
         )
@@ -107,14 +107,53 @@ async def db_session(setup_schema) -> AsyncIterator[AsyncSession]:
     await db.close()
 
 
+async def grant_active_subscription(db: AsyncSession, tenant_id: uuid.UUID) -> None:
+    """Give a tenant a live subscription so entitlement does not 402 its requests.
+
+    Every tenant-data router is gated on ``require_active_subscription``
+    (``app/core/entitlement.py``). Tests that exercise something else — RBAC,
+    connectors, webhook delivery — still have to get past the paywall, exactly
+    as a real customer does. Call this from any fixture that seeds a tenant and
+    then drives a gated endpoint.
+
+    Deliberately a helper rather than something baked into the ``client``
+    fixture: entitlement should be granted where a test means to grant it, so
+    that a test which forgets is a visible 402 and not a silent bypass.
+    """
+    existing = await db.execute(
+        text(
+            "SELECT 1 FROM subscriptions "
+            "WHERE tenant_id = :tid AND status IN ('active','trialing') "
+            "AND current_period_end > now()"
+        ),
+        {"tid": str(tenant_id)},
+    )
+    if existing.fetchone():
+        return
+
+    await db.execute(
+        text(
+            """
+            INSERT INTO subscriptions (id, tenant_id, plan_id, status,
+                                       current_period_start, current_period_end,
+                                       cancel_at_period_end, metadata)
+            VALUES (:id, :tid, 'enterprise_monthly', 'active',
+                    now() - interval '1 day', now() + interval '365 days',
+                    FALSE, '{}'::jsonb)
+            """
+        ),
+        {"id": str(uuid.uuid4()), "tid": str(tenant_id)},
+    )
+    await db.commit()
+
+
 @pytest_asyncio.fixture
 async def test_tenant_id(db_session: AsyncSession) -> uuid.UUID:
     # Avoid duplicate key value unique violation by checking if tenant already exists
-    result = await db_session.execute(
-        text("SELECT id FROM tenants WHERE slug = 'test-tenant'")
-    )
+    result = await db_session.execute(text("SELECT id FROM tenants WHERE slug = 'test-tenant'"))
     row = result.fetchone()
     if row:
+        await grant_active_subscription(db_session, row[0])
         return row[0]
 
     tenant_id = uuid.uuid4()
@@ -142,6 +181,7 @@ async def test_tenant_id(db_session: AsyncSession) -> uuid.UUID:
         {"id": str(tenant_id)},
     )
     await db_session.commit()
+    await grant_active_subscription(db_session, tenant_id)
     return tenant_id
 
 

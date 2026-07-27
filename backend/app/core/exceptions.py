@@ -70,6 +70,20 @@ class TenantSuspendedError(SanketBaseError):
         )
 
 
+class SubscriptionRequiredError(SanketBaseError):
+    """No live subscription backs this tenant's request.
+
+    402 rather than 403: the caller is authenticated and permitted, the
+    account simply is not paid up. The frontend routes 402 to the paywall,
+    which 403 (a role problem) must not do.
+    """
+
+    def __init__(
+        self, detail: str = "An active subscription is required to access this resource."
+    ) -> None:
+        super().__init__(status_code=status.HTTP_402_PAYMENT_REQUIRED, detail=detail)
+
+
 class IndustryNotEnabledError(SanketBaseError):
     def __init__(self, industry: str) -> None:
         super().__init__(

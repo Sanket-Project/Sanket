@@ -218,6 +218,22 @@ async def tenant_id(db) -> uuid.UUID:
             ),
             {"id": str(tid), "slug": f"sqlsrc-{tid.hex[:8]}"},
         )
+        # The integrations routers are gated on a live subscription
+        # (app/core/entitlement.py), so a connector test has to get past the
+        # paywall the same way a paying customer does.
+        await session.execute(
+            text(
+                """
+                INSERT INTO subscriptions (id, tenant_id, plan_id, status,
+                                           current_period_start, current_period_end,
+                                           cancel_at_period_end, metadata)
+                VALUES (:sid, :id, 'enterprise_monthly', 'active',
+                        now() - interval '1 day', now() + interval '365 days',
+                        FALSE, '{}'::jsonb)
+                """
+            ),
+            {"sid": str(uuid.uuid4()), "id": str(tid)},
+        )
     return tid
 
 
