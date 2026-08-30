@@ -251,9 +251,11 @@ class Database:
 
 
 async def seed_database_if_empty() -> None:
-    """Seed a dev tenant + users + industry profiles on a fresh database.
+    """Seed a dev tenant and reconcile its required local accounts.
 
-    Idempotent: checks for the `sanket-dev` tenant slug and bails if found.
+    Idempotent: creates the tenant on a fresh database, then independently
+    ensures the public sandbox viewer exists.  The reconciliation step matters
+    for long-lived databases created before the sandbox account was introduced.
     """
     import uuid
 
@@ -270,7 +272,8 @@ async def seed_database_if_empty() -> None:
         async with db.session_no_rls() as session:
             existing = await session.scalar(select(Tenant).where(Tenant.slug == "sanket-dev"))
             if existing is not None:
-                log.info("database.seed.skipped", reason="sanket-dev already exists")
+                tenant_id = existing.id
+                log.info("database.seed.tenant_exists", slug="sanket-dev")
             else:
                 log.info("database.seed.start")
                 tenant_id = uuid.uuid4()
@@ -313,17 +316,24 @@ async def seed_database_if_empty() -> None:
                         is_active=True,
                     )
                 )
-                # Dedicated least-privilege account backing the public "Try the
-                # Sandbox" flow (settings.sandbox_email). It is a VIEWER, not the
-                # owner/admin above, so an anonymous visitor who starts a sandbox
-                # session cannot mutate shared demo data, manage members, or reach
-                # billing. No password_hash: in Firebase mode a passwordless custom
-                # token is minted; in dev mode a dev token is minted server-side.
+                log.info("database.seed.completed", tenant_id=str(tenant_id))
+
+            # Dedicated least-privilege account backing the public "Try the
+            # Sandbox" flow. This is reconciled even when the tenant predates
+            # the feature; the old early return left every upgraded workspace
+            # permanently unable to launch the sandbox.
+            sandbox_user = await session.scalar(
+                select(User).where(
+                    User.tenant_id == tenant_id,
+                    User.email == settings.sandbox_email,
+                )
+            )
+            if sandbox_user is None:
                 session.add(
                     User(
                         id=uuid.uuid4(),
                         tenant_id=tenant_id,
-                        email="sandbox@sanket-dev.com",
+                        email=settings.sandbox_email,
                         password_hash=None,
                         full_name="Sandbox Guest",
                         role=UserRole.viewer,
@@ -331,7 +341,14 @@ async def seed_database_if_empty() -> None:
                         is_active=True,
                     )
                 )
-                log.info("database.seed.completed", tenant_id=str(tenant_id))
+                log.info("database.seed.sandbox_user_created", tenant_id=str(tenant_id))
+            else:
+                # The account is publicly mintable, so enforce the security
+                # invariant on every startup: viewer-only and passwordless.
+                sandbox_user.password_hash = None
+                sandbox_user.role = UserRole.viewer
+                sandbox_user.is_active = True
+                log.info("database.seed.sandbox_user_verified", tenant_id=str(tenant_id))
 
         # NOTE: demo product/SKU/inventory catalog seeding has been intentionally
         # removed. A fresh database now starts with an empty catalog so the app is

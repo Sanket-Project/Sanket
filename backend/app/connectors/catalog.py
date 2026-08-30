@@ -99,6 +99,11 @@ class ConnectorSpec:
     # Presentation hints consumed by the frontend.
     icon: str = "plug"  # lucide icon key (frontend maps string → component)
     accent: str = "from-slate-500 to-slate-600"  # tailwind gradient pair
+    # ISO-3166 alpha-2 when a provider is specific to one market. Indian SMEs
+    # run on Tally / Busy / Marg / Vyapar / Zoho, which no global catalog
+    # bothers to list; tagging them lets the Hub surface them first for an
+    # Indian tenant instead of burying them under SAP and NetSuite.
+    region: str | None = None
 
 
 # ── Reusable auth-field bundles ──────────────────────────────────────────────
@@ -431,6 +436,220 @@ CATALOG: list[ConnectorSpec] = [
         ),
         icon="building-2",
         accent="from-violet-600 to-purple-700",
+    ),
+    # ── ERP & accounting: India ──────────────────────────────────────────────
+    # The systems Indian SMEs actually run on. Every global forecasting tool
+    # integrates SAP and NetSuite and none of them integrate Tally, which is
+    # what a pharma distributor in Nagpur has actually got. Tally, Busy, Marg
+    # and Vyapar are desktop/LAN products, so the practical path is their
+    # export/ODBC/XML bridge rather than a cloud OAuth flow — the connect form
+    # captures what the adapter will need.
+    ConnectorSpec(
+        key="tally_prime",
+        name="Tally Prime / ERP 9",
+        category=ConnectorCategory.erp,
+        availability=ConnectorAvailability.planned,
+        summary="Tally Prime & ERP 9 — sales vouchers, stock summary and item "
+        "masters over Tally's XML/HTTP gateway.",
+        feeds=("sales", "inventory", "products"),
+        auth_fields=(
+            AuthField(
+                key="gateway_url",
+                label="Tally gateway URL",
+                type="url",
+                placeholder="http://192.168.1.10:9000",
+                help="Enable 'Act as Server' in Tally (F1 → Settings → Connectivity). "
+                "The port defaults to 9000.",
+            ),
+            AuthField(
+                key="company_name",
+                label="Company name in Tally",
+                placeholder="Exactly as it appears in Tally's company list",
+            ),
+            AuthField(
+                key="tally_user",
+                label="Tally username",
+                required=False,
+                help="Only needed if the company has security control enabled.",
+            ),
+            AuthField(
+                key="tally_password",
+                label="Tally password",
+                type="password",
+                required=False,
+                secret=True,
+            ),
+        ),
+        docs_url="https://help.tallysolutions.com/tally-prime/tally-integration/",
+        icon="building-2",
+        accent="from-blue-700 to-indigo-800",
+        region="IN",
+    ),
+    ConnectorSpec(
+        key="zoho_books",
+        name="Zoho Books",
+        category=ConnectorCategory.erp,
+        availability=ConnectorAvailability.planned,
+        summary="Zoho Books — invoices, credit notes and customer ledgers as a "
+        "sales feed.",
+        feeds=("sales",),
+        auth_fields=(
+            AuthField(key="organization_id", label="Organization ID", placeholder="60012345678"),
+            AuthField(
+                key="data_center",
+                label="Data centre",
+                type="select",
+                options=("in", "com", "eu", "au", "jp"),
+                help="`in` for zoho.in accounts — most Indian tenants.",
+            ),
+            AuthField(key="client_id", label="Client ID"),
+            AuthField(key="client_secret", label="Client secret", type="password", secret=True),
+            AuthField(key="refresh_token", label="Refresh token", type="password", secret=True),
+        ),
+        docs_url="https://www.zoho.com/books/api/v3/",
+        icon="book-open",
+        accent="from-red-600 to-orange-700",
+        region="IN",
+    ),
+    ConnectorSpec(
+        key="zoho_inventory",
+        name="Zoho Inventory",
+        category=ConnectorCategory.erp,
+        availability=ConnectorAvailability.planned,
+        summary="Zoho Inventory — stock on hand by warehouse, item masters and "
+        "sales orders.",
+        feeds=("sales", "inventory", "products"),
+        auth_fields=(
+            AuthField(key="organization_id", label="Organization ID", placeholder="60012345678"),
+            AuthField(
+                key="data_center",
+                label="Data centre",
+                type="select",
+                options=("in", "com", "eu", "au", "jp"),
+            ),
+            AuthField(key="client_id", label="Client ID"),
+            AuthField(key="client_secret", label="Client secret", type="password", secret=True),
+            AuthField(key="refresh_token", label="Refresh token", type="password", secret=True),
+        ),
+        docs_url="https://www.zoho.com/inventory/api/v1/",
+        icon="package",
+        accent="from-red-500 to-rose-600",
+        region="IN",
+    ),
+    ConnectorSpec(
+        key="busy_accounting",
+        name="Busy Accounting",
+        category=ConnectorCategory.erp,
+        availability=ConnectorAvailability.planned,
+        summary="Busy — sales registers, stock and item masters via its SQL/ODBC "
+        "data layer.",
+        feeds=("sales", "inventory", "products"),
+        auth_fields=(
+            AuthField(
+                key="sql_host",
+                label="SQL host or ODBC data-source name",
+                placeholder="192.168.1.20\\BUSY  or  BUSY_SERVER",
+                help="Busy stores its data in SQL Server; we read it read-only. Put the "
+                "host or DSN name here and the login below — never a full connection "
+                "string with the password embedded in it.",
+            ),
+            AuthField(key="company_code", label="Company code", required=False),
+            AuthField(key="db_user", label="Database user", required=False),
+            AuthField(
+                key="db_password", label="Database password", type="password",
+                required=False, secret=True,
+            ),
+        ),
+        icon="calculator",
+        accent="from-emerald-600 to-teal-700",
+        region="IN",
+    ),
+    ConnectorSpec(
+        key="marg_erp",
+        name="Marg ERP",
+        category=ConnectorCategory.erp,
+        availability=ConnectorAvailability.planned,
+        summary="Marg ERP — the default in Indian pharma distribution: batch-wise "
+        "sales, stock and expiry.",
+        feeds=("sales", "inventory", "products", "batches"),
+        auth_fields=(
+            AuthField(
+                key="server_host",
+                label="Marg server host",
+                placeholder="192.168.1.30",
+                help="Marg runs on your LAN; we connect to its data service read-only.",
+            ),
+            AuthField(key="company_code", label="Company code", required=False),
+            AuthField(key="api_user", label="API user", required=False),
+            AuthField(
+                key="api_password", label="API password", type="password",
+                required=False, secret=True,
+            ),
+        ),
+        icon="pill",
+        accent="from-cyan-600 to-blue-700",
+        region="IN",
+    ),
+    ConnectorSpec(
+        key="vyapar",
+        name="Vyapar",
+        category=ConnectorCategory.erp,
+        availability=ConnectorAvailability.planned,
+        summary="Vyapar — mobile-first billing used by smaller retailers and "
+        "wholesalers; sales and stock exports.",
+        feeds=("sales", "inventory"),
+        auth_fields=_request_only(
+            "Vyapar has no public API yet — we'll set up a scheduled export drop "
+            "(the same CSV/Excel path the file connector uses)."
+        ),
+        icon="smartphone",
+        accent="from-indigo-600 to-violet-700",
+        region="IN",
+    ),
+    ConnectorSpec(
+        key="erpnext",
+        name="ERPNext / Frappe",
+        category=ConnectorCategory.erp,
+        availability=ConnectorAvailability.planned,
+        summary="ERPNext — Sales Invoice, Bin (stock) and Item doctypes over the "
+        "Frappe REST API.",
+        feeds=("sales", "inventory", "products", "purchase_orders"),
+        auth_fields=(
+            AuthField(
+                key="base_url",
+                label="Site URL",
+                type="url",
+                placeholder="https://erp.yourcompany.com",
+            ),
+            AuthField(key="api_key", label="API key", type="password", secret=True),
+            AuthField(key="api_secret", label="API secret", type="password", secret=True),
+        ),
+        docs_url="https://frappeframework.com/docs/user/en/api/rest",
+        icon="server",
+        accent="from-sky-600 to-cyan-700",
+        region="IN",
+    ),
+    ConnectorSpec(
+        key="unicommerce",
+        name="Unicommerce",
+        category=ConnectorCategory.erp,
+        availability=ConnectorAvailability.planned,
+        summary="Unicommerce — multi-marketplace order and inventory management "
+        "used across Indian D2C and retail.",
+        feeds=("sales", "inventory"),
+        auth_fields=(
+            AuthField(
+                key="base_url",
+                label="Tenant URL",
+                type="url",
+                placeholder="https://yourbrand.unicommerce.com",
+            ),
+            AuthField(key="client_id", label="Client ID"),
+            AuthField(key="client_secret", label="Client secret", type="password", secret=True),
+        ),
+        icon="boxes",
+        accent="from-amber-600 to-yellow-700",
+        region="IN",
     ),
     # ── Warehouse management ─────────────────────────────────────────────────
     ConnectorSpec(

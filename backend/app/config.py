@@ -220,6 +220,23 @@ class Settings(BaseSettings):
             return self.allowed_origins[0].rstrip("/")
         return "http://localhost:5173"
 
+    # ── WhatsApp notifications ───────────────────────────────────────────────
+    # Provider is "console" until real credentials land: the digest is built,
+    # rendered and logged, and the send is reported as *not* delivered rather
+    # than faked. Switching to "meta" or "twilio" needs no code change.
+    whatsapp_provider: str = "console"  # console | meta | twilio
+    whatsapp_api_base: str = "https://graph.facebook.com"
+    whatsapp_api_version: str = "v21.0"
+    whatsapp_access_token: str | None = None
+    whatsapp_phone_number_id: str | None = None
+    whatsapp_twilio_account_sid: str | None = None
+    whatsapp_twilio_auth_token: str | None = None
+    whatsapp_from_number: str | None = None
+    # Scheduled morning digest. Off by default — nobody's phone should start
+    # buzzing because a deployment happened.
+    whatsapp_digest_worker_enabled: bool = False
+    whatsapp_digest_tick_s: int = Field(default=900, ge=60, le=3600)
+
     # ── Webhook delivery ─────────────────────────────────────────────────────
     webhook_retry_worker_enabled: bool = True
     webhook_retry_interval_s: int = 30

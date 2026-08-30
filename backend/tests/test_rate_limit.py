@@ -52,7 +52,12 @@ class RaisingRedis:
 
 def _make_app(redis, per_minute=3) -> FastAPI:
     app = FastAPI()
-    app.add_middleware(RateLimitMiddleware, per_minute=per_minute, trusted_proxy_count=0)
+    app.add_middleware(
+        RateLimitMiddleware,
+        ip_only=True,
+        per_minute=per_minute,
+        trusted_proxy_count=0,
+    )
     app.state.redis = redis
 
     @app.get("/api/v1/ping")
@@ -112,6 +117,74 @@ async def test_non_api_paths_are_not_limited():
     async def health():
         return {"status": "ok"}
 
-    async with await _client(app) as ac:
         for _ in range(5):
             assert (await ac.get("/health")).status_code == 200
+
+
+import uuid
+
+from fastapi import Request
+
+
+def _make_app_user_rl(redis, per_user_per_minute=2, heavy_per_minute=1, heavy_fail_closed=True) -> FastAPI:
+    app = FastAPI()
+
+    app.add_middleware(
+        RateLimitMiddleware,
+        ip_only=False,
+        per_user_per_minute=per_user_per_minute,
+        heavy_per_minute=heavy_per_minute,
+        heavy_fail_closed=heavy_fail_closed,
+    )
+
+    @app.middleware("http")
+    async def fake_tenant_context(request: Request, call_next):
+        request.state.user_id = uuid.UUID("11111111-1111-1111-1111-111111111111")
+        return await call_next(request)
+
+    app.state.redis = redis
+
+    @app.get("/api/v1/ping")
+    async def ping():
+        return {"pong": True}
+
+    @app.get("/api/v1/forecasts")
+    async def forecasts():
+        return {"forecast": []}
+
+    return app
+
+
+async def test_user_limits_after_threshold():
+    redis = FakeRedisRL()
+    app = _make_app_user_rl(redis, per_user_per_minute=2)
+    async with await _client(app) as ac:
+        statuses = [(await ac.get("/api/v1/ping")).status_code for _ in range(3)]
+    assert statuses == [200, 200, 429]
+    # One script call for checking user limit on each request
+    assert redis.calls == 3
+
+
+async def test_heavy_endpoint_limits():
+    redis = FakeRedisRL()
+    # High user limit (10) but low heavy endpoint limit (1)
+    app = _make_app_user_rl(redis, per_user_per_minute=10, heavy_per_minute=1)
+    async with await _client(app) as ac:
+        # First call: allowed
+        r1 = await ac.get("/api/v1/forecasts")
+        assert r1.status_code == 200
+        # Second call: heavy limit exceeded
+        r2 = await ac.get("/api/v1/forecasts")
+        assert r2.status_code == 429
+
+
+async def test_heavy_endpoint_fail_closed_and_user_fail_open():
+    app = _make_app_user_rl(RaisingRedis(), per_user_per_minute=1, heavy_per_minute=1, heavy_fail_closed=True)
+    async with await _client(app) as ac:
+        # User limit check fails open -> returns 200
+        r_ping = await ac.get("/api/v1/ping")
+        assert r_ping.status_code == 200
+
+        # Heavy limit check fails closed -> returns 503
+        r_forecast = await ac.get("/api/v1/forecasts")
+        assert r_forecast.status_code == 503

@@ -119,7 +119,3 @@ class RefreshToken(Base):
 # but needs Tenant relationship. The relationship is declared here
 # as a forward reference and resolved by SQLAlchemy's mapper.
 from app.models.industry import IndustryProfile  # noqa: E402
-
-Tenant.industry_profiles = relationship(  # type: ignore[assignment]
-    "IndustryProfile", back_populates="tenant", lazy="raise"
-)

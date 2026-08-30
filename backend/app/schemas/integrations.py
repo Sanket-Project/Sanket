@@ -91,6 +91,8 @@ class ConnectorOut(BaseModel):
     docs_url: str | None = None
     icon: str
     accent: str
+    # ISO-3166 alpha-2 when the provider is market-specific (e.g. "IN").
+    region: str | None = None
     # Per-tenant connection state (None when never connected).
     status: str = "disconnected"  # connected | syncing | error | requested | disconnected
     connected: bool = False

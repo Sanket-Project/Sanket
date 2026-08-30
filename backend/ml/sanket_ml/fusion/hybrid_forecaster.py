@@ -27,6 +27,58 @@ from sanket_ml.fusion.trend_scorer import SignalRecord, TrendScore, TrendScorer
 from sanket_ml.models.base import ForecastQuantiles
 
 
+def _explanation_drivers(
+    trend: TrendScore,
+    *,
+    alpha: float,
+    median_shift_pct: float,
+    max_named_drivers: int = 5,
+) -> list[dict]:
+    """Convert trend-score attribution into additive forecast percentages.
+
+    The top named rows plus an optional ``other`` row always reconcile to the
+    rounded median shift returned to the client.  Positive and negative rows
+    are deliberately retained so planners can see offsetting evidence.
+    """
+    rows = [
+        {
+            "source": str(item.get("source", "unknown")),
+            "kind": str(item.get("kind", "unknown")),
+            "series_key": str(item.get("series_key", "unknown")),
+            "contribution_pct": alpha * float(item.get("score_contribution", 0.0)),
+            "signal_score": float(item.get("signal_score", 0.0)),
+        }
+        for item in trend.contributions
+        if abs(float(item.get("score_contribution", 0.0))) > 1e-12
+    ]
+    rows.sort(key=lambda item: abs(item["contribution_pct"]), reverse=True)
+
+    named = rows[:max_named_drivers]
+    remainder = rows[max_named_drivers:]
+    if remainder:
+        named.append(
+            {
+                "source": "multiple",
+                "kind": "other",
+                "series_key": "other:signals",
+                "contribution_pct": sum(item["contribution_pct"] for item in remainder),
+                "signal_score": 0.0,
+            }
+        )
+
+    for item in named:
+        item["contribution_pct"] = round(item["contribution_pct"], 4)
+
+    # QuantileAdjuster reports a rounded net shift. Reconcile any tiny rounding
+    # difference into the largest driver so displayed percentages add exactly.
+    if named:
+        displayed_total = round(sum(item["contribution_pct"] for item in named), 4)
+        delta = round(median_shift_pct - displayed_total, 4)
+        named[0]["contribution_pct"] = round(named[0]["contribution_pct"] + delta, 4)
+
+    return named
+
+
 @dataclass(slots=True)
 class HybridForecastOutput:
     industry: str
@@ -74,6 +126,11 @@ class HybridForecaster:
         )
         scenarios = ScenarioEngine.build(adjusted, trend, industry)
         explanation = QuantileAdjuster.explain(baseline, adjusted)
+        explanation["drivers"] = _explanation_drivers(
+            trend,
+            alpha=params.alpha,
+            median_shift_pct=explanation["median_shift_pct"],
+        )
         return HybridForecastOutput(
             industry=industry,
             baseline=baseline,

@@ -13,6 +13,7 @@ from datetime import UTC, datetime
 import structlog
 
 from app.services.external_signals.base import SignalConnector, SignalSample
+from app.services.external_signals.trends_ratelimit import cooldown, is_rate_limited
 
 log = structlog.get_logger(__name__)
 
@@ -144,6 +145,15 @@ class RegionalDemandConnector(SignalConnector):
             log.info("regional_demand.pytrends.missing — emitting high-fidelity synthetic")
             return []
 
+        parked = cooldown.seconds_remaining()
+        if parked:
+            log.debug(
+                "regional_demand.cooldown.skipped",
+                industry=industry,
+                resumes_in_s=round(parked),
+            )
+            return []
+
         out: list[SignalSample] = []
         now = datetime.now(UTC)
 
@@ -198,11 +208,16 @@ class RegionalDemandConnector(SignalConnector):
                         )
             except Exception as exc:
                 log.warning("regional_demand.keyword.failed", kw=kw, error=str(exc))
+                if is_rate_limited(exc):
+                    # Per-IP throttle: the rest of the keywords are hopeless.
+                    cooldown.record_rate_limited(self.name)
+                    break
 
         # If live fetch didn't yield results (due to Google Trends rate-limiting or offline state),
         # gracefully fall back to the premium simulator.
         if not out:
             return []
+        cooldown.record_success()
         return out
 
     def _classify_tier(self, city_name: str) -> str:

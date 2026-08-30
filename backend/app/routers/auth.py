@@ -360,7 +360,10 @@ async def sandbox_session(request: Request, settings: SettingsDep) -> SandboxSes
         )
         if tenant_row is None:
             log.warning("auth.sandbox.tenant_missing", slug=settings.sandbox_tenant_slug)
-            raise InvalidCredentialsError()
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Sandbox is temporarily unavailable",
+            )
         if tenant_row.status == TenantStatus.suspended:
             raise TenantSuspendedError()
 
@@ -373,7 +376,10 @@ async def sandbox_session(request: Request, settings: SettingsDep) -> SandboxSes
         )
         if user_row is None:
             log.warning("auth.sandbox.user_missing", email=settings.sandbox_email)
-            raise InvalidCredentialsError()
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Sandbox is temporarily unavailable",
+            )
 
         industries = [i.value if hasattr(i, "value") else str(i) for i in tenant_row.industries]
 

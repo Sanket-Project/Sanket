@@ -73,12 +73,30 @@ class HybridForecastSeriesOut(BaseModel):
     baseline_p50: list[float]
 
 
+class ForecastExplanationDriverOut(BaseModel):
+    source: str
+    kind: str
+    series_key: str
+    contribution_pct: float = Field(
+        description="Additive contribution to the median forecast change; 0.03 means +3%."
+    )
+    signal_score: float = Field(default=0.0, ge=-1.0, le=1.0)
+
+
+class ForecastExplanationOut(BaseModel):
+    median_shift_pct: float
+    band_change_pct: float
+    baseline_band_mean: float
+    adjusted_band_mean: float
+    drivers: list[ForecastExplanationDriverOut] = Field(default_factory=list)
+
+
 class HybridForecastOut(BaseModel):
     industry: IndustryCode
     horizon_weeks: int
     generated_at: datetime
     trend: TrendScoreOut
-    explanation: dict[str, float]
+    explanation: ForecastExplanationOut
     scenarios: dict[str, ScenarioOut]
     series: list[HybridForecastSeriesOut]
     alerts_generated: int = 0

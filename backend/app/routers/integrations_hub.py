@@ -22,7 +22,7 @@ import hashlib
 import secrets
 import uuid
 from datetime import UTC, datetime
-from typing import Annotated
+from typing import Annotated, Any
 
 import structlog
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
@@ -100,6 +100,7 @@ def _to_connector_out(spec, conn: IntegrationConnection | None) -> ConnectorOut:
         docs_url=spec.docs_url,
         icon=spec.icon,
         accent=spec.accent,
+        region=spec.region,
         status=status,
         connected=status in ("connected", "syncing"),
         last_sync_at=conn.last_sync_at if conn else None,
@@ -444,6 +445,41 @@ async def _run_sql_sync_task(db, tenant_id: uuid.UUID, provider: str) -> None:
             )
 
 
+@router.post("/upload/analyze")
+async def analyze_file(
+    file: Annotated[UploadFile, File()],
+    kind: Annotated[str, Form()],
+) -> dict[str, Any]:
+    """Parse an uploaded file and return headers, suggested column mapping, and sample rows."""
+    if kind not in ("sales", "inventory", "products"):
+        raise HTTPException(status_code=400, detail="kind must be sales, inventory, or products")
+    
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty")
+    if len(content) > _MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="File exceeds the 10 MB limit")
+        
+    try:
+        headers, records = parse_table(file.filename or "", content)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if not records:
+        raise HTTPException(status_code=400, detail="No data rows found in the file")
+        
+    from app.services.integrations.file_import import _build_header_map
+    suggested = _build_header_map(headers)
+    
+    # Take first 3 rows as sample
+    sample_rows = records[:3]
+    
+    return {
+        "headers": headers,
+        "suggested_mapping": suggested,
+        "sample_rows": sample_rows,
+    }
+
+
 @router.post("/upload", response_model=UploadResult)
 async def upload_file(
     request: Request,
@@ -452,6 +488,7 @@ async def upload_file(
     file: Annotated[UploadFile, File()],
     kind: Annotated[str, Form()],
     target_industry: Annotated[str, Form()],
+    column_mapping: Annotated[str | None, Form()] = None,
 ) -> UploadResult:
     """Upload a CSV/Excel file of sales, inventory, or products and ingest it
     into the canonical schema."""
@@ -477,6 +514,16 @@ async def upload_file(
     if not records:
         raise HTTPException(status_code=400, detail="No data rows found in the file")
 
+    parsed_mapping = None
+    if column_mapping:
+        try:
+            import json
+            parsed_mapping = json.loads(column_mapping)
+            if not isinstance(parsed_mapping, dict):
+                raise ValueError("column_mapping must be a JSON object")
+        except Exception as exc:
+            raise HTTPException(status_code=400, detail=f"Invalid column_mapping JSON: {exc}") from exc
+
     db = request.app.state.db
     try:
         stats = await import_rows(
@@ -486,6 +533,7 @@ async def upload_file(
             kind=kind,
             headers=headers,
             records=records,
+            column_mapping=parsed_mapping,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

@@ -61,6 +61,7 @@ def _slugify(value: str) -> str:
 
 
 # Each canonical field maps to a set of accepted (normalized) header aliases.
+# The alias keys are always the result of _norm() — lowercase, alphanumeric only.
 _ALIASES: dict[str, set[str]] = {
     "sku": {
         "sku",
@@ -68,45 +69,161 @@ _ALIASES: dict[str, set[str]] = {
         "skuid",
         "item",
         "itemcode",
+        "itemsku",
         "productcode",
+        "productsku",
         "variantsku",
         "code",
         "externalid",
     },
-    "quantity": {"quantity", "qty", "units", "unitssold", "sold", "count", "volume"},
-    "price": {"sellingprice", "price", "unitprice", "saleprice", "amount", "rate"},
-    "revenue": {"revenue", "grossrevenue", "totalrevenue", "sales", "total", "linetotal"},
+    "quantity": {
+        "quantity",
+        "qty",
+        "units",
+        "unitssold",
+        "unitvelocity",
+        "unitsvelocity",       # "Units Velocity" variant
+        "sold",
+        "count",
+        "volume",
+        "qtyordered",
+        "ordered",
+        "quantitysold",        # "Quantity Sold"
+        "quantityordered",     # "Quantity Ordered"
+        "orderqty",            # "Order Qty"
+        "orderedqty",          # "Ordered Qty"
+        "salesqty",            # "Sales Qty"
+        "itemssold",           # "Items Sold"
+        "totalunits",          # "Total Units"
+        "numberofunits",       # "Number of Units"
+        "noofunits",           # "No. of Units"
+        "unitsordered",        # "Units Ordered"
+        "piecesordered",       # "Pieces Ordered"
+        "pieces",              # "Pieces"
+        "pcs",                 # "Pcs"
+    },
+    "price": {
+        "sellingprice",
+        "price",
+        "unitprice",
+        "saleprice",
+        "amount",
+        "rate",
+        "retailprice",
+        "costprice",
+        "unitcost",
+        "cost",
+    },
+    "revenue": {
+        "revenue",
+        "grossrevenue",
+        "totalrevenue",
+        "sales",
+        "total",
+        "linetotal",
+        "totalsales",
+        "saleamount",
+        "linerevenueamount",
+        "totalamount",
+    },
+    "cogs": {"cogs", "totalcogs", "costofgoodssold", "costofsales"},
     "discount": {"discount", "markdown", "discountamount"},
     "timestamp": {
         "timestamp",
         "date",
         "saledate",
         "orderdate",
+        "ordertimestamp",
+        "transactiondate",
+        "transactiontimestamp",
         "datetime",
         "time",
         "soldat",
         "createdat",
+        "invoicedate",
+        "salestimestamp",
     },
-    "channel": {"channel", "source", "saleschannel", "store", "platform"},
-    "order_id": {"orderid", "order", "ordernumber", "transactionid", "orderno", "invoice"},
+    "channel": {
+        "channel",
+        "source",
+        "saleschannel",
+        "store",
+        "platform",
+        "checkoutchannel",
+        "multichannelcheckoutpath",
+        "ordertype",
+    },
+    "order_id": {
+        "orderid",
+        "order",
+        "ordernumber",
+        "transactionid",
+        "orderno",
+        "invoice",
+        "invoiceid",
+        "invoicenumber",
+        "receiptid",
+    },
     "region": {"region", "country", "state", "market"},
-    # inventory
+    # ── inventory ────────────────────────────────────────────────────────────
+    # NOTE: "quantity" and "qty" are intentionally NOT listed here — they belong
+    # exclusively to the "quantity" canonical field above.  This prevents a column
+    # literally named "Quantity" in a sales file from being stolen by the inventory
+    # field and leaving the actual sales quantity unmapped.
     "available": {
         "availablestock",
         "available",
         "onhand",
         "stock",
-        "quantity",
-        "qty",
+        "stockonhand",
+        "currentstock",
+        "currentstockonhand",
         "onhandunits",
+        "inventoryonhand",
+        "unitsonhand",
+        "physicalstock",
+        "physicalinventory",
+        "netstock",
     },
     "reserved": {"reservedstock", "reserved", "allocated", "reservedunits"},
     "inbound": {"inboundstock", "inbound", "incoming", "onorder", "inboundunits"},
-    "warehouse": {"warehouseid", "warehouse", "location", "dc", "site", "binlocation"},
+    "reorder_point": {
+        "reorderpoint",
+        "reorderthreshold",
+        "safetystock",
+        "safetylevel",
+        "safetythreshold",
+        "reorderqty",
+        "minstock",
+        "minimumstock",
+    },
+    "warehouse": {
+        "warehouseid",
+        "warehouse",
+        "location",
+        "hub",
+        "hubname",
+        "hubregion",
+        "fulfillmenthub",
+        "fulfillmentcenter",
+        "dc",
+        "site",
+        "binlocation",
+        "storagelocation",
+    },
     # products
-    "name": {"name", "productname", "title", "product"},
+    "name": {"name", "productname", "title", "product", "itemname", "skudescription"},
     "brand": {"brand", "vendor", "manufacturer", "supplier"},
-    "category": {"category", "producttype", "type", "department"},
+    "category": {
+        "category",
+        "producttype",
+        "type",
+        "department",
+        "productcategory",
+        "categoryindexing",
+        "categoryindex",
+    },
+    "size": {"size", "sizevariant", "sizecode", "productsize"},
     "description": {"description", "desc", "variant", "option"},
     "gtin": {"gtin", "barcode", "ean", "upc"},
 }
@@ -163,27 +280,91 @@ def _parse_csv(content: bytes, delimiter: str | None) -> tuple[list[str], list[d
 
 
 def _parse_xlsx(content: bytes) -> tuple[list[str], list[dict[str, Any]]]:
+    """Parse an XLSX workbook into (headers, records).
+
+    For multi-tab workbooks (e.g. a dashboard + data sheets) we score every
+    sheet by how many of its first-row headers match a known canonical alias,
+    then pick the best candidate.  This avoids landing on dashboard / summary
+    tabs that have no tabular data recognizable by the importer.
+    """
     try:
         from openpyxl import load_workbook
     except ImportError as exc:  # pragma: no cover - dependency guard
         raise ValueError(
             "Excel support is unavailable on this server — upload a CSV instead"
         ) from exc
+
+    # Build a flat set of every known alias for quick membership tests.
+    _all_aliases: set[str] = set()
+    for aliases in _ALIASES.values():
+        _all_aliases.update(aliases)
+
+    def _score_sheet(ws) -> int:  # type: ignore[return]
+        """Return the number of first-row cells that match a known alias."""
+        try:
+            first_row = next(ws.iter_rows(values_only=True))
+        except StopIteration:
+            return 0
+        if first_row is None:
+            return 0
+        return sum(
+            1
+            for h in first_row
+            if h is not None and _norm(str(h)) in _all_aliases
+        )
+
+    def _read_sheet(ws) -> tuple[list[str], list[dict[str, Any]]]:
+        rows_iter = ws.iter_rows(values_only=True)
+        try:
+            first = next(rows_iter)
+        except StopIteration as exc:
+            raise ValueError("Worksheet is empty") from exc
+        headers = [
+            str(h).strip() if h is not None else f"col{i}" for i, h in enumerate(first)
+        ]
+        records: list[dict[str, Any]] = []
+        for row in rows_iter:
+            if row is None or all(c is None for c in row):
+                continue
+            records.append({headers[i]: row[i] for i in range(len(headers)) if i < len(row)})
+        return headers, records
+
     wb = load_workbook(io.BytesIO(content), read_only=True, data_only=True)
-    ws = wb.active
-    rows_iter = ws.iter_rows(values_only=True)
     try:
-        first = next(rows_iter)
-    except StopIteration as exc:
-        raise ValueError("Workbook is empty") from exc
-    headers = [str(h).strip() if h is not None else f"col{i}" for i, h in enumerate(first)]
-    records: list[dict[str, Any]] = []
-    for row in rows_iter:
-        if row is None or all(c is None for c in row):
-            continue
-        records.append({headers[i]: row[i] for i in range(len(headers)) if i < len(row)})
-    wb.close()
-    return headers, records
+        sheet_names = wb.sheetnames
+        if not sheet_names:
+            raise ValueError("Workbook is empty")
+
+        if len(sheet_names) == 1:
+            # Single-sheet workbook — just use it directly.
+            return _read_sheet(wb[sheet_names[0]])
+
+        # Multi-sheet: pick the sheet with the highest alias-match score.
+        # Tie-break: prefer later sheets (data tabs are usually after summary tabs).
+        best_name: str | None = None
+        best_score = -1
+        for name in sheet_names:
+            ws = wb[name]
+            score = _score_sheet(ws)
+            if score > best_score:
+                best_score = score
+                best_name = name
+
+        if best_name is None or best_score == 0:
+            # No sheet matched any alias — fall back to the first sheet so the
+            # user at least sees real headers in the column-mapping UI.
+            # wb.active can be None in openpyxl ≥ 3.1, so use sheet_names[0].
+            best_name = sheet_names[0]
+
+        log.debug(
+            "xlsx.sheet_selected",
+            sheet=best_name,
+            score=best_score,
+            all_sheets=sheet_names,
+        )
+        return _read_sheet(wb[best_name])
+    finally:
+        wb.close()
 
 
 # ── Value coercion ───────────────────────────────────────────────────────────
@@ -192,14 +373,28 @@ def _to_decimal(value: Any) -> Decimal | None:
         return None
     if isinstance(value, (int, float, Decimal)):
         return Decimal(str(value))
-    s = str(value).strip().replace(",", "")
-    # strip a leading currency symbol / trailing %
-    s = "".join(ch for ch in s if ch.isdigit() or ch in ".-")
-    if not s or s in (".", "-"):
+    s = str(value).strip()
+    # Remove currency symbols and other non-numeric chars except digits, comma, period, minus
+    s = re.sub(r"[^\d,.-]", "", s)
+    if not s:
         return None
+    
+    # Handle comma as decimal separator
+    if "," in s and "." not in s:
+        parts = s.split(",")
+        if len(parts) == 2 and len(parts[1]) != 3:
+            s = s.replace(",", ".")
+        else:
+            s = s.replace(",", "")
+    elif "," in s and "." in s:
+        if s.find(",") > s.find("."):
+            s = s.replace(".", "").replace(",", ".")
+        else:
+            s = s.replace(",", "")
+            
     try:
         return Decimal(s)
-    except InvalidOperation:
+    except (InvalidOperation, ValueError):
         return None
 
 
@@ -217,6 +412,11 @@ _DATE_FORMATS = (
     "%d-%m-%Y",
     "%m/%d/%Y %H:%M",
     "%d/%m/%Y %H:%M",
+    "%b %d, %Y",      # Jul 15, 2026
+    "%d-%b-%Y",      # 15-Jul-2026
+    "%Y/%m/%d",
+    "%Y/%m/%d %H:%M:%S",
+    "%Y%m%d",        # 20260715
 )
 
 
@@ -228,17 +428,28 @@ def _to_datetime(value: Any) -> datetime | None:
     if isinstance(value, date):
         return datetime(value.year, value.month, value.day, tzinfo=UTC)
     s = str(value).strip()
+    # Strip common day names and timezones
+    s = re.sub(r"^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),\s*", "", s, flags=re.IGNORECASE)
+    s = re.sub(r"\s+(EST|EDT|PST|PDT|CST|CDT|MST|MDT|GMT|UTC)$", "", s, flags=re.IGNORECASE)
+
+    # Standardize trailing Z/z to +00:00 for robust parsing across Python versions
+    if s.endswith(("Z", "z")):
+        s = s[:-1] + "+00:00"
+
     try:
-        return (
-            datetime.fromisoformat(s.replace("Z", "+00:00")).replace(tzinfo=UTC)
-            if "+" not in s and "Z" not in s.upper()
-            else datetime.fromisoformat(s.replace("Z", "+00:00"))
-        )
+        dt = datetime.fromisoformat(s)
+        if dt.tzinfo is None:
+            return dt.replace(tzinfo=UTC)
+        return dt.astimezone(UTC)
     except ValueError:
         pass
+
     for fmt in _DATE_FORMATS:
         try:
-            return datetime.strptime(s, fmt).replace(tzinfo=UTC)
+            dt = datetime.strptime(s, fmt)
+            if dt.tzinfo is None:
+                return dt.replace(tzinfo=UTC)
+            return dt.astimezone(UTC)
         except ValueError:
             continue
     return None
@@ -252,11 +463,15 @@ class RowError(ValueError):
 def map_sales_row(row: dict[str, Any], hmap: dict[str, str]) -> dict[str, Any]:
     """Map a raw row to a partial historical_sales dict (no tenant/sku_id).
 
-    Requires a SKU, a positive quantity, and an in-window timestamp.
+    Requires a SKU or Name, a positive quantity, and an in-window timestamp.
     """
     sku = str(row.get(hmap.get("sku", ""), "") or "").strip()
+    name = str(row.get(hmap.get("name", ""), "") or "").strip()
+    if not sku and not name:
+        raise RowError("missing SKU or product name")
     if not sku:
-        raise RowError("missing SKU")
+        digest = hashlib.sha1(name.encode("utf-8")).hexdigest()[:6]
+        sku = f"{_slugify(name)}-{digest}"
     qty = _to_int(row.get(hmap.get("quantity", "")))
     if qty is None or qty <= 0:
         raise RowError(f"invalid quantity for SKU {sku}")
@@ -426,6 +641,7 @@ async def import_rows(
     kind: str,
     headers: list[str],
     records: list[dict[str, Any]],
+    column_mapping: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     """Map and persist parsed rows for one ``kind`` (sales|inventory|products).
 
@@ -433,11 +649,29 @@ async def import_rows(
     """
     if kind not in _REQUIRED:
         raise ValueError(f"Unknown import kind: {kind}")
-    hmap = _build_header_map(headers)
-    missing = _REQUIRED[kind] - set(hmap)
-    if missing:
-        pretty = ", ".join(sorted(missing))
-        raise ValueError(f"File is missing required column(s) for {kind}: {pretty}")
+    
+    if column_mapping is not None:
+        mapped_keys = {k for k, v in column_mapping.items() if v}
+        if kind == "sales":
+            if "sku" not in mapped_keys and "name" not in mapped_keys:
+                raise ValueError("Must map either SKU or Product Name")
+            if "quantity" not in mapped_keys or "timestamp" not in mapped_keys:
+                raise ValueError("Missing mapping for required column(s): quantity, timestamp")
+        elif kind == "inventory":
+            if "sku" not in mapped_keys or "available" not in mapped_keys:
+                raise ValueError("Missing mapping for required column(s): SKU, Available Stock")
+        elif kind == "products":
+            if "sku" not in mapped_keys and "name" not in mapped_keys:
+                raise ValueError("Must map either SKU or Product Name")
+        
+        header_set = set(headers)
+        hmap = {k: v for k, v in column_mapping.items() if v in header_set}
+    else:
+        hmap = _build_header_map(headers)
+        missing = _REQUIRED[kind] - set(hmap)
+        if missing:
+            pretty = ", ".join(sorted(missing))
+            raise ValueError(f"File is missing required column(s) for {kind}: {pretty}")
 
     mapper = {"sales": map_sales_row, "inventory": map_inventory_row, "products": map_product_row}[
         kind

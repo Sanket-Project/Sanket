@@ -16,13 +16,14 @@ from fastapi import APIRouter, Request
 from app.core.exceptions import AuthenticationError
 from app.core.rbac import require_admin
 from app.models.tenant import Tenant
-from app.routers.industry_router import TenantId
+from app.routers.industry_router import ActiveIndustry, TenantId
 from app.schemas.onboarding import (
     OnboardingState,
     OnboardingStateUpdate,
     StepState,
     load_onboarding_state,
 )
+from app.services import onboarding_readiness
 
 log = structlog.get_logger(__name__)
 
@@ -101,3 +102,22 @@ async def update_state(
         current_step=state.current_step,
     )
     return state
+
+
+@router.get("/readiness")
+async def get_readiness(
+    request: Request,
+    ctx: ActiveIndustry,
+    tenant_id: TenantId,
+) -> dict:
+    """The seven-day plan, evaluated against real data rather than wizard clicks.
+
+    Distinct from ``/state``: that records which screens the user completed;
+    this checks whether the tenant can actually get value yet, and names the one
+    thing blocking them.
+    """
+    db = request.app.state.db
+    async with db.session(str(tenant_id)) as session:
+        return await onboarding_readiness.readiness(
+            session, tenant_id=tenant_id, industry=ctx.code
+        )

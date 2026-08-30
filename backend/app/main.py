@@ -144,6 +144,7 @@ async def lifespan(fastapi_app: FastAPI) -> AsyncIterator[None]:
             # The webhook-retry tick doubles as the leader heartbeat: while we
             # hold the lease we keep ticking; losing the lease ends the loop and
             # `run_as_leader` releases + re-contends.
+            last_digest_tick = 0.0
             while True:
                 if settings.webhook_retry_worker_enabled:
                     try:
@@ -151,6 +152,23 @@ async def lifespan(fastapi_app: FastAPI) -> AsyncIterator[None]:
                             await wh.retry_worker_tick(session)
                     except Exception as exc:
                         log.error("webhook.retry_loop.error", error=str(exc))
+
+                # The morning WhatsApp digest rides the same leader loop but on
+                # its own (much slower) cadence — the retry tick runs every 30s
+                # and scanning every tenant that often would be wasteful.
+                if settings.whatsapp_digest_worker_enabled:
+                    now = asyncio.get_running_loop().time()
+                    if now - last_digest_tick >= settings.whatsapp_digest_tick_s:
+                        last_digest_tick = now
+                        try:
+                            from app.workers import whatsapp_digest
+
+                            await whatsapp_digest.tick(
+                                db, settings, getattr(fastapi_app.state, "http", None)
+                            )
+                        except Exception as exc:
+                            log.error("whatsapp.digest_loop.error", error=str(exc))
+
                 await asyncio.sleep(settings.webhook_retry_interval_s)
         finally:
             # Relinquish the singletons when we stop being the leader so the new
@@ -361,6 +379,8 @@ def create_app() -> FastAPI:
     from app.routers.auth import router as auth_router
     from app.routers.billing import router as billing_router
     from app.routers.cross_industry import router as cross_industry_router
+    from app.routers.data_quality import router as data_quality_router
+    from app.routers.decisions import router as decisions_router
     from app.routers.demo_request import router as demo_request_router
     from app.routers.export import router as export_router
     from app.routers.financial import router as financial_router
@@ -377,10 +397,13 @@ def create_app() -> FastAPI:
     from app.routers.integrations_hub import router as integrations_hub_router
     from app.routers.inventory import router as inventory_router
     from app.routers.invites import router as invites_router
+    from app.routers.notifications import router as notifications_router
     from app.routers.onboarding import router as onboarding_router
     from app.routers.planning import router as planning_router
     from app.routers.products import router as products_router
+    from app.routers.roi import router as roi_router
     from app.routers.sales_analytics import router as sales_analytics_router
+    from app.routers.scenarios import router as scenarios_router
     from app.routers.shortage_alerts import router as shortage_alerts_router
     from app.routers.signals import router as signals_router
     from app.routers.skus import router as skus_router
@@ -447,6 +470,15 @@ def create_app() -> FastAPI:
     app.include_router(export_router, prefix=api_prefix, dependencies=gated)
     app.include_router(forecast_accuracy_router, prefix=api_prefix, dependencies=gated)
     app.include_router(forecasts_router, prefix=api_prefix, dependencies=gated)
+    # Decision engine, digital twin and the ROI ledger built on top of them.
+    app.include_router(decisions_router, prefix=api_prefix, dependencies=gated)
+    app.include_router(scenarios_router, prefix=api_prefix, dependencies=gated)
+    app.include_router(roi_router, prefix=api_prefix, dependencies=gated)
+    # Data quality is gated with the rest: it reads the tenant's ingested data.
+    # Onboarding's own readiness view lives on the ungated onboarding router,
+    # so a tenant that has not paid can still see why their import is failing.
+    app.include_router(data_quality_router, prefix=api_prefix, dependencies=gated)
+    app.include_router(notifications_router, prefix=api_prefix, dependencies=gated)
     # Shopify (literal routes) must be registered before the Hub's generic
     # /integrations/{provider} routes so the dedicated flow isn't shadowed.
     # The Shopify webhook and the push-ingest endpoint are in the auth

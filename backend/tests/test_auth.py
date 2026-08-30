@@ -162,6 +162,16 @@ async def test_sandbox_session_disabled_returns_404(
     assert r.status_code == 404
 
 
+async def test_sandbox_session_missing_account_returns_503(
+    client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    settings = get_settings()
+    monkeypatch.setattr(settings, "sandbox_tenant_slug", "missing-sandbox-tenant")
+    r = await client.post("/api/v1/auth/sandbox-session")
+    assert r.status_code == 503
+    assert r.json()["detail"] == "Sandbox is temporarily unavailable"
+
+
 # ── /auth/session + middleware token verification ────────────────────────────
 
 
@@ -293,4 +303,3 @@ async def test_session_auto_provisions_unregistered_google_user(
     assert user is not None
     assert user[1] == "google-oauth2|1234567890"
     assert user[2] == "New Google User"
-

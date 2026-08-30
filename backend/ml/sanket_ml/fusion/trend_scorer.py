@@ -57,6 +57,11 @@ class TrendScore:
     drivers: list[dict]  # top trending products (search/social/news)
     horizon_days: int
     demand_factors: list[dict] = field(default_factory=list)  # weather/macro context
+    # Exact additive decomposition of ``score``.  Each row is one source/series
+    # and ``score_contribution`` values sum to the aggregate trend score.  This
+    # is kept separate from ``drivers`` because the latter is a ranked evidence
+    # sample, whereas this collection is the audit trail used by explainability.
+    contributions: list[dict] = field(default_factory=list)
 
 
 # Per-industry kind weights — how much each signal *type* contributes
@@ -113,6 +118,7 @@ class TrendScorer:
                 by_kind={},
                 drivers=[],
                 horizon_days=horizon_days,
+                contributions=[],
             )
 
         as_of = as_of or max(s.captured_at for s in sigs)
@@ -123,6 +129,7 @@ class TrendScorer:
         kind_wt: dict[str, float] = {}
         kind_values: dict[str, list[float]] = {}
         contributions: list[tuple[float, SignalRecord, float]] = []
+        effective_signals: list[tuple[SignalRecord, float]] = []
 
         for s in sigs:
             recency_w = self._recency_weight(s.captured_at, as_of)
@@ -136,6 +143,7 @@ class TrendScorer:
             kind_wt[s.kind] += w
             kind_values[s.kind].append(s.normalized_score)
             contributions.append((abs(s.normalized_score) * w, s, w))
+            effective_signals.append((s, w))
 
         by_kind: dict[str, float] = {
             k: kind_sum[k] / kind_wt[k] for k in kind_sum if kind_wt[k] > 0
@@ -145,6 +153,53 @@ class TrendScorer:
         total_w = sum(kind_w.get(k, 0.0) for k in by_kind) or 1.0
         score = sum(by_kind[k] * kind_w.get(k, 0.0) for k in by_kind) / total_w
         score = max(-1.0, min(1.0, score))
+
+        # ── additive score decomposition ──────────────────────────────────
+        # score = Σ(kind mix × signal's within-kind share × signal value).
+        # Group repeated captures of the same source/series so the explanation
+        # remains compact while still reconciling exactly to the net score.
+        grouped_contributions: dict[tuple[str, str, str], dict] = {}
+        for s, w in effective_signals:
+            configured_kind_weight = kind_w.get(s.kind, 0.0)
+            within_kind_weight = kind_wt.get(s.kind, 0.0)
+            if configured_kind_weight <= 0 or within_kind_weight <= 0:
+                continue
+            score_contribution = (
+                configured_kind_weight
+                / total_w
+                * s.normalized_score
+                * w
+                / within_kind_weight
+            )
+            key = (s.source, s.kind, s.series_key)
+            group = grouped_contributions.setdefault(
+                key,
+                {
+                    "source": s.source,
+                    "kind": s.kind,
+                    "series_key": s.series_key,
+                    "score_contribution": 0.0,
+                    "signal_score_numerator": 0.0,
+                    "signal_weight": 0.0,
+                },
+            )
+            group["score_contribution"] += score_contribution
+            group["signal_score_numerator"] += s.normalized_score * w
+            group["signal_weight"] += w
+
+        score_contributions: list[dict] = []
+        for group in grouped_contributions.values():
+            signal_weight = group.pop("signal_weight")
+            signal_score_numerator = group.pop("signal_score_numerator")
+            group["score_contribution"] = round(group["score_contribution"], 8)
+            group["signal_score"] = round(
+                signal_score_numerator / signal_weight if signal_weight else 0.0,
+                4,
+            )
+            score_contributions.append(group)
+        score_contributions.sort(
+            key=lambda item: abs(item["score_contribution"]), reverse=True
+        )
 
         # ── volatility = average within-kind stdev, normalized ──────────────
         volatility = self._volatility(kind_values)
@@ -192,6 +247,7 @@ class TrendScorer:
             drivers=drivers,
             horizon_days=horizon_days,
             demand_factors=demand_factors,
+            contributions=score_contributions,
         )
 
     def _recency_weight(self, captured_at: datetime, as_of: datetime) -> float:

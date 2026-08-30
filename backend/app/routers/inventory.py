@@ -166,7 +166,7 @@ async def eoq_for_sku(
         if annual_demand is None:
             from datetime import UTC, datetime, timedelta
 
-            from app.models.historical_sales import HistoricalSale
+            from app.models.sales import HistoricalSale
 
             cutoff = datetime.now(UTC) - timedelta(weeks=52)
             annual_demand_row = await session.scalar(

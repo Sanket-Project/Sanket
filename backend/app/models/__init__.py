@@ -12,6 +12,7 @@ from app.models.inventory import InventoryLevel
 from app.models.invite import Invite
 from app.models.pharma import PharmaBatch
 from app.models.product import Product, Sku
+from app.models.recommendation import Recommendation
 from app.models.sales import HistoricalSale
 from app.models.signal import ExternalSignal, SignalCluster
 from app.models.tenant import RefreshToken, Tenant, User
@@ -35,6 +36,7 @@ __all__ = [
     "PharmaBatch",
     "Plan",
     "Product",
+    "Recommendation",
     "RefreshToken",
     "ShortageAlert",
     "SignalCluster",

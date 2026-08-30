@@ -68,7 +68,4 @@ class Sku(UUIDPrimaryKey, TimestampMixin, Base):
         "PharmaBatch", back_populates="sku", lazy="raise"
     )
 
-
 from app.models.pharma import PharmaBatch  # noqa: E402
-
-Sku.pharma_batches = relationship("PharmaBatch", back_populates="sku", lazy="raise")  # type: ignore[assignment]

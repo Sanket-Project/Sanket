@@ -18,6 +18,7 @@ from app.services.external_signals.base import (
     SignalSample,
     z_to_score,
 )
+from app.services.external_signals.trends_ratelimit import cooldown, is_rate_limited
 
 log = structlog.get_logger(__name__)
 
@@ -92,6 +93,15 @@ class GoogleTrendsConnector(SignalConnector):
             log.info("google_trends.pytrends.missing — emitting synthetic")
             return []
 
+        parked = cooldown.seconds_remaining()
+        if parked:
+            log.debug(
+                "google_trends.cooldown.skipped",
+                industry=industry,
+                resumes_in_s=round(parked),
+            )
+            return []
+
         pytrend = TrendReq(hl=self.hl, tz=self.tz, timeout=(4, 8))
         out: list[SignalSample] = []
         now = datetime.now(UTC)
@@ -105,6 +115,12 @@ class GoogleTrendsConnector(SignalConnector):
                 df = pytrend.interest_over_time()
             except Exception as exc:
                 log.warning("google_trends.batch.failed", kw=kw_list, error=str(exc))
+                if is_rate_limited(exc):
+                    # The throttle is per source IP, so every remaining batch
+                    # would fail too. Stop the sweep and let the cooldown gate
+                    # the next one instead of burning a request per keyword.
+                    cooldown.record_rate_limited(self.name)
+                    break
                 continue
             if df is None or df.empty:
                 continue
@@ -144,6 +160,7 @@ class GoogleTrendsConnector(SignalConnector):
                 )
         if not out:
             return []
+        cooldown.record_success()
         return out
 
     def _synthetic(

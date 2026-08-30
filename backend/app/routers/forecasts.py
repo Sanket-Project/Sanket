@@ -18,6 +18,7 @@ import httpx
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
+from sqlalchemy import select
 
 from app.config import Settings, get_settings
 from app.routers.industry_router import ActiveIndustry, TenantId
@@ -116,3 +117,94 @@ def _safe_detail(response: httpx.Response) -> str:
     except Exception:  # noqa: S110 - best-effort extraction
         pass
     return "Forecast request rejected"
+
+
+@router.get("/confidence")
+async def forecast_confidence(
+    request: Request,
+    tenant_id: TenantId,
+    industry: ActiveIndustry,
+    limit: int = 200,
+) -> dict[str, Any]:
+    """Per-SKU trust score for the latest forecast, with the reasons behind it.
+
+    A p10/p50/p90 band shows uncertainty but not *why*. This returns a 0–100
+    score, a band, and the specific deductions ("only 9 weeks of history",
+    "62% of weeks had no sales") so a planner knows whether to act on the number
+    or go fix the data first.
+    """
+    from app.models.enums import IndustryCode
+    from app.models.product import Sku
+    from app.services.decision_builder import (
+        MAX_SKUS,
+        confidence_for,
+        forecast_bands,
+        latest_completed_run,
+        weekly_history,
+    )
+
+    db = request.app.state.db
+    ind = IndustryCode(industry.code)
+
+    async with db.session(str(tenant_id)) as session:
+        run = await latest_completed_run(session, tenant_id, ind)
+        if run is None:
+            return {
+                "industry": industry.code,
+                "run_id": None,
+                "scored": 0,
+                "reason": "No completed forecast run yet.",
+                "skus": [],
+            }
+
+        bands = await forecast_bands(session, tenant_id, run.id)
+        ids = list(bands)[:MAX_SKUS]
+        if not ids:
+            return {
+                "industry": industry.code,
+                "run_id": str(run.id),
+                "scored": 0,
+                "reason": "The latest run produced no SKU-level results.",
+                "skus": [],
+            }
+
+        codes = {
+            r.id: r.sku_code
+            for r in (
+                await session.execute(
+                    select(Sku.id, Sku.sku_code).where(
+                        Sku.tenant_id == tenant_id, Sku.id.in_(ids)
+                    )
+                )
+            ).fetchall()
+        }
+        history = await weekly_history(session, tenant_id, ind, ids)
+
+    rows = []
+    for sku_id in ids:
+        score, _ = confidence_for(bands[sku_id], history.get(sku_id), run)
+        rows.append(
+            {
+                "sku_id": str(sku_id),
+                "sku_code": codes.get(sku_id),
+                "confidence": score.score,
+                "band": score.band,
+                "actionable": score.is_actionable,
+                "reasons": score.reasons,
+                "deductions": score.deductions,
+            }
+        )
+    rows.sort(key=lambda r: r["confidence"])
+
+    bands_count: dict[str, int] = {}
+    for r in rows:
+        bands_count[r["band"]] = bands_count.get(r["band"], 0) + 1
+
+    return {
+        "industry": industry.code,
+        "run_id": str(run.id),
+        "scored": len(rows),
+        "portfolio_confidence": round(sum(r["confidence"] for r in rows) / len(rows)) if rows else 0,
+        "by_band": bands_count,
+        "skus": rows[:limit],
+    }
