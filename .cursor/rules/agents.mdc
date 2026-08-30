@@ -1,0 +1,29 @@
+---
+description: Authoritative operating rules for every agent in this repository
+alwaysApply: true
+---
+
+Read `AGENTS.md` at the repository root and follow it. It is authoritative and
+applies to you.
+
+Summary of what it binds you to:
+
+- **The Iron Law** — before executing a task, exploring the codebase, or running
+  commands, check whether one of its workflows applies. If one does, follow it
+  and say which one. Simple, urgent, and small tasks are not exceptions.
+- **Planning** — brainstorm and get explicit approval on the design before
+  writing code for any non-trivial change; break the approved design into
+  2–5 minute tasks with verification steps.
+- **TDD** — strict RED → GREEN → REFACTOR. No production code without a failing
+  test that required it.
+- **Debugging** — no fixes without root-cause investigation first. Reproduce,
+  hypothesize, fix the cause, verify.
+- **Completion** — run the checks and report real output before calling anything
+  done.
+- **Project rules** — never bypass PostgreSQL row-level security in application
+  code; no live payment keys; import icons only from
+  `frontend/src/components/ui/icons.tsx`; fail honestly instead of substituting
+  synthetic data.
+
+You cannot invoke Claude Code skills. Follow the workflows in AGENTS.md §3
+manually instead — the discipline is required, the tooling is not.
