@@ -1,0 +1,102 @@
+﻿{
+  "scores": {
+    "Executive Summary": 0,
+    "Sales Ledger": 9,
+    "Warehouse Inventory": 4
+  },
+  "selected_sheet": "Sales Ledger",
+  "best_score": 9
+}
+---HEADER MAP for selected sheet (raw headers)---
+{
+  "order_id": "Order ID",
+  "timestamp": "Order Date",
+  "sku": "SKU",
+  "name": "Product Name",
+  "category": "Category",
+  "size": "Size",
+  "quantity": "Quantity Ordered",
+  "revenue": "Total Revenue",
+  "channel": "Sales Channel"
+}
+---Per-cell detail for Sales Ledger---
+{
+  "score": 9,
+  "cells": [
+    [
+      "Order ID",
+      "orderid",
+      true
+    ],
+    [
+      "Order Date",
+      "orderdate",
+      true
+    ],
+    [
+      "SKU",
+      "sku",
+      true
+    ],
+    [
+      "Product ID",
+      "productid",
+      false
+    ],
+    [
+      "Product Name",
+      "productname",
+      true
+    ],
+    [
+      "Category",
+      "category",
+      true
+    ],
+    [
+      "Size",
+      "size",
+      true
+    ],
+    [
+      "Quantity Ordered",
+      "quantityordered",
+      true
+    ],
+    [
+      "Unit Retail Price",
+      "unitretailprice",
+      false
+    ],
+    [
+      "Total Revenue",
+      "totalrevenue",
+      true
+    ],
+    [
+      "Unit Product Cost",
+      "unitproductcost",
+      false
+    ],
+    [
+      "Total Cost of Goods",
+      "totalcostofgoods",
+      false
+    ],
+    [
+      "Gross Profit Contribution",
+      "grossprofitcontribution",
+      false
+    ],
+    [
+      "Fulfillment Warehouse",
+      "fulfillmentwarehouse",
+      false
+    ],
+    [
+      "Sales Channel",
+      "saleschannel",
+      true
+    ]
+  ]
+}

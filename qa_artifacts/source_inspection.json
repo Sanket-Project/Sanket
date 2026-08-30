@@ -1,0 +1,59 @@
+{
+  "Executive Summary": {
+    "headers": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "data_row_count": 9,
+    "blank_rows_skipped": 4,
+    "total_rows_incl_header": 14
+  },
+  "Sales Ledger": {
+    "headers": [
+      "Order ID",
+      "Order Date",
+      "SKU",
+      "Product ID",
+      "Product Name",
+      "Category",
+      "Size",
+      "Quantity Ordered",
+      "Unit Retail Price",
+      "Total Revenue",
+      "Unit Product Cost",
+      "Total Cost of Goods",
+      "Gross Profit Contribution",
+      "Fulfillment Warehouse",
+      "Sales Channel"
+    ],
+    "data_row_count": 500,
+    "blank_rows_skipped": 0,
+    "total_rows_incl_header": 501
+  },
+  "Warehouse Inventory": {
+    "headers": [
+      "SKU",
+      "Product ID",
+      "Product Name",
+      "Category",
+      "Size",
+      "Warehouse Code",
+      "Fulfillment City",
+      "Stock On Hand (Qty)",
+      "Safety/Reorder Threshold",
+      "Unit Cost (INR)",
+      "Unit Price (INR)",
+      "Total Asset Value (At Cost)",
+      "Inventory Status"
+    ],
+    "data_row_count": 150,
+    "blank_rows_skipped": 0,
+    "total_rows_incl_header": 151
+  }
+}
