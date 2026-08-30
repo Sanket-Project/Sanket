@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { Check } from "lucide-react";
+import { Check } from "@/components/ui/icons";
 import type { ReactNode } from "react";
 
 export interface StepperItem {

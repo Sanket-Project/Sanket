@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { TrendingDown, TrendingUp, Minus, Sparkles, ChevronDown } from "lucide-react";
+import { TrendingDown, TrendingUp, Minus, Sparkles, ChevronDown } from "@/components/ui/icons";
 import clsx from "clsx";
 import type { TrendScore } from "@/types/api";
 import { groupDrivers } from "@/utils/driverGroups";

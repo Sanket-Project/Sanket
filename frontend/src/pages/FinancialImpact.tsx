@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { DollarSign, TrendingUp, Package, AlertTriangle, Warehouse } from "lucide-react";
+import { DollarSign, TrendingUp, Package, AlertTriangle, Warehouse } from "@/components/ui/icons";
 import { Link } from "react-router-dom";
 import { financialApi } from "@/api/financial";
 import { Card } from "@/components/ui/Card";

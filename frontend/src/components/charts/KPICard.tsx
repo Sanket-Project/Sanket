@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { memo, type ReactNode } from "react";
-import { TrendingDown, TrendingUp } from "lucide-react";
+import { TrendingDown, TrendingUp } from "@/components/ui/icons";
 
 interface Props {
   label: string;

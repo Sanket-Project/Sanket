@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { AlertTriangle, Play, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
+import { AlertTriangle, Play, Sparkles, TrendingDown, TrendingUp } from "@/components/ui/icons";
 import clsx from "clsx";
 import toast from "react-hot-toast";
 import { hybridForecastApi } from "@/api/hybridForecast";
@@ -17,6 +17,7 @@ import { industryAccent } from "@/utils/colors";
 import { fmtCompact } from "@/utils/format";
 import { getErrorMessage } from "@/utils/errors";
 import { ForecastExplainer } from "@/components/charts/ForecastExplainer";
+import { ForecastChangeExplanation } from "@/components/charts/ForecastChangeExplanation";
 import type { HybridForecast } from "@/types/api";
 
 const STAGE_LABEL: Record<string, string> = {
@@ -154,39 +155,6 @@ export const HybridForecastsPage = () => {
           </p>
         </div>
 
-        {result && (
-          <div className="flex items-center gap-3 self-start md:self-center">
-            <span
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border shadow-sm"
-              style={{
-                background:
-                  result.explanation.median_shift_pct >= 0
-                    ? "rgba(16,185,129,0.06)"
-                    : "rgba(239,68,68,0.06)",
-                borderColor:
-                  result.explanation.median_shift_pct >= 0
-                    ? "rgba(16,185,129,0.2)"
-                    : "rgba(239,68,68,0.2)",
-                color:
-                  result.explanation.median_shift_pct >= 0 ? "#10b981" : "#f43f5e",
-              }}
-            >
-              Median Shift: {result.explanation.median_shift_pct >= 0 ? "+" : ""}
-              {(result.explanation.median_shift_pct * 100).toFixed(1)}%
-            </span>
-            <span
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border shadow-sm"
-              style={{
-                background: "rgba(251,191,36,0.06)",
-                borderColor: "rgba(251,191,36,0.2)",
-                color: "#d97706",
-              }}
-            >
-              Band Deviation: {result.explanation.band_change_pct >= 0 ? "+" : ""}
-              {(result.explanation.band_change_pct * 100).toFixed(1)}%
-            </span>
-          </div>
-        )}
       </div>
 
       <ForecastExplainer />
@@ -283,6 +251,12 @@ export const HybridForecastsPage = () => {
       {/* ── Result Deck ── */}
       {result && !busy && (
         <div className="space-y-6">
+          <ForecastChangeExplanation
+            explanation={result.explanation}
+            sampleCount={result.trend.sample_count}
+            dataSource={result.data_source}
+          />
+
           {/* Top-row scenarios */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 animate-fade-in stagger-3">
             <div className="lg:col-span-1 card-hover-premium rounded-2xl transition">

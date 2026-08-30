@@ -27,13 +27,20 @@ import {
   Bell,
   AlertCircle,
   Menu,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { useAuthStore } from "@/stores/auth";
 import { useIndustryStore } from "@/stores/industry";
 import { LogoMark } from "@/components/ui/Logo";
+import { getErrorMessage } from "@/utils/errors";
 import type { IndustryCode } from "@/types/api";
+import { ModelsDisagreeLanding } from "./landing/ModelsDisagreeLanding";
+import { LiveConsoleLanding } from "./landing/LiveConsoleLanding";
 
 type Ind = Exclude<IndustryCode, never>;
+
+const LEGACY_LANDING_ENABLED = import.meta.env.VITE_LEGACY_LANDING === "true";
+// "console" (default) | "models" — set VITE_LANDING_CONCEPT to switch concepts.
+const LANDING_CONCEPT = import.meta.env.VITE_LANDING_CONCEPT ?? "console";
 
 const inputCls =
   "w-full rounded-none border-0 border-b border-white/15 bg-transparent px-0 py-2.5 text-sm text-white placeholder-white/25 outline-none transition focus:border-[#DEDBC8]/60 focus:ring-0";
@@ -1831,20 +1838,27 @@ export const LandingPage = () => {
   const [formLoading, setFormLoading] = useState(false);
   const [formSuccess, setFormSuccess] = useState(false);
   const [launching, setLaunching] = useState(false);
+  const [sandboxError, setSandboxError] = useState<string | null>(null);
   const [showLoader, setShowLoader] = useState(() => !sessionStorage.getItem("sanket_visited"));
   const [lead, setLead] = useState({
     name: "", email: "", company: "", industry: "fashion", tier: "growth", message: "",
   });
 
   const reducedMotion = usePrefersReducedMotion();
+  const modalRef = useRef<HTMLDivElement>(null);
+  const isModalOpen = modal !== null;
 
   const aboutRef = useRef(null);
-  const { scrollYProgress: aboutProg } = useScroll({ target: aboutRef, offset: ["start 0.95", "start 0.35"] });
+  const aboutProg = useMotionValue(1);
 
   // Hero parallax: the background video drifts down and zooms slightly as the
   // hero scrolls out, so foreground copy appears to float above it.
   const heroRef = useRef(null);
-  const { scrollYProgress: heroProg } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const { scrollYProgress: heroProg } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+    layoutEffect: false,
+  });
   const heroY = useTransform(heroProg, [0, 1], [0, 110]);
   const heroScale = useTransform(heroProg, [0, 1], [1, 1.15]);
   const heroContentOpacity = useTransform(heroProg, [0, 0.75], [1, 0.15]);
@@ -1858,6 +1872,52 @@ export const LandingPage = () => {
   useEffect(() => {
     if (reducedMotion && showLoader) handleLoaderDone();
   }, [reducedMotion, showLoader, handleLoaderDone]);
+
+  useEffect(() => {
+    if (!isModalOpen) return;
+
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const focusTimer = window.setTimeout(() => {
+      modalRef.current?.querySelector<HTMLElement>("[data-modal-initial]")?.focus();
+    }, 0);
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setModal(null);
+        return;
+      }
+
+      if (event.key !== "Tab" || !modalRef.current) return;
+      const focusable = Array.from(
+        modalRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href]',
+        ),
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.clearTimeout(focusTimer);
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+      previousFocus?.focus();
+    };
+  }, [isModalOpen]);
 
   const aboutText = "Across five global verticals — Fashion, Electronics, Pharma, Hardware, and Agrocenter — SANKET brings your sales, inventory, and market signals into one place, forecasts demand for every product, and tells you exactly what to reorder and when. Your team plans with confidence instead of spreadsheets, and acts on what's about to happen rather than what already did.";
   const aboutWords = aboutText.split(" ");
@@ -1876,6 +1936,7 @@ export const LandingPage = () => {
 
   const launchSandbox = async (code: Ind) => {
     setLaunching(true);
+    setSandboxError(null);
     try {
       // Auth runs server-side via /auth/sandbox-session — no demo credentials
       // are shipped in the client bundle.
@@ -1884,7 +1945,14 @@ export const LandingPage = () => {
       toast.success(`Sandbox launched!`);
       setModal(null);
       navigate("/workspace", { replace: true });
-    } catch { toast.error("Could not launch sandbox."); }
+    } catch (error) {
+      const message = getErrorMessage(
+        error,
+        "Sandbox is temporarily unavailable. Please try again shortly.",
+      );
+      setSandboxError(message);
+      toast.error(message);
+    }
     finally { setLaunching(false); }
   };
 
@@ -1966,7 +2034,7 @@ export const LandingPage = () => {
       </AnimatePresence>
 
       {/* ── Scroll Progress ── */}
-      <ScrollProgress />
+      {LEGACY_LANDING_ENABLED && <ScrollProgress />}
 
       {/* ══════════════════════ NAV ══════════════════════ */}
       <header className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center pt-5">
@@ -1974,7 +2042,7 @@ export const LandingPage = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: showLoader ? 1.0 : 0 }}
-          className="flex items-center gap-1 bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-full px-2 py-2"
+          className="flex items-center gap-1 bg-[#090F0E]/85 backdrop-blur-2xl border border-white/[0.10] rounded-full px-2 py-2 shadow-[0_10px_32px_rgba(0,0,0,0.16)]"
         >
           <span className="font-mono text-xs tracking-[0.3em] text-[#DEDBC8]/80 uppercase px-4">SANKET</span>
           <div className="w-px h-3 bg-white/10 mx-1" />
@@ -2152,6 +2220,21 @@ export const LandingPage = () => {
         </div>
       </section>
 
+      {!LEGACY_LANDING_ENABLED &&
+        (LANDING_CONCEPT === "models" ? (
+          <ModelsDisagreeLanding
+            onBook={() => setModal("book")}
+            onSandbox={() => setModal("sandbox")}
+          />
+        ) : (
+          <LiveConsoleLanding
+            onBook={() => setModal("book")}
+            onSandbox={() => setModal("sandbox")}
+          />
+        ))}
+
+      {LEGACY_LANDING_ENABLED && (
+        <>
       {/* ══════════════════════ TRUST MARQUEE ══════════════════════ */}
       <TrustMarquee />
 
@@ -2432,6 +2515,8 @@ export const LandingPage = () => {
           </div>
         </div>
       </footer>
+        </>
+      )}
 
       {/* ══════════════════════ MODAL ══════════════════════ */}
       <AnimatePresence>
@@ -2442,6 +2527,10 @@ export const LandingPage = () => {
             className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 p-4 backdrop-blur-xl"
           >
             <motion.div
+              ref={modalRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="landing-modal-title"
               initial={{ opacity: 0, y: 20, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.97 }}
@@ -2449,8 +2538,8 @@ export const LandingPage = () => {
               onClick={(e) => e.stopPropagation()}
               className="relative w-full max-w-md border border-white/[0.08] bg-[#0A0A0A] rounded-2xl p-7 shadow-2xl"
             >
-              <button onClick={() => setModal(null)}
-                className="absolute right-5 top-5 w-7 h-7 rounded-full border border-white/[0.08] flex items-center justify-center text-white/30 hover:text-white/70 hover:border-white/20 transition-all outline-none">
+              <button onClick={() => setModal(null)} aria-label="Close dialog" data-modal-initial
+                className="absolute right-4 top-4 w-10 h-10 rounded-full border border-white/[0.08] flex items-center justify-center text-white/50 hover:text-white/80 hover:border-white/20 transition-all outline-none focus-visible:ring-2 focus-visible:ring-[#BDD9D7]/70">
                 <X size={14} />
               </button>
 
@@ -2466,14 +2555,14 @@ export const LandingPage = () => {
               {modal === "book" ? (
                 formSuccess ? (
                   <div className="py-8 text-center">
-                    <div className="w-12 h-12 rounded-full border border-[#DEDBC8]/20 flex items-center justify-center mx-auto mb-5 text-[#DEDBC8]/60 text-xl">✓</div>
-                    <h3 className="text-base font-light text-white/80 mb-2" style={{ fontFamily: "'DM Serif Display', serif" }}>Request Received</h3>
+                    <div className="w-12 h-12 rounded-full border border-[#DEDBC8]/20 flex items-center justify-center mx-auto mb-5 text-[#DEDBC8]/60"><Check size={20} /></div>
+                    <h3 id="landing-modal-title" className="text-base font-light text-white/80 mb-2" style={{ fontFamily: "'DM Serif Display', serif" }}>Request Received</h3>
                     <p className="text-xs text-white/65 leading-relaxed">A specialist will reach out within one business day.</p>
                     <button onClick={() => setModal(null)} className="mt-6 w-full border border-white/[0.08] hover:border-white/20 text-white/30 hover:text-white/60 font-mono text-[10px] tracking-widest uppercase py-3 rounded-lg transition-all outline-none">Dismiss</button>
                   </div>
                 ) : (
                   <form onSubmit={submitDemo} className="flex flex-col gap-5">
-                    <h3 className="text-lg font-light text-white/80" style={{ fontFamily: "'DM Serif Display', serif" }}>Schedule a Technical Briefing</h3>
+                    <h3 id="landing-modal-title" className="text-lg font-light text-white/80" style={{ fontFamily: "'DM Serif Display', serif" }}>Schedule a Technical Briefing</h3>
                     <div className="grid gap-5 sm:grid-cols-2">
                       <label className="block">
                         <span className="font-mono text-[9px] tracking-[0.2em] text-white/45 uppercase block mb-2">Full Name</span>
@@ -2510,7 +2599,7 @@ export const LandingPage = () => {
                 )
               ) : (
                 <div className="flex flex-col gap-3">
-                  <h3 className="text-lg font-light text-white/80 mb-1" style={{ fontFamily: "'DM Serif Display', serif" }}>Explore a Live Sandbox</h3>
+                  <h3 id="landing-modal-title" className="text-lg font-light text-white/80 mb-1" style={{ fontFamily: "'DM Serif Display', serif" }}>Explore a Live Sandbox</h3>
                   <p className="font-mono text-[10px] tracking-wide text-white/45 mb-3">Select your industry vertical to launch:</p>
                   {INDUSTRIES.map(({ key, Icon, name }) => (
                     <button key={key} onClick={() => launchSandbox(key)} disabled={launching}
@@ -2522,6 +2611,12 @@ export const LandingPage = () => {
                   {launching && (
                     <div className="flex items-center justify-center gap-2 mt-2 text-[11px] font-mono text-[#DEDBC8]/40">
                       <RefreshCw size={12} className="animate-spin" /> Authenticating…
+                    </div>
+                  )}
+                  {sandboxError && (
+                    <div role="alert" className="flex items-start gap-2 rounded-lg border border-rose-400/20 bg-rose-400/[0.06] px-3 py-2.5 text-xs leading-relaxed text-rose-200/80">
+                      <AlertCircle size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
+                      <span>{sandboxError}</span>
                     </div>
                   )}
                 </div>
@@ -2543,4 +2638,3 @@ export const LandingPage = () => {
     </div>
   );
 };
-

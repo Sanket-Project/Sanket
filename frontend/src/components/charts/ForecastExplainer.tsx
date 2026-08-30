@@ -1,4 +1,4 @@
-import { AlertCircle, Sparkles, CheckCircle2, Info } from "lucide-react";
+import { AlertCircle, Sparkles, CheckCircle2, Info } from "@/components/ui/icons";
 
 /**
  * ForecastExplainer — always-visible inline quantile guide.

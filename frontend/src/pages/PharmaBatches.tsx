@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ShieldCheck, Lock } from "lucide-react";
+import { ShieldCheck, Lock } from "@/components/ui/icons";
 import toast from "react-hot-toast";
 import { pharmaApi } from "@/api/pharma";
 import { Card } from "@/components/ui/Card";

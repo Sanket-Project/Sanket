@@ -1,4 +1,4 @@
-import { Sparkles, X } from "lucide-react";
+import { Sparkles, X } from "@/components/ui/icons";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 

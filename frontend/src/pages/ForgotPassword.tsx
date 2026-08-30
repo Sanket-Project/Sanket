@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { Mail, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Mail, ArrowLeft, CheckCircle2 } from "@/components/ui/icons";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { firebaseAuth, firebaseEnabled } from "@/lib/firebase";
 import { Button } from "@/components/ui/Button";

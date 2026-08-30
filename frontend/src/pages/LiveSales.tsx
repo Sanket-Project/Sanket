@@ -10,7 +10,7 @@ import {
   Clock,
   Plug,
   TrendingUp,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { PageLoader } from "@/components/ui/Spinner";

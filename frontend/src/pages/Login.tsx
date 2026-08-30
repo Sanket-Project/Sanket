@@ -5,12 +5,11 @@ import {
   Mail,
   Building2,
   User,
-  Eye,
-  EyeOff,
   TrendingUp,
   ShieldCheck,
   Workflow,
-} from "lucide-react";
+} from "@/components/ui/icons";
+import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import clsx from "clsx";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
@@ -187,7 +186,6 @@ export const LoginPage = () => {
   const [tenant_slug, setSlug] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
 
   // Sign Up state
   const [signUpName, setSignUpName] = useState("");
@@ -195,7 +193,6 @@ export const LoginPage = () => {
   const [signUpEmail, setSignUpEmail] = useState("");
   const [signUpPassword, setSignUpPassword] = useState("");
   const [signUpConfirmPassword, setSignUpConfirmPassword] = useState("");
-  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
 
   // Shared
   const [loading, setLoading] = useState(false);
@@ -349,7 +346,11 @@ export const LoginPage = () => {
         className="flex items-center justify-center px-6 py-8 sm:px-10"
         role="main"
       >
-        <div className={clsx("w-full", isSignUp ? "max-w-md" : "max-w-sm")}>
+        <motion.div
+          layout="position"
+          transition={{ type: "spring", stiffness: 350, damping: 32 }}
+          className={clsx("w-full", isSignUp ? "max-w-md" : "max-w-sm")}
+        >
           {/* Brand (mobile + small) */}
           <div className="mb-8 flex items-center gap-2.5 lg:hidden">
             <LogoMark size={36} variant="tile" className="rounded-xl" />
@@ -357,11 +358,14 @@ export const LoginPage = () => {
           </div>
 
           {/* Segmented toggle */}
-          <div className="tab-group-container mb-5 w-full">
+          <div className="tab-group-container mb-5 w-full relative flex">
             <button
               type="button"
               onClick={() => setIsSignUp(false)}
-              className={clsx("flex-1", isSignUp ? "tab-item-inactive" : "tab-item-active")}
+              className={clsx(
+                "flex-1 px-3.5 py-1.5 rounded-lg text-xs font-semibold select-none cursor-pointer z-10 transition-colors duration-200",
+                isSignUp ? "text-content-muted hover:text-content" : "text-accent"
+              )}
               aria-pressed={!isSignUp}
             >
               Sign in
@@ -369,229 +373,239 @@ export const LoginPage = () => {
             <button
               type="button"
               onClick={() => setIsSignUp(true)}
-              className={clsx("flex-1", isSignUp ? "tab-item-active" : "tab-item-inactive")}
+              className={clsx(
+                "flex-1 px-3.5 py-1.5 rounded-lg text-xs font-semibold select-none cursor-pointer z-10 transition-colors duration-200",
+                isSignUp ? "text-accent" : "text-content-muted hover:text-content"
+              )}
               aria-pressed={isSignUp}
             >
               Create account
             </button>
+            <motion.div
+              className="absolute top-[4px] bottom-[4px] rounded-lg bg-surface border border-border shadow-sm"
+              layoutId="activeTabIndicator"
+              transition={{ type: "spring", stiffness: 380, damping: 30 }}
+              style={{
+                left: isSignUp ? "calc(50% + 2px)" : "4px",
+                right: isSignUp ? "4px" : "calc(50% + 2px)",
+              }}
+            />
           </div>
 
-          {!isSignUp ? (
-            <form onSubmit={onSubmit} className="space-y-4" aria-label="Sign in form" noValidate>
-              <div>
-                <h1 className="font-heading text-2xl font-bold tracking-tight text-content">Sign in</h1>
-                <p className="mt-1 text-sm text-content-subtle">Access your planning workspace.</p>
-              </div>
-
-              <Input
-                id="signin-workspace"
-                name="signin-workspace"
-                label="Workspace"
-                value={tenant_slug}
-                onChange={(e) => setSlug(e.target.value)}
-                icon={<Building2 size={15} aria-hidden="true" />}
-                placeholder="acme-co"
-                required
-                autoComplete="organization"
-              />
-              <Input
-                id="signin-email"
-                name="signin-email"
-                label="Email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                icon={<Mail size={15} aria-hidden="true" />}
-                placeholder="you@company.com"
-                required
-                autoComplete="email"
-              />
-              <div className="relative">
-                <Input
-                  id="signin-password"
-                  name="signin-password"
-                  label="Password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  icon={<Lock size={15} aria-hidden="true" />}
-                  placeholder="••••••••"
-                  required
-                  autoComplete="current-password"
-                  error={error ?? undefined}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-[34px] text-content-subtle transition hover:text-content"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                </button>
-              </div>
-
-              <div className="-mt-1 text-right">
-                <Link to="/forgot-password" className="text-xs font-medium text-content-muted hover:text-content hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
-
-              <Button type="submit" loading={loading} className="w-full" aria-busy={loading}>
-                Sign in
-              </Button>
-
-              <Divider />
-
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={handleGoogleSignIn}
-                disabled={loading}
-                className="w-full"
-                icon={<GoogleIcon />}
-                aria-label="Sign in with Google"
+          <AnimatePresence mode="wait">
+            {!isSignUp ? (
+              <motion.div
+                key="signin"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.15, ease: "easeInOut" }}
               >
-                Continue with Google
-              </Button>
-
-              <LegalConsent action="signing in" />
-            </form>
-          ) : (
-            <form onSubmit={onSignUpSubmit} className="space-y-4" aria-label="Create account form" noValidate>
-              <div>
-                <h1 className="font-heading text-2xl font-bold tracking-tight text-content">Create your workspace</h1>
-                <p className="mt-1 text-sm text-content-subtle">Start planning with predictive supply-chain intelligence.</p>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Input
-                  id="signup-name"
-                  name="signup-name"
-                  label="Full name"
-                  value={signUpName}
-                  onChange={(e) => setSignUpName(e.target.value)}
-                  icon={<User size={15} aria-hidden="true" />}
-                  placeholder="Jane Smith"
-                  required
-                  autoComplete="name"
-                />
-                <Input
-                  id="signup-workspace"
-                  name="signup-workspace"
-                  label="Workspace"
-                  value={signUpSlug}
-                  onChange={(e) => setSignUpSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
-                  icon={<Building2 size={15} aria-hidden="true" />}
-                  placeholder="acme-co"
-                  hint="Lowercase, numbers & hyphens"
-                  required
-                  autoComplete="off"
-                />
-              </div>
-              <Input
-                id="signup-email"
-                name="signup-email"
-                label="Email"
-                type="email"
-                value={signUpEmail}
-                onChange={(e) => setSignUpEmail(e.target.value)}
-                icon={<Mail size={15} aria-hidden="true" />}
-                placeholder="you@company.com"
-                required
-                autoComplete="email"
-              />
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div className="relative">
-                  <Input
-                    id="signup-password"
-                    name="signup-password"
-                    label="Password"
-                    type={showSignUpPassword ? "text" : "password"}
-                    value={signUpPassword}
-                    onChange={(e) => setSignUpPassword(e.target.value)}
-                    icon={<Lock size={15} aria-hidden="true" />}
-                    placeholder="Min. 8 characters"
-                    required
-                    autoComplete="new-password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowSignUpPassword((v) => !v)}
-                    className="absolute right-3 top-[34px] text-content-subtle transition hover:text-content"
-                    aria-label={showSignUpPassword ? "Hide password" : "Show password"}
-                  >
-                    {showSignUpPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                  </button>
-                </div>
-                <Input
-                  id="signup-confirm-password"
-                  name="signup-confirm-password"
-                  label="Confirm password"
-                  type="password"
-                  value={signUpConfirmPassword}
-                  onChange={(e) => setSignUpConfirmPassword(e.target.value)}
-                  icon={<Lock size={15} aria-hidden="true" />}
-                  placeholder="Repeat password"
-                  required
-                  autoComplete="new-password"
-                  error={
-                    (error && isSignUp ? error : undefined) ||
-                    (signUpConfirmPassword && signUpPassword !== signUpConfirmPassword
-                      ? "Passwords do not match"
-                      : undefined)
-                  }
-                />
-              </div>
-
-              {signUpPassword && (
-                <div className="space-y-1" aria-live="polite">
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4].map((i) => (
-                      <div
-                        key={i}
-                        className={clsx(
-                          "h-1 flex-1 rounded-full transition-all duration-300",
-                          i <= pwStrength.score ? pwStrength.color : "bg-surface-3",
-                        )}
-                      />
-                    ))}
+                <form onSubmit={onSubmit} className="space-y-4" aria-label="Sign in form" noValidate>
+                  <div>
+                    <h1 className="font-heading text-2xl font-bold tracking-tight text-content">Sign in</h1>
+                    <p className="mt-1 text-sm text-content-subtle">Access your planning workspace.</p>
                   </div>
-                  <p className="text-[11px] text-content-subtle">
-                    Password strength:{" "}
-                    <span className={clsx("font-semibold", pwStrength.score >= 3 ? "text-emerald-600" : pwStrength.score >= 2 ? "text-amber-500" : "text-rose-500")}>
-                      {pwStrength.label}
-                    </span>
-                  </p>
-                </div>
-              )}
 
-              <Button
-                type="submit"
-                loading={loading}
-                disabled={!!(signUpPassword && signUpConfirmPassword && signUpPassword !== signUpConfirmPassword)}
-                className="w-full"
+                  <Input
+                    id="signin-workspace"
+                    name="signin-workspace"
+                    label="Workspace"
+                    value={tenant_slug}
+                    onChange={(e) => setSlug(e.target.value)}
+                    icon={<Building2 size={15} aria-hidden="true" />}
+                    placeholder="acme-co"
+                    required
+                    autoComplete="organization"
+                  />
+                  <Input
+                    id="signin-email"
+                    name="signin-email"
+                    label="Email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    icon={<Mail size={15} aria-hidden="true" />}
+                    placeholder="you@company.com"
+                    required
+                    autoComplete="email"
+                  />
+                  <Input
+                    id="signin-password"
+                    name="signin-password"
+                    label="Password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    icon={<Lock size={15} aria-hidden="true" />}
+                    placeholder="••••••••"
+                    required
+                    autoComplete="current-password"
+                    error={error ?? undefined}
+                  />
+
+                  <div className="-mt-1 text-right">
+                    <Link to="/forgot-password" className="text-xs font-medium text-content-muted hover:text-content hover:underline">
+                      Forgot password?
+                    </Link>
+                  </div>
+
+                  <Button type="submit" loading={loading} className="w-full" aria-busy={loading}>
+                    Sign in
+                  </Button>
+
+                  <Divider />
+
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={handleGoogleSignIn}
+                    disabled={loading}
+                    className="w-full"
+                    icon={<GoogleIcon />}
+                    aria-label="Sign in with Google"
+                  >
+                    Continue with Google
+                  </Button>
+
+                  <LegalConsent action="signing in" />
+                </form>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="signup"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.15, ease: "easeInOut" }}
               >
-                Create workspace
-              </Button>
+                <form onSubmit={onSignUpSubmit} className="space-y-4" aria-label="Create account form" noValidate>
+                  <div>
+                    <h1 className="font-heading text-2xl font-bold tracking-tight text-content">Create your workspace</h1>
+                    <p className="mt-1 text-sm text-content-subtle">Start planning with predictive supply-chain intelligence.</p>
+                  </div>
 
-              <Divider />
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <Input
+                      id="signup-name"
+                      name="signup-name"
+                      label="Full name"
+                      value={signUpName}
+                      onChange={(e) => setSignUpName(e.target.value)}
+                      icon={<User size={15} aria-hidden="true" />}
+                      placeholder="Jane Smith"
+                      required
+                      autoComplete="name"
+                    />
+                    <Input
+                      id="signup-workspace"
+                      name="signup-workspace"
+                      label="Workspace"
+                      value={signUpSlug}
+                      onChange={(e) => setSignUpSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                      icon={<Building2 size={15} aria-hidden="true" />}
+                      placeholder="acme-co"
+                      hint="Lowercase, numbers & hyphens"
+                      required
+                      autoComplete="off"
+                    />
+                  </div>
+                  <Input
+                    id="signup-email"
+                    name="signup-email"
+                    label="Email"
+                    type="email"
+                    value={signUpEmail}
+                    onChange={(e) => setSignUpEmail(e.target.value)}
+                    icon={<Mail size={15} aria-hidden="true" />}
+                    placeholder="you@company.com"
+                    required
+                    autoComplete="email"
+                  />
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <Input
+                      id="signup-password"
+                      name="signup-password"
+                      label="Password"
+                      type="password"
+                      value={signUpPassword}
+                      onChange={(e) => setSignUpPassword(e.target.value)}
+                      icon={<Lock size={15} aria-hidden="true" />}
+                      placeholder="Min. 8 characters"
+                      required
+                      autoComplete="new-password"
+                    />
+                    <Input
+                      id="signup-confirm-password"
+                      name="signup-confirm-password"
+                      label="Confirm password"
+                      type="password"
+                      value={signUpConfirmPassword}
+                      onChange={(e) => setSignUpConfirmPassword(e.target.value)}
+                      icon={<Lock size={15} aria-hidden="true" />}
+                      placeholder="Repeat password"
+                      required
+                      autoComplete="new-password"
+                      error={
+                        (error && isSignUp ? error : undefined) ||
+                        (signUpConfirmPassword && signUpPassword !== signUpConfirmPassword
+                          ? "Passwords do not match"
+                          : undefined)
+                      }
+                    />
+                  </div>
 
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={handleGoogleSignIn}
-                disabled={loading}
-                className="w-full"
-                icon={<GoogleIcon />}
-                aria-label="Sign up with Google"
-              >
-                Continue with Google
-              </Button>
+                  {signUpPassword && (
+                    <div className="space-y-1" aria-live="polite">
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4].map((i) => (
+                          <div
+                            key={i}
+                            className={clsx(
+                              "h-1 flex-1 rounded-full transition-all duration-300",
+                              i <= pwStrength.score ? pwStrength.color : "bg-surface-3",
+                            )}
+                          />
+                        ))}
+                      </div>
+                      <p className="text-[11px] text-content-subtle">
+                        Password strength:{" "}
+                        <span className={clsx("font-semibold", pwStrength.score >= 3 ? "text-emerald-600" : pwStrength.score >= 2 ? "text-amber-500" : "text-rose-500")}>
+                          {pwStrength.label}
+                        </span>
+                      </p>
+                    </div>
+                  )}
 
-              <LegalConsent action="creating an account" />
-            </form>
-          )}
-        </div>
+                  <Button
+                    type="submit"
+                    loading={loading}
+                    disabled={!!(signUpPassword && signUpConfirmPassword && signUpPassword !== signUpConfirmPassword)}
+                    className="w-full"
+                  >
+                    Create workspace
+                  </Button>
+
+                  <Divider />
+
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={handleGoogleSignIn}
+                    disabled={loading}
+                    className="w-full"
+                    icon={<GoogleIcon />}
+                    aria-label="Sign up with Google"
+                  >
+                    Continue with Google
+                  </Button>
+
+                  <LegalConsent action="creating an account" />
+                </form>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </main>
 
       {/* Narrative column */}

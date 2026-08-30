@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Activity } from "lucide-react";
+import { Activity } from "@/components/ui/icons";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { useWebSocket, type RealtimeEvent } from "@/hooks/useWebSocket";

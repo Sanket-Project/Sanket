@@ -17,7 +17,7 @@ import {
   Layers,
   ChevronDown,
   ChevronUp,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import clsx from "clsx";
 import toast from "react-hot-toast";
 import {
@@ -254,7 +254,12 @@ export const SkuDetailPage = () => {
 
   if (isLoading || !sku) return <PageLoader />;
 
-  const imgUrl = getProductImage(sku.id, sku.industry, images);
+  const imgUrl = getProductImage(
+    sku.id,
+    sku.industry,
+    images,
+    [sku.sku_code, sku.description].filter(Boolean).join(" "),
+  );
   const price = sku.unit_price != null ? Number(sku.unit_price) : null;
   const cost = sku.unit_cost != null ? Number(sku.unit_cost) : null;
   const margin = price && cost && price > 0

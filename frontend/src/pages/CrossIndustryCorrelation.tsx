@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { GitBranch, AlertOctagon } from "lucide-react";
+import { GitBranch, AlertOctagon } from "@/components/ui/icons";
 import { apiClient } from "@/api/client";
 import { Card } from "@/components/ui/Card";
 import { PageLoader } from "@/components/ui/Spinner";

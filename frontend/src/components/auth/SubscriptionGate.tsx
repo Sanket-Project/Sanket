@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Check, Lock, Sparkles, Clock, Shield } from "lucide-react";
+import { Check, Lock, Sparkles, Clock, Shield } from "@/components/ui/icons";
 import toast from "react-hot-toast";
 import { billingApi } from "@/api/billing";
 import { useAuthStore } from "@/stores/auth";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { LogoMark } from "@/components/ui/Logo";
 import { getErrorMessage } from "@/utils/errors";
+import { openRazorpayCheckout } from "@/utils/razorpay";
 
 const ALLOWED_REDIRECT_HOSTS = [
   "rzp.io",
@@ -39,6 +40,12 @@ export const SubscriptionGate = ({ children }: { children: React.ReactNode }) =>
   const [billingEmail, setBillingEmail] = useState(userEmail || "");
   const [selectedPlan, setSelectedPlan] = useState<{ id: string; trial_days: number } | null>(null);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  // Payment succeeded at Razorpay but activation failed on our side. Sticky,
+  // because the user needs a route to support rather than a transient toast.
+  const [verifyFailed, setVerifyFailed] = useState(false);
+  // Covers the Razorpay SDK <script> fetch as well as the API call, so the
+  // button stays busy for the whole gap between click and modal.
+  const [openingCheckout, setOpeningCheckout] = useState(false);
 
   const [showEnterpriseModal, setShowEnterpriseModal] = useState(false);
   const [contactName, setContactName] = useState("");
@@ -50,17 +57,96 @@ export const SubscriptionGate = ({ children }: { children: React.ReactNode }) =>
   const { data: sub, isLoading: isSubLoading } = useQuery({
     queryKey: ["billing", "subscription"],
     queryFn: billingApi.getSubscription,
-    // Refetch less aggressively during gate blocking
     staleTime: 60_000,
   });
 
+  const { data: config } = useQuery({
+    queryKey: ["billing", "config"],
+    queryFn: billingApi.getConfig,
+  });
+
+  const verify = useMutation({
+    mutationFn: (body: {
+      razorpay_subscription_id: string;
+      razorpay_payment_id: string;
+      razorpay_signature: string;
+    }) => billingApi.verifySubscription(body),
+    onSuccess: () => {
+      setVerifyFailed(false);
+      toast.success("Payment verified! Subscription activated.");
+      qc.invalidateQueries({ queryKey: ["billing"] });
+    },
+    onError: (e: unknown) => {
+      // The customer may well have been charged — Razorpay redirected them
+      // back, so a payment exists. A red toast that disappears in four seconds
+      // is not an acceptable end state for "we took your money and your
+      // workspace is still locked". Persist a recovery banner instead.
+      setVerifyFailed(true);
+      toast.error(getErrorMessage(e, "Payment verification failed"));
+    },
+  });
+
+  // Handle redirect back from Razorpay hosted page
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paymentId = params.get("razorpay_payment_id");
+    const subId = params.get("razorpay_subscription_id");
+    const sig = params.get("razorpay_signature");
+
+    if (paymentId && subId && sig) {
+      // Strip the payment id and signature from the URL *before* doing
+      // anything else. They previously survived until the verify mutation
+      // succeeded, which left them in browser history, in the Referer header
+      // of every subresource this page loads, and in any analytics or CDN log
+      // that records the full URL. On a verification failure they stayed
+      // there permanently.
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      verify.mutate({
+        razorpay_payment_id: paymentId,
+        razorpay_subscription_id: subId,
+        razorpay_signature: sig,
+      });
+    }
+  }, []);
+
   // 2. Subscribe mutation
   const subscribe = useMutation({
-    mutationFn: (body: { plan_id: string; billing_email: string; trial_days: number }) =>
+    mutationFn: (body: { plan_id: string; billing_email: string; return_path?: string }) =>
       billingApi.startSubscription(body),
-    onSuccess: (r) => {
+    onSuccess: async (r) => {
       qc.invalidateQueries({ queryKey: ["billing"] });
       setSelectedPlan(null);
+
+      // A trial needs no payment — the server has already granted it.
+      if (r.status === "trialing") {
+        toast.success("Your 14-day free trial is active. Welcome aboard!");
+        return;
+      }
+
+      // Try opening Razorpay JS SDK Checkout Popup if key is configured
+      if (config?.configured && config.key_id && r.razorpay_subscription_id) {
+        setOpeningCheckout(true);
+        try {
+          const opened = await openRazorpayCheckout({
+            keyId: config.key_id,
+            subscriptionId: r.razorpay_subscription_id,
+            planName: selectedPlan?.id.replace(/_/g, " ").toUpperCase() || "Subscription",
+            billingEmail,
+            onSuccess: (res) => {
+              verify.mutate(res);
+            },
+            onDismiss: () => {
+              toast("Payment cancelled — your workspace is still locked.", { icon: "🔒" });
+            },
+          });
+          if (opened) return;
+        } finally {
+          setOpeningCheckout(false);
+        }
+      }
+
+      // Fallback to Razorpay Hosted Page redirect
       if (r.short_url) {
         if (!isSafeRedirectUrl(r.short_url)) {
           toast.error("Payment redirect URL failed validation — contact support");
@@ -69,9 +155,16 @@ export const SubscriptionGate = ({ children }: { children: React.ReactNode }) =>
         }
         toast.success("Redirecting to payment gateway…");
         window.location.href = r.short_url;
-      } else {
-        toast.success("Subscription activated successfully!");
+        return;
       }
+
+      // No checkout modal and no hosted page: we could not collect payment.
+      // This previously reported success, which is how an unpaid subscription
+      // came to look like a completed purchase.
+      console.error("No payment route available for subscription", r.id, "status:", r.status);
+      toast.error(
+        "We couldn't open the payment page. Your subscription is not active — please retry or contact support.",
+      );
     },
     onError: (e: unknown) => {
       toast.error(getErrorMessage(e, "Failed to start subscription"));
@@ -118,7 +211,8 @@ export const SubscriptionGate = ({ children }: { children: React.ReactNode }) =>
       subscribe.mutate({
         plan_id: selectedPlan.id,
         billing_email: billingEmail,
-        trial_days: selectedPlan.trial_days,
+        // Path only — the server owns the origin. See api/billing.ts.
+        return_path: window.location.pathname,
       });
     }
   };
@@ -194,6 +288,22 @@ ${contactName}`;
         </p>
 
         {/* Warning alerts */}
+        {verifyFailed ? (
+          <div
+            role="alert"
+            className="mt-4 w-full max-w-2xl bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs rounded-xl p-3 text-left"
+          >
+            <strong>Payment received, activation pending.</strong> We could not confirm your
+            payment automatically. If you were charged, do not pay again — your workspace will
+            unlock once we reconcile it, usually within a few minutes. Still locked after that?
+            Contact{" "}
+            <a className="underline font-semibold" href="mailto:billing@sanket-supply.com">
+              billing@sanket-supply.com
+            </a>{" "}
+            and quote your registered email.
+          </div>
+        ) : null}
+
         {isTrialExpired ? (
           <div className="mt-4 w-full max-w-2xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs rounded-xl p-3 text-center">
             <strong>Your 14-day free trial has expired.</strong> Please complete a monthly or yearly payment below to restore access to the software.
@@ -236,7 +346,15 @@ ${contactName}`;
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full mt-4 text-left">
           
           {/* Option 1: 14-day Free Trial */}
-          <div className={`p-4 rounded-2xl border border-line bg-surface-2 flex flex-col justify-between hover:border-accent/30 hover:bg-surface-2 transition duration-200 ${hasTrialHistory ? "opacity-60 pointer-events-none select-none" : ""}`}>
+          {/* `pointer-events-none` hid this card's used-trial state from
+              keyboard and screen-reader users: the button stayed in the tab
+              order but could not be reached or announced as unavailable.
+              `aria-disabled` on the container plus the already-`disabled`
+              button communicates it to everyone. */}
+          <div
+            aria-disabled={hasTrialHistory || undefined}
+            className={`p-4 rounded-2xl border border-line bg-surface-2 flex flex-col justify-between hover:border-accent/30 hover:bg-surface-2 transition duration-200 ${hasTrialHistory ? "opacity-60" : ""}`}
+          >
             <div>
               <div className="flex items-center gap-1.5 text-xs text-accent font-bold uppercase tracking-wider">
                 <Clock size={12} />
@@ -428,7 +546,7 @@ ${contactName}`;
                 <Button
                   type="submit"
                   variant="primary"
-                  loading={subscribe.isPending}
+                  loading={subscribe.isPending || openingCheckout}
                 >
                   Proceed to Payment
                 </Button>

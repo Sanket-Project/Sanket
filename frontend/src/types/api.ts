@@ -346,6 +346,15 @@ export interface HybridForecastSeries {
   baseline_p50: number[];
 }
 
+export interface ForecastExplanationDriver {
+  source: string;
+  kind: string;
+  series_key: string;
+  /** Additive share of the median shift; 0.03 means +3 percentage points. */
+  contribution_pct: number;
+  signal_score: number;
+}
+
 export interface HybridForecast {
   industry: IndustryCode;
   horizon_weeks: number;
@@ -356,6 +365,7 @@ export interface HybridForecast {
     band_change_pct: number;
     baseline_band_mean: number;
     adjusted_band_mean: number;
+    drivers: ForecastExplanationDriver[];
   };
   scenarios: Record<string, Scenario>;
   series: HybridForecastSeries[];

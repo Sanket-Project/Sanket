@@ -6,7 +6,7 @@ import {
   Loader2,
   Sparkles,
   Zap,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { forwardRef, useImperativeHandle, useState } from "react";
 
 import { forecastsApi } from "@/api/forecasts";

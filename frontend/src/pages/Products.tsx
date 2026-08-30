@@ -22,7 +22,7 @@ import {
   Clock,
   XCircle,
   Star,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import clsx from "clsx";
 import toast from "react-hot-toast";
 import { productsApi, type ProductCreateBody } from "@/api/products";
@@ -78,32 +78,33 @@ const STATUS_CONFIG: Record<ProductStatus, { label: string; cls: string; icon: R
 // ─────────────────────────────────────────────────────────────────────────────
 // Product Card (grid view)
 // ─────────────────────────────────────────────────────────────────────────────
-function ProductCard({ product, accent, gradient, images, skuCountMap, onClick }: {
+function ProductCard({ product, accent, images, skuCountMap, onClick }: {
   product: Product;
   accent: string;
-  gradient: string;
   images: Record<string, string>;
   skuCountMap: Record<string, number>;
   onClick: () => void;
 }) {
-  const imgUrl = getProductImage(product.id, product.industry, images);
+  const imgUrl = getProductImage(
+    product.id,
+    product.industry,
+    images,
+    [product.name, product.brand, product.category, product.subcategory].filter(Boolean).join(" "),
+  );
   const status = STATUS_CONFIG[product.status];
   const skuCount = skuCountMap[product.id] ?? 0;
 
   return (
     <button
       onClick={onClick}
-      className="w-full text-left glass rounded-2xl overflow-hidden card-hover-premium group cursor-pointer"
+      className="w-full overflow-hidden rounded-2xl border border-line bg-surface text-left shadow-sm transition hover:-translate-y-0.5 hover:border-line-strong hover:shadow-md group cursor-pointer"
     >
-      {/* Accent bar */}
-      <div className="h-1 w-full" style={{ background: gradient }} />
-
       {/* Product image banner */}
-      <div className="relative h-36 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/60 dark:to-slate-700/40 overflow-hidden">
+      <div className="relative h-44 overflow-hidden bg-surface-2">
         <img
           src={imgUrl}
           alt={product.name}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-90"
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.025]"
         />
         {/* Status badge on image */}
         <div className="absolute top-2.5 left-2.5">
@@ -171,7 +172,12 @@ function ProductRow({ product, gradient, images, skuCountMap, onClick }: {
   skuCountMap: Record<string, number>;
   onClick: () => void;
 }) {
-  const imgUrl = getProductImage(product.id, product.industry, images);
+  const imgUrl = getProductImage(
+    product.id,
+    product.industry,
+    images,
+    [product.name, product.brand, product.category, product.subcategory].filter(Boolean).join(" "),
+  );
   const status = STATUS_CONFIG[product.status];
   const skuCount = skuCountMap[product.id] ?? 0;
 
@@ -464,7 +470,6 @@ export const ProductsPage = () => {
               key={p.id}
               product={p}
               accent={accent}
-              gradient={gradient}
               images={images}
               skuCountMap={skuCountMap}
               onClick={() => navigate(`/workspace/products/${p.id}`)}

@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   Play,
   Download,
@@ -21,7 +21,7 @@ import {
   ChevronUp,
   Sparkles,
   RefreshCw,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import toast from "react-hot-toast";
 import clsx from "clsx";
 import {
@@ -34,17 +34,19 @@ import {
   Tooltip,
   ResponsiveContainer,
   ReferenceLine,
-  Legend,
 } from "recharts";
 import { format, parseISO } from "date-fns";
 import { forecastsApi } from "@/api/forecasts";
+import { decisionsApi } from "@/api/decisions";
 import { exportApi } from "@/api/export";
+import { skusApi } from "@/api/skus";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { ForecastConfidencePanel } from "@/components/charts/ForecastConfidencePanel";
 import { useIndustryStore } from "@/stores/industry";
 import { industryAccent, industryDisplay, industryGradient } from "@/utils/colors";
 import { fmtCompact, fmtNumber } from "@/utils/format";
 import type { ForecastResponse, ForecastRow, IndustryCode } from "@/types/api";
+import type { Decision } from "@/api/decisions";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Industry config
@@ -143,7 +145,7 @@ const HORIZON_PRESETS: Record<IndustryCode, { label: string; weeks: number; reco
 // Sub-components
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Quantile guide — always-visible, not collapsible */
+/** Optional explanation for planners who want to inspect the uncertainty model. */
 function QuantileGuide({ accent }: { accent: string }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -206,6 +208,45 @@ function QuantileGuide({ accent }: { accent: string }) {
   );
 }
 
+function buildIndicativeForecast(decisions: Decision[], horizon: number): ForecastResponse | null {
+  const eligible = decisions
+    .filter((decision) => decision.inputs.demand_p50_over_window > 0)
+    .slice(0, 4);
+
+  if (!eligible.length) return null;
+
+  const start = new Date();
+  const rows = eligible.flatMap((decision, skuIndex) => {
+    const protectionWeeks = Math.max(1, decision.inputs.protection_days / 7);
+    const weeklyBaseline = decision.inputs.demand_p50_over_window / protectionWeeks;
+
+    return Array.from({ length: horizon }, (_, index) => {
+      const date = new Date(start);
+      date.setDate(start.getDate() + (index + 1) * 7);
+      const progress = horizon <= 1 ? 0 : index / (horizon - 1);
+      const direction = skuIndex % 3 === 1 ? -0.025 : skuIndex % 3 === 2 ? 0.03 : 0.08;
+      const seasonalMovement = Math.sin((index + skuIndex) / 2.8) * 0.018;
+      const expected = Math.max(0, weeklyBaseline * (1 + direction * progress + seasonalMovement));
+
+      return {
+        sku_id: decision.sku_id,
+        forecast_date: date.toISOString().slice(0, 10),
+        p10: Math.round(expected * 0.9),
+        p50: Math.round(expected),
+        p90: Math.round(expected * 1.1),
+      };
+    });
+  });
+
+  return {
+    run_id: "indicative-decision-plan",
+    n_predictions: rows.length,
+    rows,
+    source: "indicative",
+    context_source: "current decision inputs",
+  };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Buy recommendation
 // ─────────────────────────────────────────────────────────────────────────────
@@ -254,19 +295,19 @@ function getBuyRecommendation(rows: ForecastRow[]) {
   };
 }
 
-/** Single SKU forecast chart with P10/P50/P90 bands, better tooltips, legend */
+/** Single SKU forecast chart with one clear demand line and a restrained range. */
 function SkuForecastChart({
   skuId,
+  skuCode,
   skuLabel,
   rows,
   accent,
-  index,
 }: {
   skuId: string;
+  skuCode?: string;
   skuLabel: string;
   rows: ForecastRow[];
   accent: string;
-  index: number;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -287,7 +328,6 @@ function SkuForecastChart({
   const TrendIcon = trend > p50Values[0] * 0.02 ? TrendingUp : trend < -p50Values[0] * 0.02 ? TrendingDown : Minus;
   const trendColor = isUp ? "text-emerald-600 dark:text-emerald-400" : trend < 0 ? "text-rose-500 dark:text-rose-400" : "text-slate-400";
 
-  const gradId = `band-${index}`;
   const displayHeight = expanded ? 300 : 200;
   const rec = getBuyRecommendation(rows);
 
@@ -299,7 +339,7 @@ function SkuForecastChart({
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-mono text-[10px] font-bold bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded border border-slate-200/60 dark:border-slate-700/40">
-                {skuId}
+                {skuCode || skuId}
               </span>
               <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">
                 {skuLabel}
@@ -334,13 +374,7 @@ function SkuForecastChart({
       <div className="p-4">
         <ResponsiveContainer width="100%" height={displayHeight}>
           <ComposedChart data={chartData} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
-            <defs>
-              <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={accent} stopOpacity={0.25} />
-                <stop offset="100%" stopColor={accent} stopOpacity={0.03} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 6" stroke="#e2e8f0" className="dark:stroke-slate-700/40" />
+            <CartesianGrid vertical={false} strokeDasharray="2 6" stroke="var(--line)" />
             <XAxis
               dataKey="date"
               tickFormatter={(d) => format(parseISO(d), "MMM d")}
@@ -354,6 +388,10 @@ function SkuForecastChart({
               tickLine={false}
               axisLine={false}
               tickFormatter={(v) => fmtCompact(v)}
+              domain={[
+                (dataMin: number) => Math.max(0, Math.floor(dataMin * 0.9)),
+                (dataMax: number) => Math.ceil(dataMax * 1.1),
+              ]}
             />
             <Tooltip
               contentStyle={{
@@ -369,7 +407,6 @@ function SkuForecastChart({
                 return [fmtNumber(value), labels[name] ?? name];
               }}
             />
-            {expanded && <Legend iconType="line" wrapperStyle={{ fontSize: 10, paddingTop: 8 }} />}
             {/* Today reference line */}
             <ReferenceLine
               x={new Date().toISOString().slice(0, 10)}
@@ -379,74 +416,32 @@ function SkuForecastChart({
             />
             {/* Uncertainty band */}
             <Area
-              type="monotone"
+              type="linear"
               dataKey="band"
               stroke="none"
-              fill={`url(#${gradId})`}
-              isAnimationActive
-              animationDuration={1000}
-              animationEasing="ease-out"
-              name="P10–P90 Band"
-            />
-            {/* P10 line */}
-            <Line
-              type="monotone"
-              dataKey="p10"
-              stroke="#ef4444"
-              strokeWidth={1.5}
-              strokeDasharray="4 3"
-              dot={false}
-              isAnimationActive
-              animationDuration={1200}
-              name="P10 (Conservative)"
-            />
-            {/* P90 line */}
-            <Line
-              type="monotone"
-              dataKey="p90"
-              stroke="#10b981"
-              strokeWidth={1.5}
-              strokeDasharray="4 3"
-              dot={false}
-              isAnimationActive
-              animationDuration={1200}
-              name="P90 (Optimistic)"
+              fill={accent}
+              fillOpacity={0.1}
+              isAnimationActive={false}
+              name="Expected range"
             />
             {/* P50 median — bold */}
             <Line
-              type="monotone"
+              type="linear"
               dataKey="p50"
               stroke={accent}
-              strokeWidth={2.5}
+              strokeWidth={2}
               dot={false}
-              isAnimationActive
-              animationDuration={1500}
-              name="P50 (Expected)"
+              isAnimationActive={false}
+              name="Expected demand"
             />
           </ComposedChart>
         </ResponsiveContainer>
+        <div className="mt-2 flex flex-wrap items-center gap-5 text-[11px] text-content-muted">
+          <span className="inline-flex items-center gap-2"><span className="h-0.5 w-7 rounded-full" style={{ background: accent }} />Expected demand</span>
+          <span className="inline-flex items-center gap-2"><span className="h-3 w-7 rounded-sm" style={{ background: accent, opacity: 0.1 }} />Expected range</span>
+          <span className="ml-auto text-content-subtle">Hover for low, expected, and high values</span>
+        </div>
 
-        {/* Inline legend */}
-        {!expanded && (
-          <div className="flex items-center gap-4 mt-3 flex-wrap">
-            {[
-              { color: accent, label: "P50 Expected", dash: false },
-              { color: "#10b981", label: "P90 Optimistic", dash: true },
-              { color: "#ef4444", label: "P10 Conservative", dash: true },
-            ].map(({ color, label, dash }) => (
-              <div key={label} className="flex items-center gap-1.5">
-                <div className="flex items-center gap-0.5">
-                  <div className="h-px w-4" style={{ background: color, ...(dash ? { borderTop: `1.5px dashed ${color}` } : { borderTop: `2.5px solid ${color}` }) }} />
-                </div>
-                <span className="text-[9px] font-semibold text-slate-500 dark:text-slate-400">{label}</span>
-              </div>
-            ))}
-            <div className="flex items-center gap-1.5">
-              <div className="h-2.5 w-4 rounded-sm opacity-30" style={{ background: accent }} />
-              <span className="text-[9px] font-semibold text-slate-500 dark:text-slate-400">Uncertainty Band</span>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* ── AI Buy Recommendation ── */}
@@ -533,27 +528,53 @@ export const ForecastsPage = () => {
   const [horizon, setHorizon] = useState(defaultHorizon);
   const [result, setResult] = useState<ForecastResponse | null>(null);
 
-  // Auto-generate forecast on mount and when industry/horizon changes
+  // Fetch SKUs for mapping ID to code and name/description
+  const { data: skus = [] } = useQuery({
+    queryKey: ["skus"],
+    queryFn: () => skusApi.list({ limit: 1000 }),
+  });
+
+  const { data: decisionData } = useQuery({
+    queryKey: ["decisions", industry, "open", "forecast-fallback"],
+    queryFn: () => decisionsApi.list({ status: "open", limit: 20 }),
+    staleTime: 60_000,
+  });
+
+  const skuLookup = useMemo(() => {
+    const map = new Map<string, { code: string; name: string }>();
+    skus.forEach((s) => {
+      map.set(s.id, {
+        code: s.sku_code,
+        name: s.description || s.sku_code,
+      });
+    });
+    return map;
+  }, [skus]);
+
+  const run = useMutation({
+    mutationFn: () =>
+      forecastsApi.generate({ horizon, force_zero_shot: true }),
+    onSuccess: (r) => {
+      setResult(r);
+    },
+    onError: () => {
+      setResult(null);
+    },
+  });
+
+  // Auto-generate forecast on mount and when industry/horizon changes.
   useEffect(() => {
     run.mutate();
   }, [industry, horizon]);
 
-  const currentResult = result;
+  const indicativeResult = useMemo(
+    () => buildIndicativeForecast(decisionData?.decisions ?? [], horizon),
+    [decisionData?.decisions, horizon],
+  );
+  const currentResult = result?.rows.length ? result : indicativeResult;
+  const isIndicative = currentResult?.source === "indicative";
   const insight = INDUSTRY_INSIGHT[industry](horizon);
   const DirIcon = insight.tone === "up" ? TrendingUp : insight.tone === "down" ? TrendingDown : Minus;
-
-  const run = useMutation({
-    mutationFn: () =>
-      forecastsApi.generate({ horizon }),
-    onSuccess: (r) => {
-      setResult(r);
-      toast.success(`Generated ${r.n_predictions} forecast rows`);
-    },
-    onError: () => {
-      setResult(null);
-      toast.error("Failed to generate forecast. Please verify that you have uploaded your product catalog and SKU parameters first.");
-    },
-  });
 
   // Group rows by sku_id
   const grouped = useMemo(() => {
@@ -588,12 +609,12 @@ export const ForecastsPage = () => {
             Demand Forecasts
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-xl leading-relaxed">
-            Probabilistic demand projections using an ensemble of trained AI models. Each SKU gets a P10, P50, and P90 range so you can plan for uncertainty.
+            Expected demand by SKU, with a restrained range showing likely variation. Start with the recommendation; open settings only when you need them.
           </p>
         </div>
 
         {/* Export buttons — shown when result exists */}
-        {currentResult && (
+        {currentResult && !isIndicative && (
           <div className="flex items-center gap-2 shrink-0">
 
             <button
@@ -637,23 +658,20 @@ export const ForecastsPage = () => {
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug">{insight.text}</p>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-              Horizon: <strong className="text-slate-700 dark:text-slate-200">{horizon} weeks</strong> · Industry: <strong className="text-slate-700 dark:text-slate-200">{displayName}</strong> · Models: {models.map((m) => m.name).join(", ")}
+              {isIndicative ? "Indicative plan from current decision inputs" : `Live ensemble · ${models.map((m) => m.name).join(", ")}`} · <strong className="text-slate-700 dark:text-slate-200">{horizon} weeks</strong> · <strong className="text-slate-700 dark:text-slate-200">{displayName}</strong>
             </p>
           </div>
+          {isIndicative && <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-700 dark:border-amber-800/60 dark:bg-amber-900/20 dark:text-amber-300">Live engine unavailable</span>}
         </div>
       )}
 
       {/* ── Configure Run ── */}
-      <Card
-        title={
-          <span className="flex items-center gap-2">
-            <BarChart2 size={15} className="text-violet-500 dark:text-violet-400" />
-            Configure Forecast Run
-          </span>
-        }
-        description="Select a horizon and active model ensemble, then generate."
-      >
-        <div className="space-y-5 mt-2">
+      <details className="group rounded-2xl border border-line bg-surface px-5 py-4">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
+          <span><span className="flex items-center gap-2 text-sm font-semibold text-content"><BarChart2 size={15} className="text-[var(--accent)]" />Forecast settings</span><span className="mt-1 block text-xs text-content-muted">{horizon} weeks · {models.map((model) => model.name).join(", ")}</span></span>
+          <ChevronDown size={16} className="text-content-subtle transition group-open:rotate-180" />
+        </summary>
+        <div className="mt-5 space-y-5 border-t border-line pt-4">
           {/* Horizon selector */}
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -720,18 +738,16 @@ export const ForecastsPage = () => {
 
           </div>
         </div>
-      </Card>
+      </details>
 
-      {/* ── Quantile Guide (always visible) ── */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <Info size={13} className="text-slate-400 dark:text-slate-500" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
-            How to read the forecast lines
-          </span>
-        </div>
-        <QuantileGuide accent={accent} />
-      </div>
+      {/* ── Progressive disclosure keeps model terminology out of the main task. ── */}
+      <details className="group rounded-xl border border-line bg-surface px-4 py-3">
+        <summary className="flex cursor-pointer list-none items-center justify-between text-xs font-semibold text-content-muted">
+          <span className="flex items-center gap-2"><Info size={13} />How uncertainty is shown</span>
+          <ChevronDown size={15} className="transition group-open:rotate-180" />
+        </summary>
+        <div className="mt-4 border-t border-line pt-4"><QuantileGuide accent={accent} /></div>
+      </details>
 
       {/* ── Results ── */}
       {!currentResult ? (
@@ -776,23 +792,32 @@ export const ForecastsPage = () => {
             <div className="flex items-center gap-2 mb-4">
               <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800/60" />
               <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 px-3">
-                Per-SKU Forecast Charts
+                Expected demand by SKU
               </span>
               <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800/60" />
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-              {grouped.map(([skuId, rows], i) => (
-                <SkuForecastChart
-                  key={skuId}
-                  skuId={skuId}
-                  skuLabel={SKU_LABELS[skuId] ?? skuId}
-                  rows={rows}
-                  accent={accent}
-                  index={i}
-                />
-              ))}
+              {grouped.map(([skuId, rows]) => {
+                const skuInfo = skuLookup.get(skuId);
+                const codeToShow = skuInfo?.code || skuId;
+                const labelToShow = skuInfo?.name || SKU_LABELS[codeToShow] || codeToShow;
+                return (
+                  <SkuForecastChart
+                    key={skuId}
+                    skuId={skuId}
+                    skuCode={codeToShow !== skuId ? codeToShow : undefined}
+                    skuLabel={labelToShow}
+                    rows={rows}
+                    accent={accent}
+                  />
+                );
+              })}
             </div>
           </div>
+
+          {/* The confidence drill-down follows the forecast itself, so the
+              planner sees the answer before the model diagnostics. */}
+          <ForecastConfidencePanel />
         </div>
       )}
     </div>

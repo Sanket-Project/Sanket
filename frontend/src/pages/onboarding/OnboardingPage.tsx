@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, LogOut } from "lucide-react";
+import { ArrowLeft, LogOut } from "@/components/ui/icons";
 import {
   useCallback,
   useMemo,

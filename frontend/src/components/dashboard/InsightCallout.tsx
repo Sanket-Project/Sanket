@@ -1,6 +1,6 @@
 import type { ReactNode, CSSProperties } from "react";
 import clsx from "clsx";
-import { ArrowRight, Zap } from "lucide-react";
+import { ArrowRight, Zap } from "@/components/ui/icons";
 
 interface Props {
   insight: string;

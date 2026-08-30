@@ -1,6 +1,6 @@
 import { memo } from "react";
 import clsx from "clsx";
-import { TrendingDown, TrendingUp, Minus } from "lucide-react";
+import { TrendingDown, TrendingUp, Minus } from "@/components/ui/icons";
 
 interface CategoryItem {
   category: string;

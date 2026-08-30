@@ -14,7 +14,7 @@ import {
   Calendar,
   AlertCircle,
   Play
-} from "lucide-react";
+} from "@/components/ui/icons";
 import toast from "react-hot-toast";
 import {
   webhooksApi,

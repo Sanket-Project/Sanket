@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CreditCard, Check } from "lucide-react";
+import { CreditCard, Check } from "@/components/ui/icons";
 import toast from "react-hot-toast";
 import { billingApi, type Plan } from "@/api/billing";
 import { Card } from "@/components/ui/Card";
@@ -12,6 +12,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PageLoader } from "@/components/ui/Spinner";
 import { fmtNumber } from "@/utils/format";
 import { getErrorMessage } from "@/utils/errors";
+import { openRazorpayCheckout } from "@/utils/razorpay";
 
 /** Validate that a redirect URL comes from a trusted payment provider domain. */
 const ALLOWED_REDIRECT_HOSTS = [
@@ -49,6 +50,11 @@ export const BillingPage = () => {
   const [pickPlan, setPickPlan] = useState<Plan | null>(null);
   const [email, setEmail] = useState("");
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  // Payment taken but activation failed — needs a persistent recovery path.
+  const [verifyFailed, setVerifyFailed] = useState(false);
+  // Covers the Razorpay SDK script fetch, not just the API call, so the button
+  // doesn't go idle during the dead air before the modal appears.
+  const [openingCheckout, setOpeningCheckout] = useState(false);
 
   const { data: plans, isLoading: l1 } = useQuery({
     queryKey: ["billing", "plans"],
@@ -62,15 +68,87 @@ export const BillingPage = () => {
     queryKey: ["billing", "usage"],
     queryFn: billingApi.usage,
   });
+  const { data: config } = useQuery({
+    queryKey: ["billing", "config"],
+    queryFn: billingApi.getConfig,
+  });
+
+  const verify = useMutation({
+    mutationFn: (body: {
+      razorpay_subscription_id: string;
+      razorpay_payment_id: string;
+      razorpay_signature: string;
+    }) => billingApi.verifySubscription(body),
+    onSuccess: () => {
+      setVerifyFailed(false);
+      toast.success("Payment verified! Subscription activated.");
+      qc.invalidateQueries({ queryKey: ["billing"] });
+    },
+    onError: (e: unknown) => {
+      // See SubscriptionGate: the customer may have been charged already, so
+      // this needs a persistent recovery path, not a transient toast.
+      setVerifyFailed(true);
+      toast.error(getErrorMessage(e, "Payment verification failed"));
+    },
+  });
+
+  // Handle redirect back from Razorpay hosted page
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paymentId = params.get("razorpay_payment_id");
+    const subId = params.get("razorpay_subscription_id");
+    const sig = params.get("razorpay_signature");
+
+    if (paymentId && subId && sig) {
+      // Clear the signature from the URL immediately — before the mutation,
+      // not after it succeeds. See SubscriptionGate for the full rationale.
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      verify.mutate({
+        razorpay_payment_id: paymentId,
+        razorpay_subscription_id: subId,
+        razorpay_signature: sig,
+      });
+    }
+  }, []);
 
   const subscribe = useMutation({
-    mutationFn: (body: { plan_id: string; billing_email: string }) =>
+    mutationFn: (body: { plan_id: string; billing_email: string; return_path?: string }) =>
       billingApi.startSubscription(body),
-    onSuccess: (r) => {
+    onSuccess: async (r) => {
       qc.invalidateQueries({ queryKey: ["billing"] });
       setPickPlan(null);
+
+      // A trial needs no payment — the server has already granted it.
+      if (r.status === "trialing") {
+        toast.success("Your free trial is active. Welcome aboard!");
+        return;
+      }
+
+      // Try opening Razorpay JS SDK Checkout Popup if key is configured
+      if (config?.configured && config.key_id && r.razorpay_subscription_id) {
+        setOpeningCheckout(true);
+        try {
+          const opened = await openRazorpayCheckout({
+            keyId: config.key_id,
+            subscriptionId: r.razorpay_subscription_id,
+            planName: pickPlan?.display_name || "Subscription",
+            billingEmail: email,
+            onSuccess: (res) => {
+              verify.mutate(res);
+            },
+            onDismiss: () => {
+              toast("Payment cancelled — no charge was made.", { icon: "🔒" });
+            },
+          });
+          if (opened) return;
+        } finally {
+          setOpeningCheckout(false);
+        }
+      }
+
+      // Fallback to Razorpay Hosted Page redirect
       if (r.short_url) {
-        // Validate the redirect URL is a known Razorpay domain before navigating
         if (!isSafeRedirectUrl(r.short_url)) {
           toast.error("Payment redirect URL failed validation — contact support");
           console.warn("Blocked unsafe billing redirect:", r.short_url);
@@ -78,12 +156,19 @@ export const BillingPage = () => {
         }
         toast.success("Redirecting to Razorpay to confirm payment…");
         window.location.href = r.short_url;
-      } else {
-        toast.success("Subscription started");
+        return;
       }
+
+      // No checkout modal and no hosted page: we could not collect payment.
+      // This previously reported success, which is how an unpaid subscription
+      // came to look like a completed purchase.
+      console.error("No payment route available for subscription", r.id, "status:", r.status);
+      toast.error(
+        "We couldn't open the payment page. Your subscription is not active — please retry or contact support.",
+      );
     },
     onError: (e: unknown) => {
-      toast.error(getErrorMessage(e, "Failed"));
+      toast.error(getErrorMessage(e, "Failed to start subscription"));
     },
   });
 
@@ -121,6 +206,25 @@ export const BillingPage = () => {
           Manage your subscription, usage, and payment method.
         </p>
       </div>
+
+      {/* Payment went through at Razorpay but we could not activate. Sticky,
+          because "you were charged and nothing happened" needs a route to a
+          human, not a toast that vanishes. */}
+      {verifyFailed && (
+        <div
+          role="alert"
+          className="animate-fade-in rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-600 dark:text-rose-400"
+        >
+          <strong className="block mb-1">Payment received, activation pending.</strong>
+          We couldn't confirm your payment automatically. If you were charged, please don't pay
+          again — this usually reconciles within a few minutes. If your plan still shows as
+          inactive after that, contact{" "}
+          <a className="underline font-semibold" href="mailto:billing@sanket-supply.com">
+            billing@sanket-supply.com
+          </a>
+          .
+        </div>
+      )}
 
       {/* Current subscription */}
       <Card title="Current subscription" className="animate-fade-in stagger-2">
@@ -247,9 +351,18 @@ export const BillingPage = () => {
                   <Button
                     className="w-full mt-6"
                     variant={p.tier === "scale" ? "primary" : "secondary"}
+                    // Switching plans isn't implemented server-side — starting a
+                    // second subscription now returns 409 rather than silently
+                    // stacking one. Say so instead of offering a dead action.
+                    disabled={!!sub}
+                    title={
+                      sub
+                        ? "Cancel your current subscription before switching plans"
+                        : undefined
+                    }
                     onClick={() => setPickPlan(p)}
                   >
-                    {sub ? "Switch to this plan" : "Subscribe"}
+                    {sub ? "Cancel current plan to switch" : "Subscribe"}
                   </Button>
                 )}
               </div>
@@ -319,10 +432,16 @@ export const BillingPage = () => {
             <Button variant="secondary" onClick={() => setPickPlan(null)}>Cancel</Button>
             <Button
               variant="primary"
-              loading={subscribe.isPending}
+              loading={subscribe.isPending || openingCheckout}
+              disabled={!/^\S+@\S+\.\S+$/.test(email)}
               onClick={() => {
                 if (pickPlan) {
-                  subscribe.mutate({ plan_id: pickPlan.id, billing_email: email });
+                  subscribe.mutate({
+                    plan_id: pickPlan.id,
+                    billing_email: email,
+                    // Path only — the server owns the origin.
+                    return_path: window.location.pathname,
+                  });
                 }
               }}
             >

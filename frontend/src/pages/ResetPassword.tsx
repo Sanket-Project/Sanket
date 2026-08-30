@@ -1,6 +1,6 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { Lock, Eye, EyeOff, CheckCircle2, XCircle, ArrowLeft } from "lucide-react";
+import { Lock, CheckCircle2, XCircle, ArrowLeft } from "@/components/ui/icons";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 
@@ -24,8 +24,6 @@ export const ResetPasswordPage = () => {
 
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [showPw, setShowPw] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -163,30 +161,19 @@ export const ResetPasswordPage = () => {
 
             {/* New password */}
             <div className="space-y-1">
-              <div className="relative">
-                <Input
-                  id="new-password"
-                  label="New password"
-                  type={showPw ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  icon={<Lock size={14} className="text-slate-400" aria-hidden="true" />}
-                  placeholder="Min. 8 characters"
-                  required
-                  autoComplete="new-password"
-                  aria-required="true"
-                  aria-describedby="pw-strength"
-                  className="pr-10"
-                />
-                <button
-                  type="button"
-                  aria-label={showPw ? "Hide password" : "Show password"}
-                  onClick={() => setShowPw((v) => !v)}
-                  className="absolute right-3 top-[38px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
-                >
-                  {showPw ? <EyeOff size={15} aria-hidden="true" /> : <Eye size={15} aria-hidden="true" />}
-                </button>
-              </div>
+              <Input
+                id="new-password"
+                label="New password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                icon={<Lock size={14} className="text-slate-400" aria-hidden="true" />}
+                placeholder="Min. 8 characters"
+                required
+                autoComplete="new-password"
+                aria-required="true"
+                aria-describedby="pw-strength"
+              />
               {password.length > 0 && (
                 <div id="pw-strength" aria-live="polite" className="space-y-1">
                   <div className="flex gap-1 h-1.5">
@@ -207,30 +194,19 @@ export const ResetPasswordPage = () => {
             </div>
 
             {/* Confirm password */}
-            <div className="relative">
-              <Input
-                id="confirm-password"
-                label="Confirm new password"
-                type={showConfirm ? "text" : "password"}
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                icon={<Lock size={14} className="text-slate-400" aria-hidden="true" />}
-                placeholder="Re-enter new password"
-                required
-                autoComplete="new-password"
-                aria-required="true"
-                error={mismatch ? "Passwords do not match" : undefined}
-                className="pr-10"
-              />
-              <button
-                type="button"
-                aria-label={showConfirm ? "Hide confirm password" : "Show confirm password"}
-                onClick={() => setShowConfirm((v) => !v)}
-                className="absolute right-3 top-[38px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
-              >
-                {showConfirm ? <EyeOff size={15} aria-hidden="true" /> : <Eye size={15} aria-hidden="true" />}
-              </button>
-            </div>
+            <Input
+              id="confirm-password"
+              label="Confirm new password"
+              type="password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              icon={<Lock size={14} className="text-slate-400" aria-hidden="true" />}
+              placeholder="Re-enter new password"
+              required
+              autoComplete="new-password"
+              aria-required="true"
+              error={mismatch ? "Passwords do not match" : undefined}
+            />
 
             <Button
               type="submit"

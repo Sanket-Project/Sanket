@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import clsx from "clsx";
-import { Shirt, Cpu, Pill, Sprout, Wrench, ChevronDown, Check, type LucideIcon } from "lucide-react";
+import { Shirt, Cpu, Pill, Sprout, Wrench, ChevronDown, Check, type AppIcon } from "@/components/ui/icons";
 import { useIndustryStore } from "@/stores/industry";
 import { useQueryClient } from "@tanstack/react-query";
 import type { IndustryCode } from "@/types/api";
@@ -10,7 +10,7 @@ const OPTIONS: {
   code: IndustryCode;
   label: string;
   description: string;
-  Icon: LucideIcon;
+  Icon: AppIcon;
 }[] = [
   { code: "fashion", label: "Fashion & Apparel", description: "Trend velocity & SS26 assortment tracking", Icon: Shirt },
   { code: "electronics", label: "Consumer Electronics", description: "Component shortages & high-tech forecasts", Icon: Cpu },

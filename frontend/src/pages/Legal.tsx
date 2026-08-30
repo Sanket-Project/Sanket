@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "@/components/ui/icons";
 import "@/styles/landing.css";
 
 const LAST_UPDATED = "June 1, 2026";

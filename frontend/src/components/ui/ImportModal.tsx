@@ -14,7 +14,7 @@ import {
   Info,
   Layers,
   ArrowRight,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { Button } from "@/components/ui/Button";
 import type { ParsedRow, ParseResult, ValidationResult } from "@/utils/csvImport";
 import { useIndustryStore } from "@/stores/industry";

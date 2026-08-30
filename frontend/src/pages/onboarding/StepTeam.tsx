@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link2, Mail, Trash2, UserPlus, Users } from "lucide-react";
+import { Link2, Mail, Trash2, UserPlus, Users } from "@/components/ui/icons";
 import { forwardRef, useImperativeHandle, useState, type FormEvent } from "react";
 import toast from "react-hot-toast";
 

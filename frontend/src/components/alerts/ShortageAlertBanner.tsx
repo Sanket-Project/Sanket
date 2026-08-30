@@ -1,4 +1,4 @@
-import { AlertTriangle, AlertOctagon, Info, X } from "lucide-react";
+import { AlertTriangle, AlertOctagon, Info, X } from "@/components/ui/icons";
 import clsx from "clsx";
 import { useState } from "react";
 import type { ShortageAlert } from "@/types/api";

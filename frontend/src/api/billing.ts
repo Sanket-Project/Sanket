@@ -28,16 +28,29 @@ export interface UsageSnapshot {
   >;
 }
 
+export interface BillingConfig {
+  configured: boolean;
+  key_id: string | null;
+}
+
 export const billingApi = {
+  getConfig: () => apiClient.get<BillingConfig>("/billing/config").then((r) => r.data),
   listPlans: () => apiClient.get<Plan[]>("/billing/plans").then((r) => r.data),
   getSubscription: () =>
     apiClient
       .get<SubscriptionSummary | null>("/billing/subscription")
       .then((r) => r.data),
+  // `trial_days` is intentionally absent: trial length and eligibility are
+  // decided server-side from the plan. Sending it has no effect.
+  //
+  // `return_path` is a relative path, not a full URL. The server joins it to a
+  // configured origin to build Razorpay's `callback_url`. Sending a full URL
+  // (as `redirect_url` used to) is rejected with a 422 — that parameter is
+  // where signed payment results land, so its origin must not be client-chosen.
   startSubscription: (body: {
     plan_id: string;
     billing_email: string;
-    trial_days?: number;
+    return_path?: string;
   }) =>
     apiClient
       .post<{
@@ -45,7 +58,21 @@ export const billingApi = {
         plan_id: string;
         status: string;
         short_url: string | null;
+        razorpay_subscription_id: string | null;
       }>("/billing/subscription", body)
+      .then((r) => r.data),
+  verifySubscription: (body: {
+    razorpay_subscription_id: string;
+    razorpay_payment_id: string;
+    razorpay_signature: string;
+  }) =>
+    apiClient
+      .post<{
+        id: string;
+        plan_id: string;
+        status: string;
+        current_period_end: string;
+      }>("/billing/subscription/verify", body)
       .then((r) => r.data),
   cancel: (atPeriodEnd = true) =>
     apiClient

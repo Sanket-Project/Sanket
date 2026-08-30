@@ -13,9 +13,9 @@ export const AppShell = () => {
   return (
     <div
       id="app-shell-root"
-      className="flex h-screen w-screen overflow-hidden relative bg-canvas lg:p-3 lg:gap-3"
+      className="flex h-screen w-screen overflow-hidden relative bg-canvas lg:p-2.5 lg:gap-2.5"
       data-industry={industry}
-      style={{ "--sidebar-w": collapsed ? "76px" : "260px" } as React.CSSProperties}
+      style={{ "--sidebar-w": collapsed ? "72px" : "244px" } as React.CSSProperties}
     >
       {/* Skip-to-main for keyboard users */}
       <a
@@ -35,9 +35,9 @@ export const AppShell = () => {
         <main
           id="main-content"
           tabIndex={-1}
-          className="flex-1 overflow-y-auto pt-3 lg:pt-4 pb-4 px-1 lg:px-2 animate-fade-in relative z-10 outline-none"
+          className="flex-1 overflow-y-auto pt-3 pb-5 px-1 lg:px-2 animate-fade-in relative z-10 outline-none"
         >
-          <div className="mx-auto w-full max-w-[1440px]">
+          <div className="mx-auto w-full max-w-[1480px]">
             <SetupBanner />
             <SubscriptionGate>
               <Outlet />

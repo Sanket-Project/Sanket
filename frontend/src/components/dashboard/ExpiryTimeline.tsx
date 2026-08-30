@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { AlertTriangle, Clock } from "lucide-react";
+import { AlertTriangle, Clock } from "@/components/ui/icons";
 import { fmtDate, fmtCompact } from "@/utils/format";
 import type { PharmaBatchExpiring } from "@/types/api";
 

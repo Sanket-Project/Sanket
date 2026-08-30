@@ -13,22 +13,22 @@
 /* ── Design tokens ──────────────────────────────────────────────────────────── */
 :root {
   color-scheme: light;
-  --sidebar-w: 260px;
+  --sidebar-w: 244px;
 
   /* Surfaces */
-  --canvas: #BDD9D7; /* Jet Stream canvas background */
+  --canvas: #F3F7F6;
   --surface: #ffffff;
-  --surface-2: #f4f8f8;
-  --surface-3: #e1eeed;
+  --surface-2: #F7FAF9;
+  --surface-3: #E8F0EE;
 
   /* Text */
   --text: #022327; /* Blue Whale dark text */
-  --text-muted: #1a4950;
-  --text-subtle: #4b787e;
+  --text-muted: #315A60;
+  --text-subtle: #5E7B80;
 
   /* Lines */
-  --border: rgba(3, 54, 61, 0.08);
-  --border-strong: rgba(3, 54, 61, 0.16);
+  --border: rgba(3, 54, 61, 0.10);
+  --border-strong: rgba(3, 54, 61, 0.20);
 
   /* Accent — brand Blue Whale */
   --accent: #03363D;
@@ -39,28 +39,28 @@
 
   /* Elevation — premium soft layered shadows */
   --shadow-sm: 0 1px 2px rgba(3, 54, 61, 0.02);
-  --shadow-md: 0 4px 20px -2px rgba(3, 54, 61, 0.05), 0 2px 8px -1px rgba(3, 54, 61, 0.02);
-  --shadow-lg: 0 12px 30px -4px rgba(3, 54, 61, 0.1), 0 4px 12px -2px rgba(3, 54, 61, 0.04);
+  --shadow-md: 0 8px 24px -16px rgba(3, 54, 61, 0.24);
+  --shadow-lg: 0 18px 48px -28px rgba(3, 54, 61, 0.32);
 
   /* Radii */
-  --radius: 20px;
-  --radius-sm: 12px;
+  --radius: 16px;
+  --radius-sm: 10px;
 }
 
 .dark {
   color-scheme: dark;
 
-  --canvas: #021a1d; /* darker Blue Whale canvas */
-  --surface: #03363D; /* Blue Whale card surface */
-  --surface-2: #05454e;
-  --surface-3: #085560;
+  --canvas: #071B1D;
+  --surface: #0B2528;
+  --surface-2: #103136;
+  --surface-3: #163E43;
 
   --text: #eef7f6;
-  --text-muted: rgba(189, 217, 215, 0.75);
-  --text-subtle: rgba(189, 217, 215, 0.45);
+  --text-muted: #C3D5D3;
+  --text-subtle: #91AEAB;
 
-  --border: rgba(189, 217, 215, 0.12);
-  --border-strong: rgba(189, 217, 215, 0.22);
+  --border: rgba(221, 238, 236, 0.12);
+  --border-strong: rgba(221, 238, 236, 0.24);
 
   --accent: #BDD9D7; /* Jet Stream active elements */
   --accent-strong: #ffffff;
@@ -119,9 +119,7 @@ h1, h2, h3, h4, h5, .font-heading, .font-display {
   position: fixed;
   inset: 0;
   z-index: -1;
-  background:
-    radial-gradient(900px 500px at 85% -10%, var(--accent-soft), transparent 60%),
-    var(--canvas);
+  background: var(--canvas);
   pointer-events: none;
 }
 /* legacy noise hooks kept as no-ops so old class refs don't 404 */
@@ -198,7 +196,7 @@ h1, h2, h3, h4, h5, .font-heading, .font-display {
 
   /* Card */
   .card {
-    @apply rounded-2xl p-6;
+    @apply rounded-2xl p-5;
     background: var(--surface);
     border: 1px solid var(--border);
     box-shadow: var(--shadow-sm);
@@ -334,6 +332,7 @@ h1, h2, h3, h4, h5, .font-heading, .font-display {
    text-slate-*, border-slate-*). Map the common ones onto tokens in dark mode so
    nothing renders as a white card on the dark canvas during the migration. */
 .dark .bg-white { background-color: var(--surface) !important; }
+.dark .brand-logo-tile { background-color: #ffffff !important; border-color: rgba(255, 255, 255, 0.18) !important; }
 .dark .bg-slate-50,
 .dark .bg-slate-100 { background-color: var(--surface-2) !important; }
 .dark .bg-slate-200 { background-color: var(--surface-3) !important; }

@@ -121,13 +121,30 @@ export const integrationsApi = {
     apiClient.delete<Connector>(`/integrations/${provider}`).then((r) => r.data),
   sync: (provider: string) =>
     apiClient.post<{ status: string; detail: string }>(`/integrations/${provider}/sync`, {}).then((r) => r.data),
-  upload: (file: File, kind: string, targetIndustry: IndustryCode) => {
+  upload: (file: File, kind: string, targetIndustry: IndustryCode, columnMapping?: Record<string, string>) => {
     const form = new FormData();
     form.append("file", file);
     form.append("kind", kind);
     form.append("target_industry", targetIndustry);
+    if (columnMapping) {
+      form.append("column_mapping", JSON.stringify(columnMapping));
+    }
     return apiClient
       .post<UploadResult>("/integrations/upload", form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      .then((r) => r.data);
+  },
+  analyze: (file: File, kind: string) => {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("kind", kind);
+    return apiClient
+      .post<{
+        headers: string[];
+        suggested_mapping: Record<string, string>;
+        sample_rows: Record<string, any>[];
+      }>("/integrations/upload/analyze", form, {
         headers: { "Content-Type": "multipart/form-data" },
       })
       .then((r) => r.data);

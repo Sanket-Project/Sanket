@@ -21,7 +21,7 @@ import {
   Wrench,
   TrendingUp,
   ShieldCheck,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import clsx from "clsx";
 import { productsApi } from "@/api/products";
 import { skusApi } from "@/api/skus";
@@ -168,7 +168,12 @@ export const ProductDetailPage = () => {
 
   if (isLoading || !product) return <PageLoader />;
 
-  const imgUrl = getProductImage(product.id, product.industry, images);
+  const imgUrl = getProductImage(
+    product.id,
+    product.industry,
+    images,
+    [product.name, product.brand, product.category, product.subcategory].filter(Boolean).join(" "),
+  );
   const skus = (allSkus ?? []).filter((s) => s.product_id === product.id);
   const accent = industryAccent[product.industry];
   const gradient = industryGradient[product.industry];

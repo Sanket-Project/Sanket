@@ -19,3 +19,35 @@ export const forecastsApi = {
       .get<{ status: string }>("/forecasts/ml-health")
       .then((r) => r.data),
 };
+
+export type ConfidenceBand = "high" | "moderate" | "low" | "insufficient";
+
+export interface SkuConfidence {
+  sku_id: string;
+  sku_code: string | null;
+  confidence: number;
+  band: ConfidenceBand;
+  actionable: boolean;
+  /** Plain-language explanation of every point lost. */
+  reasons: string[];
+  deductions: Array<{ code: string; points: number; detail: string }>;
+}
+
+export interface ConfidenceResponse {
+  industry: string;
+  run_id: string | null;
+  scored: number;
+  /** Set when no score could be produced (e.g. no completed forecast run). */
+  reason?: string;
+  portfolio_confidence?: number;
+  by_band?: Partial<Record<ConfidenceBand, number>>;
+  skus: SkuConfidence[];
+}
+
+export const forecastConfidenceApi = {
+  /** Per-SKU trust score for the latest forecast run, lowest first. */
+  list: (limit = 200) =>
+    apiClient
+      .get<ConfidenceResponse>("/forecasts/confidence", { params: { limit } })
+      .then((r) => r.data),
+};

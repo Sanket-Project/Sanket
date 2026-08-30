@@ -1,4 +1,4 @@
-import { MessageSquare, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { MessageSquare, TrendingUp, TrendingDown, Minus } from "@/components/ui/icons";
 import clsx from "clsx";
 import type { TrendSignal } from "@/types/api";
 

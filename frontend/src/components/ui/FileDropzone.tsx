@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { FileSpreadsheet, UploadCloud, X } from "lucide-react";
+import { FileSpreadsheet, UploadCloud, X } from "@/components/ui/icons";
 import { useId, useRef, useState, type DragEvent } from "react";
 
 interface Props {

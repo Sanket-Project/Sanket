@@ -32,3 +32,39 @@ export const invitesApi = {
   revoke: (id: string) =>
     apiClient.delete<Invite>(`/invites/${id}`).then((r) => r.data),
 };
+
+/** One checkpoint on the seven-day plan, verified against real data. */
+export interface ReadinessMilestone {
+  key: string;
+  day: number;
+  label: string;
+  done: boolean;
+  blocking: boolean;
+  detail: string;
+  action: string | null;
+  action_route: string | null;
+  metrics: Record<string, unknown>;
+}
+
+export interface ReadinessResponse {
+  industry: string;
+  plan_days: number;
+  day_of_journey: number | null;
+  percent_complete: number;
+  milestones_done: number;
+  milestones_total: number;
+  on_track: boolean;
+  blockers: string[];
+  next_action: ReadinessMilestone | null;
+  milestones: ReadinessMilestone[];
+  days: Array<{ day: number; milestones: ReadinessMilestone[]; complete: boolean }>;
+}
+
+export const readinessApi = {
+  /**
+   * The seven-day plan measured against real data — distinct from
+   * `onboardingApi.getState`, which only records which wizard screens were
+   * completed.
+   */
+  get: () => apiClient.get<ReadinessResponse>("/onboarding/readiness").then((r) => r.data),
+};

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toaster } from "react-hot-toast";
@@ -66,9 +66,6 @@ const WebhooksPage = lazy(() =>
 const TrendAnalysisPage = lazy(() =>
   import("@/pages/TrendAnalysis").then((m) => ({ default: m.TrendAnalysisPage }))
 );
-const HybridForecastsPage = lazy(() =>
-  import("@/pages/HybridForecasts").then((m) => ({ default: m.HybridForecastsPage }))
-);
 const ShortageAlertsPage = lazy(() =>
   import("@/pages/ShortageAlerts").then((m) => ({ default: m.ShortageAlertsPage }))
 );
@@ -98,6 +95,21 @@ const NotFoundPage = lazy(() =>
 );
 const OnboardingPage = lazy(() =>
   import("@/pages/onboarding/OnboardingPage").then((m) => ({ default: m.OnboardingPage }))
+);
+const DecisionsPage = lazy(() =>
+  import("@/pages/Decisions").then((m) => ({ default: m.DecisionsPage }))
+);
+const ROIDashboardPage = lazy(() =>
+  import("@/pages/ROIDashboard").then((m) => ({ default: m.ROIDashboardPage }))
+);
+const WhatIfScenarioPage = lazy(() =>
+  import("@/pages/WhatIfScenario").then((m) => ({ default: m.WhatIfScenarioPage }))
+);
+const DataQualityPage = lazy(() =>
+  import("@/pages/DataQuality").then((m) => ({ default: m.DataQualityPage }))
+);
+const NotificationsPage = lazy(() =>
+  import("@/pages/Notifications").then((m) => ({ default: m.NotificationsPage }))
 );
 
 const queryClient = new QueryClient({
@@ -225,11 +237,16 @@ export default function App() {
             <Route path="signals" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><SignalsPage /></Suspense></ErrorBoundary>} />
             <Route path="trends" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><TrendAnalysisPage /></Suspense></ErrorBoundary>} />
             <Route path="forecasts" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><ForecastsPage /></Suspense></ErrorBoundary>} />
-            <Route path="forecasts/hybrid" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><HybridForecastsPage /></Suspense></ErrorBoundary>} />
+            <Route path="forecasts/hybrid" element={<Navigate to="/workspace/forecasts" replace />} />
             <Route path="alerts" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><ShortageAlertsPage /></Suspense></ErrorBoundary>} />
             <Route path="sales-analytics" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><SalesAnalyticsPage /></Suspense></ErrorBoundary>} />
             <Route path="live-sales" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><LiveSalesPage /></Suspense></ErrorBoundary>} />
             <Route path="financial" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><FinancialImpactPage /></Suspense></ErrorBoundary>} />
+            <Route path="decisions" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><DecisionsPage /></Suspense></ErrorBoundary>} />
+            <Route path="roi" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><ROIDashboardPage /></Suspense></ErrorBoundary>} />
+            <Route path="scenarios" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><WhatIfScenarioPage /></Suspense></ErrorBoundary>} />
+            <Route path="data-quality" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><DataQualityPage /></Suspense></ErrorBoundary>} />
+            <Route path="notifications" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><NotificationsPage /></Suspense></ErrorBoundary>} />
             <Route path="forecast-accuracy" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><ForecastAccuracyPage /></Suspense></ErrorBoundary>} />
             <Route path="pharma/batches" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><PharmaBatchesPage /></Suspense></ErrorBoundary>} />
             <Route path="billing" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><BillingPage /></Suspense></ErrorBoundary>} />
@@ -261,8 +278,8 @@ export default function App() {
           },
         }}
       />
-      {/* Only include devtools in development — not in the production bundle */}
-      {import.meta.env.DEV && (
+      {/* Opt-in locally so the developer control never appears in product QA. */}
+      {import.meta.env.DEV && import.meta.env.VITE_SHOW_QUERY_DEVTOOLS === "true" && (
         <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
       )}
     </QueryClientProvider>

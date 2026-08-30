@@ -15,7 +15,7 @@ import {
   Sun,
   Moon,
   Menu,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "@/stores/auth";
@@ -25,6 +25,7 @@ import { useIndustryContext } from "@/hooks/useIndustryContext";
 import { Badge } from "@/components/ui/Badge";
 import { useCurrencyStore } from "@/stores/currency";
 import { shortageAlertsApi } from "@/api/shortageAlerts";
+import { decisionsApi } from "@/api/decisions";
 import { useIndustryStore } from "@/stores/industry";
 import { useSidebarStore } from "@/stores/sidebar";
 import { fmtRelative } from "@/utils/format";
@@ -76,6 +77,17 @@ export const TopBar = () => {
     enabled: !!activeIndustry,
     select: (data) => data.slice(0, 5),
   });
+  const { data: decisionData } = useQuery({
+    queryKey: ["decisions", activeIndustry, "open", "topbar"],
+    queryFn: () => decisionsApi.list({ status: "open", limit: 50 }),
+    staleTime: 30_000,
+    retry: false,
+  });
+  const decisionRisks = (decisionData?.decisions ?? []).filter((decision) => {
+    const cover = decision.inputs.days_of_cover;
+    return typeof cover === "number" && cover <= decision.inputs.lead_time_days;
+  }).slice(0, 5);
+  const warningCount = (openAlerts?.length ?? 0) || decisionRisks.length;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -99,34 +111,44 @@ export const TopBar = () => {
     const list: { label: string; href?: string }[] = [];
     const sub = parts[1];
     if (sub === "products") {
-      list.push({ label: "Core", href: "/workspace" }, { label: "Products", href: "/workspace/products" });
+      list.push({ label: "Stock", href: "/workspace/products" }, { label: "Products", href: "/workspace/products" });
       if (parts[2]) list.push({ label: "Detail" });
     } else if (sub === "skus") {
-      list.push({ label: "Core", href: "/workspace" }, { label: "SKUs", href: "/workspace/skus" });
+      list.push({ label: "Stock", href: "/workspace/products" }, { label: "SKUs", href: "/workspace/skus" });
       if (parts[2]) list.push({ label: "Detail" });
     } else if (sub === "inventory") {
-      list.push({ label: "Core", href: "/workspace" }, { label: "Inventory" });
+      list.push({ label: "Stock", href: "/workspace/inventory" }, { label: "Inventory" });
     } else if (sub === "signals") {
-      list.push({ label: "Core", href: "/workspace" }, { label: "Signals" });
+      list.push({ label: "Data", href: "/workspace/signals" }, { label: "Signals" });
     } else if (sub === "trends") {
-      list.push({ label: "Intelligence", href: "/workspace/trends" }, { label: "Market Trends" });
+      list.push({ label: "Measure", href: "/workspace/trends" }, { label: "Market Trends" });
     } else if (sub === "forecasts") {
-      list.push({ label: "Intelligence", href: "/workspace/forecasts" });
+      list.push({ label: "Plan", href: "/workspace/forecasts" });
       list.push({ label: parts[2] === "hybrid" ? "Hybrid Forecasts" : "Forecasts" });
+    } else if (sub === "decisions") {
+      list.push({ label: "Plan", href: "/workspace/decisions" }, { label: "Decisions" });
+    } else if (sub === "scenarios") {
+      list.push({ label: "Plan", href: "/workspace/scenarios" }, { label: "Scenarios" });
     } else if (sub === "alerts") {
-      list.push({ label: "Intelligence", href: "/workspace/alerts" }, { label: "Shortage Alerts" });
+      list.push({ label: "Stock", href: "/workspace/inventory" }, { label: "Shortage Alerts" });
     } else if (sub === "sales-analytics") {
-      list.push({ label: "Analytics", href: "/workspace/sales-analytics" }, { label: "Sales Analytics" });
+      list.push({ label: "Measure", href: "/workspace/sales-analytics" }, { label: "Sales Analytics" });
     } else if (sub === "financial") {
       list.push({ label: "Analytics", href: "/workspace/financial" }, { label: "Financial Impact" });
     } else if (sub === "forecast-accuracy") {
-      list.push({ label: "Analytics", href: "/workspace/forecast-accuracy" }, { label: "Forecast Accuracy" });
+      list.push({ label: "Measure", href: "/workspace/forecast-accuracy" }, { label: "Forecast Accuracy" });
+    } else if (sub === "roi") {
+      list.push({ label: "Measure", href: "/workspace/roi" }, { label: "ROI" });
+    } else if (sub === "data-quality") {
+      list.push({ label: "Data", href: "/workspace/data-quality" }, { label: "Data Quality" });
+    } else if (sub === "notifications") {
+      list.push({ label: "Data", href: "/workspace/notifications" }, { label: "WhatsApp Digest" });
     } else if (sub === "pharma") {
       list.push({ label: "Compliance", href: "/workspace/pharma/batches" }, { label: "GxP Batches" });
     } else if (sub === "live-sales") {
       list.push({ label: "Analytics", href: "/workspace/live-sales" }, { label: "Live Sales" });
     } else if (sub === "integrations") {
-      list.push({ label: "Developer", href: "/workspace/integrations" }, { label: "Integrations" });
+      list.push({ label: "Data", href: "/workspace/integrations" }, { label: "Integrations" });
     } else if (sub === "webhooks") {
       list.push({ label: "Developer", href: "/workspace/webhooks" }, { label: "Webhooks" });
     } else if (sub === "profile") {
@@ -231,7 +253,7 @@ export const TopBar = () => {
             aria-haspopup="true"
           >
             <Bell size={16} aria-hidden="true" />
-            {openAlerts && openAlerts.length > 0 && (
+            {warningCount > 0 && (
               <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-rose-500 ring-2 ring-[var(--surface)]" />
             )}
           </button>
@@ -242,7 +264,7 @@ export const TopBar = () => {
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-content-subtle">
                   System Warnings
                 </span>
-                {openAlerts && openAlerts.length > 0 && <Badge variant="warning">{openAlerts.length} open</Badge>}
+                {warningCount > 0 && <Badge variant="warning">{warningCount} open</Badge>}
               </div>
               <div className="max-h-[300px] overflow-y-auto">
                 {openAlerts && openAlerts.length > 0 ? (
@@ -265,6 +287,24 @@ export const TopBar = () => {
                       </Link>
                     ))}
                   </div>
+                ) : decisionRisks.length > 0 ? (
+                  <div className="divide-y divide-line">
+                    {decisionRisks.map((decision) => (
+                      <Link
+                        key={decision.id}
+                        to="/workspace/decisions"
+                        onClick={() => setShowNotifications(false)}
+                        className="flex gap-3 p-4 hover:bg-surface-2 transition-colors text-left items-start group"
+                      >
+                        <AlertTriangle size={15} className="mt-0.5 shrink-0 text-amber-500" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[13px] font-semibold text-content group-hover:text-[var(--accent)]">{decision.sku_code ?? "SKU needs review"}</p>
+                          <p className="mt-0.5 text-xs leading-normal text-content-muted">{decision.headline}</p>
+                          <p className="mt-1.5 text-[11px] font-medium text-content-subtle">{decision.inputs.days_of_cover?.toFixed(0)} days cover · {decision.inputs.lead_time_days} day lead time</p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
                     <CheckCircle2 size={24} className="text-emerald-500 mb-2" />
@@ -276,11 +316,11 @@ export const TopBar = () => {
                 )}
               </div>
               <Link
-                to="/workspace/alerts"
+                to={openAlerts && openAlerts.length > 0 ? "/workspace/alerts" : decisionRisks.length > 0 ? "/workspace/decisions" : "/workspace/alerts"}
                 onClick={() => setShowNotifications(false)}
                 className="block text-center py-3 text-[11px] font-semibold uppercase tracking-wider text-content-muted hover:text-[var(--accent)] bg-surface-2 border-t border-line transition-colors"
               >
-                View all alerts
+                {decisionRisks.length > 0 && (!openAlerts || openAlerts.length === 0) ? "Review inventory risks" : "View all alerts"}
               </Link>
             </div>
           )}

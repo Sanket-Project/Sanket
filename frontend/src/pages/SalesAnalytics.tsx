@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Area,
-  AreaChart,
+  Line,
+  LineChart,
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+import { Link } from "react-router-dom";
 import { format, parseISO } from "date-fns";
-import { Activity, ShoppingCart, DollarSign, Receipt } from "lucide-react";
+import { Activity, ShoppingCart, DollarSign, Receipt } from "@/components/ui/icons";
 
 import {
   salesAnalyticsApi,
@@ -47,8 +48,8 @@ export const SalesAnalyticsPage = () => {
   const { subscribe } = useWebSocket();
   const { formatPrice } = useFormattedCurrency();
 
-  const [granularity, setGranularity] = useState<Granularity>("day");
-  const [topPeriod, setTopPeriod] = useState<TopProductPeriod>("month");
+  const [granularity, setGranularity] = useState<Granularity>("month");
+  const [topPeriod, setTopPeriod] = useState<TopProductPeriod>("year");
   const [live, setLive] = useState<LiveExtra>(ZERO_LIVE);
   const [pulse, setPulse] = useState(false);
 
@@ -115,32 +116,32 @@ export const SalesAnalyticsPage = () => {
   const liveTxns = (today?.transactions ?? 0) + live.transactions;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-end justify-between">
         <div>
-          <div className="flex items-center gap-2 text-violet-600 text-sm font-medium uppercase tracking-wider">
+          <div className="flex items-center gap-2 text-[var(--accent)] text-sm font-medium uppercase tracking-wider">
             <Activity size={14} /> Sales Analytics
           </div>
-          <h1 className="text-3xl font-bold tracking-tight mt-1">Live sales & revenue</h1>
-          <p className="text-slate-500 mt-1">
-            Real-time view of what's selling across this company today, this week, month and year
+          <h1 className="text-3xl font-bold tracking-tight mt-1 text-content">Sales performance</h1>
+          <p className="text-content-muted mt-1">
+            Start with the 12-month picture, then narrow down. Today's live feed stays visible without hiding the useful history.
           </p>
         </div>
-        <LiveIndicator />
       </div>
 
       {/* Live "today" hero */}
-      <Card padding="lg" className="relative overflow-hidden">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <Card padding="md" className="relative overflow-hidden">
+        <div className="mb-3 flex items-center justify-between"><div><p className="text-sm font-semibold text-content">Today · live feed</p><p className="text-xs text-content-muted">New transactions update this strip as they arrive.</p></div><LiveIndicator /></div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-line pt-3">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
               Revenue today
             </p>
             <div
               className={
-                "text-4xl font-black tracking-tight mt-1 transition-colors duration-300 " +
-                (pulse ? "text-emerald-600" : "text-slate-900")
+                "text-2xl font-semibold tracking-tight mt-1 transition-colors duration-300 " +
+                (pulse ? "text-emerald-600" : "text-content")
               }
             >
               {formatPrice(liveRevenue)}
@@ -153,8 +154,8 @@ export const SalesAnalyticsPage = () => {
             </p>
             <div
               className={
-                "text-4xl font-black tracking-tight mt-1 transition-colors duration-300 " +
-                (pulse ? "text-emerald-600" : "text-slate-900")
+                "text-2xl font-semibold tracking-tight mt-1 transition-colors duration-300 " +
+                (pulse ? "text-emerald-600" : "text-content")
               }
             >
               {fmtNumber(liveUnits)}
@@ -165,7 +166,7 @@ export const SalesAnalyticsPage = () => {
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
               Transactions today
             </p>
-            <div className="text-4xl font-black tracking-tight mt-1 text-slate-900">
+            <div className="text-2xl font-semibold tracking-tight mt-1 text-content">
               {fmtNumber(liveTxns)}
             </div>
             <p className="text-[11px] text-slate-400 mt-2 font-medium">
@@ -177,9 +178,9 @@ export const SalesAnalyticsPage = () => {
 
       {/* Period KPI strip */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <PeriodCard label="This Week" bucket={summary?.week} />
-        <PeriodCard label="This Month" bucket={summary?.month} />
         <PeriodCard label="This Year" bucket={summary?.year} />
+        <PeriodCard label="This Month" bucket={summary?.month} />
+        <PeriodCard label="This Week" bucket={summary?.week} />
         <KPICard
           label="Avg Order Value"
           value={formatPrice(avgOrder(summary?.month))}
@@ -219,25 +220,19 @@ export const SalesAnalyticsPage = () => {
           <EmptyState />
         ) : (
           <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={chartData} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="rev" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#7C3AED" stopOpacity={0.35} />
-                  <stop offset="100%" stopColor="#7C3AED" stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 6" stroke="#e2e8f0" />
+            <LineChart data={chartData} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
+              <CartesianGrid vertical={false} strokeDasharray="2 6" stroke="var(--line)" />
               <XAxis
                 dataKey="bucket"
                 tickFormatter={(d) => format(parseISO(d), granularity === "month" ? "MMM" : "MMM d")}
-                stroke="#94a3b8"
-                tick={{ fontSize: 11, fill: "#64748b" }}
+                stroke="var(--line-strong)"
+                tick={{ fontSize: 11, fill: "var(--text-subtle)" }}
                 tickLine={false}
                 minTickGap={24}
               />
               <YAxis
-                stroke="#94a3b8"
-                tick={{ fontSize: 11, fill: "#64748b" }}
+                stroke="var(--line-strong)"
+                tick={{ fontSize: 11, fill: "var(--text-subtle)" }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(v) => fmtCompact(v as number)}
@@ -256,16 +251,15 @@ export const SalesAnalyticsPage = () => {
                   name === "revenue" ? "Revenue" : "Units",
                 ]}
               />
-              <Area
-                type="monotone"
+              <Line
+                type="linear"
                 dataKey="revenue"
-                stroke="#7C3AED"
-                strokeWidth={2.5}
-                fill="url(#rev)"
-                isAnimationActive
-                animationDuration={900}
+                stroke="var(--accent)"
+                strokeWidth={2}
+                dot={false}
+                isAnimationActive={false}
               />
-            </AreaChart>
+            </LineChart>
           </ResponsiveContainer>
         )}
       </Card>
@@ -366,9 +360,7 @@ const EmptyState = () => (
   <div className="py-10 flex flex-col items-center justify-center text-center">
     <ShoppingCart size={28} className="text-slate-300 mb-2" />
     <p className="text-sm font-medium text-slate-500">No sales recorded yet</p>
-    <p className="text-xs text-slate-400 mt-1">
-      Sales appear here as soon as your feed posts to{" "}
-      <code className="font-mono bg-slate-100 px-1 rounded">/analytics/sales/ingest</code>
-    </p>
+    <p className="text-xs text-slate-400 mt-1">Connect a sales source or import sales history to populate this view.</p>
+    <Link to="/workspace/integrations" className="mt-3 text-xs font-semibold text-[var(--accent)]">Connect a sales source</Link>
   </div>
 );

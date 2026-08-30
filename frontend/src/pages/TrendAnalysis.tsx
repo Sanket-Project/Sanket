@@ -21,7 +21,7 @@ import {
   SlidersHorizontal,
   Truck,
   CloudSun,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import clsx from "clsx";
 import { groupDrivers, type GroupedDriver } from "@/utils/driverGroups";
 import { ALL_STATES } from "@/utils/indiaRegions";
@@ -393,8 +393,7 @@ function TrendScoreGauge({ score, loading, industry }: { score: TrendScore | und
   const DirIcon = v.tone === "up" ? TrendingUp : v.tone === "down" ? TrendingDown : Minus;
 
   return (
-    <div className="glass rounded-2xl p-6 shadow-lg shadow-slate-100/80 dark:shadow-none relative overflow-hidden">
-      <div className={clsx("absolute top-0 left-0 right-0 h-1 bg-gradient-to-r", cfg.gradient)} />
+    <div className="rounded-2xl border border-line bg-surface p-5 relative overflow-hidden">
 
       <div className="flex items-center gap-2 mb-5">
         <span className={cfg.accent}>{cfg.icon}</span>
@@ -423,7 +422,7 @@ function TrendScoreGauge({ score, loading, industry }: { score: TrendScore | und
               strokeLinecap="round"
               strokeDasharray={`${dash} ${CIRC}`}
               strokeDashoffset={CIRC * 0.25}
-              style={{ transition: "stroke-dasharray 1s cubic-bezier(0.34,1.56,0.64,1)", filter: `drop-shadow(0 0 6px ${dirColor}40)` }}
+              style={{ transition: "stroke-dasharray 500ms ease" }}
             />
           </svg>
           {/* Center value */}
@@ -466,7 +465,7 @@ function TrendScoreGauge({ score, loading, industry }: { score: TrendScore | und
         </div>
         <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-700/60 overflow-hidden">
           <div
-            className="h-2 rounded-full bg-gradient-to-r from-rose-300 via-amber-300 to-emerald-400 transition-all duration-700"
+            className="h-2 rounded-full bg-[var(--accent)] transition-all duration-500"
             style={{ width: `${agreement}%` }}
           />
         </div>
@@ -1115,15 +1114,15 @@ export const TrendAnalysisPage = () => {
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 animate-fade-in stagger-1">
         <div>
           {/* Industry label */}
-          <div className={clsx("inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest border mb-3", cfg.accentLight, cfg.accent, cfg.accentBorder)}>
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-xs font-bold uppercase tracking-widest text-[var(--accent)]">
             {cfg.icon}
             {cfg.label}
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            Market Trends
+          <h1 className="text-3xl font-bold tracking-tight text-content">
+            What is moving demand
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
-            {cfg.description}{" "}
+            Ranked market signals and regional demand drivers for planning decisions. {cfg.description}{" "}
             <span className="text-slate-400 dark:text-slate-500 font-medium">Auto-syncs every 15 minutes.</span>
           </p>
         </div>
@@ -1163,7 +1162,7 @@ export const TrendAnalysisPage = () => {
           className={clsx(
             "py-2.5 px-4 text-sm font-bold border-b-2 transition duration-200 focus:outline-none",
             activeTab === "overview"
-              ? "border-violet-500 text-violet-600 dark:text-violet-450"
+              ? "border-[var(--accent)] text-[var(--accent)]"
               : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-400"
           )}
         >
@@ -1174,7 +1173,7 @@ export const TrendAnalysisPage = () => {
           className={clsx(
             "py-2.5 px-4 text-sm font-bold border-b-2 transition duration-200 flex items-center gap-2 focus:outline-none",
             activeTab === "regional"
-              ? "border-violet-500 text-violet-600 dark:text-violet-450"
+              ? "border-[var(--accent)] text-[var(--accent)]"
               : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-400"
           )}
         >

@@ -1,6 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { BarChart3, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { BarChart3, AlertCircle, CheckCircle2, Circle, Loader2 } from "@/components/ui/icons";
 import { forecastAccuracyApi } from "@/api/forecastAccuracy";
+import { forecastConfidenceApi } from "@/api/forecasts";
+import { salesAnalyticsApi } from "@/api/salesAnalytics";
+import { dataQualityApi } from "@/api/dataQuality";
 import { Card } from "@/components/ui/Card";
 import { CategoryBar } from "@/components/charts/CategoryBar";
 import { PageLoader } from "@/components/ui/Spinner";
@@ -34,32 +38,77 @@ export const ForecastAccuracyPage = () => {
     queryFn: () => forecastAccuracyApi.anomalies(90),
   });
 
+  const hasAccuracyRows = (accuracy?.rows.length ?? 0) > 0;
+  const readinessEnabled = !isLoading && !hasAccuracyRows;
+
+  const {
+    data: confidence,
+    isLoading: confidenceLoading,
+    isError: confidenceUnavailable,
+  } = useQuery({
+    queryKey: ["forecast-confidence", industry, "accuracy-readiness"],
+    queryFn: () => forecastConfidenceApi.list(1),
+    enabled: readinessEnabled,
+  });
+
+  const {
+    data: salesHistory,
+    isLoading: salesLoading,
+    isError: salesUnavailable,
+  } = useQuery({
+    queryKey: ["sales-timeseries", industry, "week", 90],
+    queryFn: () => salesAnalyticsApi.timeseries("week", 90),
+    enabled: readinessEnabled,
+  });
+
+  const {
+    data: quality,
+    isLoading: qualityLoading,
+    isError: qualityUnavailable,
+  } = useQuery({
+    queryKey: ["data-quality", industry],
+    queryFn: dataQualityApi.report,
+    enabled: readinessEnabled,
+  });
+
   if (isLoading) return <PageLoader />;
 
   const rows = accuracy?.rows ?? [];
 
-  // Full-page empty state when no accuracy data exists yet
   if (rows.length === 0) {
+    const hasForecastRun = Boolean(confidence?.run_id);
+    const hasSalesHistory = (salesHistory?.series.length ?? 0) > 0;
+    const hasHealthyInputs = Boolean(quality && quality.critical === 0);
+    const completedRequirements = [hasForecastRun, hasSalesHistory, hasHealthyInputs].filter(Boolean).length;
+
     return (
-      <div className="space-y-6">
-        <div>
-          <div className="flex items-center gap-2 text-violet-600 text-sm font-medium uppercase tracking-wider">
-            <BarChart3 size={14} /> Forecast Accuracy
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight mt-1">Model performance & anomaly log</h1>
-        </div>
-        <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-4 p-10 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30">
-          <div className="h-16 w-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-            <BarChart3 size={28} className="text-slate-400" />
-          </div>
-          <div className="max-w-sm">
-            <h2 className="text-xl font-bold text-slate-700 dark:text-slate-200">No accuracy data yet</h2>
-            <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm leading-relaxed">
-              Generate a forecast and allow at least one week of actual sales data to accumulate. SANKET will then compute MAPE, WAPE, and anomaly scores automatically.
-            </p>
-          </div>
-        </div>
-      </div>
+      <AccuracyReadiness
+        completedRequirements={completedRequirements}
+        forecast={{
+          complete: hasForecastRun,
+          loading: confidenceLoading,
+          unavailable: confidenceUnavailable,
+          detail: hasForecastRun
+            ? "A completed forecast run is available."
+            : confidence?.reason ?? "Run a forecast to establish the prediction baseline.",
+        }}
+        sales={{
+          complete: hasSalesHistory,
+          loading: salesLoading,
+          unavailable: salesUnavailable,
+          detail: hasSalesHistory
+            ? `${salesHistory?.series.length ?? 0} weekly sales bucket${salesHistory?.series.length === 1 ? " is" : "s are"} available; accuracy waits for actuals recorded after the forecast.`
+            : "No weekly sales history was found in the last 90 days.",
+        }}
+        quality={{
+          complete: hasHealthyInputs,
+          loading: qualityLoading,
+          unavailable: qualityUnavailable,
+          detail: quality
+            ? `${quality.health_score}/100 health score · ${quality.critical} critical issue${quality.critical === 1 ? "" : "s"}.`
+            : "Data-quality status has not been verified yet.",
+        }}
+      />
     );
   }
 
@@ -83,12 +132,12 @@ export const ForecastAccuracyPage = () => {
     <div className="space-y-6">
       <div className="flex items-end justify-between">
         <div>
-          <div className="flex items-center gap-2 text-violet-600 text-sm font-medium uppercase tracking-wider">
+          <div className="flex items-center gap-2 text-[var(--accent)] text-sm font-medium uppercase tracking-wider">
             <BarChart3 size={14} /> Forecast Accuracy
           </div>
           <h1 className="text-3xl font-bold tracking-tight mt-1">Model performance & anomaly log</h1>
           <p className="text-slate-500 mt-1">
-            MAPE/WAPE per SKU and model · {accuracy?.source === "cached" ? "Pre-computed" : "Live"} computation
+            Forecast error by SKU and model · {accuracy?.source === "cached" ? "Pre-computed" : "Live"} calculation
           </p>
         </div>
         {overallMape !== null && (
@@ -104,7 +153,7 @@ export const ForecastAccuracyPage = () => {
         {/* Model MAPE bar chart */}
         <Card title="Avg MAPE by model" description="Lower is better — target < 10%">
           {modelAvg.length > 0 ? (
-            <CategoryBar data={modelAvg} accent="#7c3aed" />
+            <CategoryBar data={modelAvg} accent="var(--accent)" />
           ) : (
             <p className="text-slate-400 text-sm py-8 text-center">No accuracy data yet — run a forecast first</p>
           )}
@@ -182,3 +231,105 @@ export const ForecastAccuracyPage = () => {
     </div>
   );
 };
+
+interface RequirementState {
+  complete: boolean;
+  loading: boolean;
+  unavailable: boolean;
+  detail: string;
+}
+
+function AccuracyReadiness({
+  completedRequirements,
+  forecast,
+  sales,
+  quality,
+}: {
+  completedRequirements: number;
+  forecast: RequirementState;
+  sales: RequirementState;
+  quality: RequirementState;
+}) {
+  return (
+    <div className="space-y-6">
+      <div>
+        <div className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider text-[var(--accent)]">
+          <BarChart3 size={14} /> Forecast accuracy
+        </div>
+        <h1 className="mt-1 text-3xl font-bold tracking-tight text-content">Model performance & anomaly log</h1>
+        <p className="mt-1 max-w-2xl text-content-subtle">
+          Accuracy appears only after a forecast can be compared with actual sales. No score is estimated before then.
+        </p>
+      </div>
+
+      <Card padding="none" className="overflow-hidden">
+        <div className="flex flex-col gap-4 border-b border-line p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-content-subtle">Readiness</p>
+            <h2 className="mt-1 font-heading text-lg font-semibold text-content">
+              {completedRequirements === 3 ? "Inputs are ready; waiting for comparison data" : "Complete the accuracy prerequisites"}
+            </h2>
+          </div>
+          <div className="min-w-[180px]">
+            <div className="flex items-center justify-between text-xs font-semibold text-content-muted">
+              <span>{completedRequirements} of 3 confirmed</span>
+              <span>{Math.round((completedRequirements / 3) * 100)}%</span>
+            </div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-3" aria-hidden="true">
+              <div
+                className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-300"
+                style={{ width: `${(completedRequirements / 3) * 100}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="grid divide-y divide-line md:grid-cols-3 md:divide-x md:divide-y-0">
+          <Requirement title="Forecast generated" state={forecast} />
+          <Requirement title="Actual sales available" state={sales} />
+          <Requirement title="Inputs healthy" state={quality} />
+        </div>
+
+        <div className="flex flex-wrap gap-2 border-t border-line bg-surface-2 px-5 py-4">
+          <Link to="/workspace/forecasts" className="btn-primary px-4 py-2.5 text-sm">
+            Open forecasts
+          </Link>
+          <Link to="/workspace/sales-analytics" className="btn-secondary px-4 py-2.5 text-sm">
+            Check sales analytics
+          </Link>
+          <Link to="/workspace/data-quality" className="btn-ghost px-4 py-2.5 text-sm">
+            Review data quality
+          </Link>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function Requirement({ title, state }: { title: string; state: RequirementState }) {
+  const Icon = state.loading ? Loader2 : state.complete ? CheckCircle2 : Circle;
+  const label = state.loading
+    ? "Checking"
+    : state.unavailable
+      ? "Could not verify"
+      : state.complete
+        ? "Confirmed"
+        : "Required";
+
+  return (
+    <div className="p-5">
+      <div className="flex items-center gap-2">
+        <Icon
+          size={16}
+          className={state.loading ? "animate-spin text-content-subtle" : state.complete ? "text-emerald-600" : "text-amber-600"}
+          aria-hidden="true"
+        />
+        <span className="text-[11px] font-bold uppercase tracking-widest text-content-subtle">{label}</span>
+      </div>
+      <h3 className="mt-3 font-heading text-sm font-semibold text-content">{title}</h3>
+      <p className="mt-1.5 text-xs leading-relaxed text-content-subtle">
+        {state.unavailable && !state.loading ? "This check is temporarily unavailable." : state.detail}
+      </p>
+    </div>
+  );
+}

@@ -17,7 +17,7 @@ import {
   Filter,
   LayoutGrid,
   List,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import clsx from "clsx";
 import { skusApi } from "@/api/skus";
 import { exportApi } from "@/api/export";
@@ -28,6 +28,7 @@ import { fmtNumber, fmtRelative } from "@/utils/format";
 import { useFormattedCurrency } from "@/hooks/useFormattedCurrency";
 
 import { useIndustryStore } from "@/stores/industry";
+import { getProductImage, useProductImagesStore } from "@/stores/productImages";
 import { industryAccent, industryGradient, industryDisplay } from "@/utils/colors";
 import {
   parseFile,
@@ -87,11 +88,11 @@ function stockHealthLabel(s: Sku): { label: string; tone: "good" | "warn" | "low
 // ─────────────────────────────────────────────────────────────────────────────
 // SKU Card (grid view)
 // ─────────────────────────────────────────────────────────────────────────────
-function SkuCard({ sku, accent, gradient, fields, onClick }: {
+function SkuCard({ sku, accent, fields, images, onClick }: {
   sku: Sku;
   accent: string;
-  gradient: string;
   fields: typeof INDUSTRY_FIELD_LABELS["fashion"];
+  images: Record<string, string>;
   onClick: () => void;
 }) {
   const { formatPrice } = useFormattedCurrency();
@@ -100,14 +101,16 @@ function SkuCard({ sku, accent, gradient, fields, onClick }: {
   const healthCls = health.tone === "good" ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/40"
     : health.tone === "warn" ? "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/40"
     : "text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800/40";
+  const imgUrl = getProductImage(sku.id, sku.industry, images, `${sku.sku_code} ${sku.description ?? ""}`);
 
   return (
     <button
       onClick={onClick}
-      className="w-full text-left glass rounded-2xl overflow-hidden card-hover-premium group cursor-pointer"
+      className="w-full overflow-hidden rounded-2xl border border-line bg-surface text-left shadow-sm transition hover:-translate-y-0.5 hover:border-line-strong hover:shadow-md group cursor-pointer"
     >
-      {/* Top accent bar */}
-      <div className="h-1 w-full" style={{ background: gradient }} />
+      <div className="h-36 overflow-hidden bg-surface-2">
+        <img src={imgUrl} alt={sku.description ?? sku.sku_code} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.025]" />
+      </div>
 
       <div className="p-5">
         {/* Header row */}
@@ -284,6 +287,7 @@ type SortKey = "sku_code" | "unit_price" | "margin" | "lead_time_days" | "update
 export const SkusPage = () => {
   const navigate = useNavigate();
   const industry = useIndustryStore((s) => s.activeIndustry);
+  const images = useProductImagesStore((s) => s.images);
   const accent = industryAccent[industry];
   const gradient = industryGradient[industry];
   const displayName = industryDisplay[industry];
@@ -487,8 +491,8 @@ export const SkusPage = () => {
               key={sku.id}
               sku={sku}
               accent={accent}
-              gradient={gradient}
               fields={fields}
+              images={images}
               onClick={() => navigate(`/workspace/skus/${sku.id}`)}
             />
           ))}

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
 import clsx from "clsx";
 import { LogoMark } from "../ui/Logo";
@@ -10,23 +10,26 @@ import {
   LineChart,
   Settings as SettingsIcon,
   ShieldCheck,
-  Activity,
   TrendingUp,
-  Sparkles,
   AlertOctagon,
   Warehouse,
   Plug,
-  ShoppingCart,
-  DollarSign,
   BarChart3,
+  Target,
+  FlaskConical,
+  Award,
+  Stethoscope,
+  MessageCircle,
   ChevronLeft,
   ChevronRight,
-  type LucideIcon,
-} from "lucide-react";
+  Search,
+  type AppIcon,
+} from "@/components/ui/icons";
 import { useQuery } from "@tanstack/react-query";
 import { useIndustryStore } from "@/stores/industry";
 import { useSidebarStore } from "@/stores/sidebar";
 import { buildApi, shortSha } from "@/api/build";
+import { decisionsApi } from "@/api/decisions";
 
 /**
  * The commit the running backend was built from.
@@ -43,7 +46,7 @@ const BuildStamp = () => {
     staleTime: 5 * 60_000,
     retry: false,
   });
-  if (!data) return null;
+  if (!data || import.meta.env.VITE_SHOW_BUILD_STAMP !== "true") return null;
   const sha = shortSha(data.git_sha);
   const untrusted = sha === "unknown" || sha === "dev-local";
   return (
@@ -66,40 +69,48 @@ const BuildStamp = () => {
 interface NavEntry {
   to: string;
   label: string;
-  icon: LucideIcon;
+  icon: AppIcon;
   exact?: boolean;
 }
 
-const NAV_MAIN: NavEntry[] = [
+const NAV_PLAN: NavEntry[] = [
   { to: "/workspace", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { to: "/workspace/decisions", label: "Decisions", icon: Target },
+  { to: "/workspace/forecasts", label: "Forecasts", icon: LineChart },
+  { to: "/workspace/scenarios", label: "Scenarios", icon: FlaskConical },
+];
+
+const NAV_STOCK: NavEntry[] = [
   { to: "/workspace/products", label: "Products", icon: Package },
   { to: "/workspace/skus", label: "SKUs", icon: Boxes },
   { to: "/workspace/inventory", label: "Inventory", icon: Warehouse },
-  { to: "/workspace/signals", label: "External Signals", icon: Radio },
-];
-
-const NAV_INTELLIGENCE: NavEntry[] = [
-  { to: "/workspace/trends", label: "Trend Analysis", icon: TrendingUp },
-  { to: "/workspace/forecasts", label: "Forecasts", icon: LineChart, exact: true },
-  { to: "/workspace/forecasts/hybrid", label: "Hybrid Forecasts", icon: Sparkles },
   { to: "/workspace/alerts", label: "Shortage Alerts", icon: AlertOctagon },
 ];
 
-const NAV_ANALYTICS: NavEntry[] = [
-  { to: "/workspace/live-sales", label: "Live Sales Feed", icon: ShoppingCart },
-  { to: "/workspace/sales-analytics", label: "Sales Analytics", icon: Activity },
-  { to: "/workspace/financial", label: "Financial Impact", icon: DollarSign },
+const NAV_MEASURE: NavEntry[] = [
+  { to: "/workspace/trends", label: "Trend Analysis", icon: TrendingUp },
+  { to: "/workspace/sales-analytics", label: "Sales Analytics", icon: BarChart3 },
+  { to: "/workspace/roi", label: "ROI Dashboard", icon: Award },
   { to: "/workspace/forecast-accuracy", label: "Forecast Accuracy", icon: BarChart3 },
+];
+
+const NAV_DATA: NavEntry[] = [
+  { to: "/workspace/signals", label: "External Signals", icon: Radio },
+  { to: "/workspace/data-quality", label: "Data Quality", icon: Stethoscope },
+  { to: "/workspace/integrations", label: "Integrations", icon: Plug },
+  { to: "/workspace/notifications", label: "WhatsApp Digest", icon: MessageCircle },
 ];
 
 function NavItem({
   entry,
   collapsed,
   onNavigate,
+  badge,
 }: {
   entry: NavEntry;
   collapsed: boolean;
   onNavigate?: () => void;
+  badge?: number;
 }) {
   const { to, label, icon: Icon, exact } = entry;
   return (
@@ -128,7 +139,12 @@ function NavItem({
             aria-hidden="true"
             className={clsx("shrink-0 transition-transform duration-150 group-hover:scale-105")}
           />
-          {!collapsed && <span className="truncate">{label}</span>}
+          {!collapsed && <span className="min-w-0 flex-1 truncate">{label}</span>}
+          {!collapsed && badge != null && badge > 0 && (
+            <span className="min-w-5 rounded-full bg-rose-500 px-1.5 py-0.5 text-center font-mono text-[10px] font-bold leading-none text-white" aria-label={`${badge} pending`}>
+              {badge > 99 ? "99+" : badge}
+            </span>
+          )}
           {collapsed && (
             <span className="pointer-events-none absolute left-14 z-50 whitespace-nowrap rounded-lg border border-line bg-surface px-2.5 py-1.5 text-xs font-semibold text-content opacity-0 shadow-md transition-all duration-150 group-hover:translate-x-1 group-hover:opacity-100 lg:border-white/10 lg:bg-[#03363D] lg:text-[#BDD9D7]" aria-hidden="true">
               {label}
@@ -151,11 +167,37 @@ function SectionLabel({ children, collapsed }: { children: string; collapsed: bo
 
 export const Sidebar = () => {
   const industry = useIndustryStore((s) => s.activeIndustry);
-  const { collapsed, toggle, mobileOpen, setMobileOpen } = useSidebarStore();
+  const { collapsed, toggle, setCollapsed, mobileOpen, setMobileOpen } = useSidebarStore();
+  const [search, setSearch] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
   const isPharma = industry === "pharma";
   const closeMobile = () => setMobileOpen(false);
   // Rail collapse is a desktop concept; the mobile drawer always shows full nav.
   const c = collapsed && !mobileOpen;
+
+  const { data: decisionData } = useQuery({
+    queryKey: ["decisions", industry, "open", "sidebar"],
+    queryFn: () => decisionsApi.list({ status: "open", limit: 200 }),
+    staleTime: 30_000,
+    retry: false,
+  });
+  const openDecisionCount = decisionData?.decisions.length ?? 0;
+  const riskCount = decisionData?.decisions.filter((decision) => {
+    const cover = decision.inputs.days_of_cover;
+    return decision.urgency === "critical" || decision.urgency === "high" ||
+      (typeof cover === "number" && cover <= decision.inputs.lead_time_days);
+  }).length ?? 0;
+  const badgeFor = (to: string) => to.endsWith("/decisions") ? openDecisionCount : to.endsWith("/alerts") ? riskCount : undefined;
+  const normalizedSearch = search.trim().toLowerCase();
+  const filterEntries = (entries: NavEntry[]) => normalizedSearch
+    ? entries.filter((entry) => entry.label.toLowerCase().includes(normalizedSearch))
+    : entries;
+  const visibleSections = [
+    { label: "Plan", entries: filterEntries(NAV_PLAN) },
+    { label: "Stock", entries: filterEntries(NAV_STOCK) },
+    { label: "Measure", entries: filterEntries(NAV_MEASURE) },
+    { label: "Data", entries: filterEntries(NAV_DATA) },
+  ];
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -163,11 +205,16 @@ export const Sidebar = () => {
         e.preventDefault();
         toggle();
       }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setCollapsed(false);
+        window.setTimeout(() => searchRef.current?.focus(), 50);
+      }
       if (e.key === "Escape") setMobileOpen(false);
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [toggle, setMobileOpen]);
+  }, [toggle, setCollapsed, setMobileOpen]);
 
   // Swipe-left to close on mobile
   useEffect(() => {
@@ -205,10 +252,9 @@ export const Sidebar = () => {
           mobileOpen ? "translate-x-0 shadow-lg" : "-translate-x-full",
           // Desktop floating panel mode
           "lg:relative lg:translate-x-0 lg:z-20 lg:w-[var(--sb-w)] lg:h-full",
-          "lg:rounded-[28px] lg:backdrop-blur-xl lg:border",
-          "lg:shadow-[inset_0_1px_1px_rgba(255,255,255,0.12),0_12px_36px_rgba(3,54,61,0.25)]"
+          "lg:rounded-2xl lg:border lg:shadow-md"
         )}
-        style={{ ["--sb-w" as string]: collapsed ? "76px" : "260px" }}
+        style={{ ["--sb-w" as string]: collapsed ? "72px" : "244px" }}
       >
       {/* Logo */}
       <div
@@ -232,22 +278,36 @@ export const Sidebar = () => {
         )}
       </div>
 
+      {!c && (
+        <div className="px-4 pt-4">
+          <label className="relative block">
+            <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#BDD9D7]/55" aria-hidden="true" />
+            <input
+              ref={searchRef}
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Find a workspace…"
+              aria-label="Search navigation"
+              className="h-9 w-full rounded-xl border border-white/10 bg-white/[0.06] pl-9 pr-12 text-xs text-white outline-none placeholder:text-[#BDD9D7]/45 focus:border-[#BDD9D7]/45 focus:ring-2 focus:ring-[#BDD9D7]/10"
+            />
+            <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 rounded border border-white/10 px-1.5 py-0.5 font-mono text-[9px] text-[#BDD9D7]/50">⌘K</span>
+          </label>
+        </div>
+      )}
+
       {/* Navigation */}
       <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto overflow-x-hidden">
-        <SectionLabel collapsed={c}>Core</SectionLabel>
-        {NAV_MAIN.map((e) => (
-          <NavItem key={e.to} entry={e} collapsed={c} onNavigate={closeMobile} />
+        {visibleSections.map((section) => section.entries.length > 0 && (
+          <div key={section.label}>
+            <SectionLabel collapsed={c}>{section.label}</SectionLabel>
+            {section.entries.map((entry) => (
+              <NavItem key={entry.to} entry={entry} collapsed={c} onNavigate={closeMobile} badge={badgeFor(entry.to)} />
+            ))}
+          </div>
         ))}
-
-        <SectionLabel collapsed={c}>Intelligence</SectionLabel>
-        {NAV_INTELLIGENCE.map((e) => (
-          <NavItem key={e.to} entry={e} collapsed={c} onNavigate={closeMobile} />
-        ))}
-
-        <SectionLabel collapsed={c}>Analytics</SectionLabel>
-        {NAV_ANALYTICS.map((e) => (
-          <NavItem key={e.to} entry={e} collapsed={c} onNavigate={closeMobile} />
-        ))}
+        {!c && search.trim() && visibleSections.every((section) => section.entries.length === 0) && (
+          <p className="px-4 py-6 text-center text-xs text-[#BDD9D7]/55">No workspace matches “{search}”.</p>
+        )}
 
         {isPharma && (
           <>
@@ -263,7 +323,6 @@ export const Sidebar = () => {
 
       {/* Footer */}
       <div className="p-4 border-t border-line lg:border-white/10 flex flex-col gap-1.5">
-        <NavItem entry={{ to: "/workspace/integrations", label: "Integrations", icon: Plug }} collapsed={c} onNavigate={closeMobile} />
         <NavItem entry={{ to: "/workspace/settings", label: "Settings", icon: SettingsIcon }} collapsed={c} onNavigate={closeMobile} />
 
         <button

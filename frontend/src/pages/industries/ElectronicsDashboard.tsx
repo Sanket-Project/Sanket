@@ -7,7 +7,7 @@ import {
   Clock,
   Package,
   ShipIcon,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { industryApi } from "@/api/industry";
 import { forecastsApi } from "@/api/forecasts";
 import { Card } from "@/components/ui/Card";

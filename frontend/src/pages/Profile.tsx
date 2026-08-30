@@ -8,7 +8,7 @@ import {
   Lock,
   Building2,
   ArrowRight,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import toast from "react-hot-toast";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";

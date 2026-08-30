@@ -145,6 +145,32 @@ quietly implies an *S* for SANKET.
 - **Clear space:** keep at least the height of the node dot on every side.
 - **Minimum size:** 20px tile. Below that, use the mark without the wordmark.
 
+## Icons
+
+Two sets, split by vocabulary, imported from one module —
+`src/components/ui/icons.tsx`. Nothing imports `lucide-react` or
+`react-iconly` directly.
+
+- **Iconly** (outline set, 1.5px stroke) owns the *generic interface*:
+  navigation and disclosure, identity and account, access, communication,
+  time, actions, media, commerce, and the chart glyphs.
+- **lucide** owns everything Iconly has no answer for: the supply-chain
+  domain (pills, pallets, trucks, warehouses, crops, instruments) and the
+  status ladder.
+
+The status ladder — `Info`, `AlertCircle`, `AlertTriangle`, `AlertOctagon`,
+`CheckCircle2`, `XCircle` — stays entirely on lucide. Those glyphs are read
+against each other in alert lists and severity legends, so a set change
+partway up the ladder reads as a bug rather than as a style.
+
+Iconly is drawn at 1.5px rather than lucide’s 2px: its geometry is rounder
+and more compact, so a numerically matching stroke comes out visibly heavier
+at the 16-18px the app actually renders at.
+
+Icons are sized with a numeric `size` prop and coloured by `currentColor`.
+Adding a glyph means adding one line to the icon module, not a new import in
+a page.
+
 ## Motion
 
 Motion is slow and eased, never bouncy. Standard easing is

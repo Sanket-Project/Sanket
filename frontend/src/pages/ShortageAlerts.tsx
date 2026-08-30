@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertOctagon, AlertTriangle, CheckCircle2, Info, Settings, Calendar, RefreshCw, FileSpreadsheet } from "lucide-react";
+import { Link } from "react-router-dom";
+import { AlertOctagon, AlertTriangle, CheckCircle2, Info, Settings, Calendar, RefreshCw, FileSpreadsheet } from "@/components/ui/icons";
+import type { AppIcon } from "@/components/ui/icons";
 import clsx from "clsx";
 import toast from "react-hot-toast";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { shortageAlertsApi } from "@/api/shortageAlerts";
+import { decisionsApi, type Decision } from "@/api/decisions";
 import { exportApi } from "@/api/export";
 import { useIndustryStore } from "@/stores/industry";
 import { fmtDateTime } from "@/utils/format";
@@ -14,7 +17,7 @@ import type { ShortageAlert, AlertSeverity, AlertStatus } from "@/types/api";
 
 const SEVERITY_META: Record<
   AlertSeverity,
-  { color: string; icon: typeof AlertOctagon; bg: string; border: string; glow: string }
+  { color: string; icon: AppIcon; bg: string; border: string; glow: string }
 > = {
   critical: {
     color: "text-rose-500 dark:text-rose-400",
@@ -71,6 +74,11 @@ export const ShortageAlertsPage = () => {
     queryFn: () => shortageAlertsApi.listRules(),
   });
 
+  const decisions = useQuery({
+    queryKey: ["decisions", industry, "alert-fallback"],
+    queryFn: () => decisionsApi.list({ status: "open", limit: 200 }),
+  });
+
   const ack = useMutation({
     mutationFn: (id: string) => shortageAlertsApi.acknowledge(id),
     onSuccess: () => {
@@ -87,22 +95,34 @@ export const ShortageAlertsPage = () => {
     },
   });
 
-  const counts = {
-    critical: alerts.data?.filter((a) => a.severity === "critical").length ?? 0,
-    warning: alerts.data?.filter((a) => a.severity === "warning").length ?? 0,
-    open: alerts.data?.filter((a) => a.status === "open").length ?? 0,
-  };
+  const riskDecisions = (decisions.data?.decisions ?? []).filter((decision) =>
+    decision.urgency === "critical" ||
+    decision.urgency === "high" ||
+    (decision.inputs.days_of_cover ?? Number.POSITIVE_INFINITY) <= decision.inputs.lead_time_days,
+  );
+  const decisionFallbackActive = (alerts.data?.length ?? 0) === 0 && riskDecisions.length > 0;
+  const counts = decisionFallbackActive
+    ? {
+        critical: riskDecisions.filter((decision) => decision.urgency === "critical").length,
+        warning: riskDecisions.filter((decision) => decision.urgency !== "critical").length,
+        open: riskDecisions.length,
+      }
+    : {
+        critical: alerts.data?.filter((a) => a.severity === "critical").length ?? 0,
+        warning: alerts.data?.filter((a) => a.severity === "warning").length ?? 0,
+        open: alerts.data?.filter((a) => a.status === "open").length ?? 0,
+      };
 
   return (
     <div className="space-y-4 animate-fade-in stagger-1" data-industry={industry}>
       {/* ── Page Header ── */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 dark:from-white dark:via-slate-200 dark:to-white bg-clip-text text-transparent">
-            Shortage Alerts
+          <h1 className="text-3xl font-bold tracking-tight text-content">
+            Stock risks
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-2xl leading-relaxed">
-            Predictive cross-industry stockout detection engine. Fuses real-time warehouse inventories with P90 demand forecasts and external search interest momentum to preempt shortage risks.
+          <p className="text-sm text-content-subtle mt-1 max-w-2xl leading-relaxed">
+            Items likely to run short before the next supplier delivery, with a direct path to the recommended order.
           </p>
         </div>
         <Button
@@ -117,7 +137,7 @@ export const ShortageAlertsPage = () => {
       </div>
 
       {/* ── Summary KPI Cards ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 animate-fade-in stagger-2">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-fade-in stagger-2">
         {[
           {
             label: "Critical Risks",
@@ -126,7 +146,7 @@ export const ShortageAlertsPage = () => {
             color: "text-rose-500 dark:text-rose-400",
             bg: "from-rose-500/10 to-transparent",
             border: "border-rose-100 dark:border-rose-950/40",
-            sub: "Requires immediate re-order"
+            sub: "Requires action now"
           },
           {
             label: "Warning Signals",
@@ -135,7 +155,7 @@ export const ShortageAlertsPage = () => {
             color: "text-amber-500 dark:text-amber-400",
             bg: "from-amber-500/10 to-transparent",
             border: "border-amber-100 dark:border-amber-950/40",
-            sub: "Monitor coverage metrics"
+            sub: "Review this week"
           },
           {
             label: "Active Open Alerts",
@@ -144,11 +164,11 @@ export const ShortageAlertsPage = () => {
             color: "text-sky-500 dark:text-sky-400",
             bg: "from-sky-500/10 to-transparent",
             border: "border-sky-100 dark:border-sky-950/40",
-            sub: "Awaiting planner review"
+            sub: "Awaiting your review"
           }
         ].map(({ label, count, icon: Icon, color, bg, border, sub }) => (
-          <Card padding="sm" key={label} className={clsx("card-hover-premium relative overflow-hidden group shadow-md shadow-slate-100 dark:shadow-none border", border)}>
-            <div className={clsx("absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl rounded-bl-full pointer-events-none group-hover:scale-110 transition-transform duration-500", bg)} />
+          <Card padding="sm" key={label} className={clsx("relative overflow-hidden group border", border)}>
+            <div className={clsx("absolute inset-y-0 left-0 w-1 bg-gradient-to-b", bg)} />
             <div className="flex items-center gap-3.5">
               <div className={clsx("h-10 w-10 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 flex items-center justify-center shadow-inner", color)}>
                 <Icon size={20} className="group-hover:scale-110 transition-transform" />
@@ -166,7 +186,7 @@ export const ShortageAlertsPage = () => {
       </div>
 
       {/* ── Filters Section ── */}
-      <div className="flex flex-wrap items-center gap-6 px-5 py-4 rounded-2xl glass border border-slate-200/60 dark:border-slate-800/80 animate-fade-in stagger-3 shadow-sm">
+      <div className="flex flex-wrap items-center gap-6 px-4 py-3 rounded-xl bg-surface border border-line animate-fade-in stagger-3">
         <div className="flex items-center gap-3">
           <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
             Resolution status
@@ -188,7 +208,7 @@ export const ShortageAlertsPage = () => {
 
         <div className="flex items-center gap-3">
           <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-            Threat Severity
+            Severity
           </span>
           <div className="tab-group-container inline-flex">
             {(["all", "critical", "warning", "info"] as const).map((s) => (
@@ -214,16 +234,23 @@ export const ShortageAlertsPage = () => {
             </div>
           </Card>
         )}
-        {alerts.data && alerts.data.length === 0 && (
+        {decisionFallbackActive && riskDecisions.map((decision) => (
+          <DecisionRiskRow key={decision.id} decision={decision} />
+        ))}
+        {alerts.data && alerts.data.length === 0 && !decisionFallbackActive && !decisions.isPending && (
           <Card className="border-dashed border-2 border-slate-200/80 dark:border-slate-800/80 shadow-none">
-            <div className="text-center py-14 flex flex-col items-center justify-center max-w-sm mx-auto">
+            <div className="text-center py-8 flex flex-col items-center justify-center max-w-md mx-auto">
               <div className="h-14 w-14 rounded-2xl bg-gradient-to-tr from-emerald-500/10 to-teal-500/20 flex items-center justify-center mb-4 border border-emerald-500/10 shadow-inner">
                 <CheckCircle2 className="text-emerald-500 dark:text-emerald-400" size={24} />
               </div>
-              <h3 className="text-base font-bold text-slate-800 dark:text-white mb-1.5">No risks detected</h3>
+              <h3 className="text-base font-bold text-slate-800 dark:text-white mb-1.5">No stock risks need action</h3>
               <p className="text-xs text-slate-400 dark:text-slate-400 leading-relaxed">
-                All inventory levels remain robust. Demand predictions and macro signals show healthy coverage across the entire active portfolio.
+                Stock cover is currently ahead of supplier lead times. You can still inspect inventory coverage or review all purchase decisions.
               </p>
+              <div className="mt-4 flex items-center justify-center gap-2">
+                <Link to="/workspace/inventory"><Button size="sm" variant="secondary">View inventory</Button></Link>
+                <Link to="/workspace/decisions"><Button size="sm">Review decisions</Button></Link>
+              </div>
             </div>
           </Card>
         )}
@@ -243,11 +270,11 @@ export const ShortageAlertsPage = () => {
           title={
             <span className="flex items-center gap-2 text-slate-800 dark:text-slate-100 animate-fade-in stagger-5">
               <Settings size={16} className="text-slate-500" />
-              Active System Threshold Rules
+              Alert thresholds
             </span>
           }
-          description="Quantile weighted bounds in effect for the current industry pipeline."
-          className="card-hover-premium shadow-md shadow-slate-100 dark:shadow-none animate-fade-in stagger-5"
+          description="The stock-cover rules currently used to surface risks."
+          className="animate-fade-in stagger-5"
         >
           <div className="overflow-x-auto mt-3">
             <table className="w-full text-xs text-slate-600 dark:text-slate-400">
@@ -294,6 +321,36 @@ export const ShortageAlertsPage = () => {
         </Card>
       )}
     </div>
+  );
+};
+
+const DecisionRiskRow = ({ decision }: { decision: Decision }) => {
+  const cover = decision.inputs.days_of_cover;
+  const critical = decision.urgency === "critical";
+
+  return (
+    <Card padding="none" className={clsx("overflow-hidden border-l-4", critical ? "border-l-rose-500" : "border-l-amber-500")}>
+      <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant={critical ? "danger" : "warning"}>{critical ? "Order now" : "Review this week"}</Badge>
+            <span className="font-mono text-xs font-bold text-content-muted">{decision.sku_code ?? decision.sku_id.slice(0, 8)}</span>
+            {typeof cover === "number" && (
+              <span className="text-xs font-semibold text-rose-600 dark:text-rose-400">
+                {cover.toFixed(0)} days cover · {decision.inputs.lead_time_days} days lead time
+              </span>
+            )}
+          </div>
+          <h3 className="mt-2 font-semibold text-content">{decision.headline}</h3>
+          <p className="mt-1 text-sm text-content-subtle">
+            {decision.reasons[0]?.text ?? "Current stock is unlikely to cover demand until replenishment arrives."}
+          </p>
+        </div>
+        <Link to="/workspace/decisions" className="shrink-0">
+          <Button size="sm">Review order</Button>
+        </Link>
+      </div>
+    </Card>
   );
 };
 

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
-import { Check, Shirt, Cpu, Pill, Wheat, Wrench, Building2 } from "lucide-react";
+import { Check, Shirt, Cpu, Pill, Wheat, Wrench, Building2 } from "@/components/ui/icons";
 import {
   forwardRef,
   useEffect,
