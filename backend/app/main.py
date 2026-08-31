@@ -463,10 +463,13 @@ def create_app() -> FastAPI:
         (agrocenter_router, IndustryCode.agrocenter),
         (hardware_router, IndustryCode.hardware),
     ):
+        # Industry check first, paywall second. The reason a fashion workspace
+        # cannot read pharma has nothing to do with billing, so the answer must
+        # not change from 403 to 402 depending on their subscription state.
         app.include_router(
             _router,
             prefix=api_prefix,
-            dependencies=[*gated, require_industry(_industry)],
+            dependencies=[require_industry(_industry), *gated],
         )
     app.include_router(demo_request_router, prefix=api_prefix)
     app.include_router(billing_router, prefix=api_prefix)

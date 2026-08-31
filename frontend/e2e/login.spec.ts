@@ -28,16 +28,15 @@ test.describe("SANKET Authentication Flow", () => {
     // Go to the landing page
     await page.goto("/");
 
-    // Click the primary "Try the Sandbox" button
-    const sandboxButton = page.locator("button:has-text('Try the Sandbox'), a:has-text('Try the Sandbox')").first();
+    // Click the primary "Try Live Sandbox" button
+    const sandboxButton = page.locator("button:has-text('Try Live Sandbox'), a:has-text('Try Live Sandbox')").first();
     await sandboxButton.click();
 
-    // If an industry selection modal opens, choose an industry
-    const selectIndustryHeader = page.locator("text=Explore a Live Sandbox");
-    if (await selectIndustryHeader.count() > 0) {
-      // Click the first industry button (e.g. "Fashion")
-      await page.click("button:has-text('Fashion'), button:has-text('Electronics')");
-    }
+    // The modal no longer asks which industry to explore. It used to list all
+    // five, but the choice was cosmetic — every visitor landed in the same
+    // workspace regardless, and the picker only set client-side state.
+    await expect(page.locator("text=Explore a Live Sandbox")).toBeVisible();
+    await page.click("button:has-text('Launch the sandbox')");
 
     // The sandbox flow also lands on /workspace (see LandingPage.tsx handleSandbox).
     await page.waitForURL("**/workspace", { timeout: 10000 });

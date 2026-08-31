@@ -145,6 +145,28 @@ async def test_the_boundary_holds_from_the_other_side(
     assert denied.status_code == 403
 
 
+async def test_other_industry_is_403_even_without_a_subscription(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """The industry answer comes before the paywall.
+
+    A brand-new workspace has no subscription, so every gated router would
+    otherwise answer 402 first — and "another industry" would be indistinguishable
+    from "you have not paid" depending on billing state. The reason a fashion
+    workspace cannot read pharma has nothing to do with billing, so it should not
+    change when they subscribe.
+    """
+    token = await _signup(client, "unpaid-co", "fashion")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    denied = await client.get("/api/v1/pharma/overview", headers=headers)
+    assert denied.status_code == 403, denied.text
+
+    # Their own industry still hits the paywall, which is the correct answer there.
+    own = await client.get("/api/v1/fashion/overview", headers=headers)
+    assert own.status_code == 402, own.text
+
+
 async def test_cross_industry_correlation_is_unavailable(
     client: AsyncClient, db_session: AsyncSession, test_tenant_id: uuid.UUID
 ) -> None:
