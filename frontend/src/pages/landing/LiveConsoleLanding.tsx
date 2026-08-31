@@ -13,7 +13,12 @@ import { LogoMark } from "@/components/ui/Logo";
 import { CONNECTORS } from "./connectors";
 import "./live-console.css";
 import { ConnectorGrid } from "./sections/ConnectorGrid";
+import { ForecastEngine } from "./sections/ForecastEngine";
 import { IndustryTabs } from "./sections/IndustryTabs";
+import { ModuleGrid } from "./sections/ModuleGrid";
+import { SecurityTenancy } from "./sections/SecurityTenancy";
+import { SignalGrid } from "./sections/SignalGrid";
+import { WhatItDoes } from "./sections/WhatItDoes";
 
 type LiveConsoleLandingProps = {
   onBook: () => void;
@@ -435,6 +440,8 @@ export const LiveConsoleLanding = ({ onBook, onSandbox }: LiveConsoleLandingProp
         </div>
       </section>
 
+      <WhatItDoes />
+
       {/* ── Capabilities ────────────────────────────────────── */}
       <section id="how-it-works" className="lc-section lc-section-alt">
         <div className="lc-shell lc-stack">
@@ -493,7 +500,15 @@ export const LiveConsoleLanding = ({ onBook, onSandbox }: LiveConsoleLandingProp
 
       <IndustryTabs />
 
+      <ModuleGrid />
+
+      <SignalGrid />
+
       <ConnectorGrid />
+
+      <ForecastEngine />
+
+      <SecurityTenancy />
 
       {/* ── Stats + CTA ─────────────────────────────────────── */}
       <section id="get-started" className="lc-section lc-section-alt">

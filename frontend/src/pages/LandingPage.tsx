@@ -422,6 +422,7 @@ export const LandingPage = () => {
     { label: "Industries", id: "industries" },
     { label: "How It Works", id: "how-it-works" },
     { label: "Integrations", id: "integrations" },
+    { label: "Security", id: "security" },
   ];
 
   return (
