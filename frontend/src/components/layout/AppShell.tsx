@@ -1,13 +1,13 @@
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { useSidebarStore } from "@/stores/sidebar";
 import { SubscriptionGate } from "@/components/auth/SubscriptionGate";
 import { SetupBanner } from "@/components/onboarding/SetupBanner";
 
 export const AppShell = () => {
-  const industry = useIndustryStore((s) => s.activeIndustry);
+  const industry = useWorkspaceIndustry();
   const { collapsed } = useSidebarStore();
 
   return (

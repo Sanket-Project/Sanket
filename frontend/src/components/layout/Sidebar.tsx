@@ -26,7 +26,7 @@ import {
   type AppIcon,
 } from "@/components/ui/icons";
 import { useQuery } from "@tanstack/react-query";
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { useSidebarStore } from "@/stores/sidebar";
 import { buildApi, shortSha } from "@/api/build";
 import { decisionsApi } from "@/api/decisions";
@@ -166,7 +166,7 @@ function SectionLabel({ children, collapsed }: { children: string; collapsed: bo
 }
 
 export const Sidebar = () => {
-  const industry = useIndustryStore((s) => s.activeIndustry);
+  const industry = useWorkspaceIndustry();
   const { collapsed, toggle, setCollapsed, mobileOpen, setMobileOpen } = useSidebarStore();
   const [search, setSearch] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);

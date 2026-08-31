@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/Card";
 import { CategoryBar } from "@/components/charts/CategoryBar";
 import { PageLoader } from "@/components/ui/Spinner";
 import { Badge } from "@/components/ui/Badge";
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 
 const mapeColor = (mape: number | null) => {
   if (mape === null) return "text-slate-400";
@@ -26,7 +26,7 @@ const mapeLabel = (mape: number | null) => {
 };
 
 export const ForecastAccuracyPage = () => {
-  const industry = useIndustryStore((s) => s.activeIndustry);
+  const industry = useWorkspaceIndustry();
 
   const { data: accuracy, isLoading } = useQuery({
     queryKey: ["forecast-accuracy", industry],

@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { readinessApi, type ReadinessMilestone } from "@/api/onboarding";
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 
 /**
  * The seven-day plan.
@@ -20,7 +20,7 @@ import { useIndustryStore } from "@/stores/industry";
  * furniture on the dashboard.
  */
 export const ReadinessPanel = ({ compact = false }: { compact?: boolean }) => {
-  const industry = useIndustryStore((s) => s.activeIndustry);
+  const industry = useWorkspaceIndustry();
   const { data } = useQuery({
     queryKey: ["onboarding-readiness", industry],
     queryFn: readinessApi.get,

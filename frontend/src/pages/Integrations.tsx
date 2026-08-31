@@ -39,7 +39,7 @@ import {
   type IntegrationStatus,
 } from "@/api/integrations";
 import { industryDisplay } from "@/utils/colors";
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { fmtRelative } from "@/utils/format";
 import { getErrorMessage } from "@/utils/errors";
 import type { IndustryCode } from "@/types/api";
@@ -747,7 +747,7 @@ function Meta({ label, value }: { label: string; value: string }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 export const IntegrationsPage = () => {
   const qc = useQueryClient();
-  const activeIndustry = useIndustryStore((s) => s.activeIndustry);
+  const activeIndustry = useWorkspaceIndustry();
   const [selected, setSelected] = useState<Connector | null>(null);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");

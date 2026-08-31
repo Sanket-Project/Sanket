@@ -19,14 +19,14 @@ import {
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "@/stores/auth";
-import { IndustrySwitcher } from "@/components/layout/IndustrySwitcher";
+import { WorkspaceIndustryBadge } from "@/components/layout/WorkspaceIndustryBadge";
 import { Button } from "@/components/ui/Button";
 import { useIndustryContext } from "@/hooks/useIndustryContext";
 import { Badge } from "@/components/ui/Badge";
 import { useCurrencyStore } from "@/stores/currency";
 import { shortageAlertsApi } from "@/api/shortageAlerts";
 import { decisionsApi } from "@/api/decisions";
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { useSidebarStore } from "@/stores/sidebar";
 import { fmtRelative } from "@/utils/format";
 
@@ -40,7 +40,7 @@ export const TopBar = () => {
     await logout();
   };
   const { currency, setCurrency } = useCurrencyStore();
-  const activeIndustry = useIndustryStore((s) => s.activeIndustry);
+  const activeIndustry = useWorkspaceIndustry();
   const toggleMobile = useSidebarStore((s) => s.toggleMobile);
   const mobileOpen = useSidebarStore((s) => s.mobileOpen);
   const location = useLocation();
@@ -190,7 +190,7 @@ export const TopBar = () => {
         >
           <Menu size={18} aria-hidden="true" />
         </button>
-        <IndustrySwitcher />
+        <WorkspaceIndustryBadge />
         <div className="h-6 w-px bg-line hidden md:block" />
         <div className="hidden md:flex items-center gap-1.5 text-[13px] font-medium select-none min-w-0">
           {getBreadcrumbs(location.pathname).map((bc, idx, arr) => (

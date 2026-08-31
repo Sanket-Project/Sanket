@@ -7,11 +7,11 @@ import { Card } from "@/components/ui/Card";
 import { KPICard } from "@/components/charts/KPICard";
 import { PageLoader } from "@/components/ui/Spinner";
 import { fmtCompact } from "@/utils/format";
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { useFormattedCurrency } from "@/hooks/useFormattedCurrency";
 
 export const FinancialImpactPage = () => {
-  const industry = useIndustryStore((s) => s.activeIndustry);
+  const industry = useWorkspaceIndustry();
   const [horizon, setHorizon] = useState(12);
   const { formatPrice } = useFormattedCurrency();
   const fmt = (n: number) => formatPrice(n, "USD", { compact: true });

@@ -30,7 +30,7 @@ import { getErrorMessage } from "@/utils/errors";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { trendsApi } from "@/api/trends";
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import type { TrendScore, TrendSignal, IndustryCode } from "@/types/api";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -993,7 +993,7 @@ function HowItWorksCard({ industry }: { industry: IndustryCode }) {
 }
 
 export const TrendAnalysisPage = () => {
-  const industry = useIndustryStore((s) => s.activeIndustry);
+  const industry = useWorkspaceIndustry();
   const qc = useQueryClient();
   const cfg = INDUSTRY_CONFIG[industry];
 

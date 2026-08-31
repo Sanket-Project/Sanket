@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { industryApi } from "@/api/industry";
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 
 /** A small tag input: type a term, press Enter (or comma) to add; click × to remove. */
 const TagInput = ({
@@ -74,7 +74,7 @@ const TagInput = ({
 };
 
 export const FocusProfileCard = () => {
-  const activeIndustry = useIndustryStore((s) => s.activeIndustry);
+  const activeIndustry = useWorkspaceIndustry();
   const queryClient = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["industry-profile", activeIndustry],

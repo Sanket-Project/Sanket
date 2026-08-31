@@ -12,12 +12,12 @@ import { PageLoader } from "@/components/ui/Spinner";
 import { fmtCompact, fmtDate } from "@/utils/format";
 import { getErrorMessage } from "@/utils/errors";
 import { useAuthStore } from "@/stores/auth";
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import type { PharmaBatchExpiring } from "@/types/api";
 
 export const PharmaBatchesPage = () => {
   const role = useAuthStore((s) => s.role);
-  const activeIndustry = useIndustryStore((s) => s.activeIndustry);
+  const activeIndustry = useWorkspaceIndustry();
   const [days, setDays] = useState(90);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const qc = useQueryClient();

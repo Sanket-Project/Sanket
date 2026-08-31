@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/icons";
 import { Button } from "@/components/ui/Button";
 import type { ParsedRow, ParseResult, ValidationResult } from "@/utils/csvImport";
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { industryAccent, industryGradient, industryDisplay } from "@/utils/colors";
 import clsx from "clsx";
 
@@ -121,7 +121,7 @@ export const ImportModal = ({
   manualEntry,
   defaultTab = "manual",
 }: ImportModalProps) => {
-  const industry = useIndustryStore((s) => s.activeIndustry);
+  const industry = useWorkspaceIndustry();
   const accent = industryAccent[industry];
   const gradient = industryGradient[industry];
   const displayName = industryDisplay[industry];

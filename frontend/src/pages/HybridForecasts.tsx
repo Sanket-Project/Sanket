@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
 import { ScenarioBands } from "@/components/charts/ScenarioBands";
 import { TrendPanel } from "@/components/signals/TrendPanel";
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { industryAccent } from "@/utils/colors";
 import { fmtCompact } from "@/utils/format";
 import { getErrorMessage } from "@/utils/errors";
@@ -36,7 +36,7 @@ const SCENARIO_COLOR: Record<string, string> = {
 };
 
 export const HybridForecastsPage = () => {
-  const industry = useIndustryStore((s) => s.activeIndustry);
+  const industry = useWorkspaceIndustry();
   const [horizon, setHorizon] = useState(12);
   const [includeAlerts, setIncludeAlerts] = useState(true);
   const [result, setResult] = useState<HybridForecast | null>(null);

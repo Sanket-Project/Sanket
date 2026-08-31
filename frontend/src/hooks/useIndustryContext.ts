@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { industryApi } from "@/api/industry";
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 
 export const useIndustryContext = () => {
-  const active = useIndustryStore((s) => s.activeIndustry);
+  const active = useWorkspaceIndustry();
   return useQuery({
     queryKey: ["industry-context", active],
     queryFn: industryApi.context,

@@ -27,7 +27,7 @@ import { ImportModal } from "@/components/ui/ImportModal";
 import { fmtNumber, fmtRelative } from "@/utils/format";
 import { useFormattedCurrency } from "@/hooks/useFormattedCurrency";
 
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { getProductImage, useProductImagesStore } from "@/stores/productImages";
 import { industryAccent, industryGradient, industryDisplay } from "@/utils/colors";
 import {
@@ -286,7 +286,7 @@ type SortKey = "sku_code" | "unit_price" | "margin" | "lead_time_days" | "update
 
 export const SkusPage = () => {
   const navigate = useNavigate();
-  const industry = useIndustryStore((s) => s.activeIndustry);
+  const industry = useWorkspaceIndustry();
   const images = useProductImagesStore((s) => s.images);
   const accent = industryAccent[industry];
   const gradient = industryGradient[industry];

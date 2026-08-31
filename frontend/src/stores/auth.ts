@@ -50,7 +50,7 @@ interface AuthState {
   userId: string | null;
   tenantId: string | null;
   role: UserRole | null;
-  defaultIndustry: IndustryCode | null;
+  industry: IndustryCode | null;
   email: string | null;
   fullName: string | null;
   isAuthenticated: boolean;
@@ -101,7 +101,7 @@ const CLEARED = {
   userId: null,
   tenantId: null,
   role: null,
-  defaultIndustry: null,
+  industry: null,
   email: null,
   fullName: null,
   isAuthenticated: false,
@@ -130,12 +130,16 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   ...CLEARED,
 
   setSession: (s, token) => {
+    // Project the industry first, synchronously, so nothing can observe an
+    // authenticated session that has no industry yet — that gap is what let
+    // another industry's UI flash for a frame during bootstrap.
+    useIndustryStore.getState().setSessionIndustry(s.active_industry);
     set({
       accessToken: token,
       userId: s.user_id,
       tenantId: s.tenant_id,
       role: s.role,
-      defaultIndustry: s.active_industry,
+      industry: s.active_industry,
       email: s.email,
       fullName: s.full_name,
       isAuthenticated: true,
@@ -349,15 +353,12 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     } catch {
       /* ignore */
     }
-    // The active-industry store persists to localStorage independently of the
-    // session and is NOT cleared above. Left alone, the next login (same
-    // browser, possibly a different tenant/account) briefly renders with the
-    // previous account's industry — e.g. a stale "GxP · 21 CFR Part 11" badge
-    // flashing on a Fashion tenant right after login — until the post-login
-    // sync overwrites it a moment later. Reset it here so every fresh session
-    // starts from the same default the store itself defines.
+    // Clear the projected industry with the rest of the session. It no longer
+    // persists, so this only guards the in-memory case: without it the next
+    // login in the same tab could briefly render the previous account's
+    // industry — a stale "GxP · 21 CFR Part 11" badge on a Fashion workspace.
     try {
-      useIndustryStore.getState().reset();
+      useIndustryStore.getState().setSessionIndustry(null);
     } catch {
       /* ignore */
     }
@@ -398,7 +399,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       sub: s.userId,
       tid: s.tenantId,
       role: s.role,
-      ind: s.defaultIndustry,
+      ind: s.industry,
       email: s.email,
       name: s.fullName,
     };

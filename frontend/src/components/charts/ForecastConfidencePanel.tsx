@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { forecastConfidenceApi, type ConfidenceBand, type SkuConfidence } from "@/api/forecasts";
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 
 const BAND: Record<ConfidenceBand, { label: string; variant: "success" | "info" | "warning" | "danger" }> = {
   high: { label: "High", variant: "success" },
@@ -31,7 +31,7 @@ function tone(score: number) {
  * data, not a number to hide.
  */
 export const ForecastConfidencePanel = () => {
-  const industry = useIndustryStore((s) => s.activeIndustry);
+  const industry = useWorkspaceIndustry();
   const [open, setOpen] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({

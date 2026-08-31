@@ -1,7 +1,6 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import toast from "react-hot-toast";
 import { useAuthStore } from "@/stores/auth";
-import { useIndustryStore } from "@/stores/industry";
 import { getErrorMessage } from "@/utils/errors";
 
 const baseURL = import.meta.env.VITE_API_BASE_URL ?? "/api/v1";
@@ -35,8 +34,10 @@ apiClient.interceptors.request.use(async (config: InternalAxiosRequestConfig) =>
     const token = await useAuthStore.getState().getToken();
     if (token) config.headers.Authorization = `Bearer ${token}`;
   }
-  const industry = useIndustryStore.getState().activeIndustry;
-  if (industry) config.headers["X-Industry-Code"] = industry;
+  // No X-Industry-Code. A workspace is scoped to one industry, which the server
+  // reads from the verified token; sending it from the client would only ever
+  // agree with the server or be refused, and the header is what industry
+  // switching used to ride on.
   return config;
 });
 

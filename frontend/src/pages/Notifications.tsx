@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { PageLoader } from "@/components/ui/Spinner";
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { getErrorMessage } from "@/utils/errors";
 import { notificationsApi, type WhatsAppConfig, type WhatsAppRecipient } from "@/api/notifications";
 
@@ -22,7 +22,7 @@ const HOURS = Array.from({ length: 24 }, (_, i) => i);
  * thresholds without spamming a real phone.
  */
 export const NotificationsPage = () => {
-  const industry = useIndustryStore((s) => s.activeIndustry);
+  const industry = useWorkspaceIndustry();
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState<WhatsAppConfig | null>(null);
   const [newPhone, setNewPhone] = useState("");

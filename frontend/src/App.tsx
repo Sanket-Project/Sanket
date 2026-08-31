@@ -7,6 +7,7 @@ import { Toaster } from "react-hot-toast";
 import { useAuthStore } from "@/stores/auth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { OnboardingGate } from "@/components/auth/OnboardingGate";
+import { IndustryRoute } from "@/components/auth/IndustryRoute";
 import { AppShell } from "@/components/layout/AppShell";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { SkeletonCard } from "@/components/ui/Skeleton";
@@ -248,7 +249,10 @@ export default function App() {
             <Route path="data-quality" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><DataQualityPage /></Suspense></ErrorBoundary>} />
             <Route path="notifications" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><NotificationsPage /></Suspense></ErrorBoundary>} />
             <Route path="forecast-accuracy" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><ForecastAccuracyPage /></Suspense></ErrorBoundary>} />
-            <Route path="pharma/batches" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><PharmaBatchesPage /></Suspense></ErrorBoundary>} />
+            {/* Industry-scoped. The sidebar already hides this for other
+                workspaces; the guard covers a typed URL, and the server
+                answers 403 regardless. */}
+            <Route path="pharma/batches" element={<ErrorBoundary><IndustryRoute industry="pharma"><Suspense fallback={<PageFallback />}><PharmaBatchesPage /></Suspense></IndustryRoute></ErrorBoundary>} />
             <Route path="billing" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><BillingPage /></Suspense></ErrorBoundary>} />
             <Route path="webhooks" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><WebhooksPage /></Suspense></ErrorBoundary>} />
             <Route path="integrations" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><IntegrationsPage /></Suspense></ErrorBoundary>} />

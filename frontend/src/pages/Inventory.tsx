@@ -27,7 +27,7 @@ import type { ImportResult } from "@/components/ui/ImportModal";
 import { Card } from "@/components/ui/Card";
 import { KPICard } from "@/components/charts/KPICard";
 import { PageLoader } from "@/components/ui/Spinner";
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { decisionsApi, type Decision } from "@/api/decisions";
 import { getProductImage, useProductImagesStore } from "@/stores/productImages";
 
@@ -103,7 +103,7 @@ const fmtUnits = (n: number) =>
 // ── Main page ──────────────────────────────────────────────────────────────
 
 export const InventoryPage = () => {
-  const industry = useIndustryStore((s) => s.activeIndustry);
+  const industry = useWorkspaceIndustry();
   const qc = useQueryClient();
   const [importOpen, setImportOpen] = useState(false);
   const [search, setSearch] = useState("");

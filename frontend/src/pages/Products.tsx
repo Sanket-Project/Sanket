@@ -34,7 +34,7 @@ import { ImportModal } from "@/components/ui/ImportModal";
 import { fmtRelative } from "@/utils/format";
 import type { Product, ProductStatus, IndustryCode } from "@/types/api";
 import { useProductImagesStore, getProductImage } from "@/stores/productImages";
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { industryAccent, industryGradient, industryDisplay } from "@/utils/colors";
 import {
   parseFile,
@@ -234,7 +234,7 @@ type FilterStatus = "all" | ProductStatus;
 
 export const ProductsPage = () => {
   const navigate = useNavigate();
-  const industry = useIndustryStore((s) => s.activeIndustry);
+  const industry = useWorkspaceIndustry();
   const accent = industryAccent[industry];
   const gradient = industryGradient[industry];
   const displayName = industryDisplay[industry];

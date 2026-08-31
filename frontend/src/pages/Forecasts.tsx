@@ -42,7 +42,7 @@ import { exportApi } from "@/api/export";
 import { skusApi } from "@/api/skus";
 import { Button } from "@/components/ui/Button";
 import { ForecastConfidencePanel } from "@/components/charts/ForecastConfidencePanel";
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { industryAccent, industryDisplay, industryGradient } from "@/utils/colors";
 import { fmtCompact, fmtNumber } from "@/utils/format";
 import type { ForecastResponse, ForecastRow, IndustryCode } from "@/types/api";
@@ -516,7 +516,7 @@ const SKU_LABELS: Record<string, string> = {
 // Main page
 // ─────────────────────────────────────────────────────────────────────────────
 export const ForecastsPage = () => {
-  const industry = useIndustryStore((s) => s.activeIndustry);
+  const industry = useWorkspaceIndustry();
   const accent = industryAccent[industry];
   const gradient = industryGradient[industry];
   const displayName = industryDisplay[industry];

@@ -21,7 +21,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { PageLoader } from "@/components/ui/Spinner";
 import { KPICard } from "@/components/charts/KPICard";
 import { useFormattedCurrency } from "@/hooks/useFormattedCurrency";
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { getErrorMessage } from "@/utils/errors";
 import {
   decisionsApi,
@@ -53,7 +53,7 @@ const CONFIDENCE_STYLE: Record<ConfidenceBand, { variant: "success" | "info" | "
  * interrogate.
  */
 export const DecisionsPage = () => {
-  const industry = useIndustryStore((s) => s.activeIndustry);
+  const industry = useWorkspaceIndustry();
   const queryClient = useQueryClient();
   const { formatPrice } = useFormattedCurrency();
   const [expanded, setExpanded] = useState<string | null>(null);

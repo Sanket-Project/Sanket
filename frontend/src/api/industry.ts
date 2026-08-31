@@ -10,10 +10,18 @@ import type {
 export const industryApi = {
   context: () =>
     apiClient.get<IndustryContext>("/industry/context").then((r) => r.data),
-  available: () =>
+  /**
+   * Every industry the platform supports. Public — the signup form needs it
+   * before anyone holds a token, and prospects may browse all verticals.
+   *
+   * Replaces an authenticated `/industry/available`: someone already inside a
+   * workspace has exactly one industry and should not be shown a list of the
+   * others.
+   */
+  catalog: () =>
     apiClient
       .get<Record<string, { display_name: string; default_horizon_weeks: number; audit_level: string }>>(
-        "/industry/available",
+        "/industry/catalog",
       )
       .then((r) => r.data),
   overview: (industry: IndustryCode) =>
@@ -23,20 +31,24 @@ export const industryApi = {
   updateProfile: (body: IndustryProfileUpdate) =>
     apiClient.put<EffectiveIndustryConfig>("/industry/profile", body).then((r) => r.data),
   /**
-   * Set the tenant's primary/active industry (onboarding step 1).
+   * Correct the workspace's industry during initial setup.
    *
-   * Returns a re-minted `access_token` in dev-fallback mode. The `ind` claim
-   * is baked in at login, so without swapping the token the rest of the
-   * session is served the signup-default industry on any request that does not
-   * carry an X-Industry-Code override — for a pharma tenant that means
-   * standard audit level behind a "21 CFR Part 11" badge. Callers must hand
-   * the token to `useAuthStore.replaceToken`.
+   * Not a switch: it works only while setup is incomplete and the workspace
+   * holds no data, and answers 409 after that.
+   *
+   * Returns a re-minted `access_token` in dev-fallback mode — the `ind` claim
+   * is baked into the bearer at login, so without swapping it the rest of the
+   * session runs on the old industry. Callers must hand the token to
+   * `useAuthStore.replaceToken`. In Firebase mode the server resyncs custom
+   * claims and revokes refresh tokens instead, and sets `reauth_required`.
    */
   activate: (code: IndustryCode) =>
     apiClient
-      .post<{ active_industry: IndustryCode; access_token?: string; expires_in?: number }>(
-        "/industry/activate",
-        { code },
-      )
+      .post<{
+        active_industry: IndustryCode;
+        access_token?: string;
+        expires_in?: number;
+        reauth_required?: boolean;
+      }>("/industry/activate", { code })
       .then((r) => r.data),
 };

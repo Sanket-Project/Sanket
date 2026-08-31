@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageLoader } from "@/components/ui/Spinner";
 import { useFormattedCurrency } from "@/hooks/useFormattedCurrency";
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { roiApi, type RoiLine } from "@/api/roi";
 
 const WINDOWS = [30, 90, 180, 365];
@@ -22,7 +22,7 @@ const WINDOWS = [30, 90, 180, 365];
  * because this is the screen a customer takes into a renewal conversation.
  */
 export const ROIDashboardPage = () => {
-  const industry = useIndustryStore((s) => s.activeIndustry);
+  const industry = useWorkspaceIndustry();
   const [windowDays, setWindowDays] = useState(90);
   const [open, setOpen] = useState<string | null>(null);
   const { formatPrice } = useFormattedCurrency();

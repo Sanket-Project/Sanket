@@ -12,7 +12,7 @@ import toast from "react-hot-toast";
 import { integrationsApi, type UploadResult } from "@/api/integrations";
 import { Button } from "@/components/ui/Button";
 import { FileDropzone } from "@/components/ui/FileDropzone";
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { getErrorMessage } from "@/utils/errors";
 import type { StepHandle, StepProps } from "./types";
 
@@ -27,7 +27,7 @@ interface ImportCardProps {
 }
 
 const ImportCard = ({ icon, title, description, kind, onImported }: ImportCardProps) => {
-  const industry = useIndustryStore((s) => s.activeIndustry);
+  const industry = useWorkspaceIndustry();
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);

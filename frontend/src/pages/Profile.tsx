@@ -18,7 +18,7 @@ import { useAuthStore } from "@/stores/auth";
 import { industryDisplay } from "@/utils/colors";
 
 export const ProfilePage = () => {
-  const { userId, tenantId, role, email, fullName, defaultIndustry } = useAuthStore();
+  const { userId, tenantId, role, email, fullName, industry } = useAuthStore();
   const [displayName, setDisplayName] = useState(fullName ?? "");
   const [saving, setSaving] = useState(false);
 
@@ -73,9 +73,9 @@ export const ProfilePage = () => {
                 <Badge variant="primary" className="text-[10px] uppercase tracking-wider font-bold">
                   {role ?? "user"}
                 </Badge>
-                {defaultIndustry && (
+                {industry && (
                   <Badge variant="info" className="text-[10px] font-medium capitalize">
-                    {industryDisplay[defaultIndustry] ?? defaultIndustry}
+                    {industryDisplay[industry] ?? industry}
                   </Badge>
                 )}
               </div>

@@ -37,7 +37,7 @@ import { forecastsApi } from "@/api/forecasts";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PageLoader } from "@/components/ui/Spinner";
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { industryAccent, industryGradient, industryDisplay } from "@/utils/colors";
 import { fmtDate, fmtNumber, fmtCompact } from "@/utils/format";
 import { getErrorMessage } from "@/utils/errors";
@@ -187,7 +187,7 @@ export const SkuDetailPage = () => {
   const { formatPrice, activeCurrency } = useFormattedCurrency();
   const qc = useQueryClient();
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const industry = useIndustryStore((s) => s.activeIndustry);
+  const industry = useWorkspaceIndustry();
   const accent = industryAccent[industry];
   const gradient = industryGradient[industry];
   const displayName = industryDisplay[industry];

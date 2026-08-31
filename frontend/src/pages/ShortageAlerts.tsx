@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { shortageAlertsApi } from "@/api/shortageAlerts";
 import { decisionsApi, type Decision } from "@/api/decisions";
 import { exportApi } from "@/api/export";
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { fmtDateTime } from "@/utils/format";
 import type { ShortageAlert, AlertSeverity, AlertStatus } from "@/types/api";
 
@@ -50,7 +50,7 @@ const STATUS_VARIANT: Record<AlertStatus, "default" | "warning" | "success"> = {
 };
 
 export const ShortageAlertsPage = () => {
-  const industry = useIndustryStore((s) => s.activeIndustry);
+  const industry = useWorkspaceIndustry();
   const qc = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<AlertStatus | "all">("open");
   const [severityFilter, setSeverityFilter] = useState<AlertSeverity | "all">(

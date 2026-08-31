@@ -23,7 +23,7 @@ import { KPICard } from "@/components/charts/KPICard";
 import { PageLoader } from "@/components/ui/Spinner";
 import { LiveIndicator } from "@/components/realtime/LiveIndicator";
 import { useWebSocket } from "@/hooks/useWebSocket";
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { fmtNumber, fmtCompact } from "@/utils/format";
 import { useFormattedCurrency } from "@/hooks/useFormattedCurrency";
 
@@ -44,7 +44,7 @@ interface LiveExtra {
 const ZERO_LIVE: LiveExtra = { units: 0, revenue: 0, transactions: 0 };
 
 export const SalesAnalyticsPage = () => {
-  const industry = useIndustryStore((s) => s.activeIndustry);
+  const industry = useWorkspaceIndustry();
   const { subscribe } = useWebSocket();
   const { formatPrice } = useFormattedCurrency();
 

@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import {
   User,
   Building2,
@@ -19,7 +18,6 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useAuthStore } from "@/stores/auth";
 import { useIndustryContext } from "@/hooks/useIndustryContext";
-import { industryApi } from "@/api/industry";
 import { industryDisplay } from "@/utils/colors";
 import { FocusProfileCard } from "@/components/settings/FocusProfileCard";
 
@@ -257,7 +255,7 @@ const ProfileTab = () => {
 // ── Workspace Tab ────────────────────────────────────────────────────────────
 
 const WorkspaceTab = () => {
-  const { tenantId, role, defaultIndustry } = useAuthStore();
+  const { tenantId, role, industry } = useAuthStore();
 
   return (
     <div className="space-y-6">
@@ -283,9 +281,9 @@ const WorkspaceTab = () => {
           <Row
             label="Default industry"
             value={
-              defaultIndustry ? (
+              industry ? (
                 <span className="font-bold capitalize text-slate-700 dark:text-slate-200">
-                  {industryDisplay[defaultIndustry] ?? defaultIndustry}
+                  {industryDisplay[industry] ?? industry}
                 </span>
               ) : (
                 "—"
@@ -316,19 +314,18 @@ const WorkspaceTab = () => {
 
 const IndustryTab = () => {
   const { data: ctx } = useIndustryContext();
-  const { data: available } = useQuery({
-    queryKey: ["industries-available"],
-    queryFn: industryApi.available,
-  });
 
+  // No "Available Industries" list here any more. It showed all five, labelled
+  // "enabled for this workspace", which was both untrue and the wrong thing to
+  // show: a workspace has exactly one industry and cannot move to another.
   return (
     <div className="space-y-6">
       <FocusProfileCard />
 
       {ctx && (
         <Card
-          title="Active Industry Context"
-          description="Resolved from your session and X-Industry-Code header"
+          title="Workspace Industry"
+          description="Set when this workspace was created; every member shares it"
         >
           <dl className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <Row label="Code" value={<code className="font-mono text-xs">{ctx.code}</code>} />
@@ -373,44 +370,6 @@ const IndustryTab = () => {
         </Card>
       )}
 
-      {available && (
-        <Card title="Available Industries" description="All industries enabled for this workspace">
-          <ul className="space-y-2" role="list">
-            {Object.entries(available).map(([code, info]) => (
-              <li
-                key={code}
-                className="flex items-center justify-between p-3.5 rounded-xl bg-white/70 dark:bg-surface-2 border border-slate-200/60 dark:border-line shadow-sm transition-all duration-200 hover:-translate-y-px hover:shadow-md"
-              >
-                <div>
-                  <div className="text-slate-800 dark:text-white font-bold text-sm leading-tight">
-                    {info.display_name}
-                  </div>
-                  <div className="text-xs text-slate-400 mt-0.5 font-medium">
-                    {info.default_horizon_weeks}w horizon ·{" "}
-                    <span className={info.audit_level === "gxp" ? "text-emerald-600 font-semibold" : ""}>
-                      {info.audit_level}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {ctx?.code === code && (
-                    <span
-                      className="h-5 w-5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center"
-                      aria-label="Active"
-                      title="Currently active"
-                    >
-                      <Check size={11} aria-hidden="true" />
-                    </span>
-                  )}
-                  <code className="font-mono text-xs text-slate-500 bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200/60 dark:border-slate-700">
-                    {code}
-                  </code>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
     </div>
   );
 };

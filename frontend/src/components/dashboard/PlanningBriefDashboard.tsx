@@ -26,7 +26,7 @@ import { salesAnalyticsApi } from "@/api/salesAnalytics";
 import { ForecastChart } from "@/components/charts/ForecastChart";
 import { Button } from "@/components/ui/Button";
 import { useAuthStore } from "@/stores/auth";
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { getProductImage, useProductImagesStore } from "@/stores/productImages";
 import { useFormattedCurrency } from "@/hooks/useFormattedCurrency";
 import type { ForecastRow, IndustryCode } from "@/types/api";
@@ -140,7 +140,7 @@ function SummaryItem({
 }
 
 export const PlanningBriefDashboard = () => {
-  const industry = useIndustryStore((state) => state.activeIndustry);
+  const industry = useWorkspaceIndustry();
   const images = useProductImagesStore((state) => state.images);
   const { decodeToken } = useAuthStore();
   const { formatPrice } = useFormattedCurrency();

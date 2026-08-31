@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageLoader } from "@/components/ui/Spinner";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { useIndustryStore } from "@/stores/industry";
+import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { getErrorMessage } from "@/utils/errors";
 import {
   dataQualityApi,
@@ -50,7 +50,7 @@ function scoreTone(score: number) {
  * Auto-fixes always preview the row count before anything is deleted.
  */
 export const DataQualityPage = () => {
-  const industry = useIndustryStore((s) => s.activeIndustry);
+  const industry = useWorkspaceIndustry();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState<string | null>(null);
   const [pendingFix, setPendingFix] = useState<{ action: DataQualityFix; rows: number; label: string } | null>(null);

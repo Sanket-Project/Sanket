@@ -18,10 +18,6 @@ import {
   Check,
   RefreshCw,
   Shirt,
-  Cpu,
-  Pill,
-  Sprout,
-  Wrench,
   Database,
   Zap,
   Bell,
@@ -29,14 +25,11 @@ import {
   Menu,
 } from "@/components/ui/icons";
 import { useAuthStore } from "@/stores/auth";
-import { useIndustryStore } from "@/stores/industry";
 import { LogoMark } from "@/components/ui/Logo";
 import { getErrorMessage } from "@/utils/errors";
-import type { IndustryCode } from "@/types/api";
 import { ModelsDisagreeLanding } from "./landing/ModelsDisagreeLanding";
 import { LiveConsoleLanding } from "./landing/LiveConsoleLanding";
 
-type Ind = Exclude<IndustryCode, never>;
 
 const LEGACY_LANDING_ENABLED = import.meta.env.VITE_LEGACY_LANDING === "true";
 // "console" (default) | "models" — set VITE_LANDING_CONCEPT to switch concepts.
@@ -60,13 +53,6 @@ const usePrefersReducedMotion = (): boolean => {
   return reduced;
 };
 
-const INDUSTRIES: { key: Ind; Icon: React.ComponentType<any>; name: string }[] = [
-  { key: "fashion", Icon: Shirt, name: "Fashion & Apparel" },
-  { key: "electronics", Icon: Cpu, name: "Consumer Electronics" },
-  { key: "pharma", Icon: Pill, name: "Pharmaceuticals" },
-  { key: "agrocenter", Icon: Sprout, name: "Agrocenter & Farm Inputs" },
-  { key: "hardware", Icon: Wrench, name: "Tools & Hardware" },
-];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // UPGRADE 1 · Cinematic Intro Loader
@@ -329,7 +315,7 @@ const HowItWorks = ({ onCta }: { onCta: () => void }) => {
         >
           <button onClick={onCta}
             className="group flex items-center gap-2 font-mono text-xs tracking-[0.25em] uppercase text-white/60 hover:text-[#DEDBC8] transition-colors duration-300">
-            Try the Sandbox <ArrowRight className="w-3 h-3 transition-transform duration-300 group-hover:translate-x-1" />
+            Try Live Sandbox <ArrowRight className="w-3 h-3 transition-transform duration-300 group-hover:translate-x-1" />
           </button>
         </motion.div>
       </div>
@@ -475,11 +461,11 @@ const FinalCTA = ({ onBook, onSandbox }: { onBook: () => void; onSandbox: () => 
         >
           <button onClick={onBook}
             className="group px-8 py-4 bg-[#DEDBC8] hover:bg-[#E8E5D0] text-black text-xs font-medium tracking-widest uppercase rounded-full transition-all duration-300 flex items-center gap-2 hover:-translate-y-0.5 active:scale-[0.97] hover:shadow-[0_12px_40px_-10px_rgba(222,219,200,0.5)]">
-            Book a Demo <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
+            Request Enterprise Demo <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
           </button>
           <button onClick={onSandbox}
             className="group px-8 py-4 border border-white/[0.15] hover:border-[#DEDBC8]/40 text-white/70 hover:text-[#DEDBC8] text-xs font-medium tracking-widest uppercase rounded-full transition-all duration-300 flex items-center gap-2 bg-black/10 backdrop-blur-sm hover:-translate-y-0.5 active:scale-[0.97]">
-            Try the Sandbox <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            Try Live Sandbox <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </button>
         </motion.div>
 
@@ -733,7 +719,7 @@ const FeatureCard = ({ icon, num, title, items, onClick }: {
         <div className="relative px-7 sm:px-8 pb-6" style={{ transform: "translateZ(20px)" }}>
           <div className="w-full h-px bg-white/[0.05] mb-5" />
           <button onClick={onClick} className="group/cta flex items-center gap-1.5 text-xs font-mono tracking-wider text-white/60 hover:text-[#DEDBC8] transition-colors duration-300 uppercase">
-            <span>Try the Sandbox</span>
+            <span>Try Live Sandbox</span>
             <ArrowUpRight className="w-3 h-3 transition-transform duration-300 group-hover/cta:translate-x-0.5 group-hover/cta:-translate-y-0.5" />
           </button>
         </div>
@@ -871,7 +857,7 @@ const PlatformTour = ({ onBook }: { onBook: () => void }) => {
               </button>
             ))}
             <button onClick={onBook} className="group mt-4 px-6 py-3.5 bg-[#DEDBC8] hover:bg-[#E8E5D0] text-black text-xs font-semibold tracking-widest uppercase rounded-full transition-all duration-300 flex items-center justify-center gap-2 self-start hover:-translate-y-0.5 active:scale-[0.97] hover:shadow-[0_10px_30px_-10px_rgba(222,219,200,0.45)]">
-              Book a Demo <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
+              Request Enterprise Demo <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
             </button>
           </div>
 
@@ -1517,7 +1503,7 @@ const PRICING_TIERS: PricingTier[] = [
     trialLabel: "14-day trial",
     desc: "For small teams piloting demand forecasting on a single vertical.",
     featured: false,
-    cta: "Try the Sandbox",
+    cta: "Try Live Sandbox",
     feats: [
       "1 industry workspace",
       "Up to 500 active SKUs",
@@ -1532,7 +1518,7 @@ const PRICING_TIERS: PricingTier[] = [
     annual: 4990,
     desc: "For scaling operators who need real-time signals and automation.",
     featured: true,
-    cta: "Book a Demo",
+    cta: "Request Enterprise Demo",
     feats: [
       "Up to 3 industry workspaces",
       "Unlimited SKUs",
@@ -1548,7 +1534,7 @@ const PRICING_TIERS: PricingTier[] = [
     annual: 13999,
     desc: "For mid-market enterprises that need scale and multi-vertical analytics.",
     featured: false,
-    cta: "Book a Demo",
+    cta: "Request Enterprise Demo",
     feats: [
       "Up to 10 industry workspaces",
       "Up to 100,000 active SKUs",
@@ -1564,7 +1550,7 @@ const PRICING_TIERS: PricingTier[] = [
     annual: "Custom",
     desc: "For regulated, multi-region enterprises with compliance demands.",
     featured: false,
-    cta: "Book a Demo",
+    cta: "Request Enterprise Demo",
     feats: [
       "Unlimited workspaces & seats",
       "GxP 21 CFR Part 11 audit trails",
@@ -1831,7 +1817,6 @@ const Pricing = ({ onBook, onSandbox }: { onBook: () => void; onSandbox: () => v
 export const LandingPage = () => {
   const navigate = useNavigate();
   const loginSandbox = useAuthStore((s) => s.loginSandbox);
-  const setIndustry = useIndustryStore((s) => s.setIndustry);
 
   const [modal, setModal] = useState<null | "book" | "sandbox">(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -1934,14 +1919,15 @@ export const LandingPage = () => {
     finally { setFormLoading(false); }
   };
 
-  const launchSandbox = async (code: Ind) => {
+  const launchSandbox = async () => {
     setLaunching(true);
     setSandboxError(null);
     try {
       // Auth runs server-side via /auth/sandbox-session — no demo credentials
-      // are shipped in the client bundle.
+      // are shipped in the client bundle. The industry comes back on the
+      // session; the visitor no longer picks one, because the old picker only
+      // set client state while every visitor landed in the same workspace.
       await loginSandbox();
-      setIndustry(code);
       toast.success(`Sandbox launched!`);
       setModal(null);
       navigate("/workspace", { replace: true });
@@ -2058,7 +2044,9 @@ export const LandingPage = () => {
             </button>
           ))}
 
-          {/* Sign in (desktop) */}
+          {/* The four public entry points: sandbox, self-service signup,
+              enterprise demo, sign in. Sandbox lives in the hero and the
+              pricing table; the other three are here. */}
           <button
             onClick={() => navigate("/login")}
             className="hidden md:inline-block px-4 py-1.5 rounded-full text-xs font-medium tracking-wide text-white/65 hover:text-white hover:bg-white/[0.05] transition-all duration-200"
@@ -2066,12 +2054,19 @@ export const LandingPage = () => {
             Sign In
           </button>
 
+          <button
+            onClick={() => navigate("/login?mode=signup")}
+            className="hidden md:inline-block px-4 py-1.5 rounded-full text-xs font-medium tracking-wide text-white/65 hover:text-white hover:bg-white/[0.05] transition-all duration-200"
+          >
+            Create Workspace
+          </button>
+
           {/* Primary CTA */}
           <button
             onClick={() => setModal("book")}
             className="px-4 py-1.5 rounded-full text-xs font-medium tracking-wide bg-[#DEDBC8] text-black hover:bg-[#E8E5D0] ml-1 transition-all duration-200 active:scale-95 hover:shadow-[0_4px_20px_-4px_rgba(222,219,200,0.5)]"
           >
-            Book a Demo
+            Request Enterprise Demo
           </button>
 
           {/* Mobile menu toggle */}
@@ -2111,16 +2106,22 @@ export const LandingPage = () => {
                 Sign In
               </button>
               <button
+                onClick={() => { setMobileMenuOpen(false); navigate("/login?mode=signup"); }}
+                className="text-left px-4 py-3 rounded-xl text-sm font-medium text-white/80 hover:text-white hover:bg-white/[0.05] transition-all duration-200"
+              >
+                Create Workspace
+              </button>
+              <button
                 onClick={() => { setMobileMenuOpen(false); setModal("sandbox"); }}
                 className="text-left px-4 py-3 rounded-xl text-sm font-medium text-white/80 hover:text-white hover:bg-white/[0.05] transition-all duration-200"
               >
-                Try the Sandbox
+                Try Live Sandbox
               </button>
               <button
                 onClick={() => { setMobileMenuOpen(false); setModal("book"); }}
                 className="mt-1 text-center px-4 py-3 rounded-xl text-sm font-semibold bg-[#DEDBC8] text-black hover:bg-[#E8E5D0] transition-all duration-200"
               >
-                Book a Demo
+                Request Enterprise Demo
               </button>
             </motion.div>
           )}
@@ -2208,7 +2209,7 @@ export const LandingPage = () => {
                 className="group flex items-center gap-0 overflow-hidden border border-[#DEDBC8]/25 hover:border-[#DEDBC8]/60 transition-all duration-500 rounded-full bg-black/20 backdrop-blur-sm"
               >
                 <span className="px-6 py-3 text-xs font-medium tracking-widest uppercase text-[#E8E5D0]/85 group-hover:text-[#E8E5D0] transition-colors duration-300">
-                  Try the Sandbox
+                  Try Live Sandbox
                 </span>
                 <div className="w-10 h-10 rounded-full border-l border-[#DEDBC8]/15 flex items-center justify-center group-hover:bg-[#DEDBC8]/15 transition-all duration-300">
                   <ArrowRight className="w-3.5 h-3.5 text-[#E8E5D0]/50 group-hover:text-[#E8E5D0] group-hover:translate-x-0.5 transition-all duration-300" />
@@ -2430,7 +2431,7 @@ export const LandingPage = () => {
             </p>
             <button onClick={() => setModal("book")}
               className="flex items-center gap-2 border border-[#DEDBC8]/20 hover:border-[#DEDBC8]/50 rounded-full px-6 py-3 text-xs font-medium tracking-widest uppercase text-[#DEDBC8]/80 hover:text-[#DEDBC8] transition-all duration-400">
-              Book a Demo
+              Request Enterprise Demo
               <ArrowUpRight className="w-3 h-3" />
             </button>
           </div>
@@ -2600,14 +2601,16 @@ export const LandingPage = () => {
               ) : (
                 <div className="flex flex-col gap-3">
                   <h3 id="landing-modal-title" className="text-lg font-light text-white/80 mb-1" style={{ fontFamily: "'DM Serif Display', serif" }}>Explore a Live Sandbox</h3>
-                  <p className="font-mono text-[10px] tracking-wide text-white/45 mb-3">Select your industry vertical to launch:</p>
-                  {INDUSTRIES.map(({ key, Icon, name }) => (
-                    <button key={key} onClick={() => launchSandbox(key)} disabled={launching}
-                      className="flex items-center justify-between border border-white/[0.06] hover:border-[#DEDBC8]/20 rounded-lg px-4 py-3 text-xs text-white/40 hover:text-white/70 transition-all disabled:opacity-40 outline-none">
-                      <span className="flex items-center gap-3"><Icon size={14} className="text-[#DEDBC8]/30" />{name}</span>
-                      <ArrowRight size={12} className="text-white/15" />
-                    </button>
-                  ))}
+                  <p className="font-mono text-[10px] tracking-wide text-white/45 mb-3">
+                    A read-only Fashion &amp; Apparel workspace with sample data.
+                    Your own workspace is scoped to the industry you choose when
+                    you create it.
+                  </p>
+                  <button onClick={() => launchSandbox()} disabled={launching}
+                    className="flex items-center justify-between border border-white/[0.06] hover:border-[#DEDBC8]/20 rounded-lg px-4 py-3 text-xs text-white/40 hover:text-white/70 transition-all disabled:opacity-40 outline-none">
+                    <span className="flex items-center gap-3"><Shirt size={14} className="text-[#DEDBC8]/30" />Launch the sandbox</span>
+                    <ArrowRight size={12} className="text-white/15" />
+                  </button>
                   {launching && (
                     <div className="flex items-center justify-center gap-2 mt-2 text-[11px] font-mono text-[#DEDBC8]/40">
                       <RefreshCw size={12} className="animate-spin" /> Authenticating…
@@ -2624,7 +2627,7 @@ export const LandingPage = () => {
 
               <div className="mt-6 pt-4 border-t border-white/[0.06] flex items-center justify-between text-[10px] font-mono tracking-wider">
                 <button onClick={() => { setModal(null); navigate("/login?mode=signup"); }} className="text-white/30 hover:text-white/60 transition-all uppercase outline-none">
-                  Create Account
+                  Create Workspace
                 </button>
                 <div className="w-px h-2 bg-white/10" />
                 <button onClick={() => { setModal(null); navigate("/login"); }} className="text-[#DEDBC8]/60 hover:text-[#DEDBC8] transition-all uppercase font-medium outline-none">

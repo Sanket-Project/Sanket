@@ -14,7 +14,6 @@ import toast from "react-hot-toast";
 import clsx from "clsx";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useAuthStore } from "@/stores/auth";
-import { useIndustryStore } from "@/stores/industry";
 import { firebaseAuth, firebaseEnabled } from "@/lib/firebase";
 import { Button } from "@/components/ui/Button";
 import { LogoMark } from "@/components/ui/Logo";
@@ -170,7 +169,6 @@ export const LoginPage = () => {
   const location = useLocation() as { search: string; state?: { from?: string } };
   const isAuth = useAuthStore((s) => s.isAuthenticated);
   const login = useAuthStore((s) => s.login);
-  const setIndustry = useIndustryStore((s) => s.setIndustry);
 
   const [isSignUp, setIsSignUp] = useState(() => {
     const params = new URLSearchParams(window.location.search);
@@ -217,8 +215,7 @@ export const LoginPage = () => {
     setError(null);
     setLoading(true);
     try {
-      const r = await login({ tenant_slug, email, password });
-      setIndustry(r.active_industry);
+      await login({ tenant_slug, email, password });
       toast.success("Welcome back!");
       navigate(location.state?.from ?? "/workspace", { replace: true });
     } catch (err) {
@@ -250,12 +247,11 @@ export const LoginPage = () => {
         tenant_slug: signUpSlug,
       });
       toast.success("Account created — check your inbox to verify your email.");
-      const r = await login({
+      await login({
         tenant_slug: signUpSlug,
         email: signUpEmail,
         password: signUpPassword,
       });
-      setIndustry(r.active_industry);
       // New tenant → guided setup rather than an empty workspace.
       navigate("/onboarding", { replace: true });
     } catch (err) {
@@ -279,8 +275,7 @@ export const LoginPage = () => {
 
       try {
         const verifySession = useAuthStore.getState().verifySession;
-        const s = await verifySession(token);
-        setIndustry(s.active_industry);
+        await verifySession(token);
         toast.success("Welcome back!");
         navigate(location.state?.from ?? "/workspace", { replace: true });
       } catch (sessionErr: unknown) {
@@ -316,7 +311,6 @@ export const LoginPage = () => {
         name: googlePendingName,
       });
       useAuthStore.getState().setSession(s, googlePendingToken);
-      setIndustry(s.active_industry);
       toast.success("Welcome to SANKET!");
       setGoogleModalOpen(false);
       // New tenant → guided setup.
