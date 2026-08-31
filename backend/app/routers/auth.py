@@ -59,6 +59,7 @@ from app.schemas.auth import (
 )
 from app.schemas.onboarding import default_onboarding_state, load_onboarding_state
 from app.services import audit
+from app.services.workspace import create_tenant
 
 log = structlog.get_logger(__name__)
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -127,7 +128,7 @@ async def session(request: Request, settings: SettingsDep) -> SessionInfo:
         if user_row is None and email and not settings.is_production:
             tenant_row = await db_session.scalar(select(Tenant).where(Tenant.slug == "sanket-dev"))
             if tenant_row is not None:
-                from app.models.enums import IndustryCode, UserRole
+                from app.models.enums import UserRole
 
                 candidate = User(
                     id=uuid.uuid4(),
@@ -136,7 +137,6 @@ async def session(request: Request, settings: SettingsDep) -> SessionInfo:
                     firebase_uid=uid,
                     full_name=identity.get("name") or email.split("@")[0].capitalize(),
                     role=UserRole.admin,
-                    active_industry=IndustryCode.fashion,
                     is_active=True,
                 )
                 # Insert inside a savepoint so a concurrent first-login (which races
@@ -187,20 +187,15 @@ async def session(request: Request, settings: SettingsDep) -> SessionInfo:
                 await db_session.execute(
                     update(User).where(User.id == user_row.id).values(firebase_uid=uid)
                 )
-            industries = [i.value if hasattr(i, "value") else str(i) for i in tenant_row.industries]
-            token_industries = identity.get("industries")
-            token_industries_set = (
-                {str(i) for i in token_industries} if isinstance(token_industries, list) else set()
-            )
+            # The workspace is authoritative for `ind`. Comparing against the
+            # user row instead would let a stale member value -- one written
+            # before the inheritance trigger existed -- reissue a claim for an
+            # industry the workspace is not scoped to.
             claims_stale = (
                 str(identity.get("puid")) != str(user_row.id)
                 or str(identity.get("tid")) != str(user_row.tenant_id)
                 or str(identity.get("role")) != user_row.role.value
-                or str(identity.get("ind")) != user_row.active_industry.value
-                # Re-provision when the tenant's licensed industries change (e.g. a
-                # new vertical was added), otherwise the token's `industries` claim
-                # goes stale and industry-switching is denied for the new vertical.
-                or token_industries_set != set(industries)
+                or str(identity.get("ind")) != tenant_row.industry.value
             )
             if claims_stale:
                 await run_in_threadpool(
@@ -209,8 +204,7 @@ async def session(request: Request, settings: SettingsDep) -> SessionInfo:
                     puid=str(user_row.id),
                     tid=str(user_row.tenant_id),
                     role=user_row.role.value,
-                    ind=user_row.active_industry.value,
-                    industries=industries,
+                    ind=tenant_row.industry.value,
                 )
 
         await db_session.execute(
@@ -223,7 +217,7 @@ async def session(request: Request, settings: SettingsDep) -> SessionInfo:
             action="user.login",
             entity_type="user",
             entity_id=str(user_row.id),
-            industry=user_row.active_industry,
+            industry=tenant_row.industry,
             ip_address=_client_ip(request),
             user_agent=request.headers.get("User-Agent"),
             request_id=getattr(request.state, "request_id", None),
@@ -233,7 +227,7 @@ async def session(request: Request, settings: SettingsDep) -> SessionInfo:
             user_id=user_row.id,
             tenant_id=tenant_row.id,
             role=user_row.role.value,
-            active_industry=user_row.active_industry.value,
+            active_industry=tenant_row.industry.value,
             email=user_row.email,
             full_name=user_row.full_name,
             onboarding=load_onboarding_state(tenant_row.settings),
@@ -308,21 +302,19 @@ async def dev_login(
             action="user.login",
             entity_type="user",
             entity_id=str(user_row.id),
-            industry=user_row.active_industry,
+            industry=tenant_row.industry,
             ip_address=_client_ip(request),
             user_agent=request.headers.get("User-Agent"),
             request_id=getattr(request.state, "request_id", None),
         )
 
-        industries = [i.value if hasattr(i, "value") else str(i) for i in tenant_row.industries]
         token, expires_in = get_verifier().mint_dev_token(
             uid=str(user_row.id),
             puid=str(user_row.id),
             email=user_row.email,
             tid=str(tenant_row.id),
             role=user_row.role.value,
-            ind=user_row.active_industry.value,
-            industries=industries,
+            ind=tenant_row.industry.value,
         )
         response = DevLoginResponse(
             access_token=token,
@@ -330,7 +322,7 @@ async def dev_login(
             user_id=user_row.id,
             tenant_id=tenant_row.id,
             role=user_row.role.value,
-            active_industry=user_row.active_industry.value,
+            active_industry=tenant_row.industry.value,
             email=user_row.email,
             full_name=user_row.full_name,
             onboarding=load_onboarding_state(tenant_row.settings),
@@ -381,8 +373,6 @@ async def sandbox_session(request: Request, settings: SettingsDep) -> SandboxSes
                 detail="Sandbox is temporarily unavailable",
             )
 
-        industries = [i.value if hasattr(i, "value") else str(i) for i in tenant_row.industries]
-
         verifier = get_verifier()
         custom_token: str | None = None
         access_token: str | None = None
@@ -408,8 +398,7 @@ async def sandbox_session(request: Request, settings: SettingsDep) -> SandboxSes
                 "puid": str(user_row.id),
                 "tid": str(tenant_row.id),
                 "role": user_row.role.value,
-                "ind": user_row.active_industry.value,
-                "industries": industries,
+                "ind": tenant_row.industry.value,
             }
             custom_token = await run_in_threadpool(verifier.create_custom_token, uid, claims)
             mode = "firebase"
@@ -420,8 +409,7 @@ async def sandbox_session(request: Request, settings: SettingsDep) -> SandboxSes
                 email=user_row.email,
                 tid=str(tenant_row.id),
                 role=user_row.role.value,
-                ind=user_row.active_industry.value,
-                industries=industries,
+                ind=tenant_row.industry.value,
             )
             mode = "dev"
 
@@ -435,7 +423,7 @@ async def sandbox_session(request: Request, settings: SettingsDep) -> SandboxSes
             action="user.sandbox_login",
             entity_type="user",
             entity_id=str(user_row.id),
-            industry=user_row.active_industry,
+            industry=tenant_row.industry,
             ip_address=_client_ip(request),
             user_agent=request.headers.get("User-Agent"),
             request_id=getattr(request.state, "request_id", None),
@@ -449,7 +437,7 @@ async def sandbox_session(request: Request, settings: SettingsDep) -> SandboxSes
             user_id=user_row.id,
             tenant_id=tenant_row.id,
             role=user_row.role.value,
-            active_industry=user_row.active_industry.value,
+            active_industry=tenant_row.industry.value,
             email=user_row.email,
             full_name=user_row.full_name,
             onboarding=load_onboarding_state(tenant_row.settings),
@@ -514,73 +502,21 @@ async def signup(body: SignUpRequest, request: Request, settings: SettingsDep) -
         if existing_tenant is not None:
             raise ConflictError(f"Workspace '{body.tenant_slug}' is not available")
 
-        from app.models.enums import IndustryCode, TenantStatus, TenantTier
-
-        tenant_row = Tenant(
-            id=uuid.uuid4(),
+        tenant_row = await create_tenant(
+            db_session,
             slug=body.tenant_slug,
             display_name=body.tenant_slug.capitalize(),
-            tier=TenantTier.growth,
-            status=TenantStatus.trial,
-            industries=[
-                IndustryCode.fashion,
-                IndustryCode.electronics,
-                IndustryCode.pharma,
-                IndustryCode.agrocenter,
-                IndustryCode.hardware,
-            ],
-            active_industry=IndustryCode.fashion,
-            max_skus=10000,
-            max_users=5,
-            data_retention_days=730,
-            # Seed setup readiness so the SPA routes the first user into the
-            # onboarding wizard. Legacy/demo tenants (no key) stay implicitly done.
-            settings={"onboarding": default_onboarding_state().model_dump(mode="json")},
+            industry=body.industry,
         )
-        db_session.add(tenant_row)
-        await db_session.flush()
 
-        # Seed industry profiles for all licensed verticals
-        from app.models.industry import IndustryProfile
-
-        for ind_code in tenant_row.industries:
-            profile = IndustryProfile(
-                id=uuid.uuid4(),
-                tenant_id=tenant_row.id,
-                industry=ind_code,
-                custom_horizon_weeks=None,
-                custom_signal_types=[],
-                model_overrides={},
-                feature_flags={
-                    "fashion": {"markdown_optimizer": True, "assortment_planning": True},
-                    "electronics": {"component_risk": True, "competitor_tracking": True},
-                    "pharma": {
-                        "gxp_mode": True,
-                        "shortage_alerts": True,
-                        "batch_tracking": True,
-                    },
-                    "agrocenter": {
-                        "seasonal_replenishment": True,
-                        "weather_signals": True,
-                        "input_coverage": True,
-                    },
-                    "hardware": {
-                        "supply_risk": True,
-                        "competitor_tracking": True,
-                        "safety_stock_optimizer": True,
-                    },
-                }.get(ind_code.value if hasattr(ind_code, "value") else ind_code, {}),
-            )
-            db_session.add(profile)
-        await db_session.flush()
-
-        from app.models.enums import IndustryCode, UserRole
+        from app.models.enums import UserRole
 
         # First user of every new tenant is the owner.
         # (Joining an existing tenant via invite is a separate, authenticated flow.)
         role = UserRole.owner
 
-        # Create user
+        # No industry on the user: members inherit the workspace's, enforced by
+        # the trg_users_inherit_industry trigger.
         user_row = User(
             id=uuid.uuid4(),
             tenant_id=tenant_row.id,
@@ -588,7 +524,6 @@ async def signup(body: SignUpRequest, request: Request, settings: SettingsDep) -
             password_hash=hash_password(body.password, settings),
             full_name=body.name,
             role=role,
-            active_industry=IndustryCode.fashion,
             is_active=True,
         )
         db_session.add(user_row)
@@ -608,18 +543,14 @@ async def signup(body: SignUpRequest, request: Request, settings: SettingsDep) -
                 user_row.firebase_uid = firebase_uid
                 await db_session.flush()
 
-                # Sync claims immediately
-                industries = [
-                    i.value if hasattr(i, "value") else str(i) for i in tenant_row.industries
-                ]
+                # Sync claims immediately, from the workspace's industry.
                 await run_in_threadpool(
                     get_verifier().set_user_claims,
                     firebase_uid,
                     puid=str(user_row.id),
                     tid=str(tenant_row.id),
                     role=role.value,
-                    ind=user_row.active_industry.value,
-                    industries=industries,
+                    ind=tenant_row.industry.value,
                 )
             except Exception as exc:
                 log.error("auth.signup.firebase_provision_failed", error=str(exc))
@@ -685,65 +616,16 @@ async def google_signup(
         if existing_tenant is not None:
             raise ConflictError(f"Workspace '{body.workspace_slug}' is not available")
 
-        from app.models.enums import IndustryCode, TenantStatus, TenantTier, UserRole
+        from app.models.enums import UserRole
 
-        tenant_row = Tenant(
-            id=uuid.uuid4(),
+        # Identical to the password path, deliberately: one create_tenant call,
+        # so the Google flow cannot drift back into granting every vertical.
+        tenant_row = await create_tenant(
+            db_session,
             slug=body.workspace_slug,
             display_name=body.workspace_slug.replace("-", " ").title(),
-            tier=TenantTier.growth,
-            status=TenantStatus.trial,
-            industries=[
-                IndustryCode.fashion,
-                IndustryCode.electronics,
-                IndustryCode.pharma,
-                IndustryCode.agrocenter,
-                IndustryCode.hardware,
-            ],
-            active_industry=IndustryCode.fashion,
-            max_skus=10000,
-            max_users=5,
-            data_retention_days=730,
-            # Seed setup readiness so the SPA routes the first user into the
-            # onboarding wizard. Legacy/demo tenants (no key) stay implicitly done.
-            settings={"onboarding": default_onboarding_state().model_dump(mode="json")},
+            industry=body.industry,
         )
-        db_session.add(tenant_row)
-        await db_session.flush()
-
-        # Seed industry profiles for all licensed verticals.
-        from app.models.industry import IndustryProfile
-
-        for ind_code in tenant_row.industries:
-            profile = IndustryProfile(
-                id=uuid.uuid4(),
-                tenant_id=tenant_row.id,
-                industry=ind_code,
-                custom_horizon_weeks=None,
-                custom_signal_types=[],
-                model_overrides={},
-                feature_flags={
-                    "fashion": {"markdown_optimizer": True, "assortment_planning": True},
-                    "electronics": {"component_risk": True, "competitor_tracking": True},
-                    "pharma": {
-                        "gxp_mode": True,
-                        "shortage_alerts": True,
-                        "batch_tracking": True,
-                    },
-                    "agrocenter": {
-                        "seasonal_replenishment": True,
-                        "weather_signals": True,
-                        "input_coverage": True,
-                    },
-                    "hardware": {
-                        "supply_risk": True,
-                        "competitor_tracking": True,
-                        "safety_stock_optimizer": True,
-                    },
-                }.get(ind_code.value if hasattr(ind_code, "value") else ind_code, {}),
-            )
-            db_session.add(profile)
-        await db_session.flush()
 
         user_row = User(
             id=uuid.uuid4(),
@@ -752,14 +634,12 @@ async def google_signup(
             firebase_uid=uid,
             full_name=body.name or (email.split("@")[0].replace(".", " ").title()),
             role=UserRole.owner,
-            active_industry=IndustryCode.fashion,
             is_active=True,
         )
         db_session.add(user_row)
         await db_session.flush()
 
         # Set custom claims so future ID tokens carry tenant context.
-        industries = [i.value if hasattr(i, "value") else str(i) for i in tenant_row.industries]
         try:
             await run_in_threadpool(
                 get_verifier().set_user_claims,
@@ -767,8 +647,7 @@ async def google_signup(
                 puid=str(user_row.id),
                 tid=str(tenant_row.id),
                 role=UserRole.owner.value,
-                ind=user_row.active_industry.value,
-                industries=industries,
+                ind=tenant_row.industry.value,
             )
         except Exception as exc:
             log.error("auth.google_signup.claims_failed", error=str(exc))
@@ -787,7 +666,7 @@ async def google_signup(
             action="user.google_signup",
             entity_type="user",
             entity_id=str(user_row.id),
-            industry=user_row.active_industry,
+            industry=tenant_row.industry,
             ip_address=_client_ip(request),
             user_agent=request.headers.get("User-Agent"),
             request_id=getattr(request.state, "request_id", None),
@@ -804,7 +683,7 @@ async def google_signup(
         user_id=user_row.id,
         tenant_id=tenant_row.id,
         role=UserRole.owner.value,
-        active_industry=user_row.active_industry.value,
+        active_industry=tenant_row.industry.value,
         email=user_row.email,
         full_name=user_row.full_name,
         # Freshly provisioned tenant — seeded in_progress above. Built from the

@@ -4,7 +4,19 @@ import uuid
 
 from pydantic import BaseModel, EmailStr, Field
 
+from app.models.enums import IndustryCode
 from app.schemas.onboarding import OnboardingState
+
+# Reused by both signup paths. Required, with no default: a workspace whose
+# industry was picked for it is the bug this replaces -- signup used to stamp
+# every new tenant `fashion` and grant all five verticals alongside it.
+_INDUSTRY_FIELD = Field(
+    description=(
+        "The workspace's single industry. Chosen once, when the workspace is "
+        "created; every member inherits it, and it locks as soon as setup "
+        "completes or real data arrives."
+    )
+)
 
 
 class SessionInfo(BaseModel):
@@ -73,6 +85,7 @@ class SignUpRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
     tenant_slug: str = Field(min_length=2, max_length=63, pattern=r"^[a-z0-9][a-z0-9\-]*[a-z0-9]$")
+    industry: IndustryCode = _INDUSTRY_FIELD
 
 
 class GoogleSignUpRequest(BaseModel):
@@ -92,3 +105,4 @@ class GoogleSignUpRequest(BaseModel):
         description="Desired workspace slug (unique across all tenants)",
     )
     name: str = Field(min_length=2, max_length=100, description="User's display name")
+    industry: IndustryCode = _INDUSTRY_FIELD

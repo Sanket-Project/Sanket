@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 
 import pytest
+import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,15 +14,34 @@ from app.core.security import hash_password
 pytestmark = pytest.mark.asyncio
 
 
-@pytest.fixture(autouse=True)
-def _clear_login_attempts():
-    """The in-process brute-force counter is module global — reset it between
-    tests so per-IP failures from one test don't leak into the next."""
+@pytest_asyncio.fixture(autouse=True)
+async def _clear_login_attempts(client: AsyncClient):
+    """Reset the brute-force counters around every test in this module.
+
+    Clearing only the in-process dict was not enough. When Redis is running the
+    counters live there instead, and nothing cleared them between *sessions* --
+    so the lockout test, which deliberately drives the per-IP counter past its
+    threshold, left 127.0.0.1 locked out for the next run. The following run's
+    first wrong-password test then got a 429 where it expected a 401, and the
+    suite failed for reasons that had nothing to do with the code under test.
+    """
     from app.core import login_attempt
 
-    login_attempt._in_process.clear()
+    async def _reset() -> None:
+        login_attempt._in_process.clear()
+        app = getattr(client, "_transport", None) and getattr(
+            client._transport, "app", None
+        )
+        redis_client = getattr(app.state, "redis", None) if app is not None else None
+        if redis_client is None:
+            return
+        keys = await redis_client.keys("lf:login_attempt:*")
+        if keys:
+            await redis_client.delete(*keys)
+
+    await _reset()
     yield
-    login_attempt._in_process.clear()
+    await _reset()
 
 
 async def _seed_user(
@@ -210,10 +230,16 @@ async def test_protected_route_rejects_tampered_token(client: AsyncClient) -> No
     assert r.status_code == 401
 
 
-async def test_industry_switch_to_unsubscribed_is_forbidden(
+async def test_industry_header_cannot_switch_industry(
     client: AsyncClient, db_session: AsyncSession, test_tenant_id: uuid.UUID
 ) -> None:
-    # test-tenant is subscribed to fashion/electronics/pharma, NOT agrocenter.
+    """The header may agree with the workspace. It may not choose.
+
+    This replaces a test that asserted the opposite -- that a tenant could
+    switch freely among the industries in its token claim. That behaviour is
+    what is being removed: signup granted every tenant all five verticals, so
+    "switch to a subscribed industry" meant "switch to any industry".
+    """
     await _seed_user(db_session, test_tenant_id, "switch@test.com", "GoodPass123!")
     login = await client.post(
         "/api/v1/auth/dev-login",
@@ -226,19 +252,153 @@ async def test_industry_switch_to_unsubscribed_is_forbidden(
     token = login.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    # Allowed switch (electronics is subscribed) → not a 403
-    ok = await client.get(
+    # test-tenant is a fashion workspace. Its own industry is fine.
+    same = await client.get(
         "/api/v1/industry/context",
-        headers={**headers, "X-Industry-Code": "electronics"},
+        headers={**headers, "X-Industry-Code": "fashion"},
     )
-    assert ok.status_code != 403
+    assert same.status_code == 200
+    assert same.json()["code"] == "fashion"
 
-    # Denied switch (agrocenter not subscribed) → 403
-    denied = await client.get(
+    # Every other industry is refused, whether or not it once appeared in a claim.
+    for other in ("electronics", "pharma", "agrocenter", "hardware"):
+        denied = await client.get(
+            "/api/v1/industry/context",
+            headers={**headers, "X-Industry-Code": other},
+        )
+        assert denied.status_code == 403, f"{other} was not refused"
+
+    # An unknown code is still a bad request, not a forbidden one.
+    unknown = await client.get(
         "/api/v1/industry/context",
-        headers={**headers, "X-Industry-Code": "agrocenter"},
+        headers={**headers, "X-Industry-Code": "crypto"},
     )
-    assert denied.status_code == 403
+    assert unknown.status_code == 400
+
+
+# ── /auth/signup (self-service workspace creation) ───────────────────────────
+
+
+async def test_signup_requires_an_industry(client: AsyncClient) -> None:
+    """There is no default. A workspace without an industry cannot exist."""
+    r = await client.post(
+        "/api/v1/auth/signup",
+        json={
+            "name": "Acme Owner",
+            "email": "owner@acme-none.example.com",
+            "password": "Sup3rSecret!",
+            "tenant_slug": "acme-none",
+        },
+    )
+    assert r.status_code == 422, r.text
+    # Assert on the field, not just the status: a 422 for some other reason
+    # (a rejected email domain, say) would otherwise look like a pass.
+    assert any(
+        d["loc"][-1] == "industry" and d["type"] == "missing" for d in r.json()["detail"]
+    ), r.text
+
+
+async def test_signup_rejects_an_industry_outside_the_canonical_enum(
+    client: AsyncClient,
+) -> None:
+    r = await client.post(
+        "/api/v1/auth/signup",
+        json={
+            "name": "Acme Owner",
+            "email": "owner@acme-bogus.example.com",
+            "password": "Sup3rSecret!",
+            "tenant_slug": "acme-bogus",
+            "industry": "crypto",
+        },
+    )
+    assert r.status_code == 422, r.text
+    assert any(d["loc"][-1] == "industry" for d in r.json()["detail"]), r.text
+
+
+async def test_signup_creates_a_workspace_with_exactly_that_industry(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    r = await client.post(
+        "/api/v1/auth/signup",
+        json={
+            "name": "Acme Owner",
+            "email": "owner@acme-pharma.example.com",
+            "password": "Sup3rSecret!",
+            "tenant_slug": "acme-pharma",
+            "industry": "pharma",
+        },
+    )
+    assert r.status_code == 201, r.text
+
+    row = await db_session.execute(
+        text(
+            "SELECT industry::text, industries::text[] FROM tenants "
+            "WHERE slug = 'acme-pharma'"
+        )
+    )
+    industry, industries = row.one()
+    assert industry == "pharma"
+    assert industries == ["pharma"], "a new workspace must not receive every industry"
+
+
+async def test_signup_owner_inherits_the_workspace_industry(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    await client.post(
+        "/api/v1/auth/signup",
+        json={
+            "name": "Hardware Owner",
+            "email": "owner@acme-hw.example.com",
+            "password": "Sup3rSecret!",
+            "tenant_slug": "acme-hw",
+            "industry": "hardware",
+        },
+    )
+    active = await db_session.scalar(
+        text("SELECT active_industry::text FROM users WHERE email = 'owner@acme-hw.example.com'")
+    )
+    assert active == "hardware"
+
+
+async def test_signup_seeds_one_industry_profile_not_five(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    await client.post(
+        "/api/v1/auth/signup",
+        json={
+            "name": "Agro Owner",
+            "email": "owner@acme-agro.example.com",
+            "password": "Sup3rSecret!",
+            "tenant_slug": "acme-agro",
+            "industry": "agrocenter",
+        },
+    )
+    rows = (
+        await db_session.execute(
+            text(
+                "SELECT p.industry::text FROM industry_profiles p "
+                "JOIN tenants t ON t.id = p.tenant_id WHERE t.slug = 'acme-agro'"
+            )
+        )
+    ).scalars().all()
+    assert rows == ["agrocenter"]
+
+
+async def test_signup_still_refuses_to_join_an_existing_workspace(
+    client: AsyncClient, test_tenant_id: uuid.UUID
+) -> None:
+    """Public signup must never be a way into someone else's workspace."""
+    r = await client.post(
+        "/api/v1/auth/signup",
+        json={
+            "name": "Intruder",
+            "email": "intruder@test.com",
+            "password": "Sup3rSecret!",
+            "tenant_slug": "test-tenant",
+            "industry": "fashion",
+        },
+    )
+    assert r.status_code == 409
 
 
 async def test_security_headers_present(client: AsyncClient) -> None:
