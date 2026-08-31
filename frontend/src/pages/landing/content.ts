@@ -16,6 +16,9 @@ export const INDUSTRY_DETAIL: Record<
   IndustryCode,
   {
     label: string;
+    /** Lives in public/assets/. */
+    image: string;
+    imageAlt: string;
     horizonWeeks: number;
     auditLevel: string;
     signals: string[];
@@ -26,6 +29,8 @@ export const INDUSTRY_DETAIL: Record<
 > = {
   fashion: {
     label: "Apparel & Fashion",
+    image: "fashion.png",
+    imageAlt: "Apparel arranged for inventory and demand planning",
     horizonWeeks: 26,
     auditLevel: "standard",
     signals: ["Search trends", "Social sentiment", "Weather"],
@@ -35,6 +40,8 @@ export const INDUSTRY_DETAIL: Record<
   },
   electronics: {
     label: "Consumer Electronics",
+    image: "electronics.png",
+    imageAlt: "Consumer electronics displayed for channel inventory planning",
     horizonWeeks: 12,
     auditLevel: "standard",
     signals: ["Competitor price", "Supplier lead time", "Search trends"],
@@ -44,6 +51,8 @@ export const INDUSTRY_DETAIL: Record<
   },
   pharma: {
     label: "Pharmaceuticals",
+    image: "pharma.png",
+    imageAlt: "Pharmaceutical products prepared for traceable supply planning",
     horizonWeeks: 52,
     auditLevel: "gxp",
     signals: ["Regulatory", "Supplier lead time", "Logistics disruption"],
@@ -53,6 +62,8 @@ export const INDUSTRY_DETAIL: Record<
   },
   agrocenter: {
     label: "Agrocenter & Farm Inputs",
+    image: "agro.png",
+    imageAlt: "Agricultural supplies prepared for seasonal regional planning",
     horizonWeeks: 26,
     auditLevel: "standard",
     signals: ["Weather", "Macro-economic", "Search trends"],
@@ -62,6 +73,8 @@ export const INDUSTRY_DETAIL: Record<
   },
   hardware: {
     label: "Hardware & Industrial Supply",
+    image: "hardware.png",
+    imageAlt: "Hardware products arranged for branch inventory planning",
     horizonWeeks: 16,
     auditLevel: "standard",
     signals: ["Supplier lead time", "Competitor price", "Macro-economic"],

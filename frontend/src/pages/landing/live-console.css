@@ -1296,3 +1296,12 @@
   outline-offset: 2px;
   border-radius: 6px;
 }
+
+.lc-industry-panel { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) {
+  .lc-industry-panel {
+    grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+    align-items: start;
+  }
+  .lc-industry-panel > .lc-industry-image { grid-row: span 2; }
+}

@@ -57,6 +57,16 @@ export const IndustryTabs = () => {
         </div>
 
         <div id="lc-industry-panel" role="tabpanel" className="lc-industry-panel">
+          <img
+            className="lc-industry-image"
+            src={`${import.meta.env.BASE_URL}assets/${detail.image}`}
+            alt={detail.imageAlt}
+            loading="lazy"
+            decoding="async"
+            width="1024"
+            height="1024"
+          />
+
           <dl className="lc-industry-specs">
             <div>
               <dt>Planning horizon</dt>
