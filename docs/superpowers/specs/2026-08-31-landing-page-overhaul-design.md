@@ -19,8 +19,12 @@ tall, sparse ones. That single structural fact produces three of the four
 complaints:
 
 - **"A lot of empty spaces."** Sections run 700–1,470px for as little as 399
-  characters (`#architecture`). Padding is set per-section rather than from a
-  shared rhythm, so the gaps are both large and uneven.
+  characters (`#architecture`). The section padding in `live-console.css` is
+  already tokenised (`clamp(72px, 8vw, 116px)`), so this is not runaway padding
+  — it is content density. Four sections stretched over 5,600px leaves large
+  voids between sparse blocks, and the inter-block gap (`.lc-stack`, up to 88px)
+  compounds it. The fix is therefore mostly *more content per screen*, with a
+  modest tightening of the two spacing tokens.
 - **"Less information about the software."** Four sections cannot carry a
   planning platform's story. There is nowhere that says what the modules are,
   what data it connects to, what signals it reads, or how the forecasting
