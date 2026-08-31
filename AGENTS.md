@@ -43,15 +43,29 @@ discipline because the tooling is absent.
 
 Never claim to have used a skill you did not invoke.
 
-### Installing Superpowers (Claude Code)
+### Install status (Claude Code)
 
-Not currently installed on this machine. Follow the install instructions in the
-[Superpowers README](https://github.com/obra/superpowers) — it is distributed as
-a Claude Code plugin. Once installed, `superpowers:*` skills appear in your
-skill list and the Iron Law applies to them literally.
+**Superpowers is installed** — v6.3.0, 14 skills, verified 2026-08-30. It is a
+Claude Code *plugin*, so it does not live in `~/.claude/skills/`; the code sits
+in `~/.claude/plugins/cache/superpowers-marketplace/superpowers/6.3.0/` and
+`~/.claude/settings.json` carries the marketplace and `enabledPlugins` entries.
 
-If you are told a skill is required and it is not in your skill list, say so
-plainly and fall back to §3. Do not guess at a skill name and do not pretend.
+So on Claude Code the first branch above applies: `superpowers:*` skills are in
+your skill list, and **the Iron Law applies to them literally.** Invoke the real
+skill. Falling back to §3 by hand is no longer compliance here — it is skipping
+the skill.
+
+To reinstall, or on a fresh machine — there is no standalone `claude` CLI on the
+current machine (it runs the Claude Code desktop app), so go through `npx`:
+
+```bash
+npx @anthropic-ai/claude-code plugin marketplace add obra/superpowers-marketplace
+npx @anthropic-ai/claude-code plugin install superpowers@superpowers-marketplace
+```
+
+If you are told a skill is required and it is genuinely not in your skill list,
+say so plainly and fall back to §3. Do not guess at a skill name and do not
+pretend.
 
 ---
 
@@ -138,8 +152,10 @@ The check comes first. Then the work.
 ## 5. Precedence with gstack
 
 `CLAUDE.md` documents [gstack](https://github.com/garrytan/gstack), a separate
-Claude Code skill pack whose commands overlap these workflows. Neither pack is
-currently installed. When both are available:
+Claude Code skill pack whose commands overlap these workflows. **Superpowers is
+installed; gstack is not** (verified 2026-08-30). Until gstack is installed, the
+`/browse`, `/cso` and `/ship` rows below have no tool behind them — for browsing,
+use the in-app Browser pane and say that is what you are doing. The split:
 
 | Concern | Use | Not |
 |---|---|---|

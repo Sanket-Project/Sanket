@@ -13,6 +13,7 @@ from app.config import get_settings
 from app.core.database import Database
 from app.core.entitlement import require_active_subscription
 from app.core.exceptions import SanketBaseError
+from app.core.industry_scope import require_industry
 from app.core.logging import configure_logging
 from app.core.observability import configure_observability
 from app.middleware.idempotency import IdempotencyMiddleware
@@ -21,6 +22,7 @@ from app.middleware.region_router import RegionRouterMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.middleware.tenant_context import TenantContextMiddleware
 from app.middleware.usage_metering import UsageMeteringMiddleware
+from app.models.enums import IndustryCode
 from app.realtime import get_connection_manager
 
 log = structlog.get_logger(__name__)
@@ -378,7 +380,6 @@ def create_app() -> FastAPI:
     from app.routers.anomaly import router as anomaly_router
     from app.routers.auth import router as auth_router
     from app.routers.billing import router as billing_router
-    from app.routers.cross_industry import router as cross_industry_router
     from app.routers.data_quality import router as data_quality_router
     from app.routers.decisions import router as decisions_router
     from app.routers.demo_request import router as demo_request_router
@@ -447,11 +448,26 @@ def create_app() -> FastAPI:
     app.include_router(products_router, prefix=api_prefix, dependencies=gated)
     app.include_router(skus_router, prefix=api_prefix, dependencies=gated)
     app.include_router(signals_router, prefix=api_prefix, dependencies=gated)
-    app.include_router(fashion_router, prefix=api_prefix, dependencies=gated)
-    app.include_router(electronics_router, prefix=api_prefix, dependencies=gated)
-    app.include_router(pharma_router, prefix=api_prefix, dependencies=gated)
-    app.include_router(agrocenter_router, prefix=api_prefix, dependencies=gated)
-    app.include_router(hardware_router, prefix=api_prefix, dependencies=gated)
+    # ── Industry scope ───────────────────────────────────────────────────────
+    # A *different* boundary from tenant isolation: RLS says whose data, this
+    # says which modules. Applied here rather than per-endpoint for the same
+    # reason as the paywall above — every handler in these routers already
+    # hardcodes its own industry in each query and none of them compared it to
+    # the caller's, so a fashion tenant used to get a 200 from /pharma/overview.
+    # Registering the gate once means a new endpoint inherits it by
+    # construction, because its author never writes it.
+    for _router, _industry in (
+        (fashion_router, IndustryCode.fashion),
+        (electronics_router, IndustryCode.electronics),
+        (pharma_router, IndustryCode.pharma),
+        (agrocenter_router, IndustryCode.agrocenter),
+        (hardware_router, IndustryCode.hardware),
+    ):
+        app.include_router(
+            _router,
+            prefix=api_prefix,
+            dependencies=[*gated, require_industry(_industry)],
+        )
     app.include_router(demo_request_router, prefix=api_prefix)
     app.include_router(billing_router, prefix=api_prefix)
     app.include_router(webhooks_router, prefix=api_prefix, dependencies=gated)
@@ -460,9 +476,10 @@ def create_app() -> FastAPI:
     app.include_router(hybrid_forecast_router, prefix=api_prefix, dependencies=gated)
     app.include_router(shortage_alerts_router, prefix=api_prefix, dependencies=gated)
     # Analytics improvements
-    app.include_router(
-        cross_industry_router, prefix=api_prefix, dependencies=gated
-    )  # before shortage_alerts catch-all
+    # (cross-industry shortage correlation removed: it cannot be offered to a
+    #  workspace scoped to one industry, and a permanently-403 endpoint is worse
+    #  than no endpoint. Recoverable from git history if entitlements ever
+    #  make it meaningful.)
     app.include_router(anomaly_router, prefix=api_prefix, dependencies=gated)
     app.include_router(inventory_router, prefix=api_prefix, dependencies=gated)
     app.include_router(financial_router, prefix=api_prefix, dependencies=gated)

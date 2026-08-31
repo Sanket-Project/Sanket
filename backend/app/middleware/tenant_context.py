@@ -105,12 +105,16 @@ class TenantContextMiddleware(BaseHTTPMiddleware):
             return self._unauthorized("Token is invalid", request_id)
         role = identity["role"]
         industry_code = identity["ind"]
-        allowed_industries = identity.get("industries")
 
-        # Allow workspace switching without re-login — but only to an industry
-        # the tenant is actually subscribed to. The user's own active industry
-        # is always permitted; any other value must appear in the token's
-        # `industries` claim, else we reject (deny-by-default).
+        # A workspace is scoped to exactly one industry, so this header can no
+        # longer select anything: it may only agree with the token.
+        #
+        # It used to authorize switching against the token's `industries` claim
+        # — which signup filled with all five verticals, so "switch to a
+        # subscribed industry" meant "switch to any industry". The header is
+        # kept as an explicit deny rather than silently ignored so an old client
+        # still sending another industry fails loudly instead of quietly reading
+        # the wrong module.
         override = request.headers.get("X-Industry-Code")
         if override:
             try:
@@ -122,20 +126,19 @@ class TenantContextMiddleware(BaseHTTPMiddleware):
                     headers={"X-Request-ID": request_id},
                 )
             if requested != industry_code:
-                if not allowed_industries or requested not in allowed_industries:
-                    log.warning(
-                        "auth.industry_switch.denied",
-                        requested=requested,
-                        allowed=allowed_industries,
-                    )
-                    return JSONResponse(
-                        status_code=403,
-                        content={
-                            "detail": f"Industry '{requested}' is not enabled for this tenant"
-                        },
-                        headers={"X-Request-ID": request_id},
-                    )
-            industry_code = requested
+                log.warning(
+                    "auth.industry_switch.denied",
+                    requested=requested,
+                    tenant_industry=industry_code,
+                )
+                return JSONResponse(
+                    status_code=403,
+                    content={
+                        "detail": f"This workspace is not configured for the "
+                        f"{requested} industry"
+                    },
+                    headers={"X-Request-ID": request_id},
+                )
 
         request.state.user_id = user_id
         request.state.tenant_id = tenant_id
