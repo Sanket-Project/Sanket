@@ -2196,9 +2196,10 @@ export const LandingPage = () => {
                 className="max-w-md text-base font-light tracking-wide leading-relaxed"
                 style={{ color: "rgba(232,229,208,0.9)" }}
               >
-                SANKET turns your sales, inventory, and live market signals into one
-                forecasting engine — so you order the right stock, cut markdowns,
-                and never get caught short.
+                One focused planning workspace, configured for your industry from
+                day one. SANKET turns your sales, inventory, and live market
+                signals into one forecasting engine — so you order the right
+                stock, cut markdowns, and never get caught short.
               </motion.p>
 
               <motion.button

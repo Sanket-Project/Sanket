@@ -15,12 +15,19 @@ Claude Code specifics for this repository.
 
 ## Project
 
-SANKET is a multi-tenant, multi-industry predictive analytics & supply-chain SaaS.
+SANKET is an industry-scoped predictive analytics & supply-chain SaaS.
 FastAPI backend + React/Vite SPA + a separate ML inference API, on PostgreSQL 16
 with row-level security. See `README.md` and `docs/ARCHITECTURE.md`.
 
-Target verticals: Apparel & Fashion, Consumer Electronics, Pharmaceuticals,
-Agriculture (Agro), and Hardware.
+**Each workspace is scoped to exactly one industry**, chosen when it is created
+and inherited by every member; it locks once setup completes or data arrives.
+That is a *product* boundary, enforced by `app/core/industry_scope.py`. Tenant
+isolation is the separate *security* boundary, enforced by PostgreSQL RLS — both
+still apply, and they answer different questions. See
+`docs/superpowers/specs/2026-08-31-industry-scoped-workspace-design.md`.
+
+Supported verticals (a customer picks one): Apparel & Fashion, Consumer
+Electronics, Pharmaceuticals, Agriculture (Agro), and Hardware.
 
 ---
 

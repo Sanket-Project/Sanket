@@ -10,8 +10,8 @@ optimization for three verticals: **Apparel & Fashion**, **Consumer Electronics*
 ├─────────────────┬──────────────────────────┬───────────────────────┤
 │   React SPA     │   FastAPI Backend        │    ML Inference API   │
 │   (port 5173)   │   (port 8000)            │    (port 8001)        │
-│                 │   • Multi-tenant RLS     │    • Trained ensemble │
-│                 │   • Industry router      │    • Chronos zero-shot│
+│                 │   • Tenant-isolating RLS │    • Trained ensemble │
+│                 │   • Industry scope gate  │    • Chronos zero-shot│
 │                 │   • GxP batch audit      │    • Per-SKU routing  │
 └────────┬────────┴────────────┬─────────────┴──────────┬────────────┘
          │                     │                        │
@@ -61,7 +61,7 @@ docker compose exec ml-api python -m scripts.train_all
 | Phase | Files | Deliverable |
 |------:|------:|-------------|
 | 0 | 1 | Marketing landing page (`index.html`) |
-| 1 | 44 | PostgreSQL schema (RLS, ENUMs, partitioned tables, pgvector) + FastAPI multi-tenant backend |
+| 1 | 44 | PostgreSQL schema (RLS, ENUMs, partitioned tables, pgvector) + FastAPI backend with tenant-isolating RLS |
 | 2 | 52 | Foundation / deep / GBT / statistical models + 5-stage training + causal + supply-chain optimization + inference API |
 | 3 | 54 | React dashboard wired to both APIs |
 | 3.5 | 4 | Zero-shot Chronos fallback in inference API |
