@@ -171,11 +171,42 @@ async def test_tenant_id(db_session: AsyncSession) -> uuid.UUID:
     await db_session.execute(
         text(
             """
-            INSERT INTO tenants (id, slug, display_name, tier, status,
-                                 industries, active_industry)
+            INSERT INTO tenants (id, slug, display_name, tier, status, industry)
             VALUES (:id, 'test-tenant', 'Test Tenant', 'enterprise', 'active',
-                    ARRAY['fashion','electronics','pharma']::industry_code[],
                     'fashion')
+            """
+        ),
+        {"id": str(tenant_id)},
+    )
+    await db_session.commit()
+    await grant_active_subscription(db_session, tenant_id)
+    return tenant_id
+
+
+@pytest_asyncio.fixture
+async def pharma_tenant_id(db_session: AsyncSession) -> uuid.UUID:
+    """A second workspace, scoped to pharma.
+
+    Industry-boundary assertions need a tenant on the *other* side of the line:
+    without one, "fashion cannot reach pharma" can only be tested by pointing a
+    fashion tenant at a pharma URL, which says nothing about what a real pharma
+    workspace sees.
+    """
+    result = await db_session.execute(
+        text("SELECT id FROM tenants WHERE slug = 'pharma-tenant'")
+    )
+    row = result.fetchone()
+    if row:
+        await grant_active_subscription(db_session, row[0])
+        return row[0]
+
+    tenant_id = uuid.uuid4()
+    await db_session.execute(
+        text(
+            """
+            INSERT INTO tenants (id, slug, display_name, tier, status, industry)
+            VALUES (:id, 'pharma-tenant', 'Pharma Tenant', 'enterprise',
+                    'active', 'pharma')
             """
         ),
         {"id": str(tenant_id)},
