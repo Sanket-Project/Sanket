@@ -1053,3 +1053,246 @@
   }
   .lc-marquee-track { animation: none; flex-wrap: wrap; width: 100%; justify-content: center; }
 }
+
+/* ==================================================================
+   New sections: industry specs, modules, signals, connectors, points
+   ------------------------------------------------------------------
+   All reuse the tokens declared on .lc. Grids use auto-fill so they
+   reflow without breakpoints, and every interactive element carries a
+   visible focus ring — the page argues for accessibility further down
+   it, so it had better be tabbable itself.
+   ================================================================== */
+
+.lc-industry-panel {
+  margin-top: 28px;
+  display: grid;
+  gap: 22px;
+}
+
+.lc-industry-specs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 18px 20px;
+  background: var(--lc-panel);
+  border: 1px solid var(--lc-line);
+  border-radius: var(--lc-radius-sm);
+}
+.lc-industry-specs dt {
+  font-family: var(--lc-font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--lc-muted);
+}
+.lc-industry-specs dd {
+  margin: 5px 0 0;
+  font-size: 15px;
+  color: var(--lc-ink);
+  text-transform: capitalize;
+}
+
+/* ── Module grid ─────────────────────────────────────────────────── */
+.lc-module-grid,
+.lc-signal-grid,
+.lc-connector-grid {
+  list-style: none;
+  margin: 26px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.lc-module-grid { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+.lc-signal-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.lc-connector-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+
+.lc-module-grid > li > button,
+.lc-signal-grid > li > button {
+  width: 100%;
+  display: grid;
+  gap: 5px;
+  text-align: left;
+  padding: 16px 18px;
+  background: var(--lc-card);
+  border: 1px solid var(--lc-line);
+  border-radius: var(--lc-radius-sm);
+  cursor: pointer;
+  transition: border-color 0.2s var(--lc-ease), transform 0.2s var(--lc-ease);
+}
+.lc-module-grid > li > button:hover,
+.lc-signal-grid > li > button:hover {
+  border-color: var(--lc-teal);
+  transform: translateY(-1px);
+}
+.lc-module-grid > li > button.is-active,
+.lc-signal-grid > li > button.is-active {
+  border-color: var(--lc-teal);
+  background: var(--lc-panel);
+}
+
+.lc-module-name,
+.lc-signal-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--lc-ink);
+}
+.lc-module-blurb {
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--lc-body);
+}
+.lc-signal-source {
+  font-family: var(--lc-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--lc-muted);
+}
+.lc-module-detail,
+.lc-signal-feeds {
+  margin: 8px 2px 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--lc-body);
+}
+
+/* ── Connector grid ──────────────────────────────────────────────── */
+.lc-connector-controls {
+  margin-top: 26px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+.lc-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  background: var(--lc-card);
+  border: 1px solid var(--lc-line);
+  border-radius: 999px;
+  color: var(--lc-muted);
+  min-width: 230px;
+}
+.lc-search input {
+  border: 0;
+  outline: none;
+  background: transparent;
+  font-family: var(--lc-font-body);
+  font-size: 14px;
+  color: var(--lc-ink);
+  width: 100%;
+}
+.lc-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.lc-chips button {
+  padding: 7px 13px;
+  font-family: var(--lc-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--lc-body);
+  background: transparent;
+  border: 1px solid var(--lc-line);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.18s var(--lc-ease);
+}
+.lc-chips button:hover { border-color: var(--lc-teal); }
+.lc-chips button.is-active {
+  background: var(--lc-teal);
+  border-color: var(--lc-teal);
+  color: #fbf7ef;
+}
+
+.lc-connector {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  background: var(--lc-card);
+  border: 1px solid var(--lc-line);
+  border-radius: var(--lc-radius-sm);
+}
+.lc-connector.is-planned { opacity: 0.72; }
+.lc-connector-name { font-size: 14px; font-weight: 600; color: var(--lc-ink); }
+.lc-connector-meta {
+  font-family: var(--lc-font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  color: var(--lc-muted);
+}
+.lc-badge {
+  justify-self: start;
+  margin-top: 4px;
+  padding: 3px 9px;
+  font-family: var(--lc-font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+.lc-badge.is-live { color: var(--lc-ok); border-color: rgba(63, 122, 85, 0.4); }
+.lc-badge.is-beta { color: var(--lc-warn); border-color: rgba(176, 106, 44, 0.4); }
+.lc-badge.is-planned { color: var(--lc-muted); border-color: var(--lc-line); }
+
+/* ── What it does · flow ─────────────────────────────────────────── */
+.lc-flow {
+  list-style: none;
+  margin: 26px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  counter-reset: flow;
+}
+.lc-flow > li {
+  padding: 20px;
+  background: var(--lc-card);
+  border: 1px solid var(--lc-line);
+  border-radius: var(--lc-radius-sm);
+}
+.lc-flow-num {
+  font-family: var(--lc-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--lc-amber);
+}
+.lc-flow-name {
+  margin: 8px 0 6px;
+  font-family: var(--lc-font-display);
+  font-size: 21px;
+  color: var(--lc-ink);
+}
+.lc-flow-body { margin: 0; font-size: 14px; line-height: 1.6; color: var(--lc-body); }
+
+/* ── Engine / security point grid ────────────────────────────────── */
+.lc-point-grid {
+  margin-top: 26px;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+.lc-point-grid article {
+  padding: 22px;
+  background: var(--lc-card);
+  border: 1px solid var(--lc-line);
+  border-radius: var(--lc-radius-sm);
+}
+.lc-point-grid .lc-h3 { margin-top: 0; }
+.lc-note {
+  margin-top: 22px;
+  font-family: var(--lc-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lc-muted);
+}
+
+/* ── Focus visibility ────────────────────────────────────────────── */
+.lc button:focus-visible,
+.lc input:focus-visible,
+.lc a:focus-visible {
+  outline: 2px solid var(--lc-teal);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
