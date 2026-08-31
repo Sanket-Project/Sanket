@@ -47,9 +47,14 @@ describe("landing page", () => {
     // The reported defect: the header linked to #pricing, which was the id on a
     // statistics band, so the anchor scrolled to "5 INDUSTRIES SERVED".
     // Every nav id must exist as a section id somewhere on the page.
-    const navIds = [...page.matchAll(/\{\s*label:\s*"[^"]+",\s*id:\s*"([^"]+)"\s*\}/g)].map(
-      (m) => m[1],
-    );
+    // Both the header nav and the footer link lists. The footer was missed the
+    // first time and still pointed at #pricing, #features, #architecture,
+    // #testimonials and #about long after those sections were renamed or
+    // deleted — the same defect, four more times over.
+    const navIds = [
+      ...[...page.matchAll(/\{\s*label:\s*"[^"]+",\s*id:\s*"([^"]+)"\s*\}/g)].map((m) => m[1]),
+      ...[...page.matchAll(/goToSection\("([^"]+)"\)/g)].map((m) => m[1]),
+    ];
     expect(navIds.length).toBeGreaterThan(0);
     const sectionIds = [
       ...page.matchAll(/id="([^"]+)"/g),

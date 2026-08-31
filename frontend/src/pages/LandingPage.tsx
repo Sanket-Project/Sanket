@@ -717,9 +717,9 @@ export const LandingPage = () => {
             <div>
               <h3 className="font-mono text-[11px] tracking-[0.25em] text-white/45 uppercase mb-4">Product</h3>
               <ul className="flex flex-col gap-2.5 text-sm text-white/65">
-                <li><button onClick={() => goToSection("features")} className="hover:text-[#DEDBC8] transition-colors">Platform</button></li>
+                <li><button onClick={() => goToSection("platform")} className="hover:text-[#DEDBC8] transition-colors">Platform</button></li>
                 <li><button onClick={() => goToSection("how-it-works")} className="hover:text-[#DEDBC8] transition-colors">How it works</button></li>
-                <li><button onClick={() => goToSection("pricing")} className="hover:text-[#DEDBC8] transition-colors">Pricing</button></li>
+                <li><button onClick={() => goToSection("platform-modules")} className="hover:text-[#DEDBC8] transition-colors">Modules</button></li>
                 <li><button onClick={() => setModal("sandbox")} className="hover:text-[#DEDBC8] transition-colors">Try the sandbox</button></li>
               </ul>
             </div>
@@ -728,8 +728,8 @@ export const LandingPage = () => {
             <div>
               <h3 className="font-mono text-[11px] tracking-[0.25em] text-white/45 uppercase mb-4">Resources</h3>
               <ul className="flex flex-col gap-2.5 text-sm text-white/65">
-                <li><button onClick={() => goToSection("architecture")} className="hover:text-[#DEDBC8] transition-colors">Architecture</button></li>
-                <li><button onClick={() => goToSection("testimonials")} className="hover:text-[#DEDBC8] transition-colors">Customers</button></li>
+                <li><button onClick={() => goToSection("industries")} className="hover:text-[#DEDBC8] transition-colors">Industries</button></li>
+                <li><button onClick={() => goToSection("integrations")} className="hover:text-[#DEDBC8] transition-colors">Integrations</button></li>
                 <li><button onClick={() => setModal("book")} className="hover:text-[#DEDBC8] transition-colors">Book a demo</button></li>
                 <li><button onClick={() => navigate("/login")} className="hover:text-[#DEDBC8] transition-colors">Sign in</button></li>
               </ul>
@@ -739,7 +739,7 @@ export const LandingPage = () => {
             <div>
               <h3 className="font-mono text-[11px] tracking-[0.25em] text-white/45 uppercase mb-4">Security &amp; Compliance</h3>
               <ul className="flex flex-col gap-2.5 text-sm text-white/65">
-                <li><button onClick={() => goToSection("architecture")} className="hover:text-[#DEDBC8] transition-colors">Security overview</button></li>
+                <li><button onClick={() => goToSection("security")} className="hover:text-[#DEDBC8] transition-colors">Security overview</button></li>
                 <li><span className="text-white/45">Tenant data isolation</span></li>
                 <li><span className="text-white/45">GxP audit trails</span></li>
                 <li><Link to="/privacy" className="hover:text-[#DEDBC8] transition-colors">Privacy policy</Link></li>
@@ -750,7 +750,7 @@ export const LandingPage = () => {
             <div>
               <h3 className="font-mono text-[11px] tracking-[0.25em] text-white/45 uppercase mb-4">Company</h3>
               <ul className="flex flex-col gap-2.5 text-sm text-white/65">
-                <li><button onClick={() => goToSection("about")} className="hover:text-[#DEDBC8] transition-colors">About</button></li>
+                <li><button onClick={() => goToSection("what-it-does")} className="hover:text-[#DEDBC8] transition-colors">About</button></li>
                 <li><button onClick={() => setModal("book")} className="hover:text-[#DEDBC8] transition-colors">Contact</button></li>
                 <li><Link to="/terms" className="hover:text-[#DEDBC8] transition-colors">Terms of service</Link></li>
                 <li><Link to="/privacy" className="hover:text-[#DEDBC8] transition-colors">Privacy</Link></li>

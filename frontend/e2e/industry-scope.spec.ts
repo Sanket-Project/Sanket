@@ -157,4 +157,38 @@ test.describe("industry-scoped workspace", () => {
       page.getByRole("button", { name: /try live sandbox/i }).first(),
     ).toBeVisible();
   });
+
+  test("the landing nav resolves and the connector grid filters", async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    // The defect that started this work: the header carried a Pricing link
+    // pointing at #pricing, which was the id on a statistics band.
+    await expect(page.getByRole("button", { name: /^pricing$/i })).toHaveCount(0);
+
+    // Every nav link must scroll to a section that actually exists.
+    for (const [label, id] of [
+      ["Platform", "platform"],
+      ["Industries", "industries"],
+      ["How It Works", "how-it-works"],
+      ["Integrations", "integrations"],
+      ["Security", "security"],
+    ] as const) {
+      await expect(page.getByRole("button", { name: new RegExp(`^${label}$`, "i") }).first())
+        .toBeVisible();
+      await expect(page.locator(`#${id}`)).toHaveCount(1);
+    }
+
+    // The connector grid is operable. Scoped to the grid's own cards: "Shopify"
+    // also appears in the console mock and in the live-connector list.
+    const cards = page.locator("#integrations .lc-connector-name");
+    await expect(cards.filter({ hasText: "Snowflake" })).toHaveCount(1);
+    await page.getByRole("searchbox", { name: /search connectors/i }).fill("shop");
+    await expect(cards.filter({ hasText: "Shopify" })).toHaveCount(1);
+    await expect(cards.filter({ hasText: "Snowflake" })).toHaveCount(0);
+
+    // Industry tabs swap the panel to that vertical's real planning profile.
+    await page.getByRole("tab", { name: /pharmaceuticals/i }).click();
+    await expect(page.getByText(/52-week/i)).toBeVisible();
+  });
 });
