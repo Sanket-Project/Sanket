@@ -42,8 +42,10 @@ import structlog
 from fastapi import Depends, Request
 from sqlalchemy import select
 
+from app.config import get_settings
 from app.core.exceptions import AuthenticationError, SubscriptionRequiredError
 from app.models.billing import Subscription, SubscriptionStatus
+from app.models.tenant import Tenant
 
 log = structlog.get_logger(__name__)
 
@@ -74,6 +76,28 @@ _SETUP_PATHS: frozenset[str] = frozenset(
         "/api/v1/integrations/upload/analyze",
     ]
 )
+
+
+async def _is_sandbox_tenant(request: Request, tenant_id: uuid.UUID) -> bool:
+    """Is this the configured public demo workspace?
+
+    Resolved from the database by id, not from anything the caller sends, so a
+    real tenant cannot claim the exemption. Returns False on any error: an
+    unreadable database must not become "everyone is exempt".
+    """
+    settings = get_settings()
+    if not settings.sandbox_enabled:
+        return False
+    try:
+        db = request.app.state.db
+        async with db.session(str(tenant_id)) as session:
+            slug = await session.scalar(
+                select(Tenant.slug).where(Tenant.id == tenant_id)
+            )
+    except Exception as exc:
+        log.warning("entitlement.sandbox_check_failed", error=str(exc))
+        return False
+    return slug == settings.sandbox_tenant_slug
 
 
 def require_active_subscription() -> Any:
@@ -135,6 +159,20 @@ def require_active_subscription() -> Any:
             ) from exc
 
         if sub is None:
+            # The public sandbox is a demo, not a customer: it has nothing to
+            # buy and must never be shown a paywall. Checked here, on the denial
+            # path, so a paying tenant never pays for the extra lookup.
+            #
+            # Exempted by identity rather than by giving it an `active`
+            # subscription row. `subscriptions` is the authority for who has
+            # paid, and a fabricated row there would be counted as revenue by
+            # anything that reads the table.
+            #
+            # This only surfaced when the sandbox moved to its own workspace.
+            # It used to run inside `sanket-dev`, whose subscription runs to
+            # 2036, so the gate never fired and the demo looked fine.
+            if await _is_sandbox_tenant(request, tenant_id):
+                return
             log.info(
                 "entitlement.denied",
                 tenant=str(tenant_id),

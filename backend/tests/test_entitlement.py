@@ -294,3 +294,38 @@ async def test_unauthenticated_still_401_not_402(client):
     """Entitlement must not mask an auth failure as a billing problem."""
     r = await client.get("/api/v1/products")
     assert r.status_code == 401
+
+
+async def test_the_public_sandbox_is_not_paywalled(client: AsyncClient) -> None:
+    """The demo is not a customer, so it must never be asked to subscribe.
+
+    The sandbox used to live in `sanket-dev`, which carries a subscription
+    running to 2036, so the paywall never fired there. Moving it to its own
+    workspace (right, for security -- anonymous visitors were reading the
+    development tenant) put a brand-new subscriptionless tenant behind the gate,
+    and every route in the demo rendered "Activate Your SANKET Workspace".
+
+    Fixed by exempting the sandbox by identity rather than by writing it a
+    fake `active` subscription: the billing table is the authority for who has
+    paid, and a demo row in it would count as revenue.
+    """
+    started = await client.post("/api/v1/auth/sandbox-session")
+    assert started.status_code == 200, started.text
+    token = started.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    for path in ("/api/v1/products", "/api/v1/skus", "/api/v1/fashion/overview"):
+        r = await client.get(path, headers=headers)
+        assert r.status_code != 402, f"{path} paywalled the sandbox"
+        assert r.status_code == 200, f"{path} returned {r.status_code}: {r.text}"
+
+
+async def test_the_sandbox_exemption_does_not_leak_to_other_tenants(
+    db_session, client, entitled_tenant
+) -> None:
+    """Exempting one workspace by identity must not weaken the gate generally."""
+    tenant_id, headers = entitled_tenant
+    await _clear_subscriptions(db_session, tenant_id)
+
+    r = await client.get("/api/v1/products", headers=headers)
+    assert r.status_code == 402
