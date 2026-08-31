@@ -2,20 +2,17 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import {
-
   ArrowRight,
-
   Check,
   CircleAlert,
-
   Plug,
   ShieldCheck,
   Sparkles,
-
 } from "@/components/ui/icons";
 import { LogoMark } from "@/components/ui/Logo";
 import { CONNECTORS } from "./connectors";
 import "./live-console.css";
+import { ConnectorGrid } from "./sections/ConnectorGrid";
 import { IndustryTabs } from "./sections/IndustryTabs";
 
 type LiveConsoleLandingProps = {
@@ -148,7 +145,7 @@ const DECISIONS = [
 
 const STATS = [
   { value: "5", label: "Industries served", detail: "Fashion, electronics, pharma, hardware, and agro run on the same engine." },
-  { value: "29+", label: "Connectors", detail: "Storefronts, ERPs, databases, and logistics partners, with no migration." },
+  { value: "6", label: "Live connectors", detail: "Shopify, WooCommerce, PostgreSQL, MySQL, CSV and Excel work today; the catalog holds 42." },
   { value: "90d", label: "Forecast horizon", detail: "Daily SKU-level demand with a visible confidence range, not a single number." },
 ];
 
@@ -410,8 +407,6 @@ export const LiveConsoleLanding = ({ onBook, onSandbox }: LiveConsoleLandingProp
   // Industry selection moved into <IndustryTabs />, which reads the real
   // per-vertical planning profile from content.ts rather than the abbreviated
   // copy that used to live in this file.
-  const reduce = useReducedMotion();
-
   return (
     <main className="lc">
       {/* ── Console ─────────────────────────────────────────── */}
@@ -498,35 +493,7 @@ export const LiveConsoleLanding = ({ onBook, onSandbox }: LiveConsoleLandingProp
 
       <IndustryTabs />
 
-      {/* ── Connectors marquee ──────────────────────────────── */}
-      <section className="lc-marquee-section">
-        <div className="lc-shell">
-          <Reveal className="lc-marquee-head">
-            <p className="lc-kicker">Works on top of your stack</p>
-            <h3 className="lc-h3">No migration required</h3>
-          </Reveal>
-        </div>
-        <div className={`lc-marquee ${reduce ? "is-static" : ""}`} aria-label="Supported connectors">
-          <div className="lc-marquee-track">
-            {[...CONNECTORS, ...CONNECTORS].map((connector, i) => (
-              <span
-                key={`${connector.name}-${i}`}
-                aria-hidden={i >= CONNECTORS.length ? "true" : undefined}
-              >
-                {connector.logo ? (
-                  <img
-                    src={`${import.meta.env.BASE_URL}logos/${connector.logo}`}
-                    alt=""
-                    loading="lazy"
-                    decoding="async"
-                  />
-                ) : null}
-                {connector.name}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
+      <ConnectorGrid />
 
       {/* ── Stats + CTA ─────────────────────────────────────── */}
       <section id="get-started" className="lc-section lc-section-alt">
