@@ -36,10 +36,14 @@ class Tenant(UUIDPrimaryKey, TimestampMixin, Base):
     status: Mapped[TenantStatus] = mapped_column(
         SAEnum(TenantStatus, name="tenant_status"), nullable=False, default=TenantStatus.trial
     )
-    industries: Mapped[list[str]] = mapped_column(
-        ARRAY(SAEnum(IndustryCode, name="industry_code")), nullable=False, default=list
-    )
-    active_industry: Mapped[IndustryCode] = mapped_column(
+    # The workspace's one authoritative industry, chosen when it is created and
+    # locked once setup completes or real data arrives (see core/industry_scope).
+    #
+    # The legacy `industries` array column still exists in the database as a
+    # trigger-maintained mirror and is deliberately NOT mapped here: a second
+    # writable field is exactly how the old model let a bug grant five verticals
+    # at once. One authority, and the database keeps the mirror honest.
+    industry: Mapped[IndustryCode] = mapped_column(
         SAEnum(IndustryCode, name="industry_code"), nullable=False
     )
     max_skus: Mapped[int] = mapped_column(Integer, nullable=False, default=10000)
@@ -77,9 +81,9 @@ class User(UUIDPrimaryKey, TimestampMixin, Base):
     role: Mapped[UserRole] = mapped_column(
         SAEnum(UserRole, name="user_role"), nullable=False, default=UserRole.analyst
     )
-    active_industry: Mapped[IndustryCode] = mapped_column(
-        SAEnum(IndustryCode, name="industry_code"), nullable=False
-    )
+    # No industry field: a member inherits their workspace's, enforced by the
+    # `trg_users_inherit_industry` trigger. The column remains in the database
+    # as a mirror so a stale value cannot be read back and acted on.
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     mfa_secret: Mapped[str | None] = mapped_column(Text)

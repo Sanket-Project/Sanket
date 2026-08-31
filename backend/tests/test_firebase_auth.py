@@ -29,7 +29,7 @@ def test_mint_and_verify_roundtrip() -> None:
     token, expires_in = v.mint_dev_token(
         uid="u1", puid="11111111-1111-1111-1111-111111111111",
         email="a@b.com", tid="22222222-2222-2222-2222-222222222222",
-        role="admin", ind="fashion", industries=["fashion", "pharma"],
+        role="admin", ind="fashion",
     )
     assert expires_in > 0
     identity = v.verify(token)
@@ -37,7 +37,39 @@ def test_mint_and_verify_roundtrip() -> None:
     assert identity["puid"] == "11111111-1111-1111-1111-111111111111"
     assert identity["role"] == "admin"
     assert identity["ind"] == "fashion"
-    assert identity["industries"] == ["fashion", "pharma"]
+
+
+def test_token_carries_no_plural_industries_claim() -> None:
+    """A workspace has one industry, so no plural claim can exist to be trusted.
+
+    The claim was not merely redundant: the middleware authorized industry
+    switching against it, and signup filled it with all five verticals, so it
+    was the mechanism by which every tenant could reach every industry.
+    """
+    import base64
+    import json
+
+    v = FirebaseVerifier(_settings())
+    token, _ = v.mint_dev_token(
+        uid="u1", puid="p1", email="a@b.com", tid="t1", role="admin", ind="pharma",
+    )
+    payload_b64 = token.split(".")[1]
+    payload_b64 += "=" * (-len(payload_b64) % 4)
+    payload = json.loads(base64.urlsafe_b64decode(payload_b64))
+
+    assert payload["ind"] == "pharma"
+    assert "industries" not in payload
+    assert "industries" not in v.verify(token)
+
+
+def test_mint_dev_token_refuses_a_plural_industries_argument() -> None:
+    """Callers that still pass the old argument must fail loudly, not silently."""
+    v = FirebaseVerifier(_settings())
+    with pytest.raises(TypeError):
+        v.mint_dev_token(
+            uid="u1", puid="p1", email=None, tid="t1", role="admin",
+            ind="fashion", industries=["fashion", "pharma"],
+        )
 
 
 def test_verify_rejects_tampered_token() -> None:

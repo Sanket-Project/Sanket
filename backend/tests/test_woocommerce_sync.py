@@ -174,9 +174,9 @@ async def tenant_id(db) -> uuid.UUID:
             text(
                 """
                 INSERT INTO tenants (id, slug, display_name, tier, status,
-                                     industries, active_industry)
+                                     industry)
                 VALUES (:id, :slug, 'Hub Test', 'enterprise', 'active',
-                        ARRAY['fashion']::industry_code[], 'fashion')
+                        'fashion')
                 """
             ),
             {"id": str(tid), "slug": f"hub-{tid.hex[:8]}"},

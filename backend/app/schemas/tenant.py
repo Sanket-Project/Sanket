@@ -17,8 +17,7 @@ class TenantOut(BaseModel):
     display_name: str
     tier: TenantTier
     status: TenantStatus
-    industries: list[IndustryCode]
-    active_industry: IndustryCode
+    industry: IndustryCode
     max_skus: int
     max_users: int
     data_retention_days: int
@@ -36,7 +35,6 @@ class UserOut(BaseModel):
     email: str
     full_name: str
     role: UserRole
-    active_industry: IndustryCode
     is_active: bool
     mfa_enabled: bool
     last_login_at: datetime | None
@@ -48,4 +46,3 @@ class UserCreate(BaseModel):
     password: str
     full_name: str
     role: UserRole = UserRole.analyst
-    active_industry: IndustryCode

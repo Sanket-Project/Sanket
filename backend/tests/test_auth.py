@@ -257,10 +257,9 @@ async def test_session_auto_provisions_unregistered_google_user(
     await db_session.execute(
         text(
             """
-            INSERT INTO tenants (id, slug, display_name, tier, status,
-                                 industries, active_industry)
+            INSERT INTO tenants (id, slug, display_name, tier, status, industry)
             VALUES (:id, 'sanket-dev', 'SANKET Dev Tenant', 'growth', 'active',
-                    ARRAY['fashion']::industry_code[], 'fashion')
+                    'fashion')
             ON CONFLICT (slug) DO NOTHING
             """
         ),

@@ -82,7 +82,7 @@ async def _send_for_tenant(
         tenant = await session.get(Tenant, tenant_id)
         if tenant is None:
             return 0
-        industry = str(tenant.active_industry)
+        industry = str(tenant.industry)
         d = await digest_svc.build_digest(
             session,
             tenant_id=tenant_id,

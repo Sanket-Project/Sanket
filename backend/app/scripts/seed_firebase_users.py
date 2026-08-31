@@ -2,8 +2,9 @@
 
 For every active ``users`` row this script:
   1. creates (or fetches) the matching Firebase user by email,
-  2. sets custom claims ``{tid, role, ind, industries}`` so issued ID tokens
-     drive tenant context with no DB lookup,
+  2. sets custom claims ``{tid, role, ind}`` so issued ID tokens drive tenant
+     context with no DB lookup -- ``ind`` read from the user's workspace, since
+     a workspace has exactly one industry and members inherit it,
   3. writes the Firebase ``uid`` back onto the row.
 
 Idempotent — safe to run repeatedly. No-ops (with a clear log line) when Firebase
@@ -49,15 +50,14 @@ async def seed_firebase_users(default_password: str | None, reset_password: bool
     try:
         async with db.session_no_rls() as session:
             users = (await session.scalars(select(User).where(User.is_active.is_(True)))).all()
-            # Preload tenants for the industries claim
+            # Preload tenants: the industry claim comes from the workspace, not
+            # from the member, so a stale user row cannot seed a wrong claim.
             tenants = {t.id: t for t in (await session.scalars(select(Tenant))).all()}
             for user in users:
                 tenant = tenants.get(user.tenant_id)
-                industries = (
-                    [i.value if hasattr(i, "value") else str(i) for i in tenant.industries]
-                    if tenant
-                    else None
-                )
+                if tenant is None:
+                    log.warning("seed_firebase_users.tenant_missing", email=user.email)
+                    continue
                 uid = verifier.create_or_get_user(
                     email=user.email,
                     password=default_password,
@@ -69,8 +69,7 @@ async def seed_firebase_users(default_password: str | None, reset_password: bool
                     puid=str(user.id),
                     tid=str(user.tenant_id),
                     role=user.role.value,
-                    ind=user.active_industry.value,
-                    industries=industries,
+                    ind=tenant.industry.value,
                 )
                 await session.execute(
                     update(User).where(User.id == user.id).values(firebase_uid=uid)

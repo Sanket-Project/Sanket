@@ -55,8 +55,7 @@ class TokenVerificationError(Exception):
 class NormalizedIdentity(dict):
     """A verified identity. Dict-like for convenience; required keys:
     ``uid`` (Firebase UID), ``puid`` (SANKET ``users.id``), ``tid``, ``role``,
-    ``ind``. ``email`` and ``industries`` (list, used to authorize industry
-    switching) are optional."""
+    ``ind`` (the tenant's one industry). ``email`` is optional."""
 
 
 class FirebaseVerifier:
@@ -270,9 +269,12 @@ class FirebaseVerifier:
             ind=str(ind),
             source=source,
         )
-        industries = decoded.get("industries")
-        if isinstance(industries, list):
-            identity["industries"] = [str(i) for i in industries]
+        # A plural `industries` claim is deliberately NOT surfaced, even when an
+        # older token still carries one. It existed so the middleware could
+        # authorize industry switching against it -- and signup filled it with
+        # all five verticals, which is precisely how every tenant could reach
+        # every industry. Ignoring it here means an unexpired legacy token
+        # cannot resurrect that path.
         return identity
 
     # ── Dev-token minting (dev mode only) ────────────────────────────────────
@@ -285,7 +287,6 @@ class FirebaseVerifier:
         tid: str,
         role: str,
         ind: str,
-        industries: list[str] | None = None,
     ) -> tuple[str, int]:
         """Mint an HS256 dev identity token. Returns (token, expires_in_seconds).
 
@@ -310,8 +311,6 @@ class FirebaseVerifier:
             "exp": now + timedelta(minutes=ttl_minutes),
             DEV_IDENTITY_MARKER: True,
         }
-        if industries:
-            payload["industries"] = industries
         token = jwt.encode(payload, self._settings.jwt_secret, algorithm="HS256")
         return token, ttl_minutes * 60
 
@@ -324,19 +323,22 @@ class FirebaseVerifier:
         tid: str,
         role: str,
         ind: str,
-        industries: list[str] | None = None,
     ) -> None:
         """Set custom claims on a Firebase user so future ID tokens carry the
         SANKET user id + tenant/role/industry without a DB lookup. No-op in dev
-        mode."""
+        mode.
+
+        ``ind`` is the tenant's one industry. It is safe to bake into a token
+        because nothing can change it once the workspace locks; the single path
+        that can change it (correction during setup) revokes the user's refresh
+        tokens so the superseded value cannot be replayed.
+        """
         if not self._settings.firebase_enabled:
             return
         self._ensure_admin()
         from firebase_admin import auth as fb_auth
 
         claims: dict[str, Any] = {"puid": puid, "tid": tid, "role": role, "ind": ind}
-        if industries:
-            claims["industries"] = industries
         fb_auth.set_custom_user_claims(uid, claims)
 
     def create_or_get_user(

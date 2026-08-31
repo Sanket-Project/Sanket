@@ -26,10 +26,8 @@ async def _seed_tenant(db: AsyncSession, slug: str, name: str) -> uuid.UUID:
         text(
             """
             INSERT INTO tenants (id, slug, display_name, tier, status,
-                                 industries, active_industry, max_users)
-            VALUES (:id, :slug, :name, 'enterprise', 'active',
-                    ARRAY['fashion','electronics','pharma']::industry_code[],
-                    'fashion', 100)
+                                 industry, max_users)
+            VALUES (:id, :slug, :name, 'enterprise', 'active', 'fashion', 100)
             """
         ),
         {"id": str(tid), "slug": slug, "name": name},

@@ -283,8 +283,7 @@ async def seed_database_if_empty() -> None:
                     display_name="SANKET Dev Tenant",
                     tier=TenantTier.growth,
                     status=TenantStatus.active,
-                    industries=["fashion", "electronics", "pharma", "agrocenter", "hardware"],
-                    active_industry=IndustryCode.fashion,
+                    industry=IndustryCode.fashion,
                     max_skus=999999,
                     max_users=50,
                     data_retention_days=1825,
@@ -300,7 +299,6 @@ async def seed_database_if_empty() -> None:
                         password_hash=pwd,
                         full_name="Platform Owner",
                         role=UserRole.owner,
-                        active_industry=IndustryCode.fashion,
                         is_active=True,
                     )
                 )
@@ -312,7 +310,6 @@ async def seed_database_if_empty() -> None:
                         password_hash=pwd,
                         full_name="Platform Admin",
                         role=UserRole.admin,
-                        active_industry=IndustryCode.fashion,
                         is_active=True,
                     )
                 )
@@ -337,7 +334,6 @@ async def seed_database_if_empty() -> None:
                         password_hash=None,
                         full_name="Sandbox Guest",
                         role=UserRole.viewer,
-                        active_industry=IndustryCode.fashion,
                         is_active=True,
                     )
                 )

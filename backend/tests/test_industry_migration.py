@@ -228,6 +228,19 @@ async def test_sandbox_user_is_a_viewer(db_session: AsyncSession) -> None:
     assert role == "viewer"
 
 
+async def test_orm_exposes_exactly_one_industry_field() -> None:
+    """The mirrors are the database's business, not the ORM's.
+
+    Leaving them mapped would recreate the problem the triggers solve: a second
+    writable field that application code can set independently of the first.
+    """
+    from app.models.tenant import Tenant, User
+
+    assert hasattr(Tenant, "industry")
+    assert not hasattr(Tenant, "industries"), "the mirror column must not be mapped"
+    assert not hasattr(User, "active_industry"), "members inherit; they do not carry"
+
+
 async def test_migrating_a_multi_industry_tenant_preserves_its_data(
     setup_schema, migration_probe_url: str
 ) -> None:

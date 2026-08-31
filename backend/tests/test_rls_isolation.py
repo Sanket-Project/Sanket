@@ -37,10 +37,8 @@ async def _seed_tenant(conn, slug: str) -> uuid.UUID:
     await conn.execute(
         text(
             """
-            INSERT INTO tenants (id, slug, display_name, tier, status,
-                                 industries, active_industry)
-            VALUES (:id, :slug, :name, 'enterprise', 'active',
-                    ARRAY['fashion']::industry_code[], 'fashion')
+            INSERT INTO tenants (id, slug, display_name, tier, status, industry)
+            VALUES (:id, :slug, :name, 'enterprise', 'active', 'fashion')
             """
         ),
         {"id": str(tid), "slug": slug, "name": slug},
