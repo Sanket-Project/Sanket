@@ -34,7 +34,7 @@ PROBE_DB = "migration_probe"
 def _alembic(database_url: str, revision: str, direction: str = "upgrade") -> None:
     """Run the real migration chain against ``database_url``."""
     env = {**os.environ, "DATABASE_URL": database_url}
-    proc = subprocess.run(
+    proc = subprocess.run(  # noqa: S603 - fixed argv, no shell, test-only
         [sys.executable, "-m", "alembic", direction, revision],
         cwd=str(BACKEND_DIR),
         env=env,

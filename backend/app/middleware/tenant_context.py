@@ -25,6 +25,9 @@ _PUBLIC_PATHS: frozenset[str] = frozenset(
         "/openapi.json",
         "/api/v1/auth/config",
         "/api/v1/auth/session",
+        # The canonical industry list. The signup form must render it before
+        # anyone holds a token, and it is public information besides.
+        "/api/v1/industry/catalog",
         "/api/v1/auth/dev-login",
         # Self-service registration: a brand-new user has no bearer yet.
         "/api/v1/auth/signup",

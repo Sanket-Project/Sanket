@@ -154,3 +154,169 @@ async def test_cross_industry_correlation_is_unavailable(
         "/api/v1/alerts/cross-industry", headers={"Authorization": f"Bearer {token}"}
     )
     assert r.status_code == 404
+
+
+# ── Enumeration: public catalog, no authenticated listing ────────────────────
+
+
+async def test_industry_catalog_is_public(client: AsyncClient) -> None:
+    """The signup form needs the canonical list before anyone holds a token.
+
+    It is also the honest public position: prospects may browse every vertical
+    SANKET supports. What they may not do is reach one from inside a workspace
+    scoped to another.
+    """
+    r = await client.get("/api/v1/industry/catalog")
+    assert r.status_code == 200, r.text
+    assert set(r.json()) == {
+        "fashion",
+        "electronics",
+        "pharma",
+        "agrocenter",
+        "hardware",
+    }
+
+
+async def test_authenticated_industry_enumeration_is_gone(
+    client: AsyncClient, db_session: AsyncSession, test_tenant_id: uuid.UUID
+) -> None:
+    """An authenticated user has exactly one industry; there is nothing to list."""
+    token = await _token(db_session, test_tenant_id, "fashion")
+    r = await client.get(
+        "/api/v1/industry/available", headers={"Authorization": f"Bearer {token}"}
+    )
+    assert r.status_code == 404
+
+
+# ── The correction window ────────────────────────────────────────────────────
+
+
+async def _signup(client: AsyncClient, slug: str, industry: str) -> str:
+    """Create a workspace through the real signup path and return a bearer."""
+    r = await client.post(
+        "/api/v1/auth/signup",
+        json={
+            "name": f"{slug} Owner",
+            "email": f"owner@{slug}.example.com",
+            "password": "Sup3rSecret!",
+            "tenant_slug": slug,
+            "industry": industry,
+        },
+    )
+    assert r.status_code == 201, r.text
+    login = await client.post(
+        "/api/v1/auth/dev-login",
+        json={
+            "email": f"owner@{slug}.example.com",
+            "password": "Sup3rSecret!",
+            "tenant_slug": slug,
+        },
+    )
+    assert login.status_code == 200, login.text
+    return login.json()["access_token"]
+
+
+async def test_industry_can_be_corrected_while_setup_is_incomplete(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """Choosing the wrong industry at signup must be recoverable, briefly."""
+    token = await _signup(client, "mistake-co", "fashion")
+    r = await client.post(
+        "/api/v1/industry/activate",
+        json={"code": "pharma"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert r.status_code == 200, r.text
+
+    row = await db_session.execute(
+        text(
+            "SELECT industry::text, industries::text[] FROM tenants "
+            "WHERE slug = 'mistake-co'"
+        )
+    )
+    industry, industries = row.one()
+    assert industry == "pharma"
+    assert industries == ["pharma"], "the mirror follows the correction"
+
+
+async def test_correction_reissues_a_token_carrying_the_new_industry(
+    client: AsyncClient
+) -> None:
+    """Without a fresh token the rest of the session runs on the old claim."""
+    token = await _signup(client, "reissue-co", "fashion")
+    r = await client.post(
+        "/api/v1/industry/activate",
+        json={"code": "hardware"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert r.status_code == 200, r.text
+    new_token = r.json().get("access_token")
+    assert new_token, "dev mode must hand back a re-minted bearer"
+
+    # The new bearer resolves to the corrected industry. (Asserted against
+    # /industry/context rather than an industry dashboard: a freshly created
+    # workspace has no subscription, so every gated route answers 402 first and
+    # would tell us nothing about the claim.)
+    ctx = await client.get(
+        "/api/v1/industry/context",
+        headers={"Authorization": f"Bearer {new_token}"},
+    )
+    assert ctx.status_code == 200, ctx.text
+    assert ctx.json()["code"] == "hardware"
+
+    # And the superseded bearer still names the old one, which is exactly why
+    # it has to be replaced rather than left to expire.
+    stale = await client.get(
+        "/api/v1/industry/context", headers={"Authorization": f"Bearer {token}"}
+    )
+    assert stale.json()["code"] == "fashion"
+
+
+async def test_industry_locks_once_setup_completes(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    token = await _signup(client, "locked-co", "fashion")
+    await db_session.execute(
+        text(
+            "UPDATE tenants SET settings = jsonb_set(settings, "
+            "'{onboarding,status}', '\"complete\"') WHERE slug = 'locked-co'"
+        )
+    )
+    await db_session.commit()
+
+    r = await client.post(
+        "/api/v1/industry/activate",
+        json={"code": "pharma"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert r.status_code == 409, r.text
+
+
+async def test_industry_locks_once_the_workspace_holds_data(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """Data arriving locks the industry even mid-setup: it was ingested under
+    the old one, and silently reinterpreting it as another industry's would be
+    worse than refusing."""
+    token = await _signup(client, "hasdata-co", "fashion")
+    tenant_id = await db_session.scalar(
+        text("SELECT id FROM tenants WHERE slug = 'hasdata-co'")
+    )
+    await db_session.execute(
+        text(
+            """
+            INSERT INTO products (id, tenant_id, industry, name, category, status)
+            VALUES (gen_random_uuid(), :tid, 'fashion', 'A Product', 'tops',
+                    'active')
+            """
+        ),
+        {"tid": str(tenant_id)},
+    )
+    await db_session.commit()
+
+    r = await client.post(
+        "/api/v1/industry/activate",
+        json={"code": "pharma"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert r.status_code == 409, r.text

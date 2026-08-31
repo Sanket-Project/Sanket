@@ -1,14 +1,19 @@
 from __future__ import annotations
 
 import uuid
-from typing import Annotated
+from typing import Annotated, Any
 
 import structlog
 from fastapi import APIRouter, Depends, Request
-from sqlalchemy import select
+from sqlalchemy import select, text
+from starlette.concurrency import run_in_threadpool
 
 from app.config import get_settings
-from app.core.exceptions import AuthenticationError, IndustryNotEnabledError
+from app.core.exceptions import (
+    AuthenticationError,
+    ConflictError,
+    IndustryNotEnabledError,
+)
 from app.core.firebase_auth import get_verifier
 from app.core.rbac import require_admin
 from app.models.enums import IndustryCode
@@ -20,6 +25,7 @@ from app.schemas.industry import (
     IndustryActivateIn,
     IndustryProfileUpdate,
 )
+from app.schemas.onboarding import load_onboarding_state
 from app.services.industry_config import (
     EffectiveIndustryConfig,
     merge_focus_into_flags,
@@ -85,9 +91,19 @@ async def current_industry_context(ctx: ActiveIndustry) -> dict:
     }
 
 
-@router.get("/industry/available")
-async def list_available_industries() -> dict:
-    """Return all industries known to the platform."""
+@router.get("/industry/catalog")
+async def industry_catalog() -> dict:
+    """Every industry SANKET supports. Public.
+
+    Public because the signup form needs the canonical list before the caller
+    has a token, and because prospects may legitimately browse every vertical.
+    It replaces an authenticated ``/industry/available``, which enumerated all
+    five to someone already inside a workspace -- a list they cannot act on and
+    should not be shown, since they have exactly one industry.
+
+    The list comes from the backend registry, so a frontend picker cannot drift
+    from the codes the API will actually accept.
+    """
     return {
         code: {
             "display_name": ctx.display_name,
@@ -170,6 +186,38 @@ async def update_industry_profile(
     return _to_effective_out(config)
 
 
+# Tables whose emptiness defines "this workspace holds no real data yet".
+# Data locks the industry because it was ingested and interpreted under the old
+# one; silently re-reading a fashion catalogue as pharma inventory would be
+# worse than refusing the change.
+_DATA_TABLES: tuple[str, ...] = (
+    "products",
+    "skus",
+    "historical_sales",
+    "integration_connections",
+)
+
+
+async def _lock_reason(session: Any, tenant: Tenant) -> str | None:
+    """Why this workspace's industry can no longer change, or None if it can.
+
+    Read from the database, never from a token claim. A claim describes what was
+    true when it was minted, and lock state is precisely the thing that changes
+    underneath it -- so trusting one here would let a stale session edit a
+    workspace that has since been locked by someone else.
+    """
+    if load_onboarding_state(tenant.settings).status == "complete":
+        return "setup is already complete"
+    for table in _DATA_TABLES:
+        exists = await session.scalar(
+            text(f"SELECT 1 FROM {table} WHERE tenant_id = :tid LIMIT 1"),  # noqa: S608
+            {"tid": str(tenant.id)},
+        )
+        if exists:
+            return "this workspace already holds data"
+    return None
+
+
 @router.post("/industry/activate")
 async def activate_industry(
     body: IndustryActivateIn,
@@ -178,48 +226,30 @@ async def activate_industry(
     user_id: UserId,
     _rbac: None = require_admin,
 ) -> dict:
-    """Set the tenant's primary industry (used by onboarding's first step).
+    """Correct the workspace's industry during initial setup.
 
-    Validates the code against the tenant's licensed industries, then updates
-    both ``Tenant.active_industry`` and the calling ``User.active_industry``.
+    This is no longer a switch. A workspace is scoped to one industry, and this
+    endpoint exists only so an owner who picked the wrong one at signup can fix
+    it before the choice starts mattering. It closes for good once setup
+    completes or real data arrives (:func:`_lock_reason`), and returns 409 after
+    that -- a later change needs a deliberate, support-assisted migration, not
+    an API call that silently reinterprets existing data.
 
-    Returns a re-minted access token carrying the new ``ind`` claim
-    (dev-fallback mode only — see below).
+    Re-minting the token
+    --------------------
+    ``ind`` is baked into the bearer at login and read straight off the claim by
+    ``TenantContextMiddleware``. Writing the database without reissuing the
+    token left the rest of the session running on the old industry -- for a
+    pharma tenant that meant a 26-week horizon, fashion signals and standard
+    audit level behind a header rendering "GXP - 21 CFR PART 11"
+    (docs/audit/02 P0-4). The first session is when a tenant runs their baseline
+    forecast, so the window was small and badly placed.
 
-    Why re-mint here
-    ----------------
-    ``ind`` is baked into the token at login and read straight off the claim by
-    ``TenantContextMiddleware`` (``middleware/tenant_context.py:107``). Choosing
-    an industry during onboarding wrote the database but left the claim alone,
-    so for the remainder of that session every request that did *not* carry an
-    ``X-Industry-Code`` override was served the signup default — for a pharma
-    tenant that means a 26-week horizon, fashion signals, and **standard audit
-    level**, while the header renders ``GXP · 21 CFR PART 11``
-    (docs/audit/02 P0-4, narrowed by 04). The first session is when a tenant
-    runs their baseline forecast, so the window is small and badly placed.
-
-    Re-minting was chosen over resolving ``ind`` from the database on every
-    request for three reasons:
-
-    * the deny-by-default ``X-Industry-Code`` validation
-      (``tenant_context.py:114-138``) is built on the token being authoritative
-      for both ``ind`` and ``industries``; making one of them DB-derived and
-      the other claim-derived splits the trust model of a control that
-      currently works;
-    * a per-request lookup adds a database round-trip to the hot path that the
-      claim design exists specifically to avoid;
-    * industry changes are rare and funnel through this one endpoint, so the
-      staleness window is enumerable rather than open-ended.
-
-    The trade-off: any *other* future writer of ``active_industry`` must
-    re-mint too, or reintroduce the bug. If industry ever becomes mutable from
-    several places, switch to DB resolution and accept the round-trip.
-
-    Firebase mode is unchanged and still stale: ``ind`` is a custom claim set
-    at provisioning, so the equivalent fix is ``set_custom_user_claims`` plus a
-    client-side ``getIdToken(true)``. Not implemented here because there is no
-    Firebase project configured to verify it against — tracked in
-    docs/audit/00-open-questions.md.
+    Because this is now the *only* writer of ``tenants.industry``, the staleness
+    window is closed rather than merely narrow: dev mode gets a re-minted
+    bearer, and Firebase mode gets fresh custom claims plus a refresh-token
+    revocation, so the superseded ``ind`` cannot be replayed for the remaining
+    hour of the old ID token's life.
     """
     code = body.code.value if hasattr(body.code, "value") else str(body.code)
     db = request.app.state.db
@@ -227,27 +257,41 @@ async def activate_industry(
         tenant = await session.get(Tenant, tenant_id)
         if tenant is None:
             raise AuthenticationError()
-        licensed = [i.value if hasattr(i, "value") else str(i) for i in tenant.industries]
-        if code not in licensed:
-            raise IndustryNotEnabledError(code)
 
-        tenant.active_industry = body.code
+        locked = await _lock_reason(session, tenant)
+        if locked is not None:
+            raise ConflictError(
+                f"This workspace is set to {tenant.industry.value} and cannot be "
+                f"changed because {locked}. Contact support to migrate."
+            )
+
+        tenant.industry = body.code
         user = await session.get(User, user_id)
-        if user is not None:
-            user.active_industry = body.code
         await session.flush()
 
-        industries = [i.value if hasattr(i, "value") else str(i) for i in tenant.industries]
         user_email = user.email if user is not None else None
         user_role = user.role.value if user is not None else None
+        firebase_uid = user.firebase_uid if user is not None else None
 
     result: dict = {"active_industry": code}
 
-    # Dev-fallback only. In Firebase mode the SDK owns the token and
-    # mint_dev_token refuses to run, so the claim stays stale until the
-    # provisioning claims are updated — see the docstring.
     settings = get_settings()
-    if not settings.firebase_enabled and user_role is not None:
+    if settings.firebase_enabled:
+        if firebase_uid and user_role is not None:
+            await run_in_threadpool(
+                get_verifier().set_user_claims,
+                firebase_uid,
+                puid=str(user_id),
+                tid=str(tenant_id),
+                role=user_role,
+                ind=code,
+            )
+            # The already-issued ID token keeps the previous `ind` for up to an
+            # hour. Revoke so the superseded industry cannot be replayed; the
+            # client signs in again and picks up the corrected claim.
+            await run_in_threadpool(get_verifier().revoke_refresh_tokens, firebase_uid)
+            result["reauth_required"] = True
+    elif user_role is not None:
         token, expires_in = get_verifier().mint_dev_token(
             uid=str(user_id),
             puid=str(user_id),
@@ -255,13 +299,12 @@ async def activate_industry(
             tid=str(tenant_id),
             role=user_role,
             ind=code,
-            industries=industries,
         )
         result["access_token"] = token
         result["expires_in"] = expires_in
 
     log.info(
-        "industry.activated",
+        "industry.corrected",
         tenant_id=str(tenant_id),
         code=code,
         token_reissued="access_token" in result,
