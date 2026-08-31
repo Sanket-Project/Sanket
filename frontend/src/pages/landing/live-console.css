@@ -1,3 +1,14 @@
+/* The landing page root. The type tokens live here rather than on .lc so the
+   hero -- which sits outside .lc -- inherits the same body font. Without this
+   the hero fell back to the app-wide Geist Sans while the sections below used
+   IBM Plex Sans, which is the family change this was meant to remove. */
+.landing-root {
+  --lc-font-display: "DM Serif Display", Georgia, serif;
+  --lc-font-body: "IBM Plex Sans", "Inter", system-ui, sans-serif;
+  --lc-font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--lc-font-body);
+}
+
 /* ==================================================================
    Sanket — Live Console landing
    Warm, light, rounded product surfaces with restrained motion.
@@ -22,9 +33,17 @@
   --lc-radius-sm: 14px;
   --lc-ease: cubic-bezier(0.16, 1, 0.3, 1);
 
+  /* Three type roles, applied identically in every section. A fourth family is
+     a bug: the page previously ran DM Serif Display, Space Grotesk, IBM Plex
+     Sans and IBM Plex Mono at once, and body copy changed family partway down
+     where the hero ended and these sections began. */
+  --lc-font-display: "DM Serif Display", Georgia, serif;
+  --lc-font-body: "IBM Plex Sans", "Inter", system-ui, sans-serif;
+  --lc-font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
   background: var(--lc-bg);
   color: var(--lc-body);
-  font-family: "IBM Plex Sans", "Inter", system-ui, sans-serif;
+  font-family: var(--lc-font-body);
   position: relative;
   isolation: isolate;
 }
@@ -46,7 +65,7 @@
 }
 
 .lc-section {
-  padding: clamp(72px, 8vw, 116px) 0;
+  padding: clamp(56px, 6vw, 88px) 0;
   scroll-margin-top: 88px;
 }
 
@@ -68,7 +87,7 @@
 .lc-kicker {
   margin: 0 0 16px;
   color: var(--lc-muted);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.16em;
@@ -78,7 +97,7 @@
 .lc-h2 {
   margin: 0;
   color: var(--lc-ink);
-  font-family: "DM Serif Display", Georgia, serif;
+  font-family: var(--lc-font-display);
   font-size: clamp(34px, 4.1vw, 56px);
   font-weight: 400;
   letter-spacing: -0.02em;
@@ -95,7 +114,7 @@
 .lc-h3 {
   margin: 0;
   color: var(--lc-ink);
-  font-family: "DM Serif Display", Georgia, serif;
+  font-family: var(--lc-font-display);
   font-size: clamp(26px, 2.6vw, 36px);
   font-weight: 400;
   letter-spacing: -0.015em;
@@ -155,7 +174,7 @@
 
 .lc-url {
   color: var(--lc-muted);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 12px;
   letter-spacing: 0.02em;
 }
@@ -169,7 +188,7 @@
   border: 1px solid rgba(63, 122, 85, 0.28);
   border-radius: 999px;
   color: var(--lc-ok);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.12em;
@@ -207,7 +226,7 @@
 .lc-panel-title {
   margin: 0 0 14px;
   color: var(--lc-muted);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.14em;
@@ -249,7 +268,7 @@
 }
 .lc-signal-copy small {
   color: var(--lc-muted);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 11.5px;
 }
 
@@ -257,7 +276,7 @@
   flex: 0 0 auto;
   padding: 4px 10px;
   border-radius: 999px;
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 10.5px;
   font-weight: 500;
   letter-spacing: 0.08em;
@@ -275,7 +294,7 @@
   gap: 5px;
   padding: 4px 10px;
   border-radius: 999px;
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 10.5px;
   font-weight: 500;
   letter-spacing: 0.08em;
@@ -308,14 +327,14 @@
 
 .lc-tile span {
   color: var(--lc-muted);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 11px;
   letter-spacing: 0.06em;
 }
 
 .lc-tile strong {
   color: var(--lc-ink);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 17px;
   font-weight: 600;
 }
@@ -337,7 +356,7 @@
   min-height: 26px;
   margin: 0;
   color: var(--lc-ink);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 15px;
   line-height: 1.55;
 }
@@ -409,7 +428,7 @@
   border-radius: 999px;
   background: rgba(63, 122, 85, 0.12);
   color: var(--lc-ok);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 11px;
   font-weight: 500;
   white-space: nowrap;
@@ -436,7 +455,7 @@
 
 /* ---------- split sections --------------------------------------- */
 
-.lc-stack { display: grid; gap: clamp(56px, 6vw, 88px); }
+.lc-stack { display: grid; gap: clamp(40px, 4.5vw, 64px); }
 
 .lc-split {
   display: grid;
@@ -457,7 +476,7 @@
   border: 0;
   background: transparent;
   color: var(--lc-teal);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.06em;
@@ -490,7 +509,7 @@
 .lc-surface-url,
 .lc-surface-tag {
   color: var(--lc-muted);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 12px;
 }
 
@@ -539,7 +558,7 @@
   border-radius: 8px;
   background: rgba(3, 54, 61, 0.08);
   color: var(--lc-teal);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 12px;
   font-weight: 600;
 }
@@ -553,7 +572,7 @@
 }
 .lc-driver-copy small {
   color: var(--lc-muted);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 11.5px;
 }
 
@@ -575,7 +594,7 @@
 
 .lc-driver-num {
   color: var(--lc-ink);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 14px;
   font-weight: 600;
 }
@@ -585,7 +604,7 @@
   border-radius: 999px;
   background: rgba(185, 130, 47, 0.12);
   color: var(--lc-amber);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 11.5px;
   font-weight: 500;
   white-space: nowrap;
@@ -612,7 +631,7 @@
   border-radius: 999px;
   background: rgba(58, 48, 34, 0.07);
   color: var(--lc-muted);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.07em;
@@ -653,7 +672,7 @@
 .lc-link-state {
   margin-left: auto;
   color: var(--lc-muted);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -736,7 +755,7 @@
   gap: 8px;
   margin-bottom: 14px;
   color: var(--lc-muted);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.13em;
@@ -786,7 +805,7 @@
   border-radius: 999px;
   background: var(--lc-card);
   color: var(--lc-body);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 13px;
   white-space: nowrap;
 }
@@ -830,7 +849,7 @@
 .lc-stats strong {
   display: block;
   color: var(--lc-ink);
-  font-family: "DM Serif Display", Georgia, serif;
+  font-family: var(--lc-font-display);
   font-size: 46px;
   font-weight: 400;
   line-height: 1;
@@ -840,7 +859,7 @@
   display: block;
   margin: 12px 0 10px;
   color: var(--lc-teal);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 12px;
   letter-spacing: 0.11em;
   text-transform: uppercase;
@@ -919,7 +938,7 @@
 
 .lc-footer-brand > span {
   color: var(--lc-ink);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 13px;
   letter-spacing: 0.3em;
 }
@@ -945,7 +964,7 @@
   border: 0;
   background: transparent;
   color: var(--lc-body);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 12px;
   letter-spacing: 0.07em;
   text-align: left;
@@ -965,7 +984,7 @@
   min-height: 62px;
   border-top: 1px solid var(--lc-line-soft);
   color: var(--lc-muted);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 11.5px;
   letter-spacing: 0.05em;
 }

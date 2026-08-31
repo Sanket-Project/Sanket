@@ -424,10 +424,9 @@ export const LandingPage = () => {
   ];
 
   return (
-    <div className="bg-[#060606] min-h-screen overflow-x-hidden relative" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+    <div className="landing-root bg-[#060606] min-h-screen overflow-x-hidden relative">
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Space+Grotesk:wght@300;400;500;600&display=swap');
         ::selection { background: rgba(222,219,200,0.12); color: #E8E5D0; }
         .grid-bg {
           background-image:
