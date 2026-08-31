@@ -473,7 +473,7 @@ export const LiveConsoleLanding = ({ onBook, onSandbox }: LiveConsoleLandingProp
   return (
     <main className="lc">
       {/* ── Console ─────────────────────────────────────────── */}
-      <section id="features" className="lc-section lc-section-console">
+      <section id="platform" className="lc-section lc-section-console">
         <div className="lc-shell">
           <Reveal className="lc-intro">
             <p className="lc-kicker">Live console</p>
@@ -555,7 +555,7 @@ export const LiveConsoleLanding = ({ onBook, onSandbox }: LiveConsoleLandingProp
       </section>
 
       {/* ── Industries ──────────────────────────────────────── */}
-      <section id="architecture" className="lc-section">
+      <section id="industries" className="lc-section">
         <div className="lc-shell">
           <Reveal className="lc-intro lc-intro-center">
             <p className="lc-kicker">Industries</p>
@@ -654,7 +654,7 @@ export const LiveConsoleLanding = ({ onBook, onSandbox }: LiveConsoleLandingProp
       </section>
 
       {/* ── Stats + CTA ─────────────────────────────────────── */}
-      <section id="pricing" className="lc-section lc-section-alt">
+      <section id="get-started" className="lc-section lc-section-alt">
         <div className="lc-shell">
           <Reveal className="lc-stats">
             {STATS.map((stat) => (
