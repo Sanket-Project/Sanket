@@ -47,14 +47,18 @@ def main(target_tenant: str | None = None) -> int:
         # still loaded RLS-scoped by the loader (it sets app.current_tenant_id).
         conn.execute(text("SELECT set_config('app.bypass_rls', 'true', true)"))
         rows = conn.execute(
-            text(f"SELECT id::text, slug, industries::text[] AS industries FROM tenants {where}"), params
+            text(f"SELECT id::text, slug, industry::text AS industry FROM tenants {where}"),  # noqa: S608
+            params,
         ).fetchall()
 
     log.info("train_all.start", n_tenants=len(rows))
     failures = 0
     for row in rows:
         tid = uuid.UUID(row.id)
-        for ind in row.industries or []:
+        # One industry per workspace, so one model set per tenant. This used to
+        # loop over a five-element `industries` array and train five times for
+        # every tenant, four of them on empty panels.
+        for ind in (row.industry,):
             spec = _ORCHESTRATORS.get(ind)
             if spec is None:
                 log.warning("train_all.unknown_industry", tenant=str(tid), industry=ind)

@@ -6,13 +6,24 @@ from pydantic import BaseModel, Field
 
 from app.models.enums import IndustryCode
 
+# Deprecated on every request that carries it. A workspace has exactly one
+# industry and the server knows it, so this field can no longer choose anything:
+# omit it (the normal path), or send the workspace's own. Anything else is a
+# 403 rather than a silent coercion -- a client that believes it can write into
+# another industry is telling us its state is wrong.
+_TARGET_INDUSTRY_FIELD = Field(
+    default=None,
+    description=(
+        "Deprecated. The workspace's own industry is always used; supplying a "
+        "different one is refused."
+    ),
+)
+
 
 class ShopifyConnectRequest(BaseModel):
     shop_domain: str = Field(..., description="e.g. my-store or my-store.myshopify.com")
     access_token: str = Field(..., min_length=10, description="Admin API access token")
-    target_industry: IndustryCode = Field(
-        ..., description="Industry that synced products/SKUs/sales land in"
-    )
+    target_industry: IndustryCode | None = _TARGET_INDUSTRY_FIELD
     # Optional: the custom app's API secret key. Needed only to verify inbound
     # webhooks (real-time sales). Stored encrypted; safe to omit for polling.
     api_secret: str | None = Field(default=None, min_length=8)
@@ -125,9 +136,7 @@ class GenericConnectRequest(BaseModel):
     """Connect (or request) any catalog provider. ``credentials`` keys must match
     the provider's ``auth_fields``; secret values are encrypted at rest."""
 
-    target_industry: IndustryCode = Field(
-        ..., description="Industry that data from this source lands in"
-    )
+    target_industry: IndustryCode | None = _TARGET_INDUSTRY_FIELD
     credentials: dict[str, str] = Field(default_factory=dict)
 
 

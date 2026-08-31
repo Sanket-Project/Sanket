@@ -106,3 +106,17 @@ class GoogleSignUpRequest(BaseModel):
     )
     name: str = Field(min_length=2, max_length=100, description="User's display name")
     industry: IndustryCode = _INDUSTRY_FIELD
+
+
+class AcceptInviteRequest(BaseModel):
+    """Redeem a one-time invite link.
+
+    Deliberately accepts no workspace, no role and no industry. All three come
+    from the invite record an owner or admin created; a client able to name its
+    own role would be a plain privilege-escalation path, and one able to name
+    its own industry would defeat the point of scoping a workspace at all.
+    """
+
+    token: str = Field(min_length=16, max_length=256)
+    name: str = Field(min_length=2, max_length=100)
+    password: str = Field(min_length=8, max_length=128)

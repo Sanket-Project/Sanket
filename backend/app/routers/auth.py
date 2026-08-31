@@ -18,13 +18,14 @@ production`` and by an explicit ``firebase_enabled`` guard below.
 
 from __future__ import annotations
 
+import hashlib
 import uuid
 from datetime import UTC, datetime
 from typing import Annotated
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from starlette.concurrency import run_in_threadpool
 
@@ -32,6 +33,7 @@ from app.config import Settings, get_settings
 from app.core.exceptions import (
     ConflictError,
     InvalidCredentialsError,
+    NotFoundError,
     TenantSuspendedError,
     TokenInvalidError,
 )
@@ -47,8 +49,10 @@ from app.core.login_attempt import (
 from app.core.security import hash_password, verify_password
 from app.middleware.rate_limit import client_ip_from_request
 from app.models.enums import TenantStatus
+from app.models.invite import Invite, InviteStatus
 from app.models.tenant import Tenant, User
 from app.schemas.auth import (
+    AcceptInviteRequest,
     DevLoginRequest,
     DevLoginResponse,
     FirebaseConfig,
@@ -690,3 +694,134 @@ async def google_signup(
         # default rather than re-reading the (now committed/expired) row.
         onboarding=default_onboarding_state(),
     )
+
+
+@router.post("/accept-invite", response_model=SessionInfo, status_code=201)
+async def accept_invite(
+    body: AcceptInviteRequest, request: Request, settings: SettingsDep
+) -> SessionInfo:
+    """Redeem an invitation and join its workspace.
+
+    Public, because the invitee has no bearer yet -- ``routers/invites.py`` has
+    always minted a link to ``/accept-invite?token=...`` and nothing has ever
+    redeemed it.
+
+    Everything that decides privilege is read from the invite row: which
+    workspace, which role, and (via the workspace) which industry. The request
+    supplies only the invitee's own name and password. Extra fields in the body
+    are ignored, so an attacker cannot promote themselves by adding ``role``.
+
+    The token is compared by SHA-256 hash, matching how ``POST /invites`` stored
+    it. A single-use check, an expiry check and a seat re-check all run here
+    rather than only at invite time, because all three can change in the days
+    between sending a link and someone clicking it.
+    """
+    token_hash = hashlib.sha256(body.token.encode("utf-8")).hexdigest()
+
+    db = request.app.state.db
+    async with db.session_no_rls() as db_session:
+        invite = await db_session.scalar(
+            select(Invite).where(
+                Invite.token_hash == token_hash,
+                Invite.status == InviteStatus.pending,
+            )
+        )
+        # One shape of failure for unknown, already-used, revoked and expired
+        # links: distinguishing them would let someone probe which invitations
+        # exist for an address they do not control.
+        if invite is None or invite.expires_at <= datetime.now(tz=UTC):
+            raise NotFoundError("Invite")
+
+        tenant_row = await db_session.get(Tenant, invite.tenant_id)
+        if tenant_row is None or tenant_row.status == TenantStatus.suspended:
+            raise NotFoundError("Invite")
+
+        existing = await db_session.scalar(
+            select(User).where(
+                User.tenant_id == invite.tenant_id, User.email == invite.email
+            )
+        )
+        if existing is not None:
+            raise ConflictError("That invitation has already been used")
+
+        seats_used = await db_session.scalar(
+            select(func.count())
+            .select_from(User)
+            .where(User.tenant_id == invite.tenant_id, User.is_active.is_(True))
+        )
+        if int(seats_used or 0) >= tenant_row.max_users:
+            raise ConflictError(
+                "This workspace has no seats available. Ask an admin to free one "
+                "or upgrade the plan."
+            )
+
+        # No industry passed: trg_users_inherit_industry stamps the workspace's.
+        user_row = User(
+            id=uuid.uuid4(),
+            tenant_id=invite.tenant_id,
+            email=invite.email,
+            password_hash=hash_password(body.password, settings),
+            full_name=body.name,
+            role=invite.role,
+            is_active=True,
+        )
+        db_session.add(user_row)
+        invite.status = InviteStatus.accepted
+        await db_session.flush()
+
+        if settings.firebase_enabled:
+            try:
+                firebase_uid = await run_in_threadpool(
+                    get_verifier().create_or_get_user,
+                    email=invite.email,
+                    password=body.password,
+                    display_name=body.name,
+                    reset_password=True,
+                )
+                user_row.firebase_uid = firebase_uid
+                await db_session.flush()
+                await run_in_threadpool(
+                    get_verifier().set_user_claims,
+                    firebase_uid,
+                    puid=str(user_row.id),
+                    tid=str(tenant_row.id),
+                    role=invite.role.value,
+                    ind=tenant_row.industry.value,
+                )
+            except Exception as exc:
+                log.error("auth.accept_invite.firebase_failed", error=str(exc))
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail="Account provisioning failed. Please try again.",
+                ) from exc
+
+        await audit.record(
+            db_session,
+            tenant_id=tenant_row.id,
+            user_id=user_row.id,
+            action="user.invite_accepted",
+            entity_type="user",
+            entity_id=str(user_row.id),
+            industry=tenant_row.industry,
+            ip_address=_client_ip(request),
+            user_agent=request.headers.get("User-Agent"),
+            request_id=getattr(request.state, "request_id", None),
+        )
+
+        result = SessionInfo(
+            user_id=user_row.id,
+            tenant_id=tenant_row.id,
+            role=invite.role.value,
+            active_industry=tenant_row.industry.value,
+            email=user_row.email,
+            full_name=user_row.full_name,
+            onboarding=load_onboarding_state(tenant_row.settings),
+        )
+        await db_session.commit()
+
+    log.info(
+        "auth.accept_invite.ok",
+        tenant_id=str(result.tenant_id),
+        role=result.role,
+    )
+    return result

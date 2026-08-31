@@ -30,6 +30,7 @@ from sqlalchemy import select, update
 
 from app.connectors import ConnectorAvailability, get_spec, grouped_catalog
 from app.core.crypto import decrypt_secret, encrypt_secret
+from app.core.industry_scope import TenantIndustry, assert_industry
 from app.models.enums import IndustryCode
 from app.models.integration import IntegrationConnection
 from app.routers.industry_router import TenantId, UserId
@@ -138,13 +139,19 @@ async def connect_provider(
     request: Request,
     tenant_id: TenantId,
     user_id: UserId,
+    industry: TenantIndustry,
 ) -> ConnectorOut:
     """Connect (or, for not-yet-live providers, request) any catalog provider.
 
     Secret credential fields are encrypted at rest; non-secret fields are stored
     as plain config. Shopify and file providers are rejected here — they have
     dedicated flows.
+
+    The connection always lands in the workspace's own industry. A client that
+    supplies a different ``target_industry`` is refused (403) rather than
+    quietly redirected.
     """
+    target_industry = assert_industry(body.target_industry, industry)
     spec = get_spec(provider)
     if spec is None:
         raise HTTPException(status_code=404, detail=f"Unknown provider: {provider}")
@@ -236,7 +243,7 @@ async def connect_provider(
                     shop_domain=body.credentials.get("base_url")
                     if provider == "woocommerce"
                     else None,
-                    target_industry=body.target_industry,
+                    target_industry=target_industry,
                     state=state,
                     last_sync_stats={},
                     error_message=None,
@@ -244,7 +251,7 @@ async def connect_provider(
             )
         else:
             existing.status = status
-            existing.target_industry = body.target_industry
+            existing.target_industry = target_industry
             if provider == "woocommerce":
                 existing.shop_domain = body.credentials.get("base_url")
             existing.state = {**(existing.state or {}), **state}
@@ -487,19 +494,21 @@ async def upload_file(
     user_id: UserId,
     file: Annotated[UploadFile, File()],
     kind: Annotated[str, Form()],
-    target_industry: Annotated[str, Form()],
+    tenant_industry: TenantIndustry,
+    target_industry: Annotated[str | None, Form()] = None,
     column_mapping: Annotated[str | None, Form()] = None,
 ) -> UploadResult:
     """Upload a CSV/Excel file of sales, inventory, or products and ingest it
-    into the canonical schema."""
+    into the canonical schema.
+
+    Rows always land in the workspace's own industry. ``target_industry`` is
+    deprecated and optional: omitted is the normal path, the workspace's own is
+    accepted, and anything else is refused (403) rather than silently written
+    somewhere the caller did not intend.
+    """
     if kind not in ("sales", "inventory", "products"):
         raise HTTPException(status_code=400, detail="kind must be sales, inventory, or products")
-    try:
-        industry = IndustryCode(target_industry)
-    except ValueError:
-        raise HTTPException(
-            status_code=400, detail=f"Unknown industry: {target_industry}"
-        ) from None
+    industry = assert_industry(target_industry, tenant_industry)
 
     content = await file.read()
     if not content:

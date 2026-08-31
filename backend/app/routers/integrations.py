@@ -25,6 +25,7 @@ from sqlalchemy import select, text, update
 
 from app.config import get_settings
 from app.core.crypto import decrypt_secret, encrypt_secret
+from app.core.industry_scope import TenantIndustry, assert_industry
 from app.models.integration import IntegrationConnection
 from app.routers.industry_router import TenantId, UserId
 from app.schemas.integrations import (
@@ -91,11 +92,19 @@ async def shopify_status(request: Request, tenant_id: TenantId) -> IntegrationSt
 
 @router.post("/shopify/connect", response_model=IntegrationStatus)
 async def shopify_connect(
-    body: ShopifyConnectRequest, request: Request, tenant_id: TenantId, user_id: UserId
+    body: ShopifyConnectRequest,
+    request: Request,
+    tenant_id: TenantId,
+    user_id: UserId,
+    industry: TenantIndustry,
 ) -> IntegrationStatus:
     db = request.app.state.db
     http = getattr(request.app.state, "http", None)
     settings = get_settings()
+
+    # Synced products, SKUs and sales land in the workspace's own industry.
+    # Checked before the Shopify round-trip so a mismatched request fails fast.
+    target_industry = assert_industry(body.target_industry, industry)
 
     # Validate the token against Shopify before persisting anything.
     try:
@@ -132,7 +141,7 @@ async def shopify_connect(
                 status="connected",
                 shop_domain=normalized_domain,
                 access_token_encrypted=encrypted,
-                target_industry=body.target_industry,
+                target_industry=target_industry,
                 last_sync_stats={"shop_name": shop.get("name")},
                 state=extra_state,
                 error_message=None,
@@ -142,7 +151,7 @@ async def shopify_connect(
             existing.status = "connected"
             existing.shop_domain = normalized_domain
             existing.access_token_encrypted = encrypted
-            existing.target_industry = body.target_industry
+            existing.target_industry = target_industry
             existing.error_message = None
             existing.last_sync_stats = {
                 **(existing.last_sync_stats or {}),

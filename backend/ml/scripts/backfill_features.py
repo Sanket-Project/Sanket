@@ -30,7 +30,8 @@ def main(target_tenant: str | None = None) -> int:
 
     with engine.begin() as conn:
         tenants = conn.execute(
-            text(f"SELECT id::text, industries::text[] AS industries FROM tenants {where}"), params
+            text(f"SELECT id::text, industry::text AS industry FROM tenants {where}"),  # noqa: S608
+            params,
         ).fetchall()
 
     sales_loader = HistoricalSalesLoader(settings)
@@ -40,7 +41,8 @@ def main(target_tenant: str | None = None) -> int:
 
     for row in tenants:
         tid = uuid.UUID(row.id)
-        for ind in row.industries or []:
+        # One industry per workspace — see train_all.py for the same change.
+        for ind in (row.industry,):
             try:
                 panel = sales_loader.load(tid, ind, freq="W")
                 if panel.n_series == 0:

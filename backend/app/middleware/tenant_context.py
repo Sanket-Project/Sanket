@@ -34,6 +34,10 @@ _PUBLIC_PATHS: frozenset[str] = frozenset(
         # Google OAuth first-time sign-in: the Firebase ID token is in the
         # request body (verified server-side); no bearer header exists yet.
         "/api/v1/auth/google-signup",
+        # Invite redemption: the invitee has no account, and therefore no
+        # bearer, until this call creates one. Authenticated by the one-time
+        # token in the body, which the handler compares by hash.
+        "/api/v1/auth/accept-invite",
         # Public demo: authenticates the shared sandbox account server-side, so
         # it must be reachable without an existing bearer.
         "/api/v1/auth/sandbox-session",

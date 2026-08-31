@@ -292,6 +292,90 @@ async def test_industry_locks_once_setup_completes(
     assert r.status_code == 409, r.text
 
 
+# ── Ingestion cannot cross the boundary ──────────────────────────────────────
+
+
+# These run against `pharma-tenant` rather than the shared `test-tenant`.
+# Ingestion tests leave rows behind -- a product, an integration connection --
+# and `test-tenant` is used by most of the suite, including a push-ingest test
+# that raw-INSERTs its own `rest_api` connection and collides with one created
+# here on the tenant/provider unique constraint.
+
+
+async def test_upload_cannot_target_another_industry(
+    client: AsyncClient, db_session: AsyncSession, pharma_tenant_id: uuid.UUID
+) -> None:
+    """An old client posting a mismatched target_industry is refused.
+
+    Not silently coerced: a client that believes it can write into another
+    industry is telling us its state is wrong, and that deserves an error.
+    """
+    token = await _token(db_session, pharma_tenant_id, "pharma")
+    r = await client.post(
+        "/api/v1/integrations/upload",
+        headers={"Authorization": f"Bearer {token}"},
+        data={"kind": "products", "target_industry": "fashion"},
+        files={"file": ("p.csv", b"name,category\nA Tablet,analgesics\n", "text/csv")},
+    )
+    assert r.status_code == 403, r.text
+
+
+async def test_upload_defaults_to_the_workspace_industry(
+    client: AsyncClient, db_session: AsyncSession, pharma_tenant_id: uuid.UUID
+) -> None:
+    """Omitting the field is now the normal path: the server knows the industry."""
+    token = await _token(db_session, pharma_tenant_id, "pharma")
+    r = await client.post(
+        "/api/v1/integrations/upload",
+        headers={"Authorization": f"Bearer {token}"},
+        data={"kind": "products"},
+        files={"file": ("p.csv", b"name,category\nA Tablet,analgesics\n", "text/csv")},
+    )
+    assert r.status_code == 200, r.text
+
+    industry = await db_session.scalar(
+        text(
+            "SELECT industry::text FROM products WHERE tenant_id = :tid "
+            "ORDER BY created_at DESC LIMIT 1"
+        ),
+        {"tid": str(pharma_tenant_id)},
+    )
+    assert industry == "pharma"
+
+
+async def test_connect_cannot_target_another_industry(
+    client: AsyncClient, db_session: AsyncSession, pharma_tenant_id: uuid.UUID
+) -> None:
+    token = await _token(db_session, pharma_tenant_id, "pharma")
+    r = await client.post(
+        "/api/v1/integrations/rest_api/connect",
+        json={"target_industry": "fashion", "credentials": {}},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert r.status_code == 403, r.text
+
+
+async def test_connect_records_the_workspace_industry(
+    client: AsyncClient, db_session: AsyncSession, pharma_tenant_id: uuid.UUID
+) -> None:
+    token = await _token(db_session, pharma_tenant_id, "pharma")
+    r = await client.post(
+        "/api/v1/integrations/rest_api/connect",
+        json={"credentials": {}},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert r.status_code in (200, 201), r.text
+
+    industry = await db_session.scalar(
+        text(
+            "SELECT target_industry::text FROM integration_connections "
+            "WHERE tenant_id = :tid AND provider = 'rest_api'"
+        ),
+        {"tid": str(pharma_tenant_id)},
+    )
+    assert industry == "pharma"
+
+
 async def test_industry_locks_once_the_workspace_holds_data(
     client: AsyncClient, db_session: AsyncSession
 ) -> None:
