@@ -72,6 +72,44 @@ def test_mint_dev_token_refuses_a_plural_industries_argument() -> None:
         )
 
 
+def test_an_unexpired_legacy_token_still_carrying_industries_is_ignored() -> None:
+    """The real staleness case: a token minted *before* the claim was removed.
+
+    Asserting that a freshly minted token lacks the claim proves nothing — it
+    never had one. What matters is a token issued by the old code, still inside
+    its lifetime, whose `industries: [all five]` was the very thing the old
+    middleware authorized switching against. Verification must drop it.
+    """
+    from datetime import UTC, datetime, timedelta
+
+    import jwt
+
+    from app.core.firebase_auth import DEV_IDENTITY_MARKER
+
+    settings = _settings()
+    now = datetime.now(tz=UTC)
+    legacy = jwt.encode(
+        {
+            "sub": "u1", "uid": "u1", "puid": "p1", "email": "a@b.com",
+            "tid": "t1", "role": "admin", "ind": "fashion",
+            # Minted by the old code path.
+            "industries": ["fashion", "electronics", "pharma", "agrocenter", "hardware"],
+            "iat": now,
+            "exp": now + timedelta(minutes=30),
+            DEV_IDENTITY_MARKER: True,
+        },
+        settings.jwt_secret,
+        algorithm="HS256",
+    )
+
+    identity = FirebaseVerifier(settings).verify(legacy)
+    assert identity["ind"] == "fashion"
+    assert "industries" not in identity, (
+        "a legacy claim must not survive verification — the middleware used to "
+        "authorize industry switching against exactly this list"
+    )
+
+
 def test_verify_rejects_tampered_token() -> None:
     v = FirebaseVerifier(_settings())
     token, _ = v.mint_dev_token(

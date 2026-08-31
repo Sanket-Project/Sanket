@@ -315,36 +315,16 @@ async def seed_database_if_empty() -> None:
                 )
                 log.info("database.seed.completed", tenant_id=str(tenant_id))
 
-            # Dedicated least-privilege account backing the public "Try the
-            # Sandbox" flow. This is reconciled even when the tenant predates
-            # the feature; the old early return left every upgraded workspace
-            # permanently unable to launch the sandbox.
-            sandbox_user = await session.scalar(
-                select(User).where(
-                    User.tenant_id == tenant_id,
-                    User.email == settings.sandbox_email,
-                )
-            )
-            if sandbox_user is None:
-                session.add(
-                    User(
-                        id=uuid.uuid4(),
-                        tenant_id=tenant_id,
-                        email=settings.sandbox_email,
-                        password_hash=None,
-                        full_name="Sandbox Guest",
-                        role=UserRole.viewer,
-                        is_active=True,
-                    )
-                )
-                log.info("database.seed.sandbox_user_created", tenant_id=str(tenant_id))
-            else:
-                # The account is publicly mintable, so enforce the security
-                # invariant on every startup: viewer-only and passwordless.
-                sandbox_user.password_hash = None
-                sandbox_user.role = UserRole.viewer
-                sandbox_user.is_active = True
-                log.info("database.seed.sandbox_user_verified", tenant_id=str(tenant_id))
+        # The public sandbox account is NOT seeded here any more. It used to be
+        # created inside this development tenant, which is what put anonymous
+        # visitors in it; migration 0020 owns the dedicated `sandbox` workspace
+        # and its viewer account instead. Re-adding a block here that keys off
+        # `settings.sandbox_email` would recreate the demo user in the dev
+        # tenant and quietly undo that.
+        #
+        # The security invariant it enforced — publicly mintable means
+        # viewer-only and passwordless — is asserted by
+        # `tests/test_industry_migration.py::test_sandbox_user_is_a_viewer`.
 
         # NOTE: demo product/SKU/inventory catalog seeding has been intentionally
         # removed. A fresh database now starts with an empty catalog so the app is

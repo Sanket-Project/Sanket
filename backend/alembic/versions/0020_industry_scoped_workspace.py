@@ -78,10 +78,10 @@ def upgrade() -> None:
         CREATE OR REPLACE FUNCTION tenants_mirror_industries()
         RETURNS TRIGGER
         LANGUAGE plpgsql
-        SET search_path = pg_catalog, public
+        SET search_path = pg_catalog, public, pg_temp
         AS $$
         BEGIN
-            NEW.industries := ARRAY[NEW.industry]::industry_code[];
+            NEW.industries := ARRAY[NEW.industry]::public.industry_code[];
             RETURN NEW;
         END;
         $$
@@ -99,21 +99,29 @@ def upgrade() -> None:
     # cross-tenant insert -- signup runs without an RLS tenant context, so an
     # invoker-rights function would see no row and silently leave the member's
     # industry unchecked. This is trigger-level privilege created by a
-    # migration, not application code opening a superuser connection, and the
-    # search_path is pinned so the definer rights cannot be hijacked.
+    # migration, not application code opening a superuser connection.
+    #
+    # The function runs as its owner (a superuser, since migrations connect with
+    # MIGRATION_DATABASE_URL), so its search_path must be hostile-proof:
+    #   * `pg_temp` is named explicitly and LAST. Omitting it does not exclude
+    #     it -- Postgres searches the temp schema FIRST for unqualified
+    #     relations -- so any role with the default TEMP privilege could
+    #     `CREATE TEMP TABLE tenants(...)` and feed this function whatever it
+    #     liked. Naming it last pins it behind the real schemas.
+    #   * `tenants` is schema-qualified anyway, belt and braces.
     op.execute(
         """
         CREATE OR REPLACE FUNCTION users_inherit_industry()
         RETURNS TRIGGER
         LANGUAGE plpgsql
         SECURITY DEFINER
-        SET search_path = pg_catalog, public
+        SET search_path = pg_catalog, public, pg_temp
         AS $$
         DECLARE
-            tenant_industry industry_code;
+            tenant_industry public.industry_code;
         BEGIN
             SELECT t.industry INTO tenant_industry
-            FROM tenants t WHERE t.id = NEW.tenant_id;
+            FROM public.tenants t WHERE t.id = NEW.tenant_id;
             IF tenant_industry IS NOT NULL THEN
                 NEW.active_industry := tenant_industry;
             END IF;
@@ -156,7 +164,13 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.execute("DELETE FROM users WHERE email = 'sandbox@sanket.app'")
+    op.execute(
+        """
+        DELETE FROM users
+        WHERE email = 'sandbox@sanket.app'
+          AND tenant_id = (SELECT id FROM tenants WHERE slug = 'sandbox')
+        """
+    )
     op.execute("DELETE FROM tenants WHERE slug = 'sandbox'")
     op.execute("DROP TRIGGER IF EXISTS trg_users_inherit_industry ON users")
     op.execute("DROP FUNCTION IF EXISTS users_inherit_industry()")

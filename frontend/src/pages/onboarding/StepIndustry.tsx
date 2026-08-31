@@ -53,6 +53,7 @@ export const StepIndustry = forwardRef<StepHandle, StepProps>(function StepIndus
   const industry = useWorkspaceIndustry();
   const role = useAuthStore((s) => s.role);
   const replaceToken = useAuthStore((s) => s.replaceToken);
+  const refreshToken = useAuthStore((s) => s.refresh);
 
   const canCorrect = role === "owner" || role === "admin";
   const [correcting, setCorrecting] = useState(false);
@@ -81,7 +82,17 @@ export const StepIndustry = forwardRef<StepHandle, StepProps>(function StepIndus
         // the wizard must not fail just because the workspace has since locked.
         if (selected !== industry) {
           const res = await industryApi.activate(selected);
-          if (res.access_token) replaceToken(res.access_token);
+          if (res.access_token) {
+            // Dev mode: swap in the re-minted bearer.
+            replaceToken(res.access_token);
+          } else if (res.reauth_required) {
+            // Firebase mode: the server re-stamped custom claims and revoked
+            // refresh tokens, so the bearer this page is holding is now dead.
+            // Force a fresh ID token before the next call — without it the
+            // `save` below 401s and the interceptor signs the user out
+            // mid-wizard, losing the step.
+            await refreshToken();
+          }
         }
         await save({
           mark_step: thisStep,

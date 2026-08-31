@@ -105,14 +105,18 @@ class Settings(BaseSettings):
     # mints a dev token directly, and in Firebase mode it mints a custom token —
     # so the demo account can (and should) have no usable password at all.
     #
-    # SECURITY: this MUST point at a dedicated *viewer*-role user, never the
-    # tenant owner/admin. Anyone on the internet can start a sandbox session, so
-    # the account it maps to defines the blast radius. The seed provisions
-    # `sandbox@sanket-dev.com` with UserRole.viewer precisely so an anonymous
-    # visitor cannot mutate shared demo data, manage members, or touch billing.
+    # SECURITY: this MUST point at a dedicated *viewer*-role user in a dedicated
+    # workspace, never the tenant owner/admin. Anyone on the internet can start a
+    # sandbox session, so the account it maps to defines the blast radius.
+    #
+    # It used to point at `sanket-dev` — the shared *development* tenant, which
+    # is also where non-production auth auto-provisions unknown Google accounts.
+    # A viewer role limited what a visitor could change, but they were still
+    # reading the development workspace's real data. Migration 0020 creates a
+    # dedicated `sandbox` workspace, scoped to one industry, for this to point at.
     sandbox_enabled: bool = True
-    sandbox_tenant_slug: str = "sanket-dev"
-    sandbox_email: str = "sandbox@sanket-dev.com"
+    sandbox_tenant_slug: str = "sandbox"
+    sandbox_email: str = "sandbox@sanket.app"
 
     # ── Integrations (Shopify, etc.) ─────────────────────────────────────────
     # Symmetric secret used to encrypt third-party access tokens at rest. Any

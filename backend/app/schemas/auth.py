@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.models.enums import IndustryCode
 from app.schemas.onboarding import OnboardingState
@@ -115,8 +115,24 @@ class AcceptInviteRequest(BaseModel):
     from the invite record an owner or admin created; a client able to name its
     own role would be a plain privilege-escalation path, and one able to name
     its own industry would defeat the point of scoping a workspace at all.
+
+    ``extra="forbid"`` rather than Pydantic's default ignore: a request that
+    tries to send ``role`` should be told it is wrong, not silently obeyed in
+    part. The guarantee no longer rests on a default staying put.
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     token: str = Field(min_length=16, max_length=256)
     name: str = Field(min_length=2, max_length=100)
     password: str = Field(min_length=8, max_length=128)
+
+
+class AcceptInviteResponse(SessionInfo):
+    """Redemption creates the account; it does not sign anyone in.
+
+    Carries the workspace slug so the sign-in form can prefill it — the invitee
+    has never seen it and has no way to guess it, and dev-login requires it.
+    """
+
+    tenant_slug: str

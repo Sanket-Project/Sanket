@@ -234,14 +234,19 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          {/* The layout itself needs a boundary, not just the leaf routes:
+              AppShell, Sidebar and TopBar all read the workspace industry, and
+              an exception there unmounts the whole tree to a blank page. */}
           <Route
             path="/workspace"
             element={
-              <ProtectedRoute>
-                <OnboardingGate>
-                  <AppShell />
-                </OnboardingGate>
-              </ProtectedRoute>
+              <ErrorBoundary>
+                <ProtectedRoute>
+                  <OnboardingGate>
+                    <AppShell />
+                  </OnboardingGate>
+                </ProtectedRoute>
+              </ErrorBoundary>
             }
           >
             <Route index element={<ErrorBoundary><Suspense fallback={<PageFallback />}><Dashboard /></Suspense></ErrorBoundary>} />

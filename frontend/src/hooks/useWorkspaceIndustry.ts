@@ -21,7 +21,11 @@ import type { IndustryCode } from "@/types/api";
  */
 export const useWorkspaceIndustry = (): IndustryCode => {
   const industry = useTenantIndustry();
-  if (industry === null) {
+  // Falsy, not `=== null`. The dev-mode bootstrap rehydrates the session from
+  // an untyped localStorage blob, so a snapshot written by an older build has
+  // no `active_industry` at all and arrives as undefined — which a null check
+  // waves through, to be destructured into `INDUSTRY[undefined]` a moment later.
+  if (!industry) {
     throw new Error(
       "useWorkspaceIndustry was called outside an authenticated workspace",
     );

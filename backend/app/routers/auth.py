@@ -53,6 +53,7 @@ from app.models.invite import Invite, InviteStatus
 from app.models.tenant import Tenant, User
 from app.schemas.auth import (
     AcceptInviteRequest,
+    AcceptInviteResponse,
     DevLoginRequest,
     DevLoginResponse,
     FirebaseConfig,
@@ -696,10 +697,10 @@ async def google_signup(
     )
 
 
-@router.post("/accept-invite", response_model=SessionInfo, status_code=201)
+@router.post("/accept-invite", response_model=AcceptInviteResponse, status_code=201)
 async def accept_invite(
     body: AcceptInviteRequest, request: Request, settings: SettingsDep
-) -> SessionInfo:
+) -> AcceptInviteResponse:
     """Redeem an invitation and join its workspace.
 
     Public, because the invitee has no bearer yet -- ``routers/invites.py`` has
@@ -720,11 +721,17 @@ async def accept_invite(
 
     db = request.app.state.db
     async with db.session_no_rls() as db_session:
+        # Locked for the transaction: without it two concurrent redemptions of
+        # the same link both see `pending`, and the loser dies on
+        # uq_users_tenant_email as an unhandled 500 rather than the 404 the
+        # single-use rule intends.
         invite = await db_session.scalar(
-            select(Invite).where(
+            select(Invite)
+            .where(
                 Invite.token_hash == token_hash,
                 Invite.status == InviteStatus.pending,
             )
+            .with_for_update()
         )
         # One shape of failure for unknown, already-used, revoked and expired
         # links: distinguishing them would let someone probe which invitations
@@ -736,13 +743,22 @@ async def accept_invite(
         if tenant_row is None or tenant_row.status == TenantStatus.suspended:
             raise NotFoundError("Invite")
 
+        # Global, not scoped to the invite's tenant — matching /auth/signup.
+        #
+        # Scoping it to the tenant was an account-takeover hole. Provisioning
+        # below resets the Firebase password of an address that already exists,
+        # so anyone could sign up for a free workspace, invite victim@corp.com,
+        # read the raw token straight out of their own invite response, and
+        # redeem it with a password of their choosing. `users.firebase_uid` is
+        # globally unique, so one identity maps to at most one SANKET user and
+        # there was never a legitimate case for adopting an existing account.
         existing = await db_session.scalar(
-            select(User).where(
-                User.tenant_id == invite.tenant_id, User.email == invite.email
-            )
+            select(User).where(User.email == invite.email)
         )
         if existing is not None:
-            raise ConflictError("That invitation has already been used")
+            raise ConflictError(
+                f"An account for '{invite.email}' already exists. Sign in instead."
+            )
 
         seats_used = await db_session.scalar(
             select(func.count())
@@ -770,13 +786,28 @@ async def accept_invite(
         await db_session.flush()
 
         if settings.firebase_enabled:
+            # Refuse rather than adopt an identity that already exists in
+            # Firebase but has no SANKET row (a half-provisioned signup, or an
+            # account on another product sharing the project). Taking it over
+            # would be the same defect as above by another route.
+            #
+            # Outside the try below on purpose: a ConflictError raised inside it
+            # would be swallowed by the catch-all and reported as a 502.
+            prior_uid = await run_in_threadpool(
+                get_verifier().get_uid_by_email, invite.email
+            )
+            if prior_uid is not None:
+                raise ConflictError(
+                    f"An account for '{invite.email}' already exists. Sign in instead."
+                )
             try:
+                # reset_password stays False: this endpoint is reachable by
+                # anyone holding a link, for an address they need not control.
                 firebase_uid = await run_in_threadpool(
                     get_verifier().create_or_get_user,
                     email=invite.email,
                     password=body.password,
                     display_name=body.name,
-                    reset_password=True,
                 )
                 user_row.firebase_uid = firebase_uid
                 await db_session.flush()
@@ -808,9 +839,10 @@ async def accept_invite(
             request_id=getattr(request.state, "request_id", None),
         )
 
-        result = SessionInfo(
+        result = AcceptInviteResponse(
             user_id=user_row.id,
             tenant_id=tenant_row.id,
+            tenant_slug=tenant_row.slug,
             role=invite.role.value,
             active_industry=tenant_row.industry.value,
             email=user_row.email,

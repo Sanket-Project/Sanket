@@ -9,7 +9,6 @@ import { authApi } from "@/api/auth";
 import { onboardingApi } from "@/api/onboarding";
 import { firebaseAuth, firebaseEnabled } from "@/lib/firebase";
 import toast from "react-hot-toast";
-import { useIndustryStore } from "@/stores/industry";
 import { getErrorMessage } from "@/utils/errors";
 import type {
   IndustryCode,
@@ -23,6 +22,9 @@ import type {
 // (IndexedDB), so we never persist a bearer token in localStorage there.
 const DEV_TOKEN_KEY = "sanket.dev.token";
 const DEV_SESSION_KEY = "sanket.dev.session";
+// Written by versions that kept a separate, writable industry store. Removed on
+// bootstrap; see the note in setSession.
+const LEGACY_INDUSTRY_KEY = "sanket.industry";
 
 /**
  * Keep the persisted session snapshot's onboarding slice in step with the store.
@@ -130,10 +132,11 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   ...CLEARED,
 
   setSession: (s, token) => {
-    // Project the industry first, synchronously, so nothing can observe an
-    // authenticated session that has no industry yet — that gap is what let
-    // another industry's UI flash for a frame during bootstrap.
-    useIndustryStore.getState().setSessionIndustry(s.active_industry);
+    // `industry` is set in the same synchronous update as `isAuthenticated`, so
+    // nothing can observe an authenticated session without one — that gap is
+    // what let another industry's UI flash for a frame during bootstrap. It is
+    // deliberately never persisted separately: a standalone, writable industry
+    // store was how a value from one account survived logout into the next.
     set({
       accessToken: token,
       userId: s.user_id,
@@ -181,6 +184,15 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   bootstrap: () => {
     if (bootstrapped) return;
     bootstrapped = true;
+
+    // Drop the industry key earlier versions persisted independently of the
+    // session. Nothing reads it any more, but a leftover that outlives a logout
+    // is the kind of thing that quietly becomes load-bearing again.
+    try {
+      localStorage.removeItem(LEGACY_INDUSTRY_KEY);
+    } catch {
+      /* storage may be unavailable (private mode, blocked site data) */
+    }
 
     if (firebaseEnabled && firebaseAuth) {
       // Firebase restores the session and rotates the ID token for us.
@@ -353,15 +365,10 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     } catch {
       /* ignore */
     }
-    // Clear the projected industry with the rest of the session. It no longer
-    // persists, so this only guards the in-memory case: without it the next
-    // login in the same tab could briefly render the previous account's
-    // industry — a stale "GxP · 21 CFR Part 11" badge on a Fashion workspace.
-    try {
-      useIndustryStore.getState().setSessionIndustry(null);
-    } catch {
-      /* ignore */
-    }
+    // CLEARED includes `industry: null`, so the workspace industry goes with
+    // the rest of the session. It lives nowhere else and is never persisted
+    // separately — which is what used to let the previous account's industry
+    // survive into the next login as a stale "GxP · 21 CFR Part 11" badge.
     set({ ...CLEARED, ready: true });
   },
 

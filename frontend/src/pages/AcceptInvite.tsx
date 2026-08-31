@@ -24,7 +24,6 @@ export const AcceptInvitePage = () => {
   const [params] = useSearchParams();
   const token = useMemo(() => params.get("token") ?? "", [params]);
   const isAuth = useAuthStore((s) => s.isAuthenticated);
-  const setSession = useAuthStore((s) => s.setSession);
 
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
@@ -44,11 +43,15 @@ export const AcceptInvitePage = () => {
     setLoading(true);
     try {
       const session = await authApi.acceptInvite({ token, name, password });
-      // No token to store: the invitee signs in normally afterwards. Setting the
-      // session here would leave the app authenticated with no bearer.
-      setSession(session, null);
-      toast.success(`Welcome to ${session.full_name ? "the team" : "SANKET"}!`);
-      navigate("/workspace", { replace: true });
+      // Redemption creates the account; it does not sign anyone in. Marking the
+      // store authenticated with a null bearer would get them past
+      // ProtectedRoute and then 401 every request the shell makes, ending in a
+      // forced sign-out. Send them to sign in with the workspace prefilled.
+      toast.success("You're in — sign in to open your workspace.");
+      navigate("/login", {
+        replace: true,
+        state: { email: session.email, tenantSlug: session.tenant_slug },
+      });
     } catch (err) {
       setError(
         getErrorMessage(

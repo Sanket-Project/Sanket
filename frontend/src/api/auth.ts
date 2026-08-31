@@ -60,7 +60,9 @@ export const authApi = {
    * would be a privilege-escalation path.
    */
   acceptInvite: (body: { token: string; name: string; password: string }) =>
-    apiClient.post<SessionInfo>("/auth/accept-invite", body).then((r) => r.data),
+    apiClient
+      .post<SessionInfo & { tenant_slug: string }>("/auth/accept-invite", body)
+      .then((r) => r.data),
 
   logout: () => apiClient.post("/auth/logout").then((r) => r.data),
 };

@@ -84,6 +84,13 @@ def assert_industry(
     than a silent coercion: an old client posting a mismatched
     ``target_industry`` is telling us it believes it can write somewhere it
     cannot, and that deserves an error, not a quiet redirect.
+
+    An unrecognised code is 422, matching what Pydantic already returns for the
+    JSON bodies whose ``target_industry`` is typed ``IndustryCode | None`` --
+    this function only sees a raw string from the multipart upload form, and the
+    two should not disagree. ``X-Industry-Code`` answers 400 for the same input
+    on purpose: a malformed *header* is a different failure from a malformed
+    request body, and that behaviour predates this change.
     """
     if requested is None:
         return tenant

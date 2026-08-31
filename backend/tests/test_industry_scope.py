@@ -294,6 +294,60 @@ async def test_correction_reissues_a_token_carrying_the_new_industry(
     assert stale.json()["code"] == "fashion"
 
 
+async def test_correction_carries_existing_members_with_it(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """A member who joined during setup must not be left on the old industry.
+
+    Invites can be accepted before onboarding completes, so a workspace can have
+    members when the owner corrects the industry. Updating only the tenant row
+    left their mirror stale -- the users trigger fires on writes to `users`, not
+    on writes to `tenants`, so nothing re-derived it.
+    """
+    owner = await _signup(client, "carry-co", "fashion")
+
+    created = await client.post(
+        "/api/v1/invites",
+        json={"email": "member@carry.example.com", "role": "analyst"},
+        headers={"Authorization": f"Bearer {owner}"},
+    )
+    assert created.status_code == 201, created.text
+    raw = created.json()["invite_url"].split("token=")[1]
+    accepted = await client.post(
+        "/api/v1/auth/accept-invite",
+        json={"token": raw, "name": "Member", "password": "An0therSecret!"},
+    )
+    assert accepted.status_code == 201, accepted.text
+    assert accepted.json()["active_industry"] == "fashion"
+
+    corrected = await client.post(
+        "/api/v1/industry/activate",
+        json={"code": "pharma"},
+        headers={"Authorization": f"Bearer {owner}"},
+    )
+    assert corrected.status_code == 200, corrected.text
+
+    member_industry = await db_session.scalar(
+        text(
+            "SELECT active_industry::text FROM users "
+            "WHERE email = 'member@carry.example.com'"
+        )
+    )
+    assert member_industry == "pharma", "the member must move with the workspace"
+
+    # And their next sign-in serves the corrected industry, not the old claim.
+    login = await client.post(
+        "/api/v1/auth/dev-login",
+        json={
+            "email": "member@carry.example.com",
+            "password": "An0therSecret!",
+            "tenant_slug": "carry-co",
+        },
+    )
+    assert login.status_code == 200, login.text
+    assert login.json()["active_industry"] == "pharma"
+
+
 async def test_industry_locks_once_setup_completes(
     client: AsyncClient, db_session: AsyncSession
 ) -> None:

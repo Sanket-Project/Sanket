@@ -174,6 +174,25 @@ async def test_sandbox_session_returns_dev_token(
     assert body["role"] == "admin"
 
 
+async def test_sandbox_session_uses_the_dedicated_sandbox_workspace(
+    client: AsyncClient,
+) -> None:
+    """With no overrides, the public demo lands in its own workspace.
+
+    Deliberately monkeypatches nothing. The other sandbox tests point the
+    settings at a test tenant, which is fine for exercising the handler but
+    means they pass whatever the configured default happens to be — and the
+    default used to be `sanket-dev`, the shared development tenant that
+    anonymous internet visitors were being signed into.
+    """
+    r = await client.post("/api/v1/auth/sandbox-session")
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["email"] == "sandbox@sanket.app"
+    assert body["role"] == "viewer"
+    assert body["active_industry"] == "fashion"
+
+
 async def test_sandbox_session_disabled_returns_404(
     client: AsyncClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:

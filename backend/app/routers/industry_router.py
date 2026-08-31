@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import uuid
+from datetime import UTC, datetime
 from typing import Annotated, Any
 
 import structlog
 from fastapi import APIRouter, Depends, Request
-from sqlalchemy import select, text
+from sqlalchemy import select, text, update
 from starlette.concurrency import run_in_threadpool
 
 from app.config import get_settings
@@ -266,31 +267,67 @@ async def activate_industry(
             )
 
         tenant.industry = body.code
+        # Flush before touching members: the users trigger reads back
+        # `tenants.industry`, so the new value has to be in the transaction
+        # before those rows are re-derived.
+        await session.flush()
+        # Carry every member with the workspace. The trigger fires on writes to
+        # `users`, not to `tenants`, so without this touch the members who
+        # joined during setup keep the old industry on their row — and their
+        # next token would be minted from it.
+        await session.execute(
+            update(User)
+            .where(User.tenant_id == tenant_id)
+            .values(updated_at=datetime.now(tz=UTC))
+            .execution_options(synchronize_session=False)
+        )
         user = await session.get(User, user_id)
         await session.flush()
 
         user_email = user.email if user is not None else None
         user_role = user.role.value if user is not None else None
         firebase_uid = user.firebase_uid if user is not None else None
+        # Every member's issued token still carries the old `ind`. Revoking only
+        # the person who made the change would leave their colleagues able to
+        # read the superseded industry for the rest of their token's life.
+        member_uids = list(
+            (
+                await session.scalars(
+                    select(User.firebase_uid).where(
+                        User.tenant_id == tenant_id,
+                        User.firebase_uid.is_not(None),
+                        User.is_active.is_(True),
+                    )
+                )
+            ).all()
+        )
 
     result: dict = {"active_industry": code}
 
     settings = get_settings()
     if settings.firebase_enabled:
-        if firebase_uid and user_role is not None:
-            await run_in_threadpool(
-                get_verifier().set_user_claims,
-                firebase_uid,
-                puid=str(user_id),
-                tid=str(tenant_id),
-                role=user_role,
-                ind=code,
-            )
-            # The already-issued ID token keeps the previous `ind` for up to an
-            # hour. Revoke so the superseded industry cannot be replayed; the
-            # client signs in again and picks up the corrected claim.
-            await run_in_threadpool(get_verifier().revoke_refresh_tokens, firebase_uid)
-            result["reauth_required"] = True
+        # Every member's already-issued ID token keeps the previous `ind` for up
+        # to an hour. Revoke all of them so the superseded industry cannot be
+        # replayed by anyone; each client signs in again and picks up the
+        # corrected claim. The caller's own claims are re-stamped first so their
+        # next sign-in is immediately correct.
+        for uid in member_uids:
+            try:
+                if uid == firebase_uid and user_role is not None:
+                    await run_in_threadpool(
+                        get_verifier().set_user_claims,
+                        uid,
+                        puid=str(user_id),
+                        tid=str(tenant_id),
+                        role=user_role,
+                        ind=code,
+                    )
+                await run_in_threadpool(get_verifier().revoke_refresh_tokens, uid)
+            except Exception as exc:  # one member's failure must not strand the rest
+                log.warning(
+                    "industry.corrected.revoke_failed", uid=uid, error=str(exc)
+                )
+        result["reauth_required"] = True
     elif user_role is not None:
         token, expires_in = get_verifier().mint_dev_token(
             uid=str(user_id),
