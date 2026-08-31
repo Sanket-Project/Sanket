@@ -21,6 +21,8 @@ import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { authApi } from "@/api/auth";
 import { getErrorMessage } from "@/utils/errors";
+import { IndustryPicker } from "@/components/auth/IndustryPicker";
+import type { IndustryCode } from "@/types/api";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -191,6 +193,7 @@ export const LoginPage = () => {
   const [signUpEmail, setSignUpEmail] = useState("");
   const [signUpPassword, setSignUpPassword] = useState("");
   const [signUpConfirmPassword, setSignUpConfirmPassword] = useState("");
+  const [signUpIndustry, setSignUpIndustry] = useState<IndustryCode | null>(null);
 
   // Shared
   const [loading, setLoading] = useState(false);
@@ -201,6 +204,7 @@ export const LoginPage = () => {
   const [googlePendingToken, setGooglePendingToken] = useState<string | null>(null);
   const [googlePendingName, setGooglePendingName] = useState("");
   const [googleWorkspace, setGoogleWorkspace] = useState("");
+  const [googleIndustry, setGoogleIndustry] = useState<IndustryCode | null>(null);
   const [googleModalLoading, setGoogleModalLoading] = useState(false);
   const [googleModalError, setGoogleModalError] = useState<string | null>(null);
 
@@ -237,6 +241,13 @@ export const LoginPage = () => {
       setError("Password is too weak — use at least 8 characters with mixed case and numbers");
       return;
     }
+    // No default. Signup used to stamp every new workspace Fashion and grant
+    // all five verticals alongside it; picking one for the customer here would
+    // be the same mistake with a nicer form.
+    if (!signUpIndustry) {
+      setError("Choose the industry this workspace plans for");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -245,6 +256,7 @@ export const LoginPage = () => {
         email: signUpEmail,
         password: signUpPassword,
         tenant_slug: signUpSlug,
+        industry: signUpIndustry,
       });
       toast.success("Account created — check your inbox to verify your email.");
       await login({
@@ -303,12 +315,20 @@ export const LoginPage = () => {
     e.preventDefault();
     if (!googlePendingToken) return;
     setGoogleModalError(null);
+    // Same rule as the password path: creating a workspace means choosing its
+    // industry. Without this the Google flow would be the one route that still
+    // picked for the customer.
+    if (!googleIndustry) {
+      setGoogleModalError("Choose the industry this workspace plans for");
+      return;
+    }
     setGoogleModalLoading(true);
     try {
       const s = await authApi.googleSignup({
         id_token: googlePendingToken,
         workspace_slug: googleWorkspace,
         name: googlePendingName,
+        industry: googleIndustry,
       });
       useAuthStore.getState().setSession(s, googlePendingToken);
       toast.success("Welcome to SANKET!");
@@ -549,6 +569,12 @@ export const LoginPage = () => {
                     />
                   </div>
 
+                  <IndustryPicker
+                    value={signUpIndustry}
+                    onChange={setSignUpIndustry}
+                    disabled={loading}
+                  />
+
                   {signUpPassword && (
                     <div className="space-y-1" aria-live="polite">
                       <div className="flex gap-1">
@@ -631,7 +657,7 @@ export const LoginPage = () => {
               type="submit"
               form="google-onboarding-form"
               loading={googleModalLoading}
-              disabled={!googleWorkspace || googleWorkspace.length < 2 || !googlePendingName || googleModalLoading}
+              disabled={!googleWorkspace || googleWorkspace.length < 2 || !googlePendingName || !googleIndustry || googleModalLoading}
             >
               Create workspace
             </Button>
@@ -662,6 +688,11 @@ export const LoginPage = () => {
             required
             autoComplete="off"
             error={googleModalError ?? undefined}
+          />
+          <IndustryPicker
+            value={googleIndustry}
+            onChange={setGoogleIndustry}
+            disabled={googleModalLoading}
           />
         </form>
       </Modal>

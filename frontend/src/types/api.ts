@@ -32,6 +32,11 @@ export interface LoginRequest {
 
 export interface SignUpRequest extends LoginRequest {
   name: string;
+  /**
+   * The workspace's single industry. Required — a workspace cannot exist
+   * without one, and every member inherits it.
+   */
+  industry: IndustryCode;
 }
 
 export type OnboardingStatus = "in_progress" | "complete" | "skipped";

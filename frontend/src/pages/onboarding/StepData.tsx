@@ -12,7 +12,6 @@ import toast from "react-hot-toast";
 import { integrationsApi, type UploadResult } from "@/api/integrations";
 import { Button } from "@/components/ui/Button";
 import { FileDropzone } from "@/components/ui/FileDropzone";
-import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { getErrorMessage } from "@/utils/errors";
 import type { StepHandle, StepProps } from "./types";
 
@@ -27,7 +26,6 @@ interface ImportCardProps {
 }
 
 const ImportCard = ({ icon, title, description, kind, onImported }: ImportCardProps) => {
-  const industry = useWorkspaceIndustry();
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
@@ -106,7 +104,7 @@ const ImportCard = ({ icon, title, description, kind, onImported }: ImportCardPr
     if (!file) return;
     setBusy(true);
     try {
-      const res = await integrationsApi.upload(file, kind, industry, mapping);
+      const res = await integrationsApi.upload(file, kind, mapping);
       const main = kind === "products" ? res.skus_created : res.sales_rows;
       if (main === 0) {
         const message =

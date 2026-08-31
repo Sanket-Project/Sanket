@@ -42,7 +42,6 @@ import { industryDisplay } from "@/utils/colors";
 import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { fmtRelative } from "@/utils/format";
 import { getErrorMessage } from "@/utils/errors";
-import type { IndustryCode } from "@/types/api";
 
 const ICONS: Record<string, AppIcon> = {
   "file-text": FileText,
@@ -112,27 +111,6 @@ function ConnectorLogo({ connector }: { connector: Connector }) {
   );
 }
 
-function IndustrySelect({
-  value,
-  onChange,
-}: {
-  value: IndustryCode;
-  onChange: (v: IndustryCode) => void;
-}) {
-  return (
-    <div className="w-full">
-      <label className="label">Target industry</label>
-      <select className="input" value={value} onChange={(e) => onChange(e.target.value as IndustryCode)}>
-        {(Object.keys(industryDisplay) as IndustryCode[]).map((code) => (
-          <option key={code} value={code}>
-            {industryDisplay[code]}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
-
 function availabilityBadge(a: Connector["availability"]) {
   if (a === "live") return <Badge variant="success" dot>Live</Badge>;
   if (a === "beta") return <Badge variant="info" dot>Beta</Badge>;
@@ -195,9 +173,8 @@ const UPLOAD_KINDS = [
   { key: "products", label: "Product catalog", cols: "SKU, Name, Category, Price" },
 ] as const;
 
-function UploadPanel({ defaultIndustry, onDone }: { defaultIndustry: IndustryCode; onDone: () => void }) {
+function UploadPanel({ onDone }: { onDone: () => void }) {
   const [kind, setKind] = useState<(typeof UPLOAD_KINDS)[number]["key"]>("sales");
-  const [industry, setIndustry] = useState<IndustryCode>(defaultIndustry);
   const [file, setFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -220,7 +197,7 @@ function UploadPanel({ defaultIndustry, onDone }: { defaultIndustry: IndustryCod
   });
 
   const upload = useMutation({
-    mutationFn: () => integrationsApi.upload(file as File, kind, industry, mapping),
+    mutationFn: () => integrationsApi.upload(file as File, kind, mapping),
     onSuccess: (r) => {
       toast.success(`Imported ${r.rows_imported} of ${r.rows_total} rows`);
       onDone();
@@ -337,7 +314,6 @@ function UploadPanel({ defaultIndustry, onDone }: { defaultIndustry: IndustryCod
             </div>
           </div>
 
-          <IndustrySelect value={industry} onChange={setIndustry} />
 
           <div>
             <label className="label">File (.csv or .xlsx)</label>
@@ -479,13 +455,12 @@ function UploadPanel({ defaultIndustry, onDone }: { defaultIndustry: IndustryCod
   );}
 
 // ── Generic credential / request panel ────────────────────────────────────────
-function CredentialPanel({ connector, defaultIndustry, onDone }: { connector: Connector; defaultIndustry: IndustryCode; onDone: () => void }) {
-  const [industry, setIndustry] = useState<IndustryCode>(defaultIndustry);
+function CredentialPanel({ connector, onDone }: { connector: Connector; onDone: () => void }) {
   const [creds, setCreds] = useState<Record<string, string>>({});
   const isPlanned = connector.availability === "planned";
 
   const connect = useMutation({
-    mutationFn: () => integrationsApi.connect(connector.key, { target_industry: industry, credentials: creds }),
+    mutationFn: () => integrationsApi.connect(connector.key, { credentials: creds }),
     onSuccess: () => {
       toast.success(
         isPlanned
@@ -508,7 +483,6 @@ function CredentialPanel({ connector, defaultIndustry, onDone }: { connector: Co
           it for your account — your credentials are encrypted at rest.
         </div>
       )}
-      <IndustrySelect value={industry} onChange={setIndustry} />
       {connector.auth_fields.map((f) =>
         f.type === "textarea" ? (
           <div key={f.key} className="w-full">
@@ -554,13 +528,12 @@ function CredentialPanel({ connector, defaultIndustry, onDone }: { connector: Co
 }
 
 // ── Push panel (rest_api / webhooks) ──────────────────────────────────────────
-function PushPanel({ connector, defaultIndustry, onDone }: { connector: Connector; defaultIndustry: IndustryCode; onDone: () => void }) {
-  const [industry, setIndustry] = useState<IndustryCode>(defaultIndustry);
+function PushPanel({ connector, onDone }: { connector: Connector; onDone: () => void }) {
   const [token, setToken] = useState<string | null>(null);
   const endpoint = `${window.location.origin}/api/v1/integrations/ingest`;
 
   const connect = useMutation({
-    mutationFn: () => integrationsApi.connect(connector.key, { target_industry: industry, credentials: {} }),
+    mutationFn: () => integrationsApi.connect(connector.key, { credentials: {} }),
     onSuccess: (c) => {
       setToken(c.push_token ?? null);
       toast.success(`${connector.name} enabled`);
@@ -602,7 +575,6 @@ function PushPanel({ connector, defaultIndustry, onDone }: { connector: Connecto
         Enable a token-authenticated endpoint to push canonical sale events from any system. Events
         appear instantly on Live Sales and feed forecasting.
       </p>
-      <IndustrySelect value={industry} onChange={setIndustry} />
       <Button
         variant="primary"
         icon={<Webhook size={15} />}
@@ -624,7 +596,7 @@ const SHOPIFY_SCOPES = [
 ] as const;
 type ShopifyScopeKey = (typeof SHOPIFY_SCOPES)[number]["key"];
 
-function ShopifyPanel({ defaultIndustry, onDone }: { defaultIndustry: IndustryCode; onDone: () => void }) {
+function ShopifyPanel({ onDone }: { onDone: () => void }) {
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["integration", "shopify"],
@@ -632,9 +604,11 @@ function ShopifyPanel({ defaultIndustry, onDone }: { defaultIndustry: IndustryCo
     refetchInterval: (q) =>
       (q.state.data as IntegrationStatus | undefined)?.status === "syncing" ? 4000 : false,
   });
+  // Synced data lands in the workspace's own industry — the server decides it,
+  // this is only the label.
+  const workspaceIndustry = useWorkspaceIndustry();
   const [shopDomain, setShopDomain] = useState("");
   const [accessToken, setAccessToken] = useState("");
-  const [industry, setIndustry] = useState<IndustryCode>(defaultIndustry);
   const [scope, setScope] = useState<Record<ShopifyScopeKey, boolean>>({
     sync_products: true,
     sync_inventory: true,
@@ -652,7 +626,6 @@ function ShopifyPanel({ defaultIndustry, onDone }: { defaultIndustry: IndustryCo
       integrationsApi.shopifyConnect({
         shop_domain: shopDomain.trim(),
         access_token: accessToken.trim(),
-        target_industry: industry,
         ...scope,
       }),
     onSuccess: (s) => {
@@ -688,7 +661,7 @@ function ShopifyPanel({ defaultIndustry, onDone }: { defaultIndustry: IndustryCo
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <Meta label="Store" value={data.shop_name ?? data.shop_domain ?? "—"} />
-          <Meta label="Industry" value={data.target_industry ?? "—"} />
+          <Meta label="Industry" value={industryDisplay[workspaceIndustry]} />
           <Meta label="Last sync" value={data.last_sync_at ? fmtRelative(data.last_sync_at) : "Never"} />
           <Meta label="Result" value={data.last_sync_status ?? "—"} />
         </div>
@@ -707,7 +680,6 @@ function ShopifyPanel({ defaultIndustry, onDone }: { defaultIndustry: IndustryCo
   return (
     <div className="space-y-4">
       <Input label="Store domain" name="shop_domain" placeholder="my-store.myshopify.com" value={shopDomain} onChange={(e) => setShopDomain(e.target.value)} />
-      <IndustrySelect value={industry} onChange={setIndustry} />
       <Input
         label="Admin API access token"
         name="access_token"
@@ -747,7 +719,6 @@ function Meta({ label, value }: { label: string; value: string }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 export const IntegrationsPage = () => {
   const qc = useQueryClient();
-  const activeIndustry = useWorkspaceIndustry();
   const [selected, setSelected] = useState<Connector | null>(null);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
@@ -942,13 +913,13 @@ export const IntegrationsPage = () => {
             )}
 
             {isFile ? (
-              <UploadPanel defaultIndustry={activeIndustry} onDone={closeAndRefresh} />
+              <UploadPanel onDone={closeAndRefresh} />
             ) : isShopify ? (
-              <ShopifyPanel defaultIndustry={activeIndustry} onDone={() => { closeAndRefresh(); }} />
+              <ShopifyPanel onDone={() => { closeAndRefresh(); }} />
             ) : isPush ? (
-              <PushPanel connector={selected} defaultIndustry={activeIndustry} onDone={closeAndRefresh} />
+              <PushPanel connector={selected} onDone={closeAndRefresh} />
             ) : (
-              <CredentialPanel connector={selected} defaultIndustry={activeIndustry} onDone={() => { closeAndRefresh(); setSelected(null); }} />
+              <CredentialPanel connector={selected} onDone={() => { closeAndRefresh(); setSelected(null); }} />
             )}
           </div>
         )}

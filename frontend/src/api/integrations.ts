@@ -1,5 +1,4 @@
 import { apiClient } from "@/api/client";
-import type { IndustryCode } from "@/types/api";
 
 export interface IntegrationStatus {
   provider: string;
@@ -17,7 +16,6 @@ export interface IntegrationStatus {
 export interface ShopifyConnectRequest {
   shop_domain: string;
   access_token: string;
-  target_industry: IndustryCode;
   sync_products: boolean;
   sync_inventory: boolean;
   sync_orders: boolean;
@@ -95,7 +93,6 @@ export interface Catalog {
 }
 
 export interface GenericConnectRequest {
-  target_industry: IndustryCode;
   credentials: Record<string, string>;
 }
 
@@ -121,11 +118,15 @@ export const integrationsApi = {
     apiClient.delete<Connector>(`/integrations/${provider}`).then((r) => r.data),
   sync: (provider: string) =>
     apiClient.post<{ status: string; detail: string }>(`/integrations/${provider}/sync`, {}).then((r) => r.data),
-  upload: (file: File, kind: string, targetIndustry: IndustryCode, columnMapping?: Record<string, string>) => {
+  /**
+   * Rows land in the workspace's own industry — the server reads it from the
+   * verified session. No target_industry is sent: supplying a different one is
+   * refused, and supplying the same one is just a chance to get it wrong.
+   */
+  upload: (file: File, kind: string, columnMapping?: Record<string, string>) => {
     const form = new FormData();
     form.append("file", file);
     form.append("kind", kind);
-    form.append("target_industry", targetIndustry);
     if (columnMapping) {
       form.append("column_mapping", JSON.stringify(columnMapping));
     }

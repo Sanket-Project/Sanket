@@ -2,6 +2,7 @@ import { apiClient } from "@/api/client";
 import type {
   AuthConfig,
   DevLoginResponse,
+  IndustryCode,
   LoginRequest,
   SandboxSessionResponse,
   SessionInfo,
@@ -12,6 +13,8 @@ export interface GoogleSignUpRequest {
   id_token: string;
   workspace_slug: string;
   name: string;
+  /** The new workspace's single industry — required, exactly as for signup. */
+  industry: IndustryCode;
 }
 
 export const authApi = {
@@ -48,6 +51,16 @@ export const authApi = {
    */
   googleSignup: (body: GoogleSignUpRequest) =>
     apiClient.post<SessionInfo>("/auth/google-signup", body, { timeout: 60000 }).then((r) => r.data),
+
+  /**
+   * Redeem a workspace invitation.
+   *
+   * Sends only what the invitee supplies. Workspace, role and industry all come
+   * from the invite record server-side — a client that could name its own role
+   * would be a privilege-escalation path.
+   */
+  acceptInvite: (body: { token: string; name: string; password: string }) =>
+    apiClient.post<SessionInfo>("/auth/accept-invite", body).then((r) => r.data),
 
   logout: () => apiClient.post("/auth/logout").then((r) => r.data),
 };

@@ -88,6 +88,9 @@ const ForgotPasswordPage = lazy(() =>
 const ResetPasswordPage = lazy(() =>
   import("@/pages/ResetPassword").then((m) => ({ default: m.ResetPasswordPage }))
 );
+const AcceptInvitePage = lazy(() =>
+  import("@/pages/AcceptInvite").then((m) => ({ default: m.AcceptInvitePage }))
+);
 const ProfilePage = lazy(() =>
   import("@/pages/Profile").then((m) => ({ default: m.ProfilePage }))
 );
@@ -203,6 +206,18 @@ export default function App() {
               <ErrorBoundary>
                 <Suspense fallback={<PageFallback />}>
                   <ResetPasswordPage />
+                </Suspense>
+              </ErrorBoundary>
+            }
+          />
+          {/* Public: the invitee has no account until this page creates one.
+              The invite link has always pointed here and nothing served it. */}
+          <Route
+            path="/accept-invite"
+            element={
+              <ErrorBoundary>
+                <Suspense fallback={<PageFallback />}>
+                  <AcceptInvitePage />
                 </Suspense>
               </ErrorBoundary>
             }
