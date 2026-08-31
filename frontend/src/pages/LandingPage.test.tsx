@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 /**
@@ -9,7 +9,15 @@ import { describe, expect, it } from "vitest";
  * the page offers, what it claims, and that no nav link points at nothing.
  */
 const page = readFileSync("src/pages/LandingPage.tsx", "utf8");
-const console_ = readFileSync("src/pages/landing/LiveConsoleLanding.tsx", "utf8");
+
+/** Every file that can render a landing section, so the anchor check sees them all. */
+const SECTIONS_DIR = "src/pages/landing/sections";
+const sectionSources = [
+  readFileSync("src/pages/landing/LiveConsoleLanding.tsx", "utf8"),
+  ...readdirSync(SECTIONS_DIR)
+    .filter((f) => f.endsWith(".tsx") && !f.endsWith(".test.tsx"))
+    .map((f) => readFileSync(`${SECTIONS_DIR}/${f}`, "utf8")),
+].join("\n");
 
 describe("landing page", () => {
   it("offers all four public entry points", () => {
@@ -45,7 +53,7 @@ describe("landing page", () => {
     expect(navIds.length).toBeGreaterThan(0);
     const sectionIds = [
       ...page.matchAll(/id="([^"]+)"/g),
-      ...console_.matchAll(/id="([^"]+)"/g),
+      ...sectionSources.matchAll(/id="([^"]+)"/g),
     ].map((m) => m[1]);
     for (const id of navIds) {
       expect(sectionIds, `nav links to #${id} but no section has that id`).toContain(id);

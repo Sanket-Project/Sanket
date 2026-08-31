@@ -1,23 +1,22 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import {
-  Activity,
+
   ArrowRight,
-  Boxes,
+
   Check,
   CircleAlert,
-  Database,
-  Layers,
+
   Plug,
   ShieldCheck,
   Sparkles,
-  TrendingUp,
-  Truck,
+
 } from "@/components/ui/icons";
 import { LogoMark } from "@/components/ui/Logo";
 import { CONNECTORS } from "./connectors";
 import "./live-console.css";
+import { IndustryTabs } from "./sections/IndustryTabs";
 
 type LiveConsoleLandingProps = {
   onBook: () => void;
@@ -145,59 +144,6 @@ const DECISIONS = [
   { id: "PO-2201", title: "Reorder 1,800 units", detail: "Vendor 114 · lead time 21d" },
   { id: "TRF-8841", title: "Transfer 240 units", detail: "Pune DC → Delhi DC" },
   { id: "MKD-0417", title: "Hold markdown", detail: "Line 22 · review in 7d" },
-];
-
-const INDUSTRIES = [
-  {
-    key: "fashion",
-    label: "Fashion",
-    Icon: Layers,
-    image: "fashion.png",
-    imageAlt: "Fashion apparel arranged for inventory and demand planning",
-    observes: "SKU · size curve · returns · promotion cadence",
-    risk: "A regional search spike precedes store sales.",
-    action: "Rebalance by size before replenishing the whole line.",
-  },
-  {
-    key: "electronics",
-    label: "Electronics",
-    Icon: Activity,
-    image: "electronics.png",
-    imageAlt: "Consumer electronics displayed for channel inventory planning",
-    observes: "SKU · launch cycle · channel · price movement",
-    risk: "A price move shifts demand before channel reports settle.",
-    action: "Advance the order window without overcommitting stock.",
-  },
-  {
-    key: "pharma",
-    label: "Pharma",
-    Icon: ShieldCheck,
-    image: "pharma.png",
-    imageAlt: "Pharmaceutical products prepared for traceable supply planning",
-    observes: "Product · region · expiry profile · supply",
-    risk: "Regional demand rises while usable stock narrows.",
-    action: "Prioritise allocation and keep the decision traceable.",
-  },
-  {
-    key: "hardware",
-    label: "Hardware",
-    Icon: Boxes,
-    image: "hardware.png",
-    imageAlt: "Hardware products arranged for branch inventory planning",
-    observes: "Item · branch · project demand · lead time",
-    risk: "A lead-time shift creates a hidden coverage gap.",
-    action: "Move the last safe order date forward.",
-  },
-  {
-    key: "agro",
-    label: "Agrocenter",
-    Icon: Truck,
-    image: "agro.png",
-    imageAlt: "Agricultural supplies prepared for seasonal regional planning",
-    observes: "Product · season · weather context · location",
-    risk: "Weather context reshapes the expected seasonal peak.",
-    action: "Stage inventory by region instead of one curve.",
-  },
 ];
 
 const STATS = [
@@ -461,14 +407,10 @@ const ConnectSurface = () => {
 /* ------------------------------------------------------------------ */
 
 export const LiveConsoleLanding = ({ onBook, onSandbox }: LiveConsoleLandingProps) => {
-  const [industry, setIndustry] = useState("fashion");
-  const active = useMemo(
-    () => INDUSTRIES.find((item) => item.key === industry) ?? INDUSTRIES[0],
-    [industry],
-  );
+  // Industry selection moved into <IndustryTabs />, which reads the real
+  // per-vertical planning profile from content.ts rather than the abbreviated
+  // copy that used to live in this file.
   const reduce = useReducedMotion();
-
-  const handleIndustry = useCallback((key: string) => setIndustry(key), []);
 
   return (
     <main className="lc">
@@ -554,74 +496,7 @@ export const LiveConsoleLanding = ({ onBook, onSandbox }: LiveConsoleLandingProp
         </div>
       </section>
 
-      {/* ── Industries ──────────────────────────────────────── */}
-      <section id="industries" className="lc-section">
-        <div className="lc-shell">
-          <Reveal className="lc-intro lc-intro-center">
-            <p className="lc-kicker">Industries</p>
-            <h2 className="lc-h2">One engine, fluent in your operation</h2>
-            <p className="lc-lede">
-              The reasoning stays the same. The signals, the risk, and the vocabulary change with
-              what you sell.
-            </p>
-          </Reveal>
-
-          <Reveal delay={0.06}>
-            <div className="lc-tabs" role="tablist" aria-label="Industries">
-              {INDUSTRIES.map(({ key, label, Icon }) => (
-                <button
-                  key={key}
-                  type="button"
-                  role="tab"
-                  aria-selected={industry === key}
-                  aria-controls="lc-industry-panel"
-                  className={industry === key ? "is-active" : ""}
-                  onClick={() => handleIndustry(key)}
-                >
-                  <Icon size={16} aria-hidden="true" />
-                  {label}
-                </button>
-              ))}
-            </div>
-
-            <motion.div
-              id="lc-industry-panel"
-              role="tabpanel"
-              className={`lc-industry-cards${active.image ? " has-image" : ""}`}
-              key={active.key}
-              initial={reduce ? false : { opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            >
-              {active.image ? (
-                <img
-                  className="lc-industry-image"
-                  src={`${import.meta.env.BASE_URL}assets/${active.image}`}
-                  alt={active.imageAlt}
-                  loading="lazy"
-                  decoding="async"
-                  width="1024"
-                  height="1024"
-                />
-              ) : null}
-              <div className="lc-industry-card-stack">
-                <article>
-                  <span className="lc-card-label"><Database size={14} aria-hidden="true" />Sanket observes</span>
-                  <p>{active.observes}</p>
-                </article>
-                <article>
-                  <span className="lc-card-label"><CircleAlert size={14} aria-hidden="true" />Emerging risk</span>
-                  <p>{active.risk}</p>
-                </article>
-                <article className="is-accent">
-                  <span className="lc-card-label"><TrendingUp size={14} aria-hidden="true" />Recommended response</span>
-                  <p>{active.action}</p>
-                </article>
-              </div>
-            </motion.div>
-          </Reveal>
-        </div>
-      </section>
+      <IndustryTabs />
 
       {/* ── Connectors marquee ──────────────────────────────── */}
       <section className="lc-marquee-section">
