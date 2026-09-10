@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
-import { Building2, Cpu, Pill, Shirt, Wheat, Wrench } from "@/components/ui/icons";
+import { Building2, Check, Cpu, Pill, Shirt, Wheat, Wrench } from "@/components/ui/icons";
 import type { ReactNode } from "react";
 import { industryApi } from "@/api/industry";
 import type { IndustryCode } from "@/types/api";
@@ -43,7 +43,7 @@ export const IndustryPicker = ({
     return (
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2" aria-busy="true">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-[52px] animate-pulse rounded-xl bg-surface-3" />
+          <div key={i} className="h-[60px] animate-pulse rounded-xl bg-surface-3" />
         ))}
       </div>
     );
@@ -51,13 +51,11 @@ export const IndustryPicker = ({
 
   return (
     <fieldset disabled={disabled}>
-      <legend className="mb-2 text-sm font-medium text-content">
-        Industry
-        <span className="ml-1.5 text-xs font-normal text-content-subtle">
-          Everyone you invite plans in this industry. It locks once setup is done.
-        </span>
-      </legend>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2" role="radiogroup">
+      <legend className="text-sm font-semibold text-content">Choose your industry</legend>
+      <p id="industry-picker-help" className="mb-3 mt-1 text-xs leading-5 text-content-subtle">
+        This tunes forecast horizons and workflows for everyone in the workspace.
+      </p>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2" role="radiogroup" aria-describedby="industry-picker-help">
         {Object.entries(data ?? {}).map(([code, meta]) => {
           const selected = value === code;
           return (
@@ -69,10 +67,10 @@ export const IndustryPicker = ({
               aria-label={meta.display_name}
               onClick={() => onChange(code as IndustryCode)}
               className={clsx(
-                "flex items-center gap-2.5 rounded-xl border p-3 text-left transition-colors",
+                "min-h-[60px] cursor-pointer items-center gap-2.5 rounded-xl border p-3 text-left outline-none transition-all duration-150 focus-visible:ring-2 focus-visible:ring-[var(--accent-ring)] disabled:cursor-not-allowed disabled:opacity-60 flex",
                 selected
-                  ? "border-accent bg-accent-soft"
-                  : "border-line bg-surface hover:border-line-strong",
+                  ? "border-accent bg-accent-soft shadow-sm"
+                  : "border-line bg-surface hover:border-line-strong hover:bg-surface-2",
               )}
             >
               <span
@@ -84,12 +82,21 @@ export const IndustryPicker = ({
                 {ICONS[code] ?? <Building2 size={16} aria-hidden="true" />}
               </span>
               <span className="min-w-0">
-                <span className="block truncate text-sm font-medium text-content">
+                <span className="block text-sm font-semibold leading-5 text-content">
                   {meta.display_name}
                 </span>
                 <span className="block font-mono text-[10px] text-content-subtle">
                   {meta.default_horizon_weeks}-wk horizon
                 </span>
+              </span>
+              <span
+                aria-hidden="true"
+                className={clsx(
+                  "ml-auto grid h-5 w-5 shrink-0 place-items-center rounded-full border transition-colors",
+                  selected ? "border-accent bg-accent text-accent-fg" : "border-line-strong bg-surface",
+                )}
+              >
+                {selected && <Check size={12} />}
               </span>
             </button>
           );

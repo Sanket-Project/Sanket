@@ -9,7 +9,7 @@ import { useAuthStore } from "@/stores/auth";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { LogoMark } from "@/components/ui/Logo";
-import { getErrorMessage } from "@/utils/errors";
+import { getErrorMessage, isServerError } from "@/utils/errors";
 import { openRazorpayCheckout } from "@/utils/razorpay";
 
 const ALLOWED_REDIRECT_HOSTS = [
@@ -112,7 +112,7 @@ export const SubscriptionGate = ({ children }: { children: React.ReactNode }) =>
 
   // 2. Subscribe mutation
   const subscribe = useMutation({
-    mutationFn: (body: { plan_id: string; billing_email: string; return_path?: string }) =>
+    mutationFn: (body: { plan_id: string; billing_email: string }) =>
       billingApi.startSubscription(body),
     onSuccess: async (r) => {
       qc.invalidateQueries({ queryKey: ["billing"] });
@@ -167,7 +167,11 @@ export const SubscriptionGate = ({ children }: { children: React.ReactNode }) =>
       );
     },
     onError: (e: unknown) => {
-      toast.error(getErrorMessage(e, "Failed to start subscription"));
+      // 5xx responses are surfaced once by the API interceptor. Showing a
+      // second local toast produced the two simultaneous errors in checkout.
+      if (!isServerError(e)) {
+        toast.error(getErrorMessage(e, "Failed to start subscription"));
+      }
     },
   });
 
@@ -211,8 +215,6 @@ export const SubscriptionGate = ({ children }: { children: React.ReactNode }) =>
       subscribe.mutate({
         plan_id: selectedPlan.id,
         billing_email: billingEmail,
-        // Path only — the server owns the origin. See api/billing.ts.
-        return_path: window.location.pathname,
       });
     }
   };

@@ -79,7 +79,6 @@ class SubscriptionManager:
         tenant_id: uuid.UUID,
         plan_id: str,
         billing_email: str,
-        redirect_url: str | None = None,
     ) -> Subscription:
         plan = await session.get(Plan, plan_id)
         if plan is None:
@@ -144,14 +143,13 @@ class SubscriptionManager:
             )
 
         if plan.razorpay_plan_id:
-            customer = await self._rzp.upsert_customer(
-                email=billing_email, tenant_id=str(tenant_id), name=tenant.display_name
-            )
+            # Razorpay Subscriptions creates and links the Customer only after
+            # the Checkout authorisation transaction. Supplying a customer id
+            # here makes the provider reject the create-subscription request.
+            # The browser prefills ``billing_email`` in Checkout instead.
             rzp_sub = await self._rzp.create_subscription(
-                customer_id=customer.customer_id,
                 plan_id=plan.razorpay_plan_id,
                 trial_days=trial_days,
-                redirect_url=redirect_url,
                 billing_interval=plan.billing_interval,
             )
             now = datetime.now(tz=UTC)
@@ -159,7 +157,6 @@ class SubscriptionManager:
                 tenant_id=tenant_id,
                 plan_id=plan_id,
                 status=_map_status(rzp_sub.status, SubscriptionStatus.incomplete),
-                razorpay_customer_id=customer.customer_id,
                 razorpay_subscription_id=rzp_sub.subscription_id,
                 current_period_start=_ts(rzp_sub.current_period_start) or now,
                 current_period_end=_ts(rzp_sub.current_period_end) or now,

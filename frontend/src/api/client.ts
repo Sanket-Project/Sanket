@@ -1,7 +1,7 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import toast from "react-hot-toast";
 import { useAuthStore } from "@/stores/auth";
-import { getErrorMessage } from "@/utils/errors";
+import { getErrorMessage, getServerErrorMessage } from "@/utils/errors";
 
 const baseURL = import.meta.env.VITE_API_BASE_URL ?? "/api/v1";
 
@@ -105,7 +105,7 @@ apiClient.interceptors.response.use(
     }
 
     if (status >= 500) {
-      dedupeToast("server_error", "Server error — try again shortly");
+      dedupeToast("server_error", getServerErrorMessage(error));
     } else if (status === 400) {
       // Bad request (e.g. file-import validation failures) has no other
       // handler in the app, so without this branch these errors fail

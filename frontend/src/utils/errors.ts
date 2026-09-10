@@ -44,3 +44,21 @@ export function getErrorMessage(err: unknown, fallback = "Something went wrong")
 
   return fallback;
 }
+
+/** Whether the API returned a 5xx response handled by the global interceptor. */
+export function isServerError(err: unknown): boolean {
+  const status = (err as { response?: { status?: unknown } })?.response?.status;
+  return typeof status === "number" && status >= 500;
+}
+
+/**
+ * Surface intentional upstream-unavailable responses while keeping unexpected
+ * application failures generic so internal details never reach the browser.
+ */
+export function getServerErrorMessage(err: unknown): string {
+  const status = (err as { response?: { status?: unknown } })?.response?.status;
+  if (status === 502 || status === 503) {
+    return getErrorMessage(err, "Server error — try again shortly");
+  }
+  return "Server error — try again shortly";
+}

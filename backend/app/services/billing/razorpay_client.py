@@ -53,6 +53,15 @@ class RazorpayPaymentResult:
     subscription_id: str | None
 
 
+@dataclass(frozen=True, slots=True)
+class RazorpayOrderResult:
+    order_id: str
+    amount: int  # in paise
+    currency: str
+    receipt: str | None
+    status: str
+
+
 def _signature_errors() -> tuple[type[BaseException], ...]:
     """The SDK's signature-mismatch exception types, if the SDK is importable.
 
@@ -63,6 +72,16 @@ def _signature_errors() -> tuple[type[BaseException], ...]:
         from razorpay.errors import SignatureVerificationError  # type: ignore
 
         return (SignatureVerificationError,)
+    except ImportError:  # pragma: no cover - SDK always present in prod
+        return ()
+
+
+def _request_errors() -> tuple[type[BaseException], ...]:
+    """Provider-declared API failures that are safe to translate upstream."""
+    try:
+        from razorpay.errors import BadRequestError, GatewayError, ServerError  # type: ignore
+
+        return (BadRequestError, GatewayError, ServerError)
     except ImportError:  # pragma: no cover - SDK always present in prod
         return ()
 
@@ -131,10 +150,8 @@ class RazorpayClient:
     async def create_subscription(
         self,
         *,
-        customer_id: str,
         plan_id: str,
         trial_days: int | None = None,
-        redirect_url: str | None = None,
         billing_interval: str = "month",
     ) -> RazorpaySubscriptionResult:
         client = self._module()
@@ -142,15 +159,11 @@ class RazorpayClient:
         def _impl() -> RazorpaySubscriptionResult:
             data: dict[str, Any] = {
                 "plan_id": plan_id,
-                "customer_id": customer_id,
                 "total_count": self.cycles_for(billing_interval),
                 "customer_notify": 1,
             }
             if trial_days:
                 data["start_at"] = utc_now_sec() + trial_days * 86400
-            if redirect_url:
-                data["callback_url"] = redirect_url
-                data["callback_method"] = "get"
             s = client.subscription.create(data=data)
             return RazorpaySubscriptionResult(
                 subscription_id=s["id"],
@@ -160,7 +173,13 @@ class RazorpayClient:
                 short_url=s.get("short_url"),
             )
 
-        return await asyncio.to_thread(_impl)
+        try:
+            return await asyncio.to_thread(_impl)
+        except _request_errors() as exc:
+            log.warning("billing.razorpay.subscription_create_rejected", error=str(exc))
+            raise RuntimeError(
+                "Razorpay rejected subscription setup. Please try again shortly."
+            ) from exc
 
     async def cancel_subscription(
         self, subscription_id: str, *, at_period_end: bool = True
@@ -218,6 +237,78 @@ class RazorpayClient:
             return True
         except _signature_errors():
             return False
+
+    # ── Orders (Standard Web Checkout) ──
+    async def create_order(
+        self,
+        *,
+        amount: int,
+        currency: str = "INR",
+        receipt: str | None = None,
+        notes: dict[str, Any] | None = None,
+    ) -> RazorpayOrderResult:
+        """Create a standard Razorpay order for web checkout.
+
+        Amount is in minor units (e.g. paise for INR). Minimum amount: 100 paise (₹1.00).
+        """
+        if amount < 100:
+            raise ValueError("Order amount must be at least 100 paise (₹1.00)")
+        client = self._module()
+
+        def _impl() -> RazorpayOrderResult:
+            data: dict[str, Any] = {
+                "amount": amount,
+                "currency": currency,
+            }
+            if receipt:
+                data["receipt"] = receipt
+            if notes:
+                data["notes"] = notes
+            order = client.order.create(data=data)
+            return RazorpayOrderResult(
+                order_id=order["id"],
+                amount=int(order["amount"]),
+                currency=order.get("currency", currency),
+                receipt=order.get("receipt"),
+                status=order.get("status", "created"),
+            )
+
+        return await asyncio.to_thread(_impl)
+
+    def verify_order_signature(
+        self,
+        order_id: str,
+        payment_id: str,
+        signature: str,
+    ) -> bool:
+        """Verify Razorpay payment signature for standard web checkout order.
+
+        Algorithm: HMAC-SHA256(order_id + "|" + payment_id, KEY_SECRET)
+        """
+        if not self.key_secret:
+            raise RuntimeError("Cannot verify payment signature — RAZORPAY_KEY_SECRET is not set.")
+        client = self._module()
+        try:
+            client.utility.verify_payment_signature(
+                {
+                    "razorpay_order_id": order_id,
+                    "razorpay_payment_id": payment_id,
+                    "razorpay_signature": signature,
+                }
+            )
+            return True
+        except _signature_errors():
+            return False
+
+    def _hmac_order_signature(self, order_id: str, payment_id: str) -> str:
+        """Reference HMAC for a standard order payment. Test/offline helper."""
+        if not self.key_secret:
+            raise RuntimeError("RAZORPAY_KEY_SECRET is not set")
+        return hmac.new(
+            self.key_secret.encode("utf-8"),
+            f"{order_id}|{payment_id}".encode(),
+            "sha256",
+        ).hexdigest()
 
     def _hmac_signature(self, subscription_id: str, payment_id: str) -> str:
         """Reference HMAC for a subscription payment. Test/offline helper."""

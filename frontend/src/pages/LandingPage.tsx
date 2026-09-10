@@ -90,8 +90,7 @@ const IntroLoader = ({ onDone }: { onDone: () => void }) => {
           initial={{ opacity: 0, y: 20, letterSpacing: "0.6em" }}
           animate={{ opacity: 1, y: 0, letterSpacing: "0.35em" }}
           transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-          style={{ fontFamily: "'DM Serif Display', serif" }}
-          className="text-5xl sm:text-7xl font-light text-[#E8E5D0]"
+          className="font-display text-5xl sm:text-7xl font-light text-[#E8E5D0]"
         >
           SANKET
         </motion.div>
@@ -643,9 +642,8 @@ export const LandingPage = () => {
             </motion.div>
 
             <div className="mb-10 max-w-4xl">
-              <h1 className="font-light leading-[0.95] tracking-[-0.02em]"
+              <h1 className="font-display font-light leading-[0.95] tracking-[-0.02em]"
                 style={{
-                  fontFamily: "'DM Serif Display', serif",
                   fontSize: "clamp(2.5rem, 7vw, 5.5rem)",
                   color: "#E8E5D0",
                 }}>
@@ -803,13 +801,13 @@ export const LandingPage = () => {
                 formSuccess ? (
                   <div className="py-8 text-center">
                     <div className="w-12 h-12 rounded-full border border-[#DEDBC8]/20 flex items-center justify-center mx-auto mb-5 text-[#DEDBC8]/60"><Check size={20} /></div>
-                    <h3 id="landing-modal-title" className="text-base font-light text-white/80 mb-2" style={{ fontFamily: "'DM Serif Display', serif" }}>Request Received</h3>
+                    <h3 id="landing-modal-title" className="text-base font-light text-white/80 mb-2">Request Received</h3>
                     <p className="text-xs text-white/65 leading-relaxed">A specialist will reach out within one business day.</p>
                     <button onClick={() => setModal(null)} className="mt-6 w-full border border-white/[0.08] hover:border-white/20 text-white/30 hover:text-white/60 font-mono text-[10px] tracking-widest uppercase py-3 rounded-lg transition-all outline-none">Dismiss</button>
                   </div>
                 ) : (
                   <form onSubmit={submitDemo} className="flex flex-col gap-5">
-                    <h3 id="landing-modal-title" className="text-lg font-light text-white/80" style={{ fontFamily: "'DM Serif Display', serif" }}>Schedule a Technical Briefing</h3>
+                    <h3 id="landing-modal-title" className="text-lg font-light text-white/80">Schedule a Technical Briefing</h3>
                     <div className="grid gap-5 sm:grid-cols-2">
                       <label className="block">
                         <span className="font-mono text-[9px] tracking-[0.2em] text-white/45 uppercase block mb-2">Full Name</span>
@@ -846,7 +844,7 @@ export const LandingPage = () => {
                 )
               ) : (
                 <div className="flex flex-col gap-3">
-                  <h3 id="landing-modal-title" className="text-lg font-light text-white/80 mb-1" style={{ fontFamily: "'DM Serif Display', serif" }}>Explore a Live Sandbox</h3>
+                  <h3 id="landing-modal-title" className="text-lg font-light text-white/80 mb-1">Explore a Live Sandbox</h3>
                   <p className="font-mono text-[10px] tracking-wide text-white/45 mb-3">
                     A read-only Fashion &amp; Apparel workspace with sample data.
                     Your own workspace is scoped to the industry you choose when

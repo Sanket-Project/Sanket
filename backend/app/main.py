@@ -509,6 +509,13 @@ def create_app() -> FastAPI:
     # WebSocket is mounted at /ws, not under /api/v1
     app.include_router(ws_router)
 
+    # Standard Web Checkout direct /api/ routes
+    from app.routers.billing import create_order as _create_order_handler
+    from app.routers.billing import verify_payment as _verify_payment_handler
+
+    app.post("/api/create-order", tags=["billing"])(_create_order_handler)
+    app.post("/api/verify-payment", tags=["billing"])(_verify_payment_handler)
+
     # ── Health endpoints ─────────────────────────────────────────────────────
     @app.get("/health", tags=["ops"])
     async def health(request: Request) -> JSONResponse:

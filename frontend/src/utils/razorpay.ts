@@ -75,3 +75,93 @@ export async function openRazorpayCheckout({
   rzp.open();
   return true;
 }
+
+export interface RazorpayStandardOrderOptions {
+  keyId: string;
+  orderId: string;
+  amount: number; // in paise
+  currency?: string;
+  name?: string;
+  description?: string;
+  image?: string;
+  prefill?: {
+    name?: string;
+    email?: string;
+    contact?: string;
+  };
+  notes?: Record<string, string>;
+  themeColor?: string;
+  onSuccess: (response: {
+    razorpay_payment_id: string;
+    razorpay_order_id: string;
+    razorpay_signature: string;
+  }) => void;
+  onDismiss?: () => void;
+  onFailure?: (error: any) => void;
+}
+
+export async function openStandardOrderCheckout({
+  keyId,
+  orderId,
+  amount,
+  currency = "INR",
+  name = "SANKET",
+  description = "Payment",
+  image,
+  prefill,
+  notes,
+  themeColor = "#6366f1",
+  onSuccess,
+  onDismiss,
+  onFailure,
+}: RazorpayStandardOrderOptions): Promise<boolean> {
+  const loaded = await loadRazorpayScript();
+  if (!loaded || !window.Razorpay) {
+    return false;
+  }
+
+  const options: Record<string, any> = {
+    key: keyId,
+    amount,
+    currency,
+    name,
+    description,
+    order_id: orderId,
+    prefill: {
+      name: prefill?.name || "",
+      email: prefill?.email || "",
+      contact: prefill?.contact || "",
+    },
+    notes: notes || {},
+    theme: {
+      color: themeColor,
+    },
+    handler: (response: {
+      razorpay_payment_id: string;
+      razorpay_order_id: string;
+      razorpay_signature: string;
+    }) => {
+      onSuccess(response);
+    },
+    modal: {
+      ondismiss: () => {
+        if (onDismiss) onDismiss();
+      },
+    },
+  };
+
+  if (image) {
+    options.image = image;
+  }
+
+  const rzp = new window.Razorpay(options);
+
+  if (onFailure) {
+    rzp.on("payment.failed", (response: any) => {
+      onFailure(response.error);
+    });
+  }
+
+  rzp.open();
+  return true;
+}

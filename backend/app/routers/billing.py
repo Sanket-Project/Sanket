@@ -31,17 +31,6 @@ class StartSubscriptionBody(BaseModel):
     plan_id: str
     billing_email: EmailStr
 
-    # Where to send the customer after the hosted payment page. This is a
-    # *path*, not a URL, and it is joined to a server-configured origin.
-    #
-    # It used to be `redirect_url: str | None` and was passed straight to
-    # Razorpay as `callback_url`. That callback is where Razorpay delivers
-    # `razorpay_payment_id` and `razorpay_signature` as query parameters, so a
-    # tenant admin could point it at a host they control and harvest signed
-    # payment results. Accepting only a relative path makes the destination
-    # origin unforgeable.
-    return_path: str = "/workspace/billing"
-
     # `trial_days` was removed deliberately. It used to be caller-supplied
     # (ge=0, le=60), which let a crafted request mint a 60-day trial on any
     # plan, repeatedly. Trial length now comes from `plans.trial_days` and
@@ -49,21 +38,30 @@ class StartSubscriptionBody(BaseModel):
     # field; Pydantic ignores unknown keys by default, so they degrade to the
     # plan's configured trial rather than erroring.
 
-    @field_validator("return_path")
-    @classmethod
-    def _relative_path_only(cls, v: str) -> str:
-        # Reject anything that could escape the configured origin: absolute
-        # URLs, scheme-relative `//evil.com`, and backslash variants that some
-        # URL parsers normalise to a host.
-        if not v.startswith("/") or v.startswith("//") or v.startswith("/\\"):
-            raise ValueError("return_path must be a relative path beginning with '/'")
-        if "\\" in v or "://" in v:
-            raise ValueError("return_path must not contain a scheme or backslash")
-        return v
 
 
 class VerifySubscriptionBody(BaseModel):
     razorpay_subscription_id: str
+    razorpay_payment_id: str
+    razorpay_signature: str
+
+
+class CreateOrderBody(BaseModel):
+    amount: int  # in paise
+    currency: str = "INR"
+    receipt: str | None = None
+    notes: dict[str, Any] | None = None
+
+    @field_validator("amount")
+    @classmethod
+    def _min_amount(cls, v: int) -> int:
+        if v < 100:
+            raise ValueError("Amount must be at least 100 paise (₹1.00)")
+        return v
+
+
+class VerifyOrderPaymentBody(BaseModel):
+    razorpay_order_id: str
     razorpay_payment_id: str
     razorpay_signature: str
 
@@ -145,15 +143,11 @@ async def start_subscription(
     mgr = SubscriptionManager(get_razorpay_client(settings))
     async with db.session(str(tenant_id)) as session:
         try:
-            # Origin comes from config, path from the (validated) request.
-            # Never from the client wholesale — see StartSubscriptionBody.
-            callback_url = f"{settings.billing_callback_base}{body.return_path}"
             sub = await mgr.start_subscription(
                 session,
                 tenant_id=tenant_id,
                 plan_id=body.plan_id,
                 billing_email=body.billing_email,
-                redirect_url=callback_url,
             )
         except PlanChangeNotSupportedError as exc:
             # 409, not 422: the request is well-formed, it conflicts with state.
@@ -221,6 +215,88 @@ async def verify_subscription(
         "plan_id": sub.plan_id,
         "status": sub.status.value,
         "current_period_end": sub.current_period_end.isoformat(),
+    }
+
+
+# ── Standard Web Checkout (Orders & One-Time/Mandate Payments) ──
+@router.post("/create-order")
+async def create_order(
+    body: CreateOrderBody,
+    settings: SettingsDep,
+) -> dict[str, Any]:
+    """Create a Razorpay order for Standard Web Checkout."""
+    if not settings.razorpay_key_id or not settings.razorpay_key_secret:
+        raise HTTPException(
+            status_code=503,
+            detail="Razorpay is not configured. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.",
+        )
+    client = get_razorpay_client(settings)
+    try:
+        order = await client.create_order(
+            amount=body.amount,
+            currency=body.currency,
+            receipt=body.receipt,
+            notes=body.notes,
+        )
+        return {
+            "order_id": order.order_id,
+            "amount": order.amount,
+            "currency": order.currency,
+            "status": order.status,
+            "receipt": order.receipt,
+        }
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        log.error("billing.create_order.failed", error=str(exc))
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create Razorpay order: {exc}",
+        ) from exc
+
+
+@router.post("/verify-payment")
+async def verify_payment(
+    body: VerifyOrderPaymentBody,
+    settings: SettingsDep,
+) -> dict[str, Any]:
+    """Verify Razorpay payment signature for Standard Web Checkout."""
+    if not settings.razorpay_key_id or not settings.razorpay_key_secret:
+        raise HTTPException(
+            status_code=503,
+            detail="Razorpay is not configured. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.",
+        )
+    if (
+        not body.razorpay_order_id
+        or not body.razorpay_payment_id
+        or not body.razorpay_signature
+    ):
+        raise HTTPException(status_code=400, detail="Missing required payment verification fields")
+
+    client = get_razorpay_client(settings)
+    try:
+        valid = client.verify_order_signature(
+            order_id=body.razorpay_order_id,
+            payment_id=body.razorpay_payment_id,
+            signature=body.razorpay_signature,
+        )
+    except Exception as exc:
+        log.warning("billing.verify_payment.error", error=str(exc))
+        raise HTTPException(status_code=400, detail="Invalid signature verification request") from exc
+
+    if not valid:
+        log.warning(
+            "billing.verify_payment.signature_mismatch",
+            order_id=body.razorpay_order_id,
+            payment_id=body.razorpay_payment_id,
+        )
+        raise HTTPException(status_code=400, detail="Payment signature verification failed")
+
+    return {
+        "status": "success",
+        "message": "Payment verified successfully",
+        "order_id": body.razorpay_order_id,
+        "payment_id": body.razorpay_payment_id,
     }
 
 

@@ -1,10 +1,8 @@
-/* The landing page root. The type tokens live here rather than on .lc so the
-   hero -- which sits outside .lc -- inherits the same body font. Without this
-   the hero fell back to the app-wide Geist Sans while the sections below used
-   IBM Plex Sans, which is the family change this was meant to remove. */
+/* The landing page root shares the same three typography roles as the product
+   so the transition from marketing to signup to the portal remains seamless. */
 .landing-root {
-  --lc-font-display: "DM Serif Display", Georgia, serif;
-  --lc-font-body: "IBM Plex Sans", "Inter", system-ui, sans-serif;
+  --lc-font-display: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+  --lc-font-body: "IBM Plex Sans", system-ui, sans-serif;
   --lc-font-mono: "IBM Plex Mono", ui-monospace, monospace;
   font-family: var(--lc-font-body);
 }
@@ -33,12 +31,9 @@
   --lc-radius-sm: 14px;
   --lc-ease: cubic-bezier(0.16, 1, 0.3, 1);
 
-  /* Three type roles, applied identically in every section. A fourth family is
-     a bug: the page previously ran DM Serif Display, Space Grotesk, IBM Plex
-     Sans and IBM Plex Mono at once, and body copy changed family partway down
-     where the hero ended and these sections began. */
-  --lc-font-display: "DM Serif Display", Georgia, serif;
-  --lc-font-body: "IBM Plex Sans", "Inter", system-ui, sans-serif;
+  /* The same three type roles are applied identically in every section. */
+  --lc-font-display: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+  --lc-font-body: "IBM Plex Sans", system-ui, sans-serif;
   --lc-font-mono: "IBM Plex Mono", ui-monospace, monospace;
 
   background: var(--lc-bg);

@@ -11,8 +11,9 @@ import { Modal } from "@/components/ui/Modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PageLoader } from "@/components/ui/Spinner";
 import { fmtNumber } from "@/utils/format";
-import { getErrorMessage } from "@/utils/errors";
+import { getErrorMessage, isServerError } from "@/utils/errors";
 import { openRazorpayCheckout } from "@/utils/razorpay";
+import { RazorpayCheckoutButton } from "@/components/billing/RazorpayCheckoutButton";
 
 /** Validate that a redirect URL comes from a trusted payment provider domain. */
 const ALLOWED_REDIRECT_HOSTS = [
@@ -113,7 +114,7 @@ export const BillingPage = () => {
   }, []);
 
   const subscribe = useMutation({
-    mutationFn: (body: { plan_id: string; billing_email: string; return_path?: string }) =>
+    mutationFn: (body: { plan_id: string; billing_email: string }) =>
       billingApi.startSubscription(body),
     onSuccess: async (r) => {
       qc.invalidateQueries({ queryKey: ["billing"] });
@@ -168,7 +169,9 @@ export const BillingPage = () => {
       );
     },
     onError: (e: unknown) => {
-      toast.error(getErrorMessage(e, "Failed to start subscription"));
+      if (!isServerError(e)) {
+        toast.error(getErrorMessage(e, "Failed to start subscription"));
+      }
     },
   });
 
@@ -408,6 +411,34 @@ export const BillingPage = () => {
         </div>
       </Card>
 
+      {/* Standard Web Checkout (One-Time / Custom Orders) */}
+      <Card title="Standard Web Checkout" className="animate-fade-in stagger-6 border-slate-200/80 bg-white/70 dark:bg-slate-900/40">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="text-sm font-bold text-slate-800 dark:text-white">
+              Direct Order Checkout
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xl">
+              Test or execute Razorpay Standard Checkout order creation and instant cryptographic signature verification directly from this workspace.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <RazorpayCheckoutButton
+              amount={50000}
+              currency="INR"
+              description="SANKET Supply Chain Optimization Order"
+              prefill={{ email }}
+              onSuccess={(res) => {
+                console.log("Standard checkout verified successfully:", res);
+                qc.invalidateQueries({ queryKey: ["billing"] });
+              }}
+            >
+              Test Standard Checkout (₹500)
+            </RazorpayCheckoutButton>
+          </div>
+        </div>
+      </Card>
+
       {/* Subscribe Modal */}
       <Modal
         open={!!pickPlan}
@@ -439,8 +470,6 @@ export const BillingPage = () => {
                   subscribe.mutate({
                     plan_id: pickPlan.id,
                     billing_email: email,
-                    // Path only — the server owns the origin.
-                    return_path: window.location.pathname,
                   });
                 }
               }}

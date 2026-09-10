@@ -1,15 +1,17 @@
-import { useState, useEffect, useMemo, type FormEvent } from "react";
+import { useState, useEffect, useMemo, useRef, type FormEvent } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import {
   Lock,
   Mail,
   Building2,
   User,
-  TrendingUp,
   ShieldCheck,
   Workflow,
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
 } from "@/components/ui/icons";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import toast from "react-hot-toast";
 import clsx from "clsx";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
@@ -95,73 +97,88 @@ const GoogleIcon = () => (
   </svg>
 );
 
-// ── Narrative panel (right) — restrained, no marketing decoration ────────────
+// ── Narrative panel — a calm, instrument-grade product promise ───────────────
 
-const NARRATIVE = [
-  {
-    icon: <Workflow size={18} aria-hidden="true" />,
-    title: "Plan, not guess",
-    body: "Scenario compare, signal-aware forecasts, and overrides with a full audit trail.",
-  },
-  {
-    icon: <TrendingUp size={18} aria-hidden="true" />,
-    title: "Signals that move demand",
-    body: "Weather, trends, competitors, and macro — folded into every plan automatically.",
-  },
-  {
-    icon: <ShieldCheck size={18} aria-hidden="true" />,
-    title: "Built for the enterprise",
-    body: "Role-aware workspaces, GxP-grade audit, and tenant isolation by default.",
-  },
-];
+const NARRATIVE = ["Plan, not guess", "Signals that move demand", "Built for the enterprise"];
 
-const NarrativePanel = () => (
-  <div className="relative hidden h-full flex-col justify-between overflow-hidden px-12 py-14 text-white lg:flex bg-[linear-gradient(160deg,#03363D_0%,#022429_100%)]">
-    {/* Ambient decoration — a soft glow + faint grid, purely aesthetic */}
-    <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[#BDD9D7]/10 blur-3xl" />
-    <div aria-hidden className="pointer-events-none absolute -bottom-32 -left-16 h-72 w-72 rounded-full bg-[#BDD9D7]/[0.06] blur-3xl" />
+const NarrativePanel = ({ isSignUp, reduceMotion }: { isSignUp: boolean; reduceMotion: boolean }) => (
+  <aside className="relative hidden min-h-screen overflow-hidden bg-[linear-gradient(145deg,#03363D_0%,#022429_72%,#021a1d_100%)] px-12 py-10 text-white lg:flex lg:flex-col xl:px-16 xl:py-12">
+    <div aria-hidden className="pointer-events-none absolute -left-24 top-1/3 h-80 w-80 rounded-full bg-[#BDD9D7]/[0.08] blur-3xl" />
     <div
       aria-hidden
-      className="pointer-events-none absolute inset-0 opacity-[0.05]"
+      className="pointer-events-none absolute inset-0 opacity-[0.045]"
       style={{
         backgroundImage:
           "linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)",
-        backgroundSize: "44px 44px",
+        backgroundSize: "56px 56px",
       }}
     />
 
-    <div className="relative flex items-center gap-2.5">
-      <LogoMark size={36} variant="tile" className="rounded-xl" />
-      <span className="font-heading text-lg font-bold tracking-tight" style={{ color: "#ffffff" }}>SANKET</span>
+    <div className="relative flex items-center gap-3">
+      <LogoMark size={40} variant="tile" className="rounded-xl ring-1 ring-white/10" />
+      <div>
+        <div className="font-heading text-lg font-bold tracking-tight text-white">SANKET</div>
+        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#BDD9D7]/60">Predictive OS</div>
+      </div>
     </div>
 
-    <div className="relative max-w-md">
-      <h2 className="font-heading text-[2rem] font-bold leading-[1.15] tracking-tight" style={{ color: "#ffffff" }}>
-        The planning system of record for modern supply chains.
-      </h2>
-      <ul className="mt-9 space-y-6">
-        {NARRATIVE.map((n) => (
-          <li key={n.title} className="flex gap-3.5">
-            <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/10 text-[#BDD9D7] ring-1 ring-white/10">
-              {n.icon}
-            </span>
-            <div>
-              <div className="text-sm font-semibold text-white">{n.title}</div>
-              <div className="mt-1 text-sm leading-relaxed text-white/70">{n.body}</div>
+    <div className="relative my-auto max-w-xl py-12">
+      <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#BDD9D7]">
+        <span className="h-1.5 w-1.5 rounded-full bg-[#BDD9D7]" />
+        Secure planning access
+      </div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={isSignUp ? "signup-story" : "signin-story"}
+          initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={reduceMotion ? { duration: 0 } : { duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <h2 className="max-w-[15ch] font-heading text-4xl font-semibold leading-[1.08] tracking-[-0.035em] text-white xl:text-5xl">
+            {isSignUp
+              ? "Build a workspace around the signals that matter."
+              : "Return to the decisions your supply chain is waiting on."}
+          </h2>
+          <p className="mt-5 max-w-lg text-base leading-7 text-white/65">
+            One calm operating layer for demand signals, forecasts, scenarios, and the decisions they support.
+          </p>
+        </motion.div>
+      </AnimatePresence>
+
+      <div className="mt-10 rounded-[24px] border border-white/10 bg-white/[0.055] p-5 shadow-2xl shadow-black/10 backdrop-blur-sm">
+        <div className="flex items-center justify-between border-b border-white/10 pb-4">
+          <div>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#BDD9D7]/60">Planning flow</div>
+            <div className="mt-1 text-sm font-semibold text-white">From signal to accountable action</div>
+          </div>
+          <Workflow size={20} className="text-[#BDD9D7]" aria-hidden="true" />
+        </div>
+        <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-2 py-5 text-center">
+          {["Signals", "Forecast", "Decision"].map((label, index) => (
+            <div key={label} className="contents">
+              <div className="rounded-xl border border-white/10 bg-black/10 px-2 py-3 text-xs font-semibold text-white/80">{label}</div>
+              {index < 2 && <ArrowRight size={15} className="text-[#BDD9D7]/55" aria-hidden="true" />}
             </div>
-          </li>
-        ))}
-      </ul>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-x-5 gap-y-2 border-t border-white/10 pt-4 text-xs text-white/55">
+          {NARRATIVE.map((item) => (
+            <span key={item} className="inline-flex items-center gap-1.5">
+              <CheckCircle2 size={13} className="text-[#BDD9D7]" aria-hidden="true" />
+              {item}
+            </span>
+          ))}
+        </div>
+      </div>
     </div>
 
-    <div className="relative flex items-center gap-3 font-mono text-xs text-white/60">
-      <span>SOC 2-aligned</span>
-      <span className="text-white/25">·</span>
-      <span>Role-based access</span>
-      <span className="text-white/25">·</span>
+    <div className="relative flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-white/45">
+      <span>Role-aware</span><span aria-hidden="true">·</span>
+      <span>Audit-ready</span><span aria-hidden="true">·</span>
       <span>Tenant-isolated</span>
     </div>
-  </div>
+  </aside>
 );
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -171,6 +188,7 @@ export const LoginPage = () => {
   const location = useLocation() as { search: string; state?: { from?: string } };
   const isAuth = useAuthStore((s) => s.isAuthenticated);
   const login = useAuthStore((s) => s.login);
+  const reduceMotion = Boolean(useReducedMotion());
 
   const [isSignUp, setIsSignUp] = useState(() => {
     const params = new URLSearchParams(window.location.search);
@@ -194,6 +212,8 @@ export const LoginPage = () => {
   const [signUpPassword, setSignUpPassword] = useState("");
   const [signUpConfirmPassword, setSignUpConfirmPassword] = useState("");
   const [signUpIndustry, setSignUpIndustry] = useState<IndustryCode | null>(null);
+  const [signUpStep, setSignUpStep] = useState<"account" | "workspace">("account");
+  const signUpHeadingRef = useRef<HTMLHeadingElement>(null);
 
   // Shared
   const [loading, setLoading] = useState(false);
@@ -209,6 +229,10 @@ export const LoginPage = () => {
   const [googleModalError, setGoogleModalError] = useState<string | null>(null);
 
   const pwStrength = useMemo(() => passwordStrength(signUpPassword), [signUpPassword]);
+
+  useEffect(() => {
+    if (isSignUp) signUpHeadingRef.current?.focus({ preventScroll: true });
+  }, [isSignUp, signUpStep]);
 
   if (isAuth) return <Navigate to="/workspace" replace />;
 
@@ -229,6 +253,27 @@ export const LoginPage = () => {
     }
   };
 
+  const continueToWorkspace = () => {
+    setError(null);
+    if (!signUpName.trim() || !signUpEmail.trim() || !signUpPassword || !signUpConfirmPassword) {
+      setError("Complete your account details to continue");
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(signUpEmail)) {
+      setError("Enter a valid work email address");
+      return;
+    }
+    if (signUpPassword !== signUpConfirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+    if (pwStrength.score < 2) {
+      setError("Password is too weak — use at least 8 characters with mixed case and numbers");
+      return;
+    }
+    setSignUpStep("workspace");
+  };
+
   const onSignUpSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -239,6 +284,10 @@ export const LoginPage = () => {
     }
     if (pwStrength.score < 2) {
       setError("Password is too weak — use at least 8 characters with mixed case and numbers");
+      return;
+    }
+    if (signUpSlug.trim().length < 2) {
+      setError("Enter a workspace name with at least 2 characters");
       return;
     }
     // No default. Signup used to stamp every new workspace Fashion and grant
@@ -346,7 +395,7 @@ export const LoginPage = () => {
   // ── Render ──
 
   return (
-    <div className="grid min-h-screen grid-cols-1 bg-canvas lg:grid-cols-2">
+    <div className="min-h-screen bg-canvas lg:grid lg:grid-cols-[minmax(0,1.08fr)_minmax(480px,0.92fr)]">
       <a
         href="#login-form"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-accent-fg"
@@ -354,282 +403,343 @@ export const LoginPage = () => {
         Skip to main content
       </a>
 
-      {/* Form column */}
+      <NarrativePanel isSignUp={isSignUp} reduceMotion={reduceMotion} />
+
       <main
         id="login-form"
-        className="flex items-center justify-center px-6 py-8 sm:px-10"
+        className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-6 sm:px-8 lg:px-10 xl:px-14"
         role="main"
       >
+        <div aria-hidden className="pointer-events-none absolute -right-32 -top-24 h-72 w-72 rounded-full bg-white/70 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-[#BDD9D7]/35 blur-3xl" />
         <motion.div
-          layout="position"
-          transition={{ type: "spring", stiffness: 350, damping: 32 }}
-          className={clsx("w-full", isSignUp ? "max-w-md" : "max-w-sm")}
+          layout={reduceMotion ? false : "position"}
+          transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 350, damping: 32 }}
+          className="relative w-full max-w-[520px]"
         >
-          {/* Brand (mobile + small) */}
-          <div className="mb-8 flex items-center gap-2.5 lg:hidden">
-            <LogoMark size={36} variant="tile" className="rounded-xl" />
-            <span className="font-heading text-lg font-bold tracking-tight text-content">SANKET</span>
+          <div className="mb-5 flex items-center justify-between px-1 lg:hidden">
+            <div className="flex items-center gap-2.5">
+              <LogoMark size={36} variant="tile" className="rounded-xl" />
+              <div>
+                <div className="font-heading text-base font-bold tracking-tight text-content">SANKET</div>
+                <div className="text-[9px] font-semibold uppercase tracking-[0.16em] text-content-subtle">Predictive OS</div>
+              </div>
+            </div>
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-content-subtle">
+              <ShieldCheck size={13} aria-hidden="true" /> Secure
+            </span>
           </div>
 
-          {/* Segmented toggle */}
-          <div className="tab-group-container mb-5 w-full relative flex">
-            <button
-              type="button"
-              onClick={() => setIsSignUp(false)}
-              className={clsx(
-                "flex-1 px-3.5 py-1.5 rounded-lg text-xs font-semibold select-none cursor-pointer z-10 transition-colors duration-200",
-                isSignUp ? "text-content-muted hover:text-content" : "text-accent"
-              )}
-              aria-pressed={!isSignUp}
-            >
-              Sign in
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsSignUp(true)}
-              className={clsx(
-                "flex-1 px-3.5 py-1.5 rounded-lg text-xs font-semibold select-none cursor-pointer z-10 transition-colors duration-200",
-                isSignUp ? "text-accent" : "text-content-muted hover:text-content"
-              )}
-              aria-pressed={isSignUp}
-            >
-              Create account
-            </button>
-            <motion.div
-              className="absolute top-[4px] bottom-[4px] rounded-lg bg-surface border border-border shadow-sm"
-              layoutId="activeTabIndicator"
-              transition={{ type: "spring", stiffness: 380, damping: 30 }}
-              style={{
-                left: isSignUp ? "calc(50% + 2px)" : "4px",
-                right: isSignUp ? "4px" : "calc(50% + 2px)",
-              }}
-            />
-          </div>
-
-          <AnimatePresence mode="wait">
-            {!isSignUp ? (
-              <motion.div
-                key="signin"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.15, ease: "easeInOut" }}
+          <section className="rounded-[28px] border border-line-strong bg-surface p-5 shadow-[0_24px_70px_-28px_rgba(2,35,39,0.34)] sm:p-8">
+            <div className="tab-group-container relative mb-7 flex w-full">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSignUp(false);
+                  setError(null);
+                }}
+                className={clsx(
+                  "z-10 min-h-10 flex-1 cursor-pointer select-none rounded-lg px-3.5 py-2 text-sm font-semibold transition-colors duration-200",
+                  isSignUp ? "text-content-muted hover:text-content" : "text-accent",
+                )}
+                aria-pressed={!isSignUp}
               >
-                <form onSubmit={onSubmit} className="space-y-4" aria-label="Sign in form" noValidate>
-                  <div>
-                    <h1 className="font-heading text-2xl font-bold tracking-tight text-content">Sign in</h1>
-                    <p className="mt-1 text-sm text-content-subtle">Access your planning workspace.</p>
-                  </div>
-
-                  <Input
-                    id="signin-workspace"
-                    name="signin-workspace"
-                    label="Workspace"
-                    value={tenant_slug}
-                    onChange={(e) => setSlug(e.target.value)}
-                    icon={<Building2 size={15} aria-hidden="true" />}
-                    placeholder="acme-co"
-                    required
-                    autoComplete="organization"
-                  />
-                  <Input
-                    id="signin-email"
-                    name="signin-email"
-                    label="Email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    icon={<Mail size={15} aria-hidden="true" />}
-                    placeholder="you@company.com"
-                    required
-                    autoComplete="email"
-                  />
-                  <Input
-                    id="signin-password"
-                    name="signin-password"
-                    label="Password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    icon={<Lock size={15} aria-hidden="true" />}
-                    placeholder="••••••••"
-                    required
-                    autoComplete="current-password"
-                    error={error ?? undefined}
-                  />
-
-                  <div className="-mt-1 text-right">
-                    <Link to="/forgot-password" className="text-xs font-medium text-content-muted hover:text-content hover:underline">
-                      Forgot password?
-                    </Link>
-                  </div>
-
-                  <Button type="submit" loading={loading} className="w-full" aria-busy={loading}>
-                    Sign in
-                  </Button>
-
-                  <Divider />
-
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={handleGoogleSignIn}
-                    disabled={loading}
-                    className="w-full"
-                    icon={<GoogleIcon />}
-                    aria-label="Sign in with Google"
-                  >
-                    Continue with Google
-                  </Button>
-
-                  <LegalConsent action="signing in" />
-                </form>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="signup"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.15, ease: "easeInOut" }}
+                Sign in
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSignUp(true);
+                  setSignUpStep("account");
+                  setError(null);
+                }}
+                className={clsx(
+                  "z-10 min-h-10 flex-1 cursor-pointer select-none rounded-lg px-3.5 py-2 text-sm font-semibold transition-colors duration-200",
+                  isSignUp ? "text-accent" : "text-content-muted hover:text-content",
+                )}
+                aria-pressed={isSignUp}
               >
-                <form onSubmit={onSignUpSubmit} className="space-y-4" aria-label="Create account form" noValidate>
-                  <div>
-                    <h1 className="font-heading text-2xl font-bold tracking-tight text-content">Create your workspace</h1>
-                    <p className="mt-1 text-sm text-content-subtle">Start planning with predictive supply-chain intelligence.</p>
-                  </div>
+                Create account
+              </button>
+              <motion.div
+                className="absolute bottom-1 top-1 rounded-lg border border-border bg-surface shadow-sm"
+                layoutId="activeTabIndicator"
+                transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 30 }}
+                style={{
+                  left: isSignUp ? "calc(50% + 2px)" : "4px",
+                  right: isSignUp ? "4px" : "calc(50% + 2px)",
+                }}
+              />
+            </div>
 
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <AnimatePresence mode="wait">
+              {!isSignUp ? (
+                <motion.div
+                  key="signin"
+                  initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={reduceMotion ? { duration: 0 } : { duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <form onSubmit={onSubmit} className="space-y-4" aria-label="Sign in form" noValidate>
+                    <header className="mb-6">
+                      <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-content-subtle">Workspace access</p>
+                      <h1 className="font-heading text-3xl font-semibold tracking-[-0.03em] text-content">Welcome back</h1>
+                      <p className="mt-2 text-sm leading-6 text-content-subtle">Sign in to continue to your planning workspace.</p>
+                    </header>
+
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={handleGoogleSignIn}
+                      disabled={loading}
+                      className="min-h-11 w-full"
+                      icon={<GoogleIcon />}
+                      aria-label="Sign in with Google"
+                    >
+                      Continue with Google
+                    </Button>
+                    <Divider />
+
                     <Input
-                      id="signup-name"
-                      name="signup-name"
-                      label="Full name"
-                      value={signUpName}
-                      onChange={(e) => setSignUpName(e.target.value)}
-                      icon={<User size={15} aria-hidden="true" />}
-                      placeholder="Jane Smith"
-                      required
-                      autoComplete="name"
-                    />
-                    <Input
-                      id="signup-workspace"
-                      name="signup-workspace"
+                      id="signin-workspace"
+                      name="signin-workspace"
                       label="Workspace"
-                      value={signUpSlug}
-                      onChange={(e) => setSignUpSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                      value={tenant_slug}
+                      onChange={(e) => setSlug(e.target.value)}
                       icon={<Building2 size={15} aria-hidden="true" />}
                       placeholder="acme-co"
-                      hint="Lowercase, numbers & hyphens"
                       required
-                      autoComplete="off"
+                      autoComplete="organization"
                     />
-                  </div>
-                  <Input
-                    id="signup-email"
-                    name="signup-email"
-                    label="Email"
-                    type="email"
-                    value={signUpEmail}
-                    onChange={(e) => setSignUpEmail(e.target.value)}
-                    icon={<Mail size={15} aria-hidden="true" />}
-                    placeholder="you@company.com"
-                    required
-                    autoComplete="email"
-                  />
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <Input
-                      id="signup-password"
-                      name="signup-password"
+                      id="signin-email"
+                      name="signin-email"
+                      label="Email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      icon={<Mail size={15} aria-hidden="true" />}
+                      placeholder="you@company.com"
+                      required
+                      autoComplete="email"
+                    />
+                    <Input
+                      id="signin-password"
+                      name="signin-password"
                       label="Password"
                       type="password"
-                      value={signUpPassword}
-                      onChange={(e) => setSignUpPassword(e.target.value)}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       icon={<Lock size={15} aria-hidden="true" />}
-                      placeholder="Min. 8 characters"
+                      placeholder="••••••••"
                       required
-                      autoComplete="new-password"
+                      autoComplete="current-password"
+                      error={error ?? undefined}
                     />
-                    <Input
-                      id="signup-confirm-password"
-                      name="signup-confirm-password"
-                      label="Confirm password"
-                      type="password"
-                      value={signUpConfirmPassword}
-                      onChange={(e) => setSignUpConfirmPassword(e.target.value)}
-                      icon={<Lock size={15} aria-hidden="true" />}
-                      placeholder="Repeat password"
-                      required
-                      autoComplete="new-password"
-                      error={
-                        (error && isSignUp ? error : undefined) ||
-                        (signUpConfirmPassword && signUpPassword !== signUpConfirmPassword
-                          ? "Passwords do not match"
-                          : undefined)
-                      }
-                    />
+
+                    <div className="-mt-1 flex justify-end">
+                      <Link to="/forgot-password" className="text-xs font-semibold text-content-muted underline-offset-4 hover:text-content hover:underline">
+                        Forgot password?
+                      </Link>
+                    </div>
+                    <Button type="submit" loading={loading} className="min-h-11 w-full" aria-busy={loading}>
+                      Sign in <ArrowRight size={15} aria-hidden="true" />
+                    </Button>
+                    <LegalConsent action="signing in" />
+                  </form>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key={`signup-${signUpStep}`}
+                  initial={reduceMotion ? false : { opacity: 0, x: signUpStep === "workspace" ? 10 : -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: signUpStep === "workspace" ? -10 : 10 }}
+                  transition={reduceMotion ? { duration: 0 } : { duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <div className="mb-6" aria-label="Workspace creation progress">
+                    <div className="mb-2 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.14em] text-content-subtle">
+                      <span>Account</span>
+                      <span>Workspace</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2" aria-hidden="true">
+                      <span className="h-1 rounded-full bg-accent" />
+                      <span className={clsx("h-1 rounded-full transition-colors", signUpStep === "workspace" ? "bg-accent" : "bg-surface-3")} />
+                    </div>
+                    <p className="mt-2 text-xs text-content-subtle">Step {signUpStep === "account" ? "1" : "2"} of 2</p>
                   </div>
 
-                  <IndustryPicker
-                    value={signUpIndustry}
-                    onChange={setSignUpIndustry}
-                    disabled={loading}
-                  />
+                  <form
+                    onSubmit={signUpStep === "account" ? (e) => { e.preventDefault(); continueToWorkspace(); } : onSignUpSubmit}
+                    className="space-y-4"
+                    aria-label="Create account form"
+                    noValidate
+                  >
+                    {signUpStep === "account" ? (
+                      <>
+                        <header className="mb-5">
+                          <h1 ref={signUpHeadingRef} tabIndex={-1} className="font-heading text-3xl font-semibold tracking-[-0.03em] text-content outline-none">Create your account</h1>
+                          <p className="mt-2 text-sm leading-6 text-content-subtle">Start with your details. Your planning environment comes next.</p>
+                        </header>
 
-                  {signUpPassword && (
-                    <div className="space-y-1" aria-live="polite">
-                      <div className="flex gap-1">
-                        {[1, 2, 3, 4].map((i) => (
-                          <div
-                            key={i}
-                            className={clsx(
-                              "h-1 flex-1 rounded-full transition-all duration-300",
-                              i <= pwStrength.score ? pwStrength.color : "bg-surface-3",
-                            )}
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={handleGoogleSignIn}
+                          disabled={loading}
+                          className="min-h-11 w-full"
+                          icon={<GoogleIcon />}
+                          aria-label="Sign up with Google"
+                        >
+                          Continue with Google
+                        </Button>
+                        <Divider />
+
+                        <Input
+                          id="signup-name"
+                          name="signup-name"
+                          label="Full name"
+                          value={signUpName}
+                          onChange={(e) => setSignUpName(e.target.value)}
+                          icon={<User size={15} aria-hidden="true" />}
+                          placeholder="Jane Smith"
+                          required
+                          autoComplete="name"
+                        />
+                        <Input
+                          id="signup-email"
+                          name="signup-email"
+                          label="Work email"
+                          type="email"
+                          value={signUpEmail}
+                          onChange={(e) => setSignUpEmail(e.target.value)}
+                          icon={<Mail size={15} aria-hidden="true" />}
+                          placeholder="you@company.com"
+                          required
+                          autoComplete="email"
+                        />
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          <Input
+                            id="signup-password"
+                            name="signup-password"
+                            label="Password"
+                            type="password"
+                            value={signUpPassword}
+                            onChange={(e) => setSignUpPassword(e.target.value)}
+                            icon={<Lock size={15} aria-hidden="true" />}
+                            placeholder="Min. 8 characters"
+                            required
+                            autoComplete="new-password"
                           />
-                        ))}
-                      </div>
-                      <p className="text-[11px] text-content-subtle">
-                        Password strength:{" "}
-                        <span className={clsx("font-semibold", pwStrength.score >= 3 ? "text-emerald-600" : pwStrength.score >= 2 ? "text-amber-500" : "text-rose-500")}>
-                          {pwStrength.label}
-                        </span>
-                      </p>
-                    </div>
-                  )}
+                          <Input
+                            id="signup-confirm-password"
+                            name="signup-confirm-password"
+                            label="Confirm password"
+                            type="password"
+                            value={signUpConfirmPassword}
+                            onChange={(e) => setSignUpConfirmPassword(e.target.value)}
+                            icon={<Lock size={15} aria-hidden="true" />}
+                            placeholder="Repeat password"
+                            required
+                            autoComplete="new-password"
+                            error={signUpConfirmPassword && signUpPassword !== signUpConfirmPassword ? "Passwords do not match" : undefined}
+                          />
+                        </div>
 
-                  <Button
-                    type="submit"
-                    loading={loading}
-                    disabled={!!(signUpPassword && signUpConfirmPassword && signUpPassword !== signUpConfirmPassword)}
-                    className="w-full"
-                  >
-                    Create workspace
-                  </Button>
+                        {signUpPassword && (
+                          <div className="space-y-1.5" aria-live="polite">
+                            <div className="flex gap-1">
+                              {[1, 2, 3, 4].map((i) => (
+                                <div
+                                  key={i}
+                                  className={clsx(
+                                    "h-1 flex-1 rounded-full transition-colors duration-200",
+                                    i <= pwStrength.score ? pwStrength.color : "bg-surface-3",
+                                  )}
+                                />
+                              ))}
+                            </div>
+                            <p className="text-[11px] text-content-subtle">
+                              Password strength: <span className={clsx("font-semibold", pwStrength.score >= 3 ? "text-emerald-600" : pwStrength.score >= 2 ? "text-amber-600" : "text-rose-600")}>{pwStrength.label}</span>
+                            </p>
+                          </div>
+                        )}
 
-                  <Divider />
+                        {error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs font-medium text-rose-700">{error}</p>}
+                        <Button type="submit" className="min-h-11 w-full">
+                          Continue to workspace <ArrowRight size={15} aria-hidden="true" />
+                        </Button>
+                        <LegalConsent action="creating an account" />
+                      </>
+                    ) : (
+                      <>
+                        <header className="mb-5">
+                          <h1 ref={signUpHeadingRef} tabIndex={-1} className="font-heading text-3xl font-semibold tracking-[-0.03em] text-content outline-none">Set up your workspace</h1>
+                          <p className="mt-2 text-sm leading-6 text-content-subtle">Name your planning environment and choose the industry model it should use.</p>
+                        </header>
 
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={handleGoogleSignIn}
-                    disabled={loading}
-                    className="w-full"
-                    icon={<GoogleIcon />}
-                    aria-label="Sign up with Google"
-                  >
-                    Continue with Google
-                  </Button>
+                        <div className="flex items-center gap-3 rounded-xl border border-line bg-surface-2 px-3.5 py-3">
+                          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-accent-soft text-accent"><CheckCircle2 size={16} aria-hidden="true" /></span>
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-content">Account details ready</p>
+                            <p className="truncate text-xs text-content-subtle">{signUpEmail}</p>
+                          </div>
+                        </div>
 
-                  <LegalConsent action="creating an account" />
-                </form>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                        <Input
+                          id="signup-workspace"
+                          name="signup-workspace"
+                          label="Workspace name"
+                          value={signUpSlug}
+                          onChange={(e) => setSignUpSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                          icon={<Building2 size={15} aria-hidden="true" />}
+                          placeholder="acme-co"
+                          hint="Lowercase letters, numbers and hyphens · 2–63 characters"
+                          required
+                          autoComplete="off"
+                        />
+
+                        <IndustryPicker
+                          value={signUpIndustry}
+                          onChange={(industry) => {
+                            setSignUpIndustry(industry);
+                            setError(null);
+                          }}
+                          disabled={loading}
+                        />
+
+                        {error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs font-medium text-rose-700">{error}</p>}
+                        <div className="grid grid-cols-[auto_1fr] gap-3 pt-1">
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => {
+                              setError(null);
+                              setSignUpStep("account");
+                            }}
+                            className="min-h-11 px-3"
+                            aria-label="Back to account details"
+                          >
+                            <ArrowLeft size={15} aria-hidden="true" /> Back
+                          </Button>
+                          <Button type="submit" loading={loading} className="min-h-11 w-full">
+                            Create workspace <ArrowRight size={15} aria-hidden="true" />
+                          </Button>
+                        </div>
+                        <p className="text-center text-[11px] leading-relaxed text-content-subtle">Your industry selection locks after setup to keep forecasts and permissions consistent.</p>
+                      </>
+                    )}
+                  </form>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </section>
+
+          <p className="mt-4 text-center text-[11px] text-content-subtle lg:hidden">
+            Role-aware · Audit-ready · Tenant-isolated
+          </p>
         </motion.div>
       </main>
-
-      {/* Narrative column */}
-      <NarrativePanel />
 
       {/* Google onboarding modal (first-time Google sign-in) */}
       <Modal

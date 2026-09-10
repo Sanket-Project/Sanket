@@ -1,24 +1,16 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-/**
- * The landing page ran four font families at once: DM Serif Display for
- * headlines, Space Grotesk set inline on the page wrapper, IBM Plex Sans set by
- * live-console.css, and IBM Plex Mono for labels. Body copy therefore changed
- * family partway down the page, where the hero ended and the sections began.
- *
- * Three roles now, routed through tokens so a fourth cannot be introduced by
- * editing a single rule.
- */
+/** The landing page shares the product-wide heading, body, and data roles. */
 const css = readFileSync("src/pages/landing/live-console.css", "utf8");
 const page = readFileSync("src/pages/LandingPage.tsx", "utf8");
 const html = readFileSync("index.html", "utf8");
 
 describe("landing typography", () => {
   it("declares the three type roles as tokens", () => {
-    expect(css).toContain("--lc-font-display");
-    expect(css).toContain("--lc-font-body");
-    expect(css).toContain("--lc-font-mono");
+    expect(css).toContain('--lc-font-display: "Space Grotesk"');
+    expect(css).toContain('--lc-font-body: "IBM Plex Sans"');
+    expect(css).toContain('--lc-font-mono: "IBM Plex Mono"');
   });
 
   it("names no font family outside those tokens", () => {
@@ -31,15 +23,13 @@ describe("landing typography", () => {
     }
   });
 
-  it("does not set a competing body font on the page wrapper", () => {
-    expect(page).not.toMatch(/fontFamily:\s*"'Space Grotesk'/);
+  it("does not set a competing font inline", () => {
+    expect(page).not.toMatch(/fontFamily\s*:/);
   });
 
   it("puts the hero on the same body font as the sections below it", () => {
-    // Removing the inline Space Grotesk was not enough on its own: the hero
-    // sits outside .lc, so it fell through to the app-wide Geist Sans while the
-    // sections used IBM Plex Sans — the same family change, moved. The tokens
-    // live on .landing-root so both inherit one body font.
+    // The tokens live on .landing-root so the hero and sections inherit one
+    // body family before users enter signup and the authenticated portal.
     expect(page).toMatch(/className="landing-root /);
     expect(css).toMatch(/\.landing-root\s*\{[^}]*--lc-font-body/);
   });

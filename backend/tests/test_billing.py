@@ -11,7 +11,11 @@ import pytest
 
 from app.models.billing import Plan, Subscription, SubscriptionStatus
 from app.models.tenant import Tenant
-from app.services.billing.razorpay_client import RazorpayClient, RazorpayPaymentResult
+from app.services.billing.razorpay_client import (
+    RazorpayClient,
+    RazorpayPaymentResult,
+    RazorpaySubscriptionResult,
+)
 from app.services.billing.subscription_manager import (
     BillingNotConfiguredError,
     PlanChangeNotSupportedError,
@@ -628,6 +632,91 @@ def test_yearly_plans_do_not_request_120_years_of_billing():
 
 
 @pytest.mark.asyncio
+async def test_create_subscription_uses_only_provider_supported_fields():
+    """Razorpay creates and links the customer during authorisation.
+
+    ``customer_id`` and ``callback_url`` are Checkout fields, not accepted by
+    the create-subscription API. Sending either makes Razorpay reject the
+    request before Checkout can open.
+    """
+    sdk = MagicMock()
+    sdk.subscription.create.return_value = {
+        "id": "sub_test_123",
+        "status": "created",
+        "current_start": None,
+        "current_end": None,
+        "short_url": "https://rzp.io/i/test",
+    }
+    client = RazorpayClient(key_id="k", key_secret="s", total_count=120)  # noqa: S106
+    client._client = sdk
+
+    await client.create_subscription(
+        plan_id="plan_test_123",
+        billing_interval="month",
+    )
+
+    sdk.subscription.create.assert_called_once_with(
+        data={
+            "plan_id": "plan_test_123",
+            "total_count": 120,
+            "customer_notify": 1,
+        }
+    )
+
+
+@pytest.mark.asyncio
+async def test_create_subscription_wraps_provider_rejection():
+    """A Razorpay API rejection must not escape as an unhandled HTTP 500."""
+    from razorpay.errors import BadRequestError
+
+    sdk = MagicMock()
+    sdk.subscription.create.side_effect = BadRequestError("provider rejected request")
+    client = RazorpayClient(key_id="k", key_secret="s")  # noqa: S106
+    client._client = sdk
+
+    with pytest.raises(RuntimeError, match="Razorpay rejected subscription setup"):
+        await client.create_subscription(plan_id="plan_test_123")
+
+
+@pytest.mark.asyncio
+async def test_manager_does_not_create_customer_before_subscription_authorisation():
+    """Checkout, not the server, creates and links Razorpay's customer."""
+    tenant_id = uuid.uuid4()
+    plan = _plan(price=499500, rzp_id="plan_test_123", trial_days=14)
+    session = _mock_session(
+        plan=plan,
+        tenant=_tenant(tenant_id),
+        prior_sub_id=uuid.uuid4(),
+    )
+    session.add = MagicMock()
+    provider = MagicMock(spec=RazorpayClient)
+    provider.upsert_customer = AsyncMock()
+    provider.create_subscription = AsyncMock(
+        return_value=RazorpaySubscriptionResult(
+            subscription_id="sub_test_123",
+            status="created",
+            current_period_start=None,
+            current_period_end=None,
+            short_url="https://rzp.io/i/test",
+        )
+    )
+
+    await SubscriptionManager(provider).start_subscription(
+        session,
+        tenant_id=tenant_id,
+        plan_id="growth_monthly",
+        billing_email="buyer@example.com",
+    )
+
+    provider.upsert_customer.assert_not_awaited()
+    provider.create_subscription.assert_awaited_once_with(
+        plan_id="plan_test_123",
+        trial_days=0,
+        billing_interval="month",
+    )
+
+
+@pytest.mark.asyncio
 async def test_notifications_are_buffered_until_flush():
     """P2: realtime events must not escape before the transaction commits."""
     tenant_id = uuid.uuid4()
@@ -643,3 +732,29 @@ async def test_notifications_are_buffered_until_flush():
 
     mgr.discard_notifications()
     assert mgr._pending_events == []
+
+
+@pytest.mark.asyncio
+async def test_razorpay_order_signature_verification():
+    """Standard Web Checkout: verify HMAC-SHA256(order_id|payment_id, secret)."""
+    client = RazorpayClient(key_id="rzp_test_123", key_secret="secret_123")  # noqa: S106
+    order_id = "order_test999"
+    pay_id = "pay_test888"
+
+    valid_sig = hmac.new(
+        b"secret_123",
+        f"{order_id}|{pay_id}".encode(),
+        "sha256",
+    ).hexdigest()
+
+    assert client.verify_order_signature(order_id, pay_id, valid_sig) is True
+    assert client.verify_order_signature(order_id, pay_id, "forged_signature") is False
+
+
+@pytest.mark.asyncio
+async def test_razorpay_create_order_min_amount_validation():
+    """Razorpay orders require amount >= 100 paise (₹1.00)."""
+    client = RazorpayClient(key_id="rzp_test_123", key_secret="secret_123")  # noqa: S106
+
+    with pytest.raises(ValueError, match="at least 100 paise"):
+        await client.create_order(amount=99)

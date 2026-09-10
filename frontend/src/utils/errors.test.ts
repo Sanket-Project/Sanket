@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getErrorMessage } from "./errors";
+import { getErrorMessage, getServerErrorMessage, isServerError } from "./errors";
 
 describe("getErrorMessage", () => {
   it("returns a string detail from an axios-style error", () => {
@@ -38,5 +38,28 @@ describe("getErrorMessage", () => {
   it("never returns a raw object (guards against React error #31)", () => {
     const err = { response: { data: { detail: { unexpected: "shape" } } } };
     expect(typeof getErrorMessage(err)).toBe("string");
+  });
+});
+
+describe("server error handling", () => {
+  it("recognises server responses so local handlers can avoid duplicate toasts", () => {
+    expect(isServerError({ response: { status: 503 } })).toBe(true);
+    expect(isServerError({ response: { status: 422 } })).toBe(false);
+  });
+
+  it("surfaces an intentional 502/503 detail but keeps unexpected 500s generic", () => {
+    expect(
+      getServerErrorMessage({
+        response: {
+          status: 503,
+          data: { detail: "Razorpay rejected subscription setup. Please try again shortly." },
+        },
+      }),
+    ).toBe("Razorpay rejected subscription setup. Please try again shortly.");
+    expect(
+      getServerErrorMessage({
+        response: { status: 500, data: { detail: "internal implementation detail" } },
+      }),
+    ).toBe("Server error — try again shortly");
   });
 });

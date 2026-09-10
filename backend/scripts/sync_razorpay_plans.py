@@ -34,6 +34,9 @@ async def main() -> None:
     client = get_razorpay_client(settings)
     rzp_module = client._module()
 
+    migration_db_url = os.getenv("MIGRATION_DATABASE_URL")
+    if migration_db_url:
+        settings = settings.model_copy(update={"database_url": migration_db_url})
     db = Database(settings)
 
     async with db.session_no_rls() as session:
