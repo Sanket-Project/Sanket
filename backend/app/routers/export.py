@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import io
+from datetime import timedelta
 from typing import Any
 
 import structlog
@@ -11,6 +12,7 @@ from fastapi import APIRouter, Request, Response
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 
+from app.core.calendar import CALENDAR
 from app.models.enums import IndustryCode
 from app.routers.industry_router import ActiveIndustry, TenantId
 
@@ -71,7 +73,11 @@ async def export_forecast_xlsx(
 
     header_fill = PatternFill("solid", fgColor="7C3AED")
     header_font = Font(color="FFFFFF", bold=True)
-    headers = ["SKU ID", "SKU Code", "Forecast Date", "P10", "P50 (Median)", "P90", "Model"]
+    # Runs on the Monday-UTC calendar get explicit week bounds; older runs used
+    # Sunday dates whose week cannot be stated reliably, so they keep the raw date.
+    weekly = bool(run and (run.metrics or {}).get("calendar") == CALENDAR)
+    date_headers = ["Week start (Mon, UTC)", "Week end (Sun)"] if weekly else ["Forecast Date"]
+    headers = ["SKU ID", "SKU Code", *date_headers, "P10", "P50 (Median)", "P90", "Model"]
     for col, h in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col, value=h)
         cell.fill = header_fill
@@ -79,13 +85,15 @@ async def export_forecast_xlsx(
         cell.alignment = Alignment(horizontal="center")
 
     for row_i, (fc, sku_code) in enumerate(rows, 2):
-        ws.cell(row=row_i, column=1, value=str(fc.sku_id))
-        ws.cell(row=row_i, column=2, value=sku_code or "")
-        ws.cell(row=row_i, column=3, value=str(fc.forecast_date))
-        ws.cell(row=row_i, column=4, value=float(fc.p10))
-        ws.cell(row=row_i, column=5, value=float(fc.p50))
-        ws.cell(row=row_i, column=6, value=float(fc.p90))
-        ws.cell(row=row_i, column=7, value=fc.model_name)
+        dates = (
+            [str(fc.forecast_date), str(fc.forecast_date + timedelta(days=6))]
+            if weekly
+            else [str(fc.forecast_date)]
+        )
+        values = [str(fc.sku_id), sku_code or "", *dates, float(fc.p10), float(fc.p50),
+                  float(fc.p90), fc.model_name]
+        for col, value in enumerate(values, 1):
+            ws.cell(row=row_i, column=col, value=value)
 
     # Auto-width
     for col in ws.columns:

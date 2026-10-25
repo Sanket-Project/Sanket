@@ -109,7 +109,8 @@ async def _fetch_ml_baseline(
     """Call ml-api/forecast for the real probabilistic baseline.
 
     Returns the parsed JSON body on success, or None if the ML service is
-    unreachable / errored — caller then falls back to the synthetic generator.
+    unreachable / errored — the caller then fails the run honestly (no synthetic
+    baseline is ever substituted).
     """
     settings = get_settings()
     url = f"{settings.ml_api_url.rstrip('/')}/forecast"
@@ -441,6 +442,9 @@ async def compute_hybrid_forecast(
         series=series_payload,
         alerts_generated=alerts_count,
         data_source=baseline_source,
+        calendar=(ml_response or {}).get("calendar"),
+        history_end=(ml_response or {}).get("history_end"),
+        omitted=(ml_response or {}).get("omitted") or [],
     )
 
     return HybridComputeResult(
@@ -490,6 +494,17 @@ async def _persist_accuracy_snapshot(
                     status="completed",
                     started_at=out.generated_at,
                     completed_at=out.generated_at,
+                    # What accuracy needs to score this run honestly: which
+                    # calendar its dates use and where its history ended.
+                    metrics={
+                        "mode": "hybrid",
+                        "calendar": out.calendar,
+                        "history_end": (
+                            out.history_end.isoformat()
+                            if hasattr(out.history_end, "isoformat")
+                            else out.history_end
+                        ),
+                    },
                 )
             )
             # Force the parent row to be inserted before any ForecastResult

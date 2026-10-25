@@ -8,8 +8,8 @@ import pandas as pd
 import structlog
 from fastapi import APIRouter, Request
 from sqlalchemy import func, select
-from sqlalchemy import text as sa_text
 
+from app.core.calendar import week_bucket
 from app.models.enums import IndustryCode
 from app.routers.industry_router import ActiveIndustry, TenantId
 
@@ -43,7 +43,7 @@ async def anomaly_skus(
     cutoff = datetime.now(UTC) - timedelta(days=days)
 
     async with db.session(str(tenant_id)) as session:
-        _week = func.date_trunc(sa_text("'week'"), HistoricalSale.sale_time)
+        _week = week_bucket(HistoricalSale.sale_time)
         rows = await session.execute(
             select(
                 HistoricalSale.sku_id,

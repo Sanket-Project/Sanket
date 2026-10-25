@@ -29,6 +29,7 @@ import structlog
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.calendar import week_bucket
 from app.models.enums import DecisionStatus, IndustryCode
 from app.models.forecast import ForecastResult, ForecastRun
 from app.models.recommendation import Recommendation
@@ -249,7 +250,7 @@ async def _forecast_improvement(
         return empty
 
     sku_ids = {r.sku_id for r in fc_rows}
-    week = func.date_trunc("week", HistoricalSale.sale_time).label("week")
+    week = week_bucket(HistoricalSale.sale_time).label("week")
     actual_rows = (
         await session.execute(
             select(HistoricalSale.sku_id, week, func.sum(HistoricalSale.units_sold).label("units"))
@@ -268,7 +269,7 @@ async def _forecast_improvement(
         actuals[(r.sku_id, r.week.date())] = float(r.units or 0)
 
     def week_start(d: Any) -> Any:
-        # Postgres date_trunc('week') anchors on Monday; align forecast dates.
+        # Weeks are Monday 00:00 UTC (app.core.calendar); align forecast dates.
         return d - timedelta(days=d.weekday())
 
     abs_err_model = 0.0

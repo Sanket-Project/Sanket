@@ -29,6 +29,7 @@ import structlog
 from sqlalchemy import and_, delete, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.calendar import week_bucket
 from app.models.enums import IndustryCode
 from app.models.inventory import InventoryLevel
 from app.models.product import Sku
@@ -556,7 +557,7 @@ async def _series_health(
     session: AsyncSession, tenant_id: uuid.UUID, industry: IndustryCode
 ) -> list[Finding]:
     """Gaps and outliers in the weekly demand series."""
-    week = func.date_trunc("week", HistoricalSale.sale_time).label("week")
+    week = week_bucket(HistoricalSale.sale_time).label("week")
     rows = (
         await session.execute(
             select(HistoricalSale.sku_id, week, func.sum(HistoricalSale.units_sold).label("units"))

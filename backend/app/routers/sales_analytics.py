@@ -190,7 +190,10 @@ async def sales_timeseries(
     now = datetime.now(UTC)
     window_start = _trunc_start(now - timedelta(days=lookback_days), granularity)
 
-    bucket = func.date_trunc(sa_text(f"'{granularity}'"), HistoricalSale.sale_time)
+    # Buckets in UTC explicitly, matching the weekly calendar (app.core.calendar).
+    bucket = func.date_trunc(
+        sa_text(f"'{granularity}'"), func.timezone("UTC", HistoricalSale.sale_time)
+    )
 
     async def _compute() -> dict[str, Any]:
         async with db.session(str(tenant_id)) as session:

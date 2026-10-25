@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -103,10 +103,16 @@ class HybridForecastOut(BaseModel):
     data_source: str = Field(
         default="trained",
         description=(
-            "Source of the baseline. One of: 'trained' (real ML artifact), "
-            "'zero_shot' (Chronos fallback), 'synthetic' (ML API unreachable)."
+            "Source of the baseline, as reported by the ML service: 'trained' (a "
+            "tenant-trained artifact) or 'chronos_zero_shot' / 'timesfm_zero_shot'. "
+            "There is no synthetic baseline: if the ML service is unavailable the run fails."
         ),
     )
+    #: Weekly calendar of the series dates and where the baseline's history ended.
+    calendar: str | None = None
+    history_end: date | None = None
+    #: Active SKUs the baseline did not forecast, with the reason.
+    omitted: list[dict] = Field(default_factory=list)
 
 
 class HybridRunAccepted(BaseModel):

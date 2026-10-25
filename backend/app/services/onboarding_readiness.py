@@ -27,6 +27,7 @@ import structlog
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.calendar import week_bucket
 from app.models.enums import DecisionStatus, IndustryCode
 from app.models.forecast import ForecastRun
 from app.models.integration import IntegrationConnection
@@ -152,7 +153,7 @@ async def readiness(
     )
 
     # ── Day 3: enough history ────────────────────────────────────────────────
-    week = func.date_trunc("week", HistoricalSale.sale_time)
+    week = week_bucket(HistoricalSale.sale_time)
     weeks_covered = int(
         await session.scalar(
             select(func.count(func.distinct(week))).where(
