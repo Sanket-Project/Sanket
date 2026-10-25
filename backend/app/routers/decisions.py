@@ -25,6 +25,7 @@ from app.models.tenant import Tenant
 from app.routers.industry_router import ActiveIndustry, TenantId, UserId
 from app.services import decision_builder
 from app.services.decision_builder import load_policy, serialize
+from app.services.forecast_gate import assert_forecastable
 
 log = structlog.get_logger(__name__)
 router = APIRouter(prefix="/decisions", tags=["decisions"])
@@ -131,6 +132,7 @@ async def refresh_decisions(
         tenant = await session.get(Tenant, tenant_id)
         if tenant is None:
             raise AuthenticationError()
+        await assert_forecastable(session, tenant_id=tenant_id, industry=ctx.code)
         result, rows = await decision_builder.refresh(
             session,
             tenant_id=tenant_id,

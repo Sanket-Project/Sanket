@@ -22,6 +22,7 @@ from sqlalchemy import select
 
 from app.config import Settings, get_settings
 from app.routers.industry_router import ActiveIndustry, TenantId
+from app.services.forecast_gate import assert_forecastable
 
 log = structlog.get_logger(__name__)
 router = APIRouter(prefix="/forecasts", tags=["forecast"])
@@ -44,6 +45,8 @@ async def generate_forecast(
     settings: SettingsDep,
 ) -> dict[str, Any]:
     """Generate a probabilistic forecast for the caller's tenant + active industry."""
+    async with request.app.state.db.session(str(tenant_id)) as session:
+        await assert_forecastable(session, tenant_id=tenant_id, industry=industry.code)
     url = f"{settings.ml_api_url.rstrip('/')}/forecast"
     payload = {
         "tenant_id": str(tenant_id),  # authoritative: from the verified token

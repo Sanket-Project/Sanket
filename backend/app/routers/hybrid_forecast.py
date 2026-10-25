@@ -35,6 +35,7 @@ from app.schemas.trends import (
     HybridRunAccepted,
     HybridRunStatus,
 )
+from app.services.forecast_gate import assert_forecastable
 from app.services.hybrid_forecast import execute_hybrid_run
 from app.services.industry_config import resolve_effective_config
 
@@ -83,6 +84,8 @@ async def create_hybrid_run(
     """Enqueue a hybrid forecast run; returns immediately with a run_id to poll."""
     db = request.app.state.db
     industry = IndustryCode(ctx.code)
+    async with db.session(str(tenant_id)) as session:
+        await assert_forecastable(session, tenant_id=tenant_id, industry=ctx.code)
     body = await _apply_effective_horizon(db, tenant_id, ctx.code, body)
     run_id = await _create_run_row(db, tenant_id, industry, body)
 
@@ -162,6 +165,8 @@ async def hybrid_forecast_sync(
     http_client: httpx.AsyncClient | None = getattr(request.app.state, "http", None)
     realtime = getattr(request.app.state, "realtime", None)
 
+    async with db.session(str(tenant_id)) as session:
+        await assert_forecastable(session, tenant_id=tenant_id, industry=ctx.code)
     body = await _apply_effective_horizon(db, tenant_id, ctx.code, body)
     run_id = await _create_run_row(db, tenant_id, industry, body)
     await execute_hybrid_run(

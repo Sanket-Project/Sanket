@@ -38,6 +38,10 @@ SQL_DIR = BACKEND_DIR / "sql"
 os.environ["SIGNAL_PIPELINE_ENABLED"] = "false"
 os.environ["SHOPIFY_POLL_ENABLED"] = "false"
 os.environ["WHATSAPP_DIGEST_WORKER_ENABLED"] = "false"
+# Never let a test reach a real ML service: a developer's (or an audit's)
+# inference API on the default 127.0.0.1:8001 writes into its own database.
+# Port 9 (discard) refuses connections, so any un-mocked call fails loudly.
+os.environ["ML_API_URL"] = "http://127.0.0.1:9"
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -281,6 +285,48 @@ async def make_tenant(db_session: AsyncSession):
         )
         await db_session.commit()
         return tenant_id
+
+    return _make
+
+
+@pytest_asyncio.fixture
+async def signed_in_workspace(client, db_session, make_tenant):
+    """Factory: a fresh subscribed workspace plus an admin's auth headers.
+
+    For API tests that need their own data (duplicates, forecasts, stock)
+    without leaking into the shared ``test-tenant``.
+    """
+    from app.config import get_settings
+    from app.core.security import hash_password
+
+    async def _make(industry: str = "fashion") -> tuple[uuid.UUID, dict[str, str]]:
+        tenant_id = await make_tenant(industry)
+        await grant_active_subscription(db_session, tenant_id)
+        slug = await db_session.scalar(
+            text("SELECT slug FROM tenants WHERE id = :t"), {"t": str(tenant_id)}
+        )
+        email = f"admin-{tenant_id.hex[:10]}@test.com"
+        await db_session.execute(
+            text(
+                "INSERT INTO users (id, tenant_id, email, password_hash, full_name, role, "
+                "active_industry, is_active) VALUES (:id, :t, :e, :h, 'Synthetic admin', 'admin', "
+                "CAST(:ind AS industry_code), TRUE)"
+            ),
+            {
+                "id": str(uuid.uuid4()),
+                "t": str(tenant_id),
+                "e": email,
+                "h": hash_password("GoodPass123!", get_settings()),
+                "ind": industry,
+            },
+        )
+        await db_session.commit()
+        r = await client.post(
+            "/api/v1/auth/dev-login",
+            json={"email": email, "password": "GoodPass123!", "tenant_slug": slug},
+        )
+        assert r.status_code == 200, r.text
+        return tenant_id, {"Authorization": f"Bearer {r.json()['access_token']}"}
 
     return _make
 
