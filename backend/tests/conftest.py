@@ -42,6 +42,10 @@ os.environ["WHATSAPP_DIGEST_WORKER_ENABLED"] = "false"
 # inference API on the default 127.0.0.1:8001 writes into its own database.
 # Port 9 (discard) refuses connections, so any un-mocked call fails loudly.
 os.environ["ML_API_URL"] = "http://127.0.0.1:9"
+# Same for Redis: backend/.env points at a developer Redis on :6379. Tests ran
+# against "Redis unreachable" anyway (plus ~11 s of arq retries per lifespan);
+# empty means in-process only, and a live developer Redis is never written to.
+os.environ["REDIS_URL"] = ""
 
 
 @pytest.fixture(scope="session", autouse=True)
