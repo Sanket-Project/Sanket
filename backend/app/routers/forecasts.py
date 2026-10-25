@@ -12,12 +12,13 @@ service token.
 
 from __future__ import annotations
 
+from datetime import UTC, date, datetime, timedelta
 from typing import Annotated, Any
 
 import httpx
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 
 from app.config import Settings, get_settings
@@ -47,23 +48,83 @@ async def generate_forecast(
     """Generate a probabilistic forecast for the caller's tenant + active industry."""
     async with request.app.state.db.session(str(tenant_id)) as session:
         await assert_forecastable(session, tenant_id=tenant_id, industry=industry.code)
-    url = f"{settings.ml_api_url.rstrip('/')}/forecast"
-    payload = {
-        "tenant_id": str(tenant_id),  # authoritative: from the verified token
-        "industry": industry.code,
-        "horizon": body.horizon,
-        "force_zero_shot": body.force_zero_shot,
-    }
-    headers = {"Authorization": f"Bearer {settings.ml_service_token_effective}"}
+    return await _forecast_via_ml(
+        request,
+        settings,
+        tenant_id,
+        {
+            "tenant_id": str(tenant_id),  # authoritative: from the verified token
+            "industry": industry.code,
+            "horizon": body.horizon,
+            "force_zero_shot": body.force_zero_shot,
+        },
+    )
+
+
+class BacktestBody(BaseModel):
+    #: Forecast as if it were this Monday: the model sees only earlier weeks.
+    cutoff: date
+    horizon: int = Field(default=8, ge=1, le=26)
+
+    @field_validator("cutoff")
+    @classmethod
+    def _past_monday(cls, v: date) -> date:
+        if v.weekday() != 0:
+            raise ValueError("cutoff must be a Monday (the start of a UTC week)")
+        today = datetime.now(UTC).date()
+        if v >= today - timedelta(days=today.weekday()):
+            raise ValueError("cutoff must be before the current week — a backtest looks back")
+        return v
+
+
+@router.post("/backtest")
+async def backtest_forecast(
+    body: BacktestBody,
+    request: Request,
+    tenant_id: TenantId,
+    industry: ActiveIndustry,
+    settings: SettingsDep,
+) -> dict[str, Any]:
+    """Explicit historical forecast from history before ``cutoff`` only.
+
+    The run is stored with ``mode = "backtest"`` and reported separately from
+    production accuracy, which only ever scores forecasts made before their
+    week began. Always zero-shot: a trained artifact may have seen the weeks
+    being predicted.
+    """
+    async with request.app.state.db.session(str(tenant_id)) as session:
+        await assert_forecastable(session, tenant_id=tenant_id, industry=industry.code)
+    return await _forecast_via_ml(
+        request,
+        settings,
+        tenant_id,
+        {
+            "tenant_id": str(tenant_id),
+            "industry": industry.code,
+            "horizon": body.horizon,
+            "force_zero_shot": True,
+            "history_end": body.cutoff.isoformat(),
+        },
+    )
+
+
+async def _post_to_ml(
+    request: Request, url: str, payload: dict, headers: dict, timeout: float
+) -> httpx.Response:
     http: httpx.AsyncClient | None = getattr(request.app.state, "http", None)
+    if http is not None:
+        return await http.post(url, json=payload, headers=headers, timeout=timeout)
+    async with httpx.AsyncClient(timeout=timeout) as client:
+        return await client.post(url, json=payload, headers=headers)
+
+
+async def _forecast_via_ml(
+    request: Request, settings: Settings, tenant_id: Any, payload: dict
+) -> dict[str, Any]:
+    url = f"{settings.ml_api_url.rstrip('/')}/forecast"
+    headers = {"Authorization": f"Bearer {settings.ml_service_token_effective}"}
     try:
-        if http is not None:
-            r = await http.post(
-                url, json=payload, headers=headers, timeout=settings.ml_api_timeout_s
-            )
-        else:
-            async with httpx.AsyncClient(timeout=settings.ml_api_timeout_s) as client:
-                r = await client.post(url, json=payload, headers=headers)
+        r = await _post_to_ml(request, url, payload, headers, settings.ml_api_timeout_s)
         r.raise_for_status()
         return r.json()
     except httpx.TimeoutException as exc:
