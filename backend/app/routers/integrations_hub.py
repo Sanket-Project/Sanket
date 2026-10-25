@@ -22,7 +22,7 @@ import hashlib
 import secrets
 import uuid
 from datetime import UTC, datetime
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 import structlog
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
@@ -497,9 +497,16 @@ async def upload_file(
     tenant_industry: TenantIndustry,
     target_industry: Annotated[str | None, Form()] = None,
     column_mapping: Annotated[str | None, Form()] = None,
+    identity: Annotated[Literal["transaction", "period"], Form()] = "transaction",
 ) -> UploadResult:
     """Upload a CSV/Excel file of sales, inventory, or products and ingest it
     into the canonical schema.
+
+    Sales uploads are replay-safe: rows already imported are skipped, and
+    ``identity`` says how a row is recognised — ``transaction`` lines (order
+    and line id, else content plus occurrence in the file) or ``period``
+    totals (one row per SKU, location, channel and day, so a corrected export
+    replaces the earlier value).
 
     Rows always land in the workspace's own industry. ``target_industry`` is
     deprecated and optional: omitted is the normal path, the workspace's own is
@@ -543,6 +550,7 @@ async def upload_file(
             headers=headers,
             records=records,
             column_mapping=parsed_mapping,
+            identity=identity,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -666,40 +674,56 @@ async def ingest_push(request: Request) -> dict:
     units = 0
     revenue = 0.0
 
+    unchanged = 0
     async with db.session(str(tenant_id)) as session:
         import_product_id = await fi._ensure_import_product(session, tenant_id, industry_enum)
         sku_map = await fi._load_sku_map(session, tenant_id)
+        rows: list[dict[str, Any]] = []
         for ev in events:
             sku = str(ev.get("sku") or ev.get("sku_code") or "").strip()
             qty = fi._to_int(ev.get("quantity") or ev.get("units") or ev.get("qty"))
             if not sku or qty is None or qty <= 0:
                 skipped += 1
                 continue
+            # An event without its own timestamp (or order id) cannot be
+            # recognised if redelivered — senders should include both.
             when = fi._to_datetime(ev.get("timestamp") or ev.get("date")) or datetime.now(tz=UTC)
             if not (fi._MIN_SALE_DATE <= when.date() <= fi._max_sale_date()):
                 skipped += 1
                 continue
             rev = fi._to_decimal(ev.get("revenue") or ev.get("amount"))
-            sku_id = await fi._get_or_create_sku(
-                session, tenant_id, industry_enum, sku, sku_map, import_product_id
+            order_id = str(ev.get("order_id")).strip() if ev.get("order_id") else None
+            rows.append(
+                {
+                    "_sku_code": sku,
+                    "_order_id": order_id or None,
+                    "_line_id": str(ev["line_id"]) if ev.get("line_id") else None,
+                    "sku_id": await fi._get_or_create_sku(
+                        session, tenant_id, industry_enum, sku, sku_map, import_product_id
+                    ),
+                    "sale_time": when,
+                    "channel": str(ev.get("channel") or conn.provider),
+                    "region": (str(ev.get("region")) if ev.get("region") else None),
+                    "location": (str(ev.get("location")) if ev.get("location") else None),
+                    "units_sold": qty,
+                    "gross_revenue": rev,
+                    "net_revenue": rev,
+                }
             )
-            session.add(
-                fi.HistoricalSale(
-                    tenant_id=tenant_id,
-                    sku_id=sku_id,
-                    industry=industry_enum,
-                    sale_time=when,
-                    channel=str(ev.get("channel") or conn.provider),
-                    region=(str(ev.get("region")) if ev.get("region") else None),
-                    units_sold=qty,
-                    gross_revenue=rev,
-                    net_revenue=rev,
-                    metadata_={"source": conn.provider, "order_id": ev.get("order_id")},
-                )
+        if rows:
+            outcome = await fi.upsert_sales_rows(
+                session,
+                tenant_id=tenant_id,
+                industry=industry_enum,
+                rows=rows,
+                identity="transaction",
+                source=conn.provider,
+                upload_id=f"push-{uuid.uuid4().hex}",
             )
-            accepted += 1
-            units += qty
-            revenue += float(rev) if rev is not None else 0.0
+            accepted = outcome["rows_inserted"] + outcome["rows_updated"]
+            unchanged = outcome["rows_unchanged"]
+            units = outcome["units_inserted"]
+            revenue = outcome["revenue_inserted"]
 
     # Best-effort live event so dashboards update in real time.
     realtime = getattr(request.app.state, "realtime", None)
@@ -721,6 +745,7 @@ async def ingest_push(request: Request) -> dict:
         provider=conn.provider,
         tenant=str(tenant_id),
         accepted=accepted,
+        unchanged=unchanged,
         skipped=skipped,
     )
-    return {"ok": True, "accepted": accepted, "skipped": skipped}
+    return {"ok": True, "accepted": accepted, "unchanged": unchanged, "skipped": skipped}

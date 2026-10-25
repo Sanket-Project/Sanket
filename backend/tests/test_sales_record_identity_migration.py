@@ -118,8 +118,8 @@ async def test_backfill_keys_match_the_importer_and_delete_nothing(db_session):
     fp = _python_key(sku)
     order_key = _python_key(sku, order="ORD-1")
     assert after == before == 7
-    assert rows[a_u1_first] == f"{fp}#1"
-    assert rows[a_u1_second] == f"{fp}#2"
+    # Two identical lines of one file: interchangeable, so which gets #1 is arbitrary.
+    assert {rows[a_u1_first], rows[a_u1_second]} == {f"{fp}#1", f"{fp}#2"}
     assert rows[a_u2_replay] == f"{fp}#1"  # the replayed copy collides: a provable duplicate
     assert rows[a_u1_order] == rows[a_u2_order] == f"{order_key}#1"
     assert rows[a_shopify] is None  # only upload rows are keyed

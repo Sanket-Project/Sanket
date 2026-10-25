@@ -238,6 +238,54 @@ async def client(setup_schema) -> AsyncIterator[AsyncClient]:
 
 
 @pytest_asyncio.fixture
+async def app_role_db(setup_schema):
+    """A ``Database`` connected as ``sanket_app`` — the production app role.
+
+    ``db_session``/``client`` connect as the container superuser, which
+    bypasses RLS. Services that must be shown to respect tenant isolation run
+    through this instead, so every query is subject to the real policies.
+    """
+    from sqlalchemy.engine import make_url
+
+    from app.config import get_settings
+    from app.core.database import Database
+
+    get_settings.cache_clear()
+    # The disposable test container's app role (created by sql/003_rls_policies.sql).
+    url = make_url(os.environ["DATABASE_URL"]).set(
+        username="sanket_app", password="changeme"  # noqa: S106
+    )
+    settings = get_settings().model_copy(
+        update={"database_url": url.render_as_string(hide_password=False)}
+    )
+    db = Database(settings)
+    try:
+        yield db
+    finally:
+        await db.close()
+
+
+@pytest_asyncio.fixture
+async def make_tenant(db_session: AsyncSession):
+    """Factory for disposable, clearly synthetic workspaces (fixture setup only)."""
+
+    async def _make(industry: str = "fashion") -> uuid.UUID:
+        tenant_id = uuid.uuid4()
+        slug = f"synthetic-{tenant_id.hex[:10]}"
+        await db_session.execute(
+            text(
+                "INSERT INTO tenants (id, slug, display_name, tier, status, industry) "
+                "VALUES (:id, :slug, :name, 'growth', 'active', CAST(:ind AS industry_code))"
+            ),
+            {"id": str(tenant_id), "slug": slug, "name": f"Synthetic test {slug}", "ind": industry},
+        )
+        await db_session.commit()
+        return tenant_id
+
+    return _make
+
+
+@pytest_asyncio.fixture
 async def rls_engine(setup_schema):
     """Async engine for tenant-isolation tests.
 

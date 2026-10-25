@@ -150,4 +150,10 @@ class UploadResult(BaseModel):
     skus_created: int = 0
     inventory_rows: int = 0
     sales_rows: int = 0
+    # Replay accounting for sales (F01). rows_imported = inserted + updated.
+    rows_inserted: int = 0
+    rows_unchanged: int = 0
+    rows_updated: int = 0
+    identity_mode: str | None = None  # "transaction" | "period" (sales only)
+    warnings: list[str] = Field(default_factory=list)
     errors: list[str] = Field(default_factory=list)

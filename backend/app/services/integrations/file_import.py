@@ -19,6 +19,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import io
+import json
 import re
 import uuid
 from datetime import UTC, date, datetime
@@ -26,13 +27,14 @@ from decimal import Decimal, InvalidOperation
 from typing import Any
 
 import structlog
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from app.models.enums import IndustryCode, ProductStatus
 from app.models.inventory import InventoryLevel
 from app.models.product import Product, Sku
 from app.models.sales import HistoricalSale
+from app.services import sales_identity as si
 
 log = structlog.get_logger(__name__)
 
@@ -164,6 +166,9 @@ _ALIASES: dict[str, set[str]] = {
         "invoicenumber",
         "receiptid",
     },
+    # Distinguishes several lines of one order. Without it the SKU identifies
+    # the line, which is right for the usual one-row-per-SKU order export.
+    "line_id": {"line", "lineid", "lineno", "linenumber", "lineitem", "lineitemid"},
     "region": {"region", "country", "state", "market"},
     # ── inventory ────────────────────────────────────────────────────────────
     # NOTE: "quantity" and "qty" are intentionally NOT listed here — they belong
@@ -490,12 +495,17 @@ def map_sales_row(row: dict[str, Any], hmap: dict[str, str]) -> dict[str, Any]:
     channel = str(row.get(hmap.get("channel", ""), "") or "upload").strip() or "upload"
     region = str(row.get(hmap.get("region", ""), "") or "").strip() or None
     order_id = str(row.get(hmap.get("order_id", ""), "") or "").strip() or None
+    line_id = str(row.get(hmap.get("line_id", ""), "") or "").strip() or None
+    location = str(row.get(hmap.get("warehouse", ""), "") or "").strip() or None
 
     return {
         "_sku_code": sku,
+        "_order_id": order_id,
+        "_line_id": line_id,
         "sale_time": when,
         "channel": channel,
         "region": region,
+        "location": location,
         "units_sold": qty,
         "gross_revenue": revenue,
         "net_revenue": net,
@@ -633,6 +643,203 @@ async def _get_or_create_sku(
     return sku_id
 
 
+# ── Sales replay safety ──────────────────────────────────────────────────────
+#: Fields a stored sale is compared on when its key is seen again. Any
+#: difference is a correction (applied in place); none means a replay (skipped).
+_SALE_CONTENT = (
+    "sale_time",
+    "channel",
+    "region",
+    "location",
+    "units_sold",
+    "gross_revenue",
+    "net_revenue",
+    "in_stock",
+    "returns",
+)
+_KEY_LOOKUP_CHUNK = 1000
+
+
+async def _lock_sales_import(session, tenant_id: uuid.UUID) -> None:
+    """Serialise sales imports per tenant for the rest of the transaction.
+
+    Two uploads of the same file arriving together would otherwise both see
+    "not imported yet" and both insert. The second now waits for the first to
+    commit, then finds its rows already present.
+    """
+    await session.execute(
+        text("SELECT pg_advisory_xact_lock(hashtextextended(:k, 0))"),
+        {"k": f"sanket:sales-import:{tenant_id}"},
+    )
+
+
+async def _existing_by_key(
+    session, tenant_id: uuid.UUID, keys: list[str]
+) -> dict[str, list[HistoricalSale]]:
+    found: dict[str, list[HistoricalSale]] = {}
+    unique = list(dict.fromkeys(keys))
+    for i in range(0, len(unique), _KEY_LOOKUP_CHUNK):
+        chunk = unique[i : i + _KEY_LOOKUP_CHUNK]
+        rows = await session.execute(
+            select(HistoricalSale).where(
+                HistoricalSale.tenant_id == tenant_id,
+                HistoricalSale.record_key.in_(chunk),
+            )
+        )
+        for sale in rows.scalars():
+            found.setdefault(sale.record_key, []).append(sale)
+    return found
+
+
+def _insert_sale(session, **fields: Any) -> None:
+    session.add(HistoricalSale(**fields))
+
+
+def _same_content(stored: HistoricalSale, incoming: dict[str, Any]) -> bool:
+    return all(getattr(stored, f) == incoming.get(f) for f in _SALE_CONTENT)
+
+
+async def upsert_sales_rows(
+    session,
+    *,
+    tenant_id: uuid.UUID,
+    industry: IndustryCode,
+    rows: list[dict[str, Any]],
+    identity: si.IdentityMode,
+    source: str,
+    upload_id: str,
+) -> dict[str, Any]:
+    """Insert new sales, skip replays, apply corrections — never duplicate.
+
+    ``rows`` carry ``sku_id`` plus the sale fields and the private
+    ``_order_id`` / ``_line_id`` / ``_row`` / ``_sku_code`` keys. Runs inside
+    the caller's transaction, so a failure anywhere leaves the tenant exactly
+    as it was and a retry is a clean replay.
+    """
+    await _lock_sales_import(session, tenant_id)
+
+    bases = [
+        si.base_key(
+            source=source,
+            mode=identity,
+            sku_id=r["sku_id"],
+            sale_time=r["sale_time"],
+            channel=r["channel"],
+            region=r.get("region"),
+            location=r.get("location"),
+            units=r["units_sold"],
+            gross=r.get("gross_revenue"),
+            net=r.get("net_revenue"),
+            order_id=r.get("_order_id"),
+            line_id=r.get("_line_id"),
+        )
+        for r in rows
+    ]
+    keys = si.assign_record_keys(bases, identity)
+
+    errors: list[str] = []
+    pairs = list(zip(rows, keys, strict=True))
+    if identity == "period":
+        counts: dict[str, int] = {}
+        for k in keys:
+            counts[k] = counts.get(k, 0) + 1
+        conflicted = {k for k, n in counts.items() if n > 1}
+        for r, k in pairs:
+            if k in conflicted:
+                errors.append(
+                    f"Row {r.get('_row', '?')}: duplicate period row for SKU "
+                    f"{r.get('_sku_code')} on {r['sale_time'].date()} — the file has more "
+                    "than one total for it"
+                )
+        pairs = [(r, k) for r, k in pairs if k not in conflicted]
+
+    existing = await _existing_by_key(session, tenant_id, [k for _, k in pairs])
+    inserted = unchanged = updated = shadowed = 0
+    units_inserted = 0
+    revenue_inserted = 0.0
+    for r, key in pairs:
+        sale_fields = {f: r.get(f) for f in _SALE_CONTENT}
+        if sale_fields["returns"] is None:
+            sale_fields["returns"] = 0
+        stored = existing.get(key, [])
+        if not stored:
+            _insert_sale(
+                session,
+                tenant_id=tenant_id,
+                sku_id=r["sku_id"],
+                industry=industry,
+                record_key=key,
+                metadata_={
+                    "source": source,
+                    "order_id": r.get("_order_id"),
+                    "line_id": r.get("_line_id"),
+                    "upload_id": upload_id,
+                    "revision": 1,
+                },
+                **sale_fields,
+            )
+            inserted += 1
+            units_inserted += int(sale_fields["units_sold"])
+            revenue_inserted += float(sale_fields["gross_revenue"] or 0)
+        elif len(stored) > 1:
+            # Copies left by pre-fix replays: which one a correction belongs to
+            # is not provable, so they wait for the Data Quality repair.
+            shadowed += 1
+        elif _same_content(stored[0], sale_fields):
+            unchanged += 1
+        else:
+            current = stored[0]
+            meta = dict(current.metadata_ or {})
+            meta["revision"] = int(meta.get("revision", 1)) + 1
+            meta["corrected_by_upload"] = upload_id
+            # The app role cannot UPDATE sales history (append-only ledger);
+            # this definer function can only rewrite the sole holder of a key.
+            changed = await session.scalar(
+                text(
+                    "SELECT sanket_correct_sale(:id, :old_time, :key, :sale_time, :channel, "
+                    ":region, :location, :units, :gross, :net, :in_stock, :returns, "
+                    "CAST(:meta AS jsonb))"
+                ),
+                {
+                    "id": current.id,
+                    "old_time": current.sale_time,
+                    "key": key,
+                    "sale_time": sale_fields["sale_time"],
+                    "channel": sale_fields["channel"],
+                    "region": sale_fields["region"],
+                    "location": sale_fields["location"],
+                    "units": sale_fields["units_sold"],
+                    "gross": sale_fields["gross_revenue"],
+                    "net": sale_fields["net_revenue"],
+                    "in_stock": sale_fields["in_stock"],
+                    "returns": sale_fields["returns"],
+                    "meta": json.dumps(meta, default=str),
+                },
+            )
+            if changed:
+                updated += 1
+            else:
+                shadowed += 1
+
+    warnings: list[str] = []
+    if shadowed:
+        warnings.append(
+            f"{shadowed} row(s) match sales that already have duplicate copies from earlier "
+            "imports and were left unchanged. Remove the duplicates in Data Quality, then "
+            "re-upload to apply any corrections."
+        )
+    return {
+        "rows_inserted": inserted,
+        "rows_unchanged": unchanged + shadowed,
+        "rows_updated": updated,
+        "rows_rejected": len(rows) - len(pairs),
+        "units_inserted": units_inserted,
+        "revenue_inserted": round(revenue_inserted, 2),
+        "errors": errors,
+        "warnings": warnings,
+    }
+
+
 async def import_rows(
     *,
     db,
@@ -642,14 +849,22 @@ async def import_rows(
     headers: list[str],
     records: list[dict[str, Any]],
     column_mapping: dict[str, str] | None = None,
+    identity: str = "transaction",
 ) -> dict[str, Any]:
     """Map and persist parsed rows for one ``kind`` (sales|inventory|products).
+
+    ``identity`` (sales only) chooses how a re-uploaded row is recognised:
+    ``transaction`` lines (order/line id, else the row's content and its
+    occurrence in the file) or ``period`` totals (one row per SKU, location,
+    channel and day — a corrected export replaces the value).
 
     Returns a stats dict matching the UploadResult schema fields.
     """
     if kind not in _REQUIRED:
         raise ValueError(f"Unknown import kind: {kind}")
-    
+    if identity not in ("transaction", "period"):
+        raise ValueError(f"Unknown identity mode '{identity}' — use transaction or period")
+
     if column_mapping is not None:
         mapped_keys = {k for k, v in column_mapping.items() if v}
         if kind == "sales":
@@ -680,7 +895,9 @@ async def import_rows(
     errors: list[str] = []
     for idx, row in enumerate(records, start=2):  # row 1 is the header
         try:
-            mapped.append(mapper(row, hmap))
+            m = mapper(row, hmap)
+            m["_row"] = idx
+            mapped.append(m)
         except RowError as exc:
             if len(errors) < 50:
                 errors.append(f"Row {idx}: {exc}")
@@ -693,6 +910,11 @@ async def import_rows(
         "skus_created": 0,
         "inventory_rows": 0,
         "sales_rows": 0,
+        "rows_inserted": 0,
+        "rows_unchanged": 0,
+        "rows_updated": 0,
+        "identity_mode": identity if kind == "sales" else None,
+        "warnings": [],
         "errors": errors,
     }
     if not mapped:
@@ -770,26 +992,28 @@ async def import_rows(
 
         else:  # sales
             for m in mapped:
-                sku_id = await _get_or_create_sku(
+                m["sku_id"] = await _get_or_create_sku(
                     session, tenant_id, industry, m["_sku_code"], sku_map, import_product_id
                 )
-                meta = {**m["metadata_"], "upload_id": upload_id}
-                session.add(
-                    HistoricalSale(
-                        tenant_id=tenant_id,
-                        sku_id=sku_id,
-                        industry=industry,
-                        sale_time=m["sale_time"],
-                        channel=m["channel"],
-                        region=m["region"],
-                        units_sold=m["units_sold"],
-                        gross_revenue=m["gross_revenue"],
-                        net_revenue=m["net_revenue"],
-                        metadata_=meta,
-                    )
-                )
-                stats["sales_rows"] += 1
-                stats["rows_imported"] += 1
+            outcome = await upsert_sales_rows(
+                session,
+                tenant_id=tenant_id,
+                industry=industry,
+                rows=mapped,
+                identity=identity,  # type: ignore[arg-type]
+                source=SOURCE,
+                upload_id=upload_id,
+            )
+            stats["rows_inserted"] = outcome["rows_inserted"]
+            stats["rows_unchanged"] = outcome["rows_unchanged"]
+            stats["rows_updated"] = outcome["rows_updated"]
+            stats["sales_rows"] = outcome["rows_inserted"]
+            stats["rows_imported"] = outcome["rows_inserted"] + outcome["rows_updated"]
+            stats["rows_skipped"] += outcome["rows_rejected"]
+            stats["warnings"].extend(outcome["warnings"])
+            for err in outcome["errors"]:
+                if len(stats["errors"]) < 50:
+                    stats["errors"].append(err)
 
         stats["skus_created"] = len(set(sku_map) - before)
 
