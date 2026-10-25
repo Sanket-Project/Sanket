@@ -16,6 +16,7 @@ import hmac
 import uuid
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from datetime import date
 from pathlib import Path
 from typing import Literal
 
@@ -23,9 +24,10 @@ import structlog
 from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import PlainTextResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from sanket_ml.config import MLSettings, get_ml_settings
+from sanket_ml.data.calendar import current_week_start
 from sanket_ml.inference.service import InferenceService
 from sanket_ml.inference.throttle import ThrottleRejectionError, build_throttle
 from sanket_ml.inference.zero_shot import (
@@ -55,6 +57,21 @@ class ForecastRequest(BaseModel):
     # If omitted, zero-shot pulls history from historical_sales via RLS-scoped query.
     series_context: dict[str, list[float]] | None = None
     num_samples: int | None = Field(default=None, ge=20, le=500)
+    # Explicit backtest: forecast as if it were the Monday `history_end`, using
+    # only history before it. Forces the zero-shot path (a trained artifact may
+    # have been fit on later data, which would leak the answer).
+    history_end: date | None = None
+
+    @field_validator("history_end")
+    @classmethod
+    def _monday_in_the_past(cls, v: date | None) -> date | None:
+        if v is None:
+            return v
+        if v.weekday() != 0:
+            raise ValueError("history_end must be a Monday (the start of a UTC week)")
+        if v > current_week_start():
+            raise ValueError("history_end cannot be after the current week")
+        return v
 
 
 class ZeroShotForecastRequest(BaseModel):
@@ -82,6 +99,13 @@ class ForecastResponse(BaseModel):
     context_source: Literal["request", "database", "artifact"] = "artifact"
     n_series: int | None = None
     rows: list[ForecastRow]
+    #: Weekly calendar of `forecast_date` (each is a week start), when known.
+    calendar: str | None = None
+    #: Exclusive end of the history the model saw (Monday, UTC).
+    history_end: date | None = None
+    first_forecast_week: date | None = None
+    #: Active SKUs that were not forecast, with the reason.
+    omitted: list[dict] = Field(default_factory=list)
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -242,9 +266,10 @@ def create_app() -> FastAPI:
             raise _reject(exc) from exc
 
     async def _forecast_inner(req: ForecastRequest) -> ForecastResponse:
-        # 1. Try trained artifact unless the caller forces zero-shot
+        # 1. Try trained artifact unless the caller forces zero-shot (a backtest
+        #    always does: an artifact may have been fit on the weeks it predicts)
         artifact_dir: Path | None = None
-        if not req.force_zero_shot:
+        if not req.force_zero_shot and req.history_end is None:
             artifact_dir = _resolve_artifact_dir(settings, req)
 
         if artifact_dir is not None:
@@ -288,7 +313,9 @@ def create_app() -> FastAPI:
             industry=req.industry,
             horizon=req.horizon,
             model=req.zero_shot_model,
-            reason="forced" if req.force_zero_shot else "no_artifact",
+            reason=(
+                "backtest" if req.history_end else "forced" if req.force_zero_shot else "no_artifact"
+            ),
         )
         try:
             zs = await run_in_threadpool(
@@ -297,8 +324,9 @@ def create_app() -> FastAPI:
                     industry=req.industry,
                     horizon=req.horizon,
                     model=req.zero_shot_model,
-                    series_context=req.series_context,
+                    series_context=None if req.history_end else req.series_context,
                     num_samples=req.num_samples,
+                    history_end=req.history_end,
                 )
             )
         except ValueError as exc:
@@ -320,11 +348,12 @@ def create_app() -> FastAPI:
                 horizon=req.horizon,
                 model_stack=[zs.source_model],
                 run_metadata={
-                    "mode": "zero_shot",
+                    "mode": "backtest" if req.history_end else "zero_shot",
                     "model": zs.source_model,
                     "context_source": zs.context_source,
                     "n_series": zs.n_series,
                     "used_observations": zs.used_observations,
+                    **_calendar_metadata(zs),
                 },
             )
         except Exception as exc:
@@ -333,14 +362,7 @@ def create_app() -> FastAPI:
             log.warning("forecast.zero_shot.persist_failed", error=str(exc))
             run_id = uuid.uuid4()
 
-        return ForecastResponse(
-            run_id=run_id,
-            n_predictions=len(zs.forecast.unique_id),
-            source=zs.source_model,  # type: ignore[arg-type]
-            context_source=zs.context_source,  # type: ignore[arg-type]
-            n_series=zs.n_series,
-            rows=_rows_from_quantiles(zs.forecast),
-        )
+        return _zero_shot_response(run_id, zs)
 
     # ── explicit zero-shot endpoint ───────────────────────────────────────
     @app.post("/forecast/zero-shot", response_model=ForecastResponse, dependencies=auth)
@@ -383,22 +405,48 @@ def create_app() -> FastAPI:
                     "model": zs.source_model,
                     "context_source": zs.context_source,
                     "n_series": zs.n_series,
+                    **_calendar_metadata(zs),
                 },
             )
         except Exception as exc:
             log.warning("forecast.zero_shot.persist_failed", error=str(exc))
             run_id = uuid.uuid4()
 
-        return ForecastResponse(
-            run_id=run_id,
-            n_predictions=len(zs.forecast.unique_id),
-            source=zs.source_model,  # type: ignore[arg-type]
-            context_source=zs.context_source,  # type: ignore[arg-type]
-            n_series=zs.n_series,
-            rows=_rows_from_quantiles(zs.forecast),
-        )
+        return _zero_shot_response(run_id, zs)
 
     return app
+
+
+#: Omitted SKUs kept on the run row; the full count is always recorded.
+_MAX_OMITTED_PERSISTED = 500
+
+
+def _calendar_metadata(zs) -> dict:
+    """What a later accuracy check needs to know about this run."""
+    return {
+        "calendar": zs.calendar if zs.history_end else None,
+        "history_end": zs.history_end.isoformat() if zs.history_end else None,
+        "first_forecast_week": (
+            zs.first_forecast_week.isoformat() if zs.first_forecast_week else None
+        ),
+        "omitted_count": len(zs.omitted),
+        "omitted": zs.omitted[:_MAX_OMITTED_PERSISTED],
+    }
+
+
+def _zero_shot_response(run_id: uuid.UUID, zs) -> ForecastResponse:
+    return ForecastResponse(
+        run_id=run_id,
+        n_predictions=len(zs.forecast.unique_id),
+        source=zs.source_model,  # type: ignore[arg-type]
+        context_source=zs.context_source,  # type: ignore[arg-type]
+        n_series=zs.n_series,
+        rows=_rows_from_quantiles(zs.forecast),
+        calendar=zs.calendar if zs.history_end else None,
+        history_end=zs.history_end,
+        first_forecast_week=zs.first_forecast_week,
+        omitted=zs.omitted,
+    )
 
 
 app = create_app()

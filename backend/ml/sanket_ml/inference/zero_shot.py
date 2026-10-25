@@ -11,8 +11,8 @@ an opt-in alternative for callers that want decoder-only behavior.
 from __future__ import annotations
 
 import uuid
-from dataclasses import dataclass
-from datetime import date
+from dataclasses import dataclass, field
+from datetime import date, timedelta
 from typing import Literal
 
 import numpy as np
@@ -21,8 +21,9 @@ import structlog
 import torch
 
 from sanket_ml.config import MLSettings, get_ml_settings
+from sanket_ml.data.calendar import CALENDAR, current_week_start
 from sanket_ml.data.censoring import correct_censored_demand
-from sanket_ml.data.loader import HistoricalSalesLoader
+from sanket_ml.data.loader import HistoricalSalesLoader, TimeSeriesPanel
 from sanket_ml.models.base import ForecastQuantiles
 
 log = structlog.get_logger(__name__)
@@ -119,6 +120,12 @@ class ZeroShotResult:
     context_source: str         # "request" | "database"
     n_series: int
     used_observations: int
+    #: Exclusive end of the history the model saw (a Monday, UTC).
+    history_end: date | None = None
+    first_forecast_week: date | None = None
+    #: Active SKUs with no forecast: {sku_id, reason, observations}.
+    omitted: list[dict] = field(default_factory=list)
+    calendar: str = CALENDAR
 
 
 # Frequency string → industry-default season length tokens for foundation models.
@@ -154,37 +161,48 @@ class ZeroShotForecaster:
         series_context: dict[str, list[float]] | None = None,
         freq: str | None = None,
         num_samples: int | None = None,
+        history_end: date | None = None,
     ) -> ZeroShotResult:
+        """Forecast every eligible SKU and report the ones that were not.
+
+        ``history_end`` (a Monday) limits the model to history before that
+        week — an explicit, leakage-free backtest. Without it the model sees
+        every complete week up to now.
+        """
         freq = freq or _INDUSTRY_FREQ.get(industry, "W")
         num_samples = num_samples or self.settings.zero_shot_num_samples
+        min_obs = self.settings.zero_shot_min_observations
+        if history_end is not None and history_end.weekday() != 0:
+            raise ValueError(f"history_end must be a Monday (week start); got {history_end}")
 
+        omitted: list[dict] = []
         # ── 1. Resolve context (request override > DB) ────────────────────
         if series_context:
             context_source = "request"
             context_arrays: dict[str, np.ndarray] = {
                 str(k): np.asarray(v, dtype=np.float32)
                 for k, v in series_context.items()
-                if v and len(v) >= self.settings.zero_shot_min_observations
+                if v and len(v) >= min_obs
             }
             if not context_arrays:
                 raise ValueError(
                     "series_context contained no series with enough history "
-                    f"(min={self.settings.zero_shot_min_observations})."
+                    f"(min={min_obs})."
                 )
-            last_period_end = pd.Timestamp(date.today())
+            # Request context carries no dates: its last value is taken to be the
+            # last complete week, so the forecast starts with the current week.
+            last_week = pd.Timestamp(current_week_start() - timedelta(weeks=1))
         else:
             context_source = "database"
             panel = self.loader.load(
                 tenant_id=tenant_id,
                 industry=industry,
                 freq=freq,
-                min_observations=self.settings.zero_shot_min_observations,
+                min_observations=min_obs,
+                end=history_end,
             )
             if panel.n_series == 0:
-                raise ValueError(
-                    "Cannot zero-shot forecast: no historical_sales rows for this "
-                    "tenant/industry. Ingest at least 8 weeks of sales first."
-                )
+                raise ValueError(_no_eligible_message(panel, min_obs))
             # Unconstrain censored (stockout) demand so the foundation model
             # conditions on true demand, not on stockout-driven zeros. Same
             # correction as the training path — keeps the two serving paths
@@ -204,15 +222,21 @@ class ZeroShotForecaster:
                 max_series=self.settings.zero_shot_max_series,
                 context_weeks=self.settings.zero_shot_default_context_weeks,
             )
-            last_period_end = panel_df["ds"].max()
+            last_week = panel.last_week if panel.last_week is not None else panel_df["ds"].max()
+            omitted = _omissions(panel, min_obs, set(context_arrays))
 
         used_obs = int(sum(len(v) for v in context_arrays.values()))
 
         # ── 2. Generate future timestamps ─────────────────────────────────
-        offset = pd.tseries.frequencies.to_offset(freq)
-        future_dates = pd.date_range(
-            last_period_end + offset, periods=horizon, freq=freq
-        )
+        # Continue the history's own buckets: weekly history is Monday-anchored
+        # (calendar W-MON-UTC), so the first forecast week is the Monday after
+        # the last observed one — never the pandas default Sunday.
+        if freq == "W":
+            first = last_week + pd.Timedelta(weeks=1)
+            future_dates = pd.date_range(first, periods=horizon, freq="W-MON")
+        else:
+            offset = pd.tseries.frequencies.to_offset(freq)
+            future_dates = pd.date_range(last_week + offset, periods=horizon, freq=freq)
 
         # ── 3. Dispatch to model ──────────────────────────────────────────
         if model == "chronos":
@@ -267,6 +291,9 @@ class ZeroShotForecaster:
             context_source=context_source,
             n_series=len(sku_ids),
             used_observations=used_obs,
+            history_end=(last_week + pd.Timedelta(weeks=1)).date() if freq == "W" else None,
+            first_forecast_week=pd.Timestamp(future_dates[0]).date() if horizon else None,
+            omitted=omitted,
         )
 
     # ── per-model adapters ────────────────────────────────────────────────
@@ -320,6 +347,34 @@ class ZeroShotForecaster:
 # ──────────────────────────────────────────────────────────────────────────
 # helpers
 # ──────────────────────────────────────────────────────────────────────────
+
+
+def _omissions(panel: TimeSeriesPanel, min_obs: int, forecast_ids: set[str]) -> list[dict]:
+    """Every active SKU not in the forecast, with the reason it is not."""
+    out: list[dict] = []
+    for sku_id in panel.active_sku_ids:
+        if sku_id in forecast_ids:
+            continue
+        n = int(panel.observation_counts.get(sku_id, 0))
+        if n == 0:
+            reason = "no_sales_history"
+        elif n < min_obs:
+            reason = "insufficient_history"
+        else:
+            reason = "series_cap"
+        out.append({"sku_id": sku_id, "reason": reason, "observations": n})
+    return out
+
+
+def _no_eligible_message(panel: TimeSeriesPanel, min_obs: int) -> str:
+    unsold = sum(1 for s in panel.active_sku_ids if not panel.observation_counts.get(s))
+    short = sum(1 for n in panel.observation_counts.values() if 0 < n < min_obs)
+    return (
+        f"Cannot zero-shot forecast: no SKU has the {min_obs} weekly observations this model "
+        f"needs. {unsold} active SKU(s) have no sales history and {short} have fewer than "
+        f"{min_obs} weeks. Zero-shot means no tenant-trained model, not no history — load "
+        "more sales history first."
+    )
 
 
 def _panel_to_context_arrays(
