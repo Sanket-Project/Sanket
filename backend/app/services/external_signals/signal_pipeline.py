@@ -75,6 +75,9 @@ class SignalIngestionPipeline:
         self.poll_interval_s = poll_interval_s
         self._task: asyncio.Task | None = None
         self._stop = asyncio.Event()
+        #: Outcome of the latest run_once on *this* process, per industry
+        #: ({samples, persisted, error}); None until a run has happened here.
+        self.last_run: dict | None = None
 
     # ── lifecycle ────────────────────────────────────────────────────────────
 
@@ -126,14 +129,30 @@ class SignalIngestionPipeline:
         Returns count of samples persisted per industry.
         """
         counts: dict[str, int] = {}
+        per_industry: dict[str, dict] = {}
         for industry in INDUSTRIES:
             samples = await self._gather_industry(industry)
             if not samples:
                 counts[industry] = 0
+                per_industry[industry] = {"samples": 0, "persisted": 0, "error": None}
                 continue
-            await self._persist(samples)
+            try:
+                await self._persist(samples)
+            except Exception as exc:  # noqa: BLE001 - recorded and surfaced, never hidden
+                # One industry failing to store (e.g. a missing partition) must
+                # not stop the others, and must be visible to the Trends API
+                # rather than looking like "no signals today".
+                log.error("signal_pipeline.persist.failed", industry=industry, error=str(exc))
+                counts[industry] = 0
+                per_industry[industry] = {
+                    "samples": len(samples), "persisted": 0, "error": str(exc)[:300]
+                }
+                continue
             counts[industry] = len(samples)
+            per_industry[industry] = {"samples": len(samples), "persisted": len(samples),
+                                      "error": None}
             await self._broadcast(industry, samples)
+        self.last_run = {"finished_at": datetime.now(UTC).isoformat(), "industries": per_industry}
         log.info("signal_pipeline.tick", counts=counts)
         return counts
 

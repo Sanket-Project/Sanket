@@ -21,6 +21,7 @@ from app.models.enums import IndustryCode, TrendSignalKind
 from app.models.trend import TrendSignal
 from app.routers.industry_router import ActiveIndustry, TenantId
 from app.schemas.trends import TrendScoreOut, TrendSignalOut
+from app.services.signal_evidence import signal_evidence
 
 log = structlog.get_logger(__name__)
 router = APIRouter(prefix="/trends", tags=["trends"])
@@ -98,11 +99,22 @@ async def aggregate_trend_score(
 
     scorer = TrendScorer()
     score = scorer.score(industry=ctx.code, signals=records, horizon_days=horizon_days)
+    pipeline = getattr(request.app.state, "signal_pipeline", None)
+    evidence = signal_evidence(
+        captured_at=[r.captured_at for r in records],
+        sources=[r.source for r in records],
+        industry=ctx.code,
+        now=datetime.now(UTC),
+        lookback_hours=lookback_hours,
+        last_run=getattr(pipeline, "last_run", None),
+    )
 
     return TrendScoreOut(
         industry=industry,
         score=score.score,
-        volatility=score.volatility,
+        # A volatility of 0 from no samples is not agreement — withhold it.
+        volatility=score.volatility if evidence["agreement_reportable"] else None,
+        evidence=evidence,
         sample_count=score.sample_count,
         by_kind=score.by_kind,
         drivers=score.drivers,

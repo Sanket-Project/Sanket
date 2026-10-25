@@ -32,8 +32,18 @@ class TrendSignalOut(BaseModel):
 class TrendScoreOut(BaseModel):
     industry: IndustryCode
     score: float = Field(..., ge=-1.0, le=1.0, description="Aggregate trend score")
-    volatility: float = Field(..., ge=0.0, le=1.0, description="Source disagreement")
+    volatility: float | None = Field(
+        ...,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Source disagreement. Null when there is too little evidence to measure "
+            "agreement — never read null as 'sources agree'."
+        ),
+    )
     sample_count: int
+    #: What evidence stands behind the score (app.services.signal_evidence).
+    evidence: dict[str, Any] | None = None
     by_kind: dict[str, float]
     drivers: list[dict[str, Any]]
     demand_factors: list[dict[str, Any]] = Field(
