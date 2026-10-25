@@ -1,35 +1,39 @@
-"""ROI ledger — what the software actually saved, traced to specific decisions.
+"""ROI ledger — estimates, approvals and observed outcomes, never confused.
 
-Every CEO asks the same question at renewal: *what did this save me?* A number
-that cannot be traced back to individual orders is a marketing claim, so this
-module only counts things that left an audit trail:
+Every figure here is one of three things, and is labelled as such:
 
-* **Working capital released** — for each *accepted* purchase order, the gap
-  between the spreadsheet baseline (cover p90 over the whole protection window)
-  and what the planner actually ordered, valued at that SKU's unit cost as it
-  stood on the day. Both numbers are frozen on the recommendation row.
-* **Stockouts avoided** — accepted orders on SKUs that had an open shortage
-  alert at the time the recommendation was generated. Nothing else counts;
-  "would have stocked out" without an alert is speculation.
-* **Forecast improvement** — measured, not assumed: model WAPE versus a naive
-  random-walk baseline over the same out-of-sample weeks.
+* **Opportunity** — open recommendations: what the forecast says is at stake
+  if the planner acts. A forecast-based estimate.
+* **Estimated at approval** — accepted recommendations, valued with the
+  inputs frozen on them when they were approved: working capital versus the
+  spreadsheet baseline, the carrying cost that implies (derived from the same
+  units — never added to it), revenue at risk the order covers, and how many
+  approved orders were on SKUs with an open shortage alert. An approval is a
+  decision, not an outcome: none of this is money saved.
+* **Observed** — outcomes that actually happened. Sanket records approvals but
+  not supplier orders, goods receipts or post-order sell-through, so realised
+  savings are reported as not measurable, with the reason. The one observed
+  measurement it can make is forecast accuracy versus a naive baseline on
+  weeks that were forecast before they happened.
 
-Anything that cannot be evidenced is reported as ``None`` with a reason, rather
-than filled in with a plausible-looking figure.
+Money is reported per currency and never summed across currencies or across
+unlike measures (working capital, carrying cost and revenue are different
+things); there is no grand total.
 """
 
 from __future__ import annotations
 
 import uuid
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import structlog
-from sqlalchemy import func, select
+from sqlalchemy import Date, cast, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.calendar import week_bucket
+from app.core.calendar import CALENDAR, week_bucket
 from app.models.enums import DecisionStatus, IndustryCode
 from app.models.forecast import ForecastResult, ForecastRun
 from app.models.recommendation import Recommendation
@@ -39,10 +43,16 @@ log = structlog.get_logger(__name__)
 
 DEFAULT_WINDOW_DAYS = 90
 
+TIERS = {
+    "opportunity": "Open recommendations — forecast-based estimates of what is at stake",
+    "estimated_at_approval": "Estimated when you approved — not observed savings",
+    "observed": "Observed outcomes",
+}
+
 
 @dataclass
 class RoiLine:
-    """One claim on the ROI dashboard, with the evidence behind it."""
+    """One figure on the ROI dashboard, with its tier and the evidence behind it."""
 
     key: str
     label: str
@@ -51,153 +61,213 @@ class RoiLine:
     basis: str
     evidence_count: int = 0
     details: list[dict] = field(default_factory=list)
+    tier: str = "observed"
+    #: Per-currency values for money lines; ``value`` is set only for one currency.
+    values_by_currency: dict[str, float] = field(default_factory=dict)
+    #: False for figures derived from another line (adding them double-counts).
+    additive: bool = True
 
     def as_dict(self) -> dict[str, Any]:
+        currencies = sorted(self.values_by_currency)
         return {
             "key": self.key,
             "label": self.label,
+            "tier": self.tier,
             "value": self.value,
             "unit": self.unit,
+            "currency": currencies[0] if len(currencies) == 1 else None,
+            "values_by_currency": self.values_by_currency,
+            "additive": self.additive,
             "basis": self.basis,
             "evidence_count": self.evidence_count,
             "details": self.details[:20],
         }
 
 
-async def _accepted(
-    session: AsyncSession,
-    tenant_id: uuid.UUID,
-    industry: IndustryCode,
-    since: datetime,
-) -> list[Recommendation]:
-    return list(
-        (
-            await session.execute(
-                select(Recommendation).where(
-                    Recommendation.tenant_id == tenant_id,
-                    Recommendation.industry == industry,
-                    Recommendation.status == DecisionStatus.accepted,
-                    Recommendation.decided_at >= since,
-                )
-            )
-        ).scalars().all()
+def _money_line(
+    key: str,
+    label: str,
+    tier: str,
+    per_currency: dict[str, float],
+    basis: str,
+    *,
+    evidence: int,
+    details: list[dict] | None = None,
+    additive: bool = True,
+) -> RoiLine:
+    rounded = {c: round(v, 2) for c, v in per_currency.items()}
+    if not rounded:
+        value: float | None = 0.0
+    elif len(rounded) == 1:
+        value = next(iter(rounded.values()))
+    else:
+        value = None  # several currencies: no single number exists
+    return RoiLine(
+        key=key,
+        label=label,
+        tier=tier,
+        value=value,
+        unit="currency",
+        basis=basis,
+        evidence_count=evidence,
+        details=details or [],
+        values_by_currency=rounded,
+        additive=additive,
     )
 
 
-def _working_capital(recs: list[Recommendation]) -> tuple[RoiLine, RoiLine, str]:
-    """Baseline-minus-actual, valued at the frozen unit cost."""
-    released = 0.0
-    units_saved = 0.0
-    holding_avoided = 0.0
-    details: list[dict] = []
-    currency = "INR"
+async def _recommendations(
+    session: AsyncSession,
+    tenant_id: uuid.UUID,
+    industry: IndustryCode,
+    *,
+    status: DecisionStatus,
+    since: datetime | None = None,
+) -> list[Recommendation]:
+    q = select(Recommendation).where(
+        Recommendation.tenant_id == tenant_id,
+        Recommendation.industry == industry,
+        Recommendation.status == status,
+    )
+    if since is not None:
+        q = q.where(Recommendation.decided_at >= since)
+    return list((await session.execute(q)).scalars().all())
 
-    for r in recs:
-        if str(r.kind) != "purchase_order":
-            continue
-        currency = r.currency or currency
-        actual = r.accepted_units if r.accepted_units is not None else r.recommended_units
-        delta_units = float(r.baseline_units - actual)
+
+def _is_po(r: Recommendation) -> bool:
+    return str(r.kind) == "purchase_order"
+
+
+def _opportunity(open_recs: list[Recommendation]) -> list[RoiLine]:
+    at_risk: dict[str, float] = defaultdict(float)
+    order_value: dict[str, float] = defaultdict(float)
+    pos = [r for r in open_recs if _is_po(r)]
+    for r in pos:
+        at_risk[r.currency] += float((r.economics or {}).get("revenue_protected") or 0)
+        order_value[r.currency] += float(r.recommended_units) * float(r.unit_cost or 0)
+    return [
+        _money_line(
+            "open_revenue_at_risk",
+            "Revenue at risk on open recommendations",
+            "opportunity",
+            dict(at_risk),
+            "Forecast demand that current stock would not cover over each open order's "
+            "protection window, valued at selling price. An estimate of what is at stake.",
+            evidence=len(pos),
+        ),
+        _money_line(
+            "open_order_value",
+            "Cost of open recommended orders",
+            "opportunity",
+            dict(order_value),
+            "Recommended units x unit cost for open purchase recommendations.",
+            evidence=len(pos),
+        ),
+    ]
+
+
+def _at_approval(accepted: list[Recommendation]) -> list[RoiLine]:
+    wc: dict[str, float] = defaultdict(float)
+    carrying: dict[str, float] = defaultdict(float)
+    covered: dict[str, float] = defaultdict(float)
+    details: list[dict] = []
+    pos = [r for r in accepted if _is_po(r)]
+    for r in pos:
+        ordered = r.accepted_units if r.accepted_units is not None else r.recommended_units
+        covered[r.currency] += float((r.economics or {}).get("revenue_protected") or 0)
+        delta_units = float(r.baseline_units - ordered)
         if delta_units <= 0:
             continue
-        cost = float(r.unit_cost or 0)
-        delta_value = delta_units * cost
-        released += delta_value
-        units_saved += delta_units
-
+        delta_value = delta_units * float(r.unit_cost or 0)
+        wc[r.currency] += delta_value
         inputs = r.inputs or {}
         holding_pct = float(inputs.get("holding_cost_pct") or 0.25)
         protection_days = float(inputs.get("protection_days") or 42)
-        holding_avoided += delta_value * holding_pct * (protection_days / 365.0)
-
+        carrying[r.currency] += delta_value * holding_pct * (protection_days / 365.0)
         details.append(
             {
                 "recommendation_id": str(r.id),
                 "sku_id": str(r.sku_id),
                 "decided_at": r.decided_at.isoformat() if r.decided_at else None,
                 "baseline_units": r.baseline_units,
-                "ordered_units": actual,
-                "units_avoided": round(delta_units, 1),
-                "unit_cost": cost,
+                "ordered_units": ordered,
+                "units_below_baseline": round(delta_units, 1),
+                "unit_cost": float(r.unit_cost or 0),
+                "currency": r.currency,
                 "value": round(delta_value, 2),
             }
         )
-
     details.sort(key=lambda d: d["value"], reverse=True)
-
-    wc = RoiLine(
-        key="working_capital_released",
-        label="Working capital released",
-        value=round(released, 2),
-        unit="currency",
-        basis=(
-            "Sum over accepted purchase orders of (spreadsheet baseline units − units actually "
-            "ordered) × the SKU's unit cost at the time. Baseline = cover p90 demand across the "
-            "full lead-time + review window with no variance pooling."
+    alerted = [r for r in pos if r.linked_alert_id is not None]
+    return [
+        _money_line(
+            "working_capital_vs_baseline",
+            "Working capital below the spreadsheet baseline (estimate at approval)",
+            "estimated_at_approval",
+            dict(wc),
+            "For approved purchase orders: (baseline units - units approved) x the unit cost "
+            "frozen on the recommendation. Baseline = P90 demand over the full lead-time + "
+            "review window. It becomes a saving only if the order is placed and received as "
+            "approved, which Sanket does not record.",
+            evidence=len(details),
+            details=details,
         ),
-        evidence_count=len(details),
-        details=details,
-    )
-    hold = RoiLine(
-        key="holding_cost_avoided",
-        label="Carrying cost avoided",
-        value=round(holding_avoided, 2),
-        unit="currency",
-        basis=(
-            "Working capital released × the tenant's annual holding-cost rate, pro-rated over "
-            "each order's protection window."
+        _money_line(
+            "carrying_cost_implied",
+            "Carrying cost implied by that difference (derived — not additional)",
+            "estimated_at_approval",
+            dict(carrying),
+            "The working-capital difference x the holding-cost rate, pro-rated over each "
+            "order's protection window. Derived from the line above; adding the two "
+            "double-counts.",
+            evidence=len(details),
+            additive=False,
         ),
-        evidence_count=len(details),
-    )
-    return wc, hold, currency
-
-
-def _stockouts_avoided(recs: list[Recommendation]) -> RoiLine:
-    hits = [
-        r
-        for r in recs
-        if str(r.kind) == "purchase_order" and r.linked_alert_id is not None
+        _money_line(
+            "revenue_at_risk_covered",
+            "Revenue at risk covered by approved orders (estimate)",
+            "estimated_at_approval",
+            dict(covered),
+            "Forecast demand stock on hand would not have covered, valued at selling price, "
+            "for each approved order. Revenue, not profit, and not observed sales.",
+            evidence=len(pos),
+        ),
+        RoiLine(
+            key="approved_orders_on_alerted_skus",
+            label="Approved orders on SKUs with an open shortage alert",
+            tier="estimated_at_approval",
+            value=float(len(alerted)),
+            unit="count",
+            basis=(
+                "Approved purchase orders whose SKU had an open or acknowledged shortage alert "
+                "when the recommendation was generated. A count of approvals, not of stockouts "
+                "avoided: whether a stockout was avoided is not observed."
+            ),
+            evidence_count=len(alerted),
+            details=[
+                {
+                    "recommendation_id": str(r.id),
+                    "sku_id": str(r.sku_id),
+                    "alert_id": str(r.linked_alert_id),
+                }
+                for r in alerted
+            ],
+        ),
     ]
-    return RoiLine(
-        key="stockouts_avoided",
-        label="Stockouts avoided",
-        value=float(len(hits)),
-        unit="count",
-        basis=(
-            "Accepted purchase orders on SKUs that had an open or acknowledged shortage alert "
-            "at the moment the recommendation was generated. Orders with no alert are not counted."
-        ),
-        evidence_count=len(hits),
-        details=[
-            {
-                "recommendation_id": str(r.id),
-                "sku_id": str(r.sku_id),
-                "alert_id": str(r.linked_alert_id),
-                "units": r.accepted_units if r.accepted_units is not None else r.recommended_units,
-                "revenue_protected": float((r.economics or {}).get("revenue_protected") or 0),
-                "decided_at": r.decided_at.isoformat() if r.decided_at else None,
-            }
-            for r in hits
-        ],
-    )
 
 
-def _revenue_protected(recs: list[Recommendation]) -> RoiLine:
-    total = sum(
-        float((r.economics or {}).get("revenue_protected") or 0)
-        for r in recs
-        if str(r.kind) == "purchase_order"
-    )
+def _realized() -> RoiLine:
     return RoiLine(
-        key="revenue_protected",
-        label="Revenue protected",
-        value=round(total, 2),
+        key="realized_savings",
+        label="Realised savings",
+        tier="observed",
+        value=None,
         unit="currency",
         basis=(
-            "For each accepted order, the demand that stock on hand could not have covered over "
-            "the protection window, valued at the SKU's selling price."
+            "Not measurable yet. Sanket records approvals, but no supplier order, goods receipt "
+            "or post-order sell-through, so no saving or avoided stockout has been observed. "
+            "Measuring it needs those records, compared against the baseline for the same weeks."
         ),
-        evidence_count=sum(1 for r in recs if str(r.kind) == "purchase_order"),
     )
 
 
@@ -209,8 +279,9 @@ async def _forecast_improvement(
 ) -> RoiLine:
     """Model WAPE versus a naive random-walk baseline on the same weeks.
 
-    Only genuinely out-of-sample points count: the forecast run must have
-    completed *before* the week it predicted.
+    Only genuinely out-of-sample points count, on the same rules as production
+    accuracy: Monday-UTC calendar runs, completed before the week began, whose
+    training history ended no later than that week.
     """
     empty = RoiLine(
         key="forecast_improvement",
@@ -223,6 +294,7 @@ async def _forecast_improvement(
         ),
     )
 
+    history_end = cast(ForecastRun.metrics["history_end"].astext, Date)
     fc_rows = (
         await session.execute(
             select(
@@ -236,10 +308,16 @@ async def _forecast_improvement(
                 ForecastRun.industry == industry,
                 ForecastRun.status == "completed",
                 ForecastRun.completed_at.isnot(None),
+                ForecastRun.metrics["calendar"].astext == CALENDAR,
+                or_(
+                    ForecastRun.metrics["mode"].astext.is_(None),
+                    ForecastRun.metrics["mode"].astext != "backtest",
+                ),
                 ForecastResult.forecast_date >= since.date(),
-                ForecastResult.forecast_date <= datetime.now(UTC).date(),
-                # Out-of-sample only.
-                func.date(ForecastRun.completed_at) < ForecastResult.forecast_date,
+                ForecastResult.forecast_date <= datetime.now(UTC).date() - timedelta(days=7),
+                # Out-of-sample only: made before the week began, not trained on it.
+                func.timezone("UTC", ForecastRun.completed_at) < ForecastResult.forecast_date,
+                history_end <= ForecastResult.forecast_date,
             )
             .group_by(ForecastResult.sku_id, ForecastResult.forecast_date)
         )
@@ -268,17 +346,13 @@ async def _forecast_improvement(
     for r in actual_rows:
         actuals[(r.sku_id, r.week.date())] = float(r.units or 0)
 
-    def week_start(d: Any) -> Any:
-        # Weeks are Monday 00:00 UTC (app.core.calendar); align forecast dates.
-        return d - timedelta(days=d.weekday())
-
     abs_err_model = 0.0
     abs_err_naive = 0.0
     total_actual = 0.0
     matched = 0
 
     for r in fc_rows:
-        wk = week_start(r.forecast_date)
+        wk = r.forecast_date  # a Monday on the W-MON-UTC calendar
         actual = actuals.get((r.sku_id, wk))
         prev = actuals.get((r.sku_id, wk - timedelta(weeks=1)))
         if actual is None or prev is None:
@@ -321,50 +395,46 @@ async def summary(
     industry: str,
     window_days: int = DEFAULT_WINDOW_DAYS,
 ) -> dict[str, Any]:
-    """Assemble the ROI dashboard payload."""
+    """Assemble the ROI dashboard payload: three tiers, no grand total."""
     ind = IndustryCode(industry)
     since = datetime.now(UTC) - timedelta(days=window_days)
 
-    recs = await _accepted(session, tenant_id, ind, since)
-    wc, holding, currency = _working_capital(recs)
-    lines = [
-        wc,
-        _stockouts_avoided(recs),
-        holding,
-        _revenue_protected(recs),
-        await _forecast_improvement(session, tenant_id, ind, since),
-    ]
-
-    # Only the currency-denominated lines roll into the headline. Mixing a
-    # percentage or a count into a rupee total is how ROI dashboards start
-    # lying.
-    total_value = sum(
-        line.value or 0.0 for line in lines if line.unit == "currency"
+    open_recs = await _recommendations(session, tenant_id, ind, status=DecisionStatus.open)
+    accepted = await _recommendations(
+        session, tenant_id, ind, status=DecisionStatus.accepted, since=since
     )
+    improvement = await _forecast_improvement(session, tenant_id, ind, since)
 
-    decided = len(recs)
-    open_count = await session.scalar(
-        select(func.count())
-        .select_from(Recommendation)
-        .where(
-            Recommendation.tenant_id == tenant_id,
-            Recommendation.industry == ind,
-            Recommendation.status == DecisionStatus.open,
-        )
-    )
+    by_tier = {
+        "opportunity": _opportunity(open_recs),
+        "estimated_at_approval": _at_approval(accepted),
+        "observed": [_realized(), improvement],
+    }
+    lines = [line for tier_lines in by_tier.values() for line in tier_lines]
+    currencies = sorted({c for line in lines for c in line.values_by_currency})
+    observed_status = "measured" if improvement.value is not None else "not_measurable"
 
     return {
         "industry": industry,
         "window_days": window_days,
-        "currency": currency,
-        "total_value_realized": round(total_value, 2),
+        "currency": currencies[0] if len(currencies) == 1 else None,
+        "currencies": currencies,
+        "tiers": {
+            key: {
+                "label": TIERS[key],
+                "status": observed_status if key == "observed" else "estimate",
+                "lines": [line.as_dict() for line in tier_lines],
+            }
+            for key, tier_lines in by_tier.items()
+        },
         "lines": [line.as_dict() for line in lines],
         "adoption": {
-            "recommendations_accepted": decided,
-            "recommendations_open": int(open_count or 0),
+            "recommendations_accepted": len(accepted),
+            "recommendations_open": len(open_recs),
         },
         "caveat": (
-            "Every figure is derived from decisions you accepted in this window and the inputs "
-            "frozen on them at the time. Recommendations you never acted on contribute nothing."
+            "Estimates use the inputs frozen on each recommendation. Approving a recommendation "
+            "is a decision, not an outcome: none of these figures is money saved until orders, "
+            "receipts and sales confirm it."
         ),
     }
