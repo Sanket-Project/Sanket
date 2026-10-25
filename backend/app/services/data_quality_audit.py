@@ -26,7 +26,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
 
 import structlog
-from sqlalchemy import and_, delete, func, select
+from sqlalchemy import and_, delete, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.enums import IndustryCode
@@ -137,9 +137,92 @@ async def _duplicate_skus(
     )
 
 
+#: How the repair chooses which copy survives. Stated exactly, because "the
+#: earliest row" would be a claim the data cannot support: sales rows carry no
+#: insertion time, and the copies are identical anyway.
+SURVIVOR_RULE = (
+    "One copy of each duplicated sale is kept — the one with the lowest id in text order. The "
+    "copies are identical in every sales field, so which one survives does not change any "
+    "total. Copies that disagree are listed for review and never removed automatically."
+)
+
+
+async def _duplicate_groups(
+    session: AsyncSession, tenant_id: uuid.UUID, industry: IndustryCode, *, dry_run: bool
+) -> list[Any]:
+    """Rows sharing a ``record_key`` — provable copies from replayed imports.
+
+    Runs ``sanket_dedupe_sales`` (migration 0023): the app role cannot DELETE
+    sales history, and the function can only ever remove identical copies in
+    the tenant set on this session. ``tenant_id`` is that same tenant.
+    """
+    del tenant_id  # scope comes from app.current_tenant_id, enforced in SQL
+    return list(
+        (
+            await session.execute(
+                text("SELECT * FROM sanket_dedupe_sales(CAST(:ind AS industry_code), :dry)"),
+                {"ind": industry.value, "dry": dry_run},
+            )
+        ).fetchall()
+    )
+
+
+async def confirmed_duplicate_count(
+    session: AsyncSession, *, tenant_id: uuid.UUID, industry: str
+) -> int:
+    """Extra rows in confirmed duplicate groups (identical or conflicting)."""
+    groups = await _duplicate_groups(session, tenant_id, IndustryCode(industry), dry_run=True)
+    return sum(int(g.copies) - 1 for g in groups)
+
+
 async def _duplicate_sales(
     session: AsyncSession, tenant_id: uuid.UUID, industry: IndustryCode
 ) -> Finding | None:
+    groups = await _duplicate_groups(session, tenant_id, industry, dry_run=True)
+    if not groups:
+        return None
+
+    extra = sum(int(g.copies) - 1 for g in groups)
+    conflicting = [g for g in groups if not g.identical]
+    how = "Remove the extra copies. " + SURVIVOR_RULE
+    if conflicting:
+        how += (
+            f" {len(conflicting)} sale(s) have copies with different values — re-check those in "
+            "the source system."
+        )
+    return Finding(
+        key="duplicate_sales_rows",
+        label="Duplicate sales rows",
+        severity="critical",
+        count=extra,
+        why_it_matters=(
+            "The same sale was imported more than once, so demand is double-counted. The "
+            "forecast reads inflated history and every recommendation over-orders. Forecasting "
+            "is paused until these are removed."
+        ),
+        how_to_fix=how,
+        autofix="dedupe_sales" if any(g.identical for g in groups) else None,
+        sample=[
+            {
+                "sku_id": str(g.sku_id),
+                "sale_time": g.sale_time.isoformat() if g.sale_time else None,
+                "copies": int(g.copies),
+                "identical": bool(g.identical),
+                "units_per_copy": int(g.units_per_copy or 0),
+            }
+            for g in groups[:SAMPLE_LIMIT]
+        ],
+    )
+
+
+async def _possible_duplicates(
+    session: AsyncSession, tenant_id: uuid.UUID, industry: IndustryCode
+) -> Finding | None:
+    """Fully identical rows from sources that do not key their sales.
+
+    Without a source identity we cannot prove these are copies rather than
+    genuinely repeated sales, so they are a warning with no automatic fix.
+    """
     rows = (
         await session.execute(
             select(
@@ -149,12 +232,21 @@ async def _duplicate_sales(
                 HistoricalSale.units_sold,
                 func.count().label("n"),
             )
-            .where(HistoricalSale.tenant_id == tenant_id, HistoricalSale.industry == industry)
+            .where(
+                HistoricalSale.tenant_id == tenant_id,
+                HistoricalSale.industry == industry,
+                HistoricalSale.record_key.is_(None),
+            )
             .group_by(
                 HistoricalSale.sku_id,
                 HistoricalSale.sale_time,
                 HistoricalSale.channel,
+                HistoricalSale.region,
+                HistoricalSale.location,
                 HistoricalSale.units_sold,
+                HistoricalSale.gross_revenue,
+                HistoricalSale.net_revenue,
+                HistoricalSale.metadata_["order_id"].astext,
             )
             .having(func.count() > 1)
             .limit(1000)
@@ -162,19 +254,20 @@ async def _duplicate_sales(
     ).fetchall()
     if not rows:
         return None
-
-    extra = sum(r.n - 1 for r in rows)
     return Finding(
-        key="duplicate_sales_rows",
-        label="Duplicate sales rows",
-        severity="critical",
-        count=extra,
+        key="possible_duplicate_sales",
+        label="Possibly repeated sales rows",
+        severity="warning",
+        count=sum(r.n - 1 for r in rows),
         why_it_matters=(
-            "Re-importing the same file double-counts demand. The forecast reads inflated history "
-            "and every recommendation over-orders."
+            "These rows are identical in every field, but their source does not identify "
+            "individual sales, so we cannot tell a copy from two real sales of the same item at "
+            "the same moment."
         ),
-        how_to_fix="Remove the extra copies — the earliest row of each group is kept.",
-        autofix="dedupe_sales",
+        how_to_fix=(
+            "Check them against the source system. Re-importing through the file upload or the "
+            "keyed push API makes future replays safe."
+        ),
         sample=[
             {
                 "sku_id": str(r.sku_id),
@@ -613,6 +706,7 @@ async def audit(
     for maybe in (
         await _duplicate_skus(session, tenant_id, ind),
         await _duplicate_sales(session, tenant_id, ind),
+        await _possible_duplicates(session, tenant_id, ind),
         await _orphan_sales(session, tenant_id, ind),
     ):
         if maybe is not None:
@@ -632,7 +726,7 @@ async def audit(
         "industry": industry,
         "health_score": score,
         "grade": _grade(score),
-        "checks_run": 11,
+        "checks_run": 12,
         "issues_found": len(findings),
         "critical": sum(1 for f in findings if f.severity == "critical"),
         "warnings": sum(1 for f in findings if f.severity == "warning"),
@@ -700,7 +794,22 @@ async def apply_fix(
             await session.execute(delete(HistoricalSale).where(where))
 
     else:  # dedupe_sales
-        affected = await _dedupe_sales(session, tenant_id, ind, dry_run=dry_run)
+        detail = await _dedupe_sales(session, tenant_id, ind, dry_run=dry_run)
+        affected = detail["rows_affected"]
+        log.info(
+            "data_quality.fix",
+            tenant_id=str(tenant_id),
+            action=action,
+            dry_run=dry_run,
+            affected=affected,
+            conflicting=detail["groups_conflicting"],
+        )
+        return {
+            "action": action,
+            "dry_run": dry_run,
+            "applied": (not dry_run) and affected > 0,
+            **detail,
+        }
 
     log.info(
         "data_quality.fix",
@@ -725,47 +834,31 @@ async def _count(session: AsyncSession, where: Any) -> int:
 
 async def _dedupe_sales(
     session: AsyncSession, tenant_id: uuid.UUID, industry: IndustryCode, *, dry_run: bool
-) -> int:
-    """Keep the lowest-id row of each identical group, delete the rest.
+) -> dict[str, Any]:
+    """Remove extra identical copies of replayed sales; report conflicting ones.
 
-    ``historical_sales`` is partitioned with a composite mapper key and no
-    unique constraint, so the duplicates have to be identified explicitly rather
-    than left to an upsert.
+    A duplicate is two or more rows sharing a ``record_key`` — the same order
+    line, the same row of the same file, or the same period total imported
+    again. Rows that merely share SKU, time and quantity are *not* duplicates:
+    two customers can buy the same thing in the same hour. The delete happens
+    inside the caller's transaction, so a failure afterwards undoes it.
     """
-    groups = (
-        await session.execute(
-            select(
-                HistoricalSale.sku_id,
-                HistoricalSale.sale_time,
-                HistoricalSale.channel,
-                HistoricalSale.units_sold,
-                func.count().label("n"),
-                func.min(HistoricalSale.id).label("keep_id"),
-            )
-            .where(HistoricalSale.tenant_id == tenant_id, HistoricalSale.industry == industry)
-            .group_by(
-                HistoricalSale.sku_id,
-                HistoricalSale.sale_time,
-                HistoricalSale.channel,
-                HistoricalSale.units_sold,
-            )
-            .having(func.count() > 1)
-        )
-    ).fetchall()
-
-    removed = sum(g.n - 1 for g in groups)
-    if dry_run or not groups:
-        return removed
-
-    for g in groups:
-        await session.execute(
-            delete(HistoricalSale).where(
-                HistoricalSale.tenant_id == tenant_id,
-                HistoricalSale.sku_id == g.sku_id,
-                HistoricalSale.sale_time == g.sale_time,
-                HistoricalSale.channel == g.channel,
-                HistoricalSale.units_sold == g.units_sold,
-                HistoricalSale.id != g.keep_id,
-            )
-        )
-    return removed
+    groups = await _duplicate_groups(session, tenant_id, industry, dry_run=dry_run)
+    removable = [g for g in groups if g.identical]
+    return {
+        "rows_affected": sum(int(g.copies) - 1 for g in removable),
+        "groups_removable": len(removable),
+        "groups_conflicting": len(groups) - len(removable),
+        "units_removed": sum((int(g.copies) - 1) * int(g.units_per_copy or 0) for g in removable),
+        "survivor_rule": SURVIVOR_RULE,
+        "sample": [
+            {
+                "sku_id": str(g.sku_id),
+                "sale_time": g.sale_time.isoformat() if g.sale_time else None,
+                "copies": int(g.copies),
+                "identical": bool(g.identical),
+                "keep_id": g.keep_id if g.identical else None,
+            }
+            for g in groups[:SAMPLE_LIMIT]
+        ],
+    }

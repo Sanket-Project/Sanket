@@ -9,8 +9,9 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from app.core.rbac import require_admin
-from app.routers.industry_router import ActiveIndustry, TenantId
-from app.services import data_quality_audit
+from app.models.enums import IndustryCode
+from app.routers.industry_router import ActiveIndustry, TenantId, UserId
+from app.services import audit, data_quality_audit
 
 log = structlog.get_logger(__name__)
 router = APIRouter(prefix="/data-quality", tags=["data-quality"])
@@ -43,18 +44,39 @@ async def fix(
     request: Request,
     ctx: ActiveIndustry,
     tenant_id: TenantId,
+    user_id: UserId,
     _rbac: None = require_admin,
 ) -> dict[str, Any]:
-    """Run one auto-fix. Without ``confirm`` this only reports what it would do."""
+    """Run one auto-fix. Without ``confirm`` this only reports what it would do.
+
+    A confirmed fix deletes rows, so it is written to the audit log in the same
+    transaction: either both happen or neither does.
+    """
     db = request.app.state.db
     try:
         async with db.session(str(tenant_id)) as session:
-            return await data_quality_audit.apply_fix(
+            result = await data_quality_audit.apply_fix(
                 session,
                 tenant_id=tenant_id,
                 industry=ctx.code,
                 action=body.action,
                 dry_run=not body.confirm,
             )
+            if body.confirm:
+                await audit.record(
+                    session,
+                    tenant_id=tenant_id,
+                    user_id=user_id,
+                    industry=IndustryCode(ctx.code),
+                    action="data_quality.fix",
+                    entity_type="historical_sales",
+                    new_value={
+                        "action": body.action,
+                        "rows_affected": result.get("rows_affected", 0),
+                        "groups_conflicting": result.get("groups_conflicting"),
+                    },
+                    request_id=getattr(request.state, "request_id", None),
+                )
+            return result
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
