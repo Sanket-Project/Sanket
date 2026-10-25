@@ -30,6 +30,15 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 SQL_DIR = BACKEND_DIR / "sql"
 
+# The app lifespan starts background loops that call third-party services
+# (Google Trends, Reddit, FRED, Shopify, WhatsApp). A test run must never do
+# that: a real 429 from Google opened the shared Trends cooldown mid-suite and
+# made test_regional_demand_connector_fetch fail only in full runs. Set before
+# any test imports the app, so the cached Settings never see the live defaults.
+os.environ["SIGNAL_PIPELINE_ENABLED"] = "false"
+os.environ["SHOPIFY_POLL_ENABLED"] = "false"
+os.environ["WHATSAPP_DIGEST_WORKER_ENABLED"] = "false"
+
 
 @pytest.fixture(scope="session", autouse=True)
 def mock_env():

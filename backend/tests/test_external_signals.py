@@ -8,6 +8,18 @@ import pytest
 from app.services.external_signals.fda_connector import FdaConnector
 from app.services.external_signals.logistics_connector import LogisticsConnector
 from app.services.external_signals.regional_demand_connector import RegionalDemandConnector
+from app.services.external_signals.trends_ratelimit import cooldown
+
+
+@pytest.fixture(autouse=True)
+def _closed_trends_cooldown():
+    """The Google Trends cooldown is a process-global breaker shared by every
+    connector that talks to the endpoint. A real 429 seen earlier in the same
+    process (any lifespan that started the live pipeline) leaves it open, so
+    each test here states its precondition instead of inheriting it."""
+    cooldown.record_success()
+    yield
+    cooldown.record_success()
 
 
 @pytest.mark.asyncio
@@ -158,3 +170,14 @@ async def test_regional_demand_connector_fetch():
         assert siddipet_sample.payload["tier"] == "TIER3"
         assert siddipet_sample.payload["relative_search_interest"] > 0
 
+
+
+@pytest.mark.asyncio
+async def test_open_cooldown_suppresses_regional_fetch_without_calling_google():
+    """While Google is throttling us, the connector must not issue requests."""
+    cooldown.record_rate_limited("test")
+    with patch("pytrends.request.TrendReq") as mock_trend_req_cls:
+        samples = await RegionalDemandConnector().fetch("fashion")
+
+    assert samples == []
+    mock_trend_req_cls.return_value.build_payload.assert_not_called()
