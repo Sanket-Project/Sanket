@@ -18,7 +18,7 @@ from decimal import Decimal
 from typing import Any
 
 import structlog
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.calendar import week_bucket
@@ -85,12 +85,20 @@ def load_policy(tenant_settings: dict | None) -> PolicyConfig:
 async def latest_completed_run(
     session: AsyncSession, tenant_id: uuid.UUID, industry: IndustryCode
 ) -> ForecastRun | None:
+    """The latest forecast a planner should act on.
+
+    Explicit backtests (metrics.mode = "backtest") are forecasts of the past
+    made after the fact; they must never become the run that drives decisions,
+    confidence, coverage or the forecast export.
+    """
+    mode = ForecastRun.metrics["mode"].astext
     return await session.scalar(
         select(ForecastRun)
         .where(
             ForecastRun.tenant_id == tenant_id,
             ForecastRun.industry == industry,
             ForecastRun.status == "completed",
+            or_(mode.is_(None), mode != "backtest"),
         )
         .order_by(ForecastRun.completed_at.desc())
         .limit(1)

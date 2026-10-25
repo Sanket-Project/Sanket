@@ -15,6 +15,7 @@ from sqlalchemy import select
 from app.core.calendar import CALENDAR
 from app.models.enums import IndustryCode
 from app.routers.industry_router import ActiveIndustry, TenantId
+from app.services.decision_builder import latest_completed_run
 
 log = structlog.get_logger(__name__)
 router = APIRouter(prefix="/export", tags=["export"])
@@ -35,23 +36,15 @@ async def export_forecast_xlsx(
 
         return JSONResponse({"error": "openpyxl not installed"}, status_code=501)
 
-    from app.models.forecast import ForecastResult, ForecastRun
+    from app.models.forecast import ForecastResult
     from app.models.product import Sku
 
     db = request.app.state.db
     industry = IndustryCode(ctx.code)
 
     async with db.session(str(tenant_id)) as session:
-        run = await session.scalar(
-            select(ForecastRun)
-            .where(
-                ForecastRun.tenant_id == tenant_id,
-                ForecastRun.industry == industry,
-                ForecastRun.status == "completed",
-            )
-            .order_by(ForecastRun.completed_at.desc())
-            .limit(1)
-        )
+        # The forecast a planner acts on — never an after-the-fact backtest.
+        run = await latest_completed_run(session, tenant_id, industry)
 
         rows: list[Any] = []
         if run:

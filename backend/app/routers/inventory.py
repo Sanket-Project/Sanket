@@ -17,6 +17,7 @@ from app.models.enums import IndustryCode
 from app.models.inventory import InventoryLevel
 from app.models.product import Sku
 from app.routers.industry_router import ActiveIndustry, TenantId, UserId
+from app.services.coverage import coverage
 
 log = structlog.get_logger(__name__)
 router = APIRouter(prefix="/inventory", tags=["inventory"])
@@ -97,6 +98,24 @@ async def upsert_levels(
 
     log.info("inventory.levels.upserted", tenant=str(tenant_id), industry=ctx.code, n=len(rows))
     return {"upserted": len(rows), "industry": ctx.code}
+
+
+@router.get("/coverage")
+async def stock_coverage(
+    request: Request,
+    ctx: ActiveIndustry,
+    tenant_id: TenantId,
+) -> dict[str, Any]:
+    """Days of cover per SKU (pooled) and per location, with the demand basis.
+
+    Computed from stock, demand and lead time — never from whether a
+    recommendation happens to exist — and ``unknown`` whenever the demand or a
+    fresh stock position is missing. See ``app.services.coverage``.
+    """
+    db = request.app.state.db
+    async with db.session(str(tenant_id)) as session:
+        result = await coverage(session, tenant_id=tenant_id, industry=ctx.code)
+    return {"industry": ctx.code, **result}
 
 
 @router.get("/levels")
