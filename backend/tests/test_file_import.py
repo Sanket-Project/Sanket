@@ -251,9 +251,10 @@ def test_map_sales_row_rejects_missing_sku():
 
 
 def test_map_sales_row_rejects_bad_quantity():
+    # "0" is valid observed zero demand since F07; an unreadable value is not.
     hmap = _sales_hmap()
     with pytest.raises(fi.RowError, match="invalid quantity"):
-        fi.map_sales_row({"sku": "A", "quantity": "0", "timestamp": "2026-06-15"}, hmap)
+        fi.map_sales_row({"sku": "A", "quantity": "n/a", "timestamp": "2026-06-15"}, hmap)
 
 
 def test_map_sales_row_rejects_out_of_window_date():

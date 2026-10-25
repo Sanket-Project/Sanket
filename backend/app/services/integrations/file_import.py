@@ -169,6 +169,11 @@ _ALIASES: dict[str, set[str]] = {
     # Distinguishes several lines of one order. Without it the SKU identifies
     # the line, which is right for the usual one-row-per-SKU order export.
     "line_id": {"line", "lineid", "lineno", "linenumber", "lineitem", "lineitemid"},
+    # Availability during the sale period. A zero-demand row with in_stock=no is
+    # a stockout (censored demand), not evidence that nobody wanted the item.
+    "in_stock": {"instock", "availability", "wasinstock"},
+    "stockout": {"stockout", "outofstock", "stockedout", "oos"},
+    "returns": {"returns", "returnedqty", "returnqty", "returnunits", "unitsreturned"},
     "region": {"region", "country", "state", "market"},
     # ── inventory ────────────────────────────────────────────────────────────
     # NOTE: "quantity" and "qty" are intentionally NOT listed here — they belong
@@ -465,10 +470,31 @@ class RowError(ValueError):
     """A row that can't be mapped; message is surfaced to the user."""
 
 
+_TRUE = {"yes", "y", "true", "t", "1"}
+_FALSE = {"no", "n", "false", "f", "0"}
+
+
+def _to_flag(value: Any, *, field: str, sku: str) -> bool | None:
+    """Yes/no column → bool; blank → None (unknown). Anything else is a row error."""
+    if value is None or (isinstance(value, str) and not value.strip()):
+        return None
+    if isinstance(value, bool):
+        return value
+    token = str(value).strip().lower()
+    if token in _TRUE:
+        return True
+    if token in _FALSE:
+        return False
+    raise RowError(f"unreadable {field} value '{value}' for SKU {sku} — use yes or no")
+
+
 def map_sales_row(row: dict[str, Any], hmap: dict[str, str]) -> dict[str, Any]:
     """Map a raw row to a partial historical_sales dict (no tenant/sku_id).
 
-    Requires a SKU or Name, a positive quantity, and an in-window timestamp.
+    Requires a SKU or Name, a quantity of zero or more, and an in-window
+    timestamp. Zero is observed zero demand (a week that genuinely sold
+    nothing), which is different from a missing week; ``in_stock`` / ``stockout``
+    say whether a zero was a stockout.
     """
     sku = str(row.get(hmap.get("sku", ""), "") or "").strip()
     name = str(row.get(hmap.get("name", ""), "") or "").strip()
@@ -478,8 +504,21 @@ def map_sales_row(row: dict[str, Any], hmap: dict[str, str]) -> dict[str, Any]:
         digest = hashlib.sha1(name.encode("utf-8")).hexdigest()[:6]
         sku = f"{_slugify(name)}-{digest}"
     qty = _to_int(row.get(hmap.get("quantity", "")))
-    if qty is None or qty <= 0:
+    if qty is None:
         raise RowError(f"invalid quantity for SKU {sku}")
+    if qty < 0:
+        raise RowError(
+            f"negative quantity for SKU {sku} — book returns in the returns column, not as "
+            "negative sales"
+        )
+    in_stock = _to_flag(row.get(hmap.get("in_stock", "")), field="in_stock", sku=sku)
+    stockout = _to_flag(row.get(hmap.get("stockout", "")), field="stockout", sku=sku)
+    if in_stock is None and stockout is not None:
+        in_stock = not stockout
+    returns_raw = row.get(hmap.get("returns", ""))
+    returns = _to_int(returns_raw) if returns_raw not in (None, "") else None
+    if returns is not None and returns < 0:
+        raise RowError(f"returns for SKU {sku} cannot be negative")
     when = _to_datetime(row.get(hmap.get("timestamp", "")))
     if when is None:
         raise RowError(f"missing/invalid date for SKU {sku}")
@@ -509,6 +548,8 @@ def map_sales_row(row: dict[str, Any], hmap: dict[str, str]) -> dict[str, Any]:
         "units_sold": qty,
         "gross_revenue": revenue,
         "net_revenue": net,
+        "in_stock": in_stock,
+        "returns": returns,
         "metadata_": {"source": SOURCE, "order_id": order_id},
     }
 
