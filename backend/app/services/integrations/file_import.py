@@ -236,6 +236,7 @@ _ALIASES: dict[str, set[str]] = {
     },
     "size": {"size", "sizevariant", "sizecode", "productsize"},
     "color": {"color", "colour", "colorway", "shade"},
+    "currency": {"currency", "currencycode", "cur", "ccy"},
     "description": {"description", "desc", "variant", "option"},
     "gtin": {"gtin", "barcode", "ean", "upc"},
 }
@@ -517,6 +518,10 @@ def map_sales_row(row: dict[str, Any], hmap: dict[str, str]) -> dict[str, Any]:
     stockout = _to_flag(row.get(hmap.get("stockout", "")), field="stockout", sku=sku)
     if in_stock is None and stockout is not None:
         in_stock = not stockout
+    currency_raw = row.get(hmap.get("currency", ""))
+    currency = _clean_currency(currency_raw) if currency_raw not in (None, "") else None
+    if currency_raw not in (None, "") and currency is None:
+        raise RowError(f"unreadable currency '{currency_raw}' for SKU {sku} — use a code like INR")
     returns_raw = row.get(hmap.get("returns", ""))
     returns = _to_int(returns_raw) if returns_raw not in (None, "") else None
     if returns is not None and returns < 0:
@@ -543,6 +548,7 @@ def map_sales_row(row: dict[str, Any], hmap: dict[str, str]) -> dict[str, Any]:
         "_sku_code": sku,
         "_order_id": order_id,
         "_line_id": line_id,
+        "_currency": currency,
         "sale_time": when,
         "channel": channel,
         "region": region,
@@ -603,6 +609,7 @@ def map_product_row(row: dict[str, Any], hmap: dict[str, str]) -> dict[str, Any]
         # is its own SKU; a bad size is a row error, never merged into another).
         "size": (str(row.get(hmap.get("size", ""), "") or "").strip() or None),
         "color": (str(row.get(hmap.get("color", ""), "") or "").strip() or None),
+        "currency": _clean_currency(row.get(hmap.get("currency", ""))),
     }
 
 
@@ -656,6 +663,31 @@ async def _load_sku_map(session, tenant_id: uuid.UUID) -> dict[str, uuid.UUID]:
     return dict(rows.all())
 
 
+async def _sku_currencies(session, tenant_id: uuid.UUID, ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
+    if not ids:
+        return {}
+    rows = await session.execute(
+        select(Sku.id, Sku.currency).where(Sku.tenant_id == tenant_id, Sku.id.in_(ids))
+    )
+    return dict(rows.all())
+
+
+async def _workspace_currency(session, tenant_id: uuid.UUID) -> str | None:
+    """The workspace's configured currency (tenants.settings.currency), if any."""
+    value = await session.scalar(
+        text("SELECT settings->>'currency' FROM tenants WHERE id = :t"), {"t": str(tenant_id)}
+    )
+    return _clean_currency(value)
+
+
+_CURRENCY = re.compile(r"^[A-Z]{3}$")
+
+
+def _clean_currency(value: Any) -> str | None:
+    code = str(value or "").strip().upper()
+    return code if _CURRENCY.match(code) else None
+
+
 async def _get_or_create_sku(
     session,
     tenant_id: uuid.UUID,
@@ -665,20 +697,24 @@ async def _get_or_create_sku(
     import_product_id: uuid.UUID,
     *,
     unit_price: Decimal | None = None,
+    currency: str | None = None,
 ) -> uuid.UUID:
     if sku_code in sku_map:
         return sku_map[sku_code]
+    values: dict[str, Any] = {
+        "tenant_id": tenant_id,
+        "product_id": import_product_id,
+        "industry": industry,
+        "sku_code": sku_code,
+        "unit_price": unit_price,
+        "attributes": {"source": SOURCE},
+        "is_active": True,
+    }
+    if currency:
+        values["currency"] = currency
     stmt = (
         pg_insert(Sku)
-        .values(
-            tenant_id=tenant_id,
-            product_id=import_product_id,
-            industry=industry,
-            sku_code=sku_code,
-            unit_price=unit_price,
-            attributes={"source": SOURCE},
-            is_active=True,
-        )
+        .values(**values)
         .on_conflict_do_update(
             index_elements=[Sku.tenant_id, Sku.sku_code],
             set_={"is_active": True},
@@ -897,6 +933,7 @@ async def import_rows(
     records: list[dict[str, Any]],
     column_mapping: dict[str, str] | None = None,
     identity: str = "transaction",
+    currency: str | None = None,
 ) -> dict[str, Any]:
     """Map and persist parsed rows for one ``kind`` (sales|inventory|products).
 
@@ -904,6 +941,10 @@ async def import_rows(
     ``transaction`` lines (order/line id, else the row's content and its
     occurrence in the file) or ``period`` totals (one row per SKU, location,
     channel and day — a corrected export replaces the value).
+
+    New SKUs take their currency from the row's ``currency`` column, else
+    ``currency``, else the workspace setting; a row whose currency differs from
+    its existing SKU's is rejected rather than mixed into the same totals.
 
     Returns a stats dict matching the UploadResult schema fields.
     """
@@ -975,6 +1016,9 @@ async def import_rows(
 
         if kind == "products":
             ctx = get_industry_context(industry.value)
+            default_currency = _clean_currency(currency) or await _workspace_currency(
+                session, tenant_id
+            )
             for m in mapped:
                 variant = {k: m[k] for k in ("size", "color") if m.get(k)}
                 variant = ctx.normalize_sku_attributes(variant)
@@ -990,6 +1034,7 @@ async def import_rows(
                 # partial-unique gtin index on dirty catalogs — same choice the
                 # Shopify sync makes for the barcode field.
                 attrs = {"source": SOURCE, "brand": m["brand"], "gtin": m["gtin"], **variant}
+                new_sku_currency = m["currency"] or default_currency
                 stmt = (
                     pg_insert(Sku)
                     .values(
@@ -1001,6 +1046,7 @@ async def import_rows(
                         unit_price=m["unit_price"],
                         attributes=attrs,
                         is_active=True,
+                        **({"currency": new_sku_currency} if new_sku_currency else {}),
                     )
                     .on_conflict_do_update(
                         index_elements=[Sku.tenant_id, Sku.sku_code],
@@ -1009,6 +1055,8 @@ async def import_rows(
                             "unit_price": m["unit_price"],
                             "attributes": attrs,
                             "is_active": True,
+                            # Only an explicit currency column re-prices an existing SKU.
+                            **({"currency": m["currency"]} if m["currency"] else {}),
                         },
                     )
                     .returning(Sku.id)
@@ -1049,15 +1097,43 @@ async def import_rows(
                 stats["rows_imported"] += 1
 
         else:  # sales
+            default_currency = _clean_currency(currency) or await _workspace_currency(
+                session, tenant_id
+            )
+            created_without_currency: set[str] = set()
             for m in mapped:
+                code = m["_sku_code"]
+                if code not in sku_map and not (m.get("_currency") or default_currency):
+                    created_without_currency.add(code)
                 m["sku_id"] = await _get_or_create_sku(
-                    session, tenant_id, industry, m["_sku_code"], sku_map, import_product_id
+                    session, tenant_id, industry, code, sku_map, import_product_id,
+                    currency=m.get("_currency") or default_currency,
+                )
+            currencies = await _sku_currencies(session, tenant_id, [m["sku_id"] for m in mapped])
+            accepted = []
+            for m in mapped:
+                sku_currency = currencies.get(m["sku_id"])
+                if m.get("_currency") and sku_currency and m["_currency"] != sku_currency:
+                    stats["rows_skipped"] += 1
+                    if len(stats["errors"]) < 50:
+                        stats["errors"].append(
+                            f"Row {m['_row']}: SKU {m['_sku_code']} is priced in {sku_currency}, "
+                            f"but this row is in {m['_currency']} — revenue in different "
+                            "currencies cannot be combined"
+                        )
+                    continue
+                accepted.append(m)
+            if created_without_currency:
+                stats["warnings"].append(
+                    f"{len(created_without_currency)} new SKU(s) were created without a currency "
+                    "and default to USD. Add a currency column, choose a currency on upload, or "
+                    "set the workspace currency."
                 )
             outcome = await upsert_sales_rows(
                 session,
                 tenant_id=tenant_id,
                 industry=industry,
-                rows=mapped,
+                rows=accepted,
                 identity=identity,  # type: ignore[arg-type]
                 source=SOURCE,
                 upload_id=upload_id,

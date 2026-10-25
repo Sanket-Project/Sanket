@@ -65,6 +65,30 @@ def _period_bounds(now: datetime, period: str) -> tuple[datetime, datetime]:
     return start, prev
 
 
+#: Revenue is denominated in the SKU's currency (sales rows carry none of
+#: their own). Orphaned sales with no SKU have no known currency.
+_SKU_CURRENCY = func.coalesce(Sku.currency, "unknown").label("currency")
+
+
+def _money(rows: list[Any]) -> dict[str, Any]:
+    """Revenue for one bucket, per currency; summed only when there is one.
+
+    Adding rupees to dollars produces a number in no currency at all, so a
+    bucket with several currencies reports ``gross_revenue``/``net_revenue`` as
+    ``None`` and the per-currency figures in ``revenue_by_currency``.
+    """
+    gross = {r.currency: float(r.gross or 0) for r in rows if (r.gross or r.net)}
+    net = {r.currency: float(r.net or 0) for r in rows if (r.gross or r.net)}
+    single = len(gross) <= 1
+    return {
+        "currency": next(iter(gross)) if len(gross) == 1 else None,
+        "gross_revenue": sum(gross.values()) if single else None,
+        "net_revenue": sum(net.values()) if single else None,
+        "revenue_by_currency": gross,
+        "net_revenue_by_currency": net,
+    }
+
+
 def _delta(current: float, previous: float) -> float | None:
     """Fractional change vs the prior window, or None when there's no baseline."""
     if previous <= 0:
@@ -101,45 +125,62 @@ async def sales_summary(
     now = datetime.now(UTC)
     periods: list[str] = ["today", "week", "month", "year"]
 
-    async def _aggregate(session, start: datetime, end: datetime) -> dict[str, float | int]:
-        row = (
+    async def _aggregate(session, start: datetime, end: datetime) -> dict[str, Any]:
+        rows = (
             await session.execute(
                 select(
+                    _SKU_CURRENCY,
                     func.coalesce(func.sum(HistoricalSale.units_sold), 0).label("units"),
                     func.coalesce(func.sum(HistoricalSale.gross_revenue), 0).label("gross"),
                     func.coalesce(func.sum(HistoricalSale.net_revenue), 0).label("net"),
                     func.coalesce(func.sum(HistoricalSale.returns), 0).label("returns"),
                     func.count().label("transactions"),
-                ).where(
+                )
+                .select_from(HistoricalSale)
+                .outerjoin(Sku, Sku.id == HistoricalSale.sku_id)
+                .where(
                     HistoricalSale.tenant_id == tenant_id,
                     HistoricalSale.industry == industry,
                     HistoricalSale.sale_time >= start,
                     HistoricalSale.sale_time < end,
                 )
+                .group_by(_SKU_CURRENCY)
             )
-        ).one()
+        ).all()
         return {
-            "units_sold": int(row.units or 0),
-            "gross_revenue": float(row.gross or 0),
-            "net_revenue": float(row.net or 0),
-            "returns": int(row.returns or 0),
-            "transactions": int(row.transactions or 0),
+            "units_sold": int(sum(r.units or 0 for r in rows)),
+            **_money(rows),
+            "returns": int(sum(r.returns or 0 for r in rows)),
+            "transactions": int(sum(r.transactions or 0 for r in rows)),
         }
 
     async def _compute() -> dict[str, Any]:
         result: dict[str, Any] = {"industry": ctx.code, "as_of": now.isoformat()}
+        seen: set[str] = set()
         async with db.session(str(tenant_id)) as session:
             for period in periods:
                 start, prev_start = _period_bounds(now, period)
                 elapsed = now - start
                 current = await _aggregate(session, start, now)
                 previous = await _aggregate(session, prev_start, prev_start + elapsed)
+                seen.update(current["revenue_by_currency"])
+                comparable = (
+                    current["currency"] is not None
+                    and current["currency"] == (previous["currency"] or current["currency"])
+                )
                 result[period] = {
                     **current,
                     "period_start": start.isoformat(),
-                    "revenue_delta": _delta(current["gross_revenue"], previous["gross_revenue"]),
+                    # A change in rupees vs a mix of currencies is not a percentage.
+                    "revenue_delta": (
+                        _delta(current["gross_revenue"] or 0.0, previous["gross_revenue"] or 0.0)
+                        if comparable
+                        else None
+                    ),
                     "units_delta": _delta(current["units_sold"], previous["units_sold"]),
                 }
+        result["currencies"] = sorted(seen)
+        result["currency"] = result["currencies"][0] if len(seen) == 1 else None
         return result
 
     cache = get_response_cache(request)
@@ -201,36 +242,42 @@ async def sales_timeseries(
                 await session.execute(
                     select(
                         bucket.label("bucket"),
+                        _SKU_CURRENCY,
                         func.coalesce(func.sum(HistoricalSale.units_sold), 0).label("units"),
                         func.coalesce(func.sum(HistoricalSale.gross_revenue), 0).label("gross"),
                         func.coalesce(func.sum(HistoricalSale.net_revenue), 0).label("net"),
                     )
+                    .select_from(HistoricalSale)
+                    .outerjoin(Sku, Sku.id == HistoricalSale.sku_id)
                     .where(
                         HistoricalSale.tenant_id == tenant_id,
                         HistoricalSale.industry == industry,
                         HistoricalSale.sale_time >= window_start,
                     )
-                    .group_by(bucket)
+                    .group_by(bucket, _SKU_CURRENCY)
                     .order_by(bucket)
                 )
             ).fetchall()
 
-        by_bucket = {
-            _day_start(r.bucket.replace(tzinfo=UTC) if r.bucket.tzinfo is None else r.bucket): r
-            for r in rows
-        }
+        by_bucket: dict[datetime, list[Any]] = {}
+        for r in rows:
+            key = _day_start(r.bucket.replace(tzinfo=UTC) if r.bucket.tzinfo is None else r.bucket)
+            by_bucket.setdefault(key, []).append(r)
+        currencies = sorted({r.currency for r in rows if (r.gross or r.net)})
+        mixed = len(currencies) > 1
 
         series: list[dict] = []
         cursor = window_start
         while cursor <= now:
-            key = _day_start(cursor)
-            r = by_bucket.get(key)
+            bucket_rows = by_bucket.get(_day_start(cursor), [])
+            money = _money(bucket_rows)
             series.append(
                 {
                     "bucket": cursor.date().isoformat(),
-                    "units_sold": int(r.units) if r else 0,
-                    "gross_revenue": float(r.gross) if r else 0.0,
-                    "net_revenue": float(r.net) if r else 0.0,
+                    "units_sold": int(sum(r.units or 0 for r in bucket_rows)),
+                    "gross_revenue": None if mixed else (money["gross_revenue"] or 0.0),
+                    "net_revenue": None if mixed else (money["net_revenue"] or 0.0),
+                    "revenue_by_currency": money["revenue_by_currency"],
                 }
             )
             cursor = _step(cursor, granularity)
@@ -239,6 +286,8 @@ async def sales_timeseries(
             "industry": ctx.code,
             "granularity": granularity,
             "lookback_days": lookback_days,
+            "currency": currencies[0] if len(currencies) == 1 else None,
+            "currencies": currencies,
             "series": series,
         }
 
@@ -299,20 +348,22 @@ async def top_products(
             if sku_ids:
                 meta = (
                     await session.execute(
-                        select(Sku.id, Sku.sku_code, Product.name)
+                        select(Sku.id, Sku.sku_code, Sku.currency, Product.name)
                         .join(Product, Product.id == Sku.product_id)
                         .where(Sku.tenant_id == tenant_id, Sku.id.in_(sku_ids))
                     )
                 ).fetchall()
-                names = {m.id: (m.sku_code, m.name) for m in meta}
+                names = {m.id: (m.sku_code, m.name, m.currency) for m in meta}
 
+        unknown = ("—", "Unknown SKU", None)
         products = [
             {
                 "sku_id": str(r.sku_id),
-                "sku_code": names.get(r.sku_id, ("—", "Unknown SKU"))[0],
-                "product_name": names.get(r.sku_id, ("—", "Unknown SKU"))[1],
+                "sku_code": names.get(r.sku_id, unknown)[0],
+                "product_name": names.get(r.sku_id, unknown)[1],
                 "units_sold": int(r.units or 0),
                 "gross_revenue": float(r.gross or 0),
+                "currency": names.get(r.sku_id, unknown)[2],
                 "returns": int(r.returns or 0),
             }
             for r in rows

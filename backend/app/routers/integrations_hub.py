@@ -498,6 +498,7 @@ async def upload_file(
     target_industry: Annotated[str | None, Form()] = None,
     column_mapping: Annotated[str | None, Form()] = None,
     identity: Annotated[Literal["transaction", "period"], Form()] = "transaction",
+    currency: Annotated[str | None, Form(pattern=r"^[A-Z]{3}$")] = None,
 ) -> UploadResult:
     """Upload a CSV/Excel file of sales, inventory, or products and ingest it
     into the canonical schema.
@@ -551,6 +552,7 @@ async def upload_file(
             records=records,
             column_mapping=parsed_mapping,
             identity=identity,
+            currency=currency,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
