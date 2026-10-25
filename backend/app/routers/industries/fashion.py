@@ -10,6 +10,7 @@ from app.models.enums import IndustryCode
 from app.models.product import Product, Sku
 from app.models.trend import TrendSignal
 from app.routers.industry_router import ActiveIndustry, TenantId
+from app.services.fashion_sizes import normalize_size, size_rank
 from app.services.industry_context import FASHION
 
 log = structlog.get_logger(__name__)
@@ -105,7 +106,9 @@ async def size_curve(
     async with db.session(str(tenant_id)) as session:
         size_totals: dict[str, int] = {}
         for row in skus:
-            size = row.attributes.get("size", "UNKNOWN")
+            raw = row.attributes.get("size")
+            # One bucket per size however it was spelled (legacy XXXL == 3XL).
+            size = normalize_size(raw) or (str(raw) if raw else "UNKNOWN")
             sales_total = (
                 await session.scalar(
                     select(func.sum(HistoricalSale.units_sold)).where(
@@ -120,6 +123,7 @@ async def size_curve(
     grand_total = sum(size_totals.values()) or 1
     size_curve = [
         {"size": s, "units": u, "share_pct": round(u / grand_total * 100, 2)}
-        for s, u in sorted(size_totals.items(), key=lambda x: -x[1])
+        # A size curve reads small to large, not by volume.
+        for s, u in sorted(size_totals.items(), key=lambda x: (size_rank(x[0]), x[0]))
     ]
     return {"product_id": product_id, "size_curve": size_curve}

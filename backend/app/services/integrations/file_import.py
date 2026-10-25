@@ -35,6 +35,7 @@ from app.models.inventory import InventoryLevel
 from app.models.product import Product, Sku
 from app.models.sales import HistoricalSale
 from app.services import sales_identity as si
+from app.services.industry_context import get_industry_context
 
 log = structlog.get_logger(__name__)
 
@@ -234,6 +235,7 @@ _ALIASES: dict[str, set[str]] = {
         "categoryindex",
     },
     "size": {"size", "sizevariant", "sizecode", "productsize"},
+    "color": {"color", "colour", "colorway", "shade"},
     "description": {"description", "desc", "variant", "option"},
     "gtin": {"gtin", "barcode", "ean", "upc"},
 }
@@ -597,6 +599,10 @@ def map_product_row(row: dict[str, Any], hmap: dict[str, str]) -> dict[str, Any]
         "description": (str(row.get(hmap.get("description", ""), "") or "").strip() or None),
         "gtin": (str(row.get(hmap.get("gtin", ""), "") or "").strip() or None),
         "unit_price": _to_decimal(row.get(hmap.get("price", ""))),
+        # Variant attributes, validated per industry by the importer (each size
+        # is its own SKU; a bad size is a row error, never merged into another).
+        "size": (str(row.get(hmap.get("size", ""), "") or "").strip() or None),
+        "color": (str(row.get(hmap.get("color", ""), "") or "").strip() or None),
     }
 
 
@@ -968,11 +974,22 @@ async def import_rows(
         before = set(sku_map)
 
         if kind == "products":
+            ctx = get_industry_context(industry.value)
             for m in mapped:
+                variant = {k: m[k] for k in ("size", "color") if m.get(k)}
+                variant = ctx.normalize_sku_attributes(variant)
+                problems = ctx.validate_sku_attributes(variant)
+                if problems:
+                    stats["rows_skipped"] += 1
+                    if len(stats["errors"]) < 50:
+                        stats["errors"].append(
+                            f"Row {m['_row']}: SKU {m['_sku_code']}: {'; '.join(problems)}"
+                        )
+                    continue
                 # gtin lives in attributes (not the column) to avoid tripping the
                 # partial-unique gtin index on dirty catalogs — same choice the
                 # Shopify sync makes for the barcode field.
-                attrs = {"source": SOURCE, "brand": m["brand"], "gtin": m["gtin"]}
+                attrs = {"source": SOURCE, "brand": m["brand"], "gtin": m["gtin"], **variant}
                 stmt = (
                     pg_insert(Sku)
                     .values(

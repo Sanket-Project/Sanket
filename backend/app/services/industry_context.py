@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from app.models.enums import IndustryCode
+from app.services.fashion_sizes import CANONICAL_SIZES, normalize_size
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,6 +25,26 @@ class IndustryContext:
 
     def effective_horizon(self, tenant_override: int | None) -> int:
         return tenant_override if tenant_override is not None else self.default_horizon_weeks
+
+    def normalize_sku_attributes(self, attributes: dict[str, Any]) -> dict[str, Any]:
+        """Canonicalise attribute spellings before validation (fashion sizes).
+
+        A recognised size label is rewritten to its canonical form and the
+        original kept as ``size_label``; an unrecognised one is left untouched
+        so validation rejects it rather than it being guessed into a size.
+        """
+        if self.code != IndustryCode.fashion.value:
+            return attributes
+        raw = attributes.get("size")
+        if not isinstance(raw, str):
+            return attributes
+        canonical = normalize_size(raw)
+        if canonical is None:
+            return attributes
+        out = {**attributes, "size": canonical}
+        if raw.strip() != canonical:
+            out["size_label"] = raw
+        return out
 
     def validate_sku_attributes(self, attributes: dict[str, Any]) -> list[str]:
         """Return a list of validation errors for industry-specific SKU attributes."""
@@ -61,7 +82,8 @@ FASHION = IndustryContext(
         "competitor_price",
     ],
     sku_attribute_schema={
-        "size": {"type": "string", "enum": ["XS", "S", "M", "L", "XL", "XXL", "XXXL"]},
+        # Canonical labels only; normalize_sku_attributes maps XXXL→3XL, 5xl→5XL…
+        "size": {"type": "string", "enum": list(CANONICAL_SIZES)},
         "color": {"type": "string"},
         "material": {"type": "string"},
         "season": {"type": "string", "enum": ["SS", "FW", "AW", "Cruise", "Resort"]},

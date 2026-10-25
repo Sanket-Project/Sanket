@@ -13,9 +13,21 @@ from app.models.tenant import Tenant
 from app.routers.industry_router import ActiveIndustry, TenantId, UserId
 from app.schemas.product import SkuCreate, SkuOut, SkuUpdate
 from app.services import audit
+from app.services.industry_context import IndustryContext
 
 log = structlog.get_logger(__name__)
 router = APIRouter(prefix="/skus", tags=["skus"])
+
+
+def _checked_attributes(ctx: IndustryContext, attributes: dict[str, Any]) -> dict[str, Any]:
+    """Normalise industry attribute spellings, then refuse anything invalid (422)."""
+    normalized = ctx.normalize_sku_attributes(attributes)
+    errors = ctx.validate_sku_attributes(normalized)
+    if errors:
+        from app.core.exceptions import ValidationError
+
+        raise ValidationError(f"SKU attribute errors: {'; '.join(errors)}")
+    return normalized
 
 
 @router.get("", response_model=list[SkuOut])
@@ -56,11 +68,7 @@ async def create_sku(
     pid = uuid.UUID(product_id)
     industry = IndustryCode(ctx.code)
 
-    attr_errors = ctx.validate_sku_attributes(body.attributes)
-    if attr_errors:
-        from app.core.exceptions import ValidationError
-
-        raise ValidationError(f"SKU attribute errors: {'; '.join(attr_errors)}")
+    body = body.model_copy(update={"attributes": _checked_attributes(ctx, body.attributes)})
 
     async with db.session(str(tenant_id)) as session:
         tenant_row = await session.get(Tenant, tenant_id)
@@ -205,8 +213,14 @@ async def update_sku(
             "is_active": sku.is_active,
         }
         updates = body.model_dump(exclude_none=True)
+        if "attributes" in updates:
+            updates["attributes"] = _checked_attributes(ctx, updates["attributes"])
         for field, value in updates.items():
             setattr(sku, field, value)
+        # updated_at is set by the database on write; load it while the session
+        # is open, otherwise serialising the detached row raises after commit.
+        await session.flush()
+        await session.refresh(sku)
 
         await audit.record(
             session,
