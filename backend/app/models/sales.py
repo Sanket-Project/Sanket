@@ -34,6 +34,14 @@ class HistoricalSale(Base):
     returns: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     promo_flag: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     markdown_pct: Mapped[Decimal | None] = mapped_column(Numeric(5, 2))
+    # Availability during the period. NULL = unknown; False = stocked out
+    # (demand was censored), which is not the same as observed zero demand.
+    in_stock: Mapped[bool | None] = mapped_column(Boolean)
+    # Tenant-scoped identity (app.services.sales_identity) that makes replays
+    # of the same upload or push idempotent. NULL for sources that do not key.
+    record_key: Mapped[str | None] = mapped_column(Text)
+    # Store/warehouse the sale happened at, when the source says so.
+    location: Mapped[str | None] = mapped_column(Text)
     metadata_: Mapped[dict] = mapped_column("metadata", JSONB, nullable=False, default=dict)
 
     __mapper_args__ = {"primary_key": [id, sale_time]}

@@ -19,20 +19,20 @@ T = datetime(2026, 8, 24, tzinfo=UTC)
 
 
 def _base(**overrides):
-    args = dict(
-        source="upload",
-        mode="transaction",
-        sku_id=SKU,
-        sale_time=T,
-        channel="Boduppal",
-        region=None,
-        location=None,
-        units=5,
-        gross=Decimal("6000"),
-        net=Decimal("5900"),
-        order_id=None,
-        line_id=None,
-    )
+    args = {
+        "source": "upload",
+        "mode": "transaction",
+        "sku_id": SKU,
+        "sale_time": T,
+        "channel": "Boduppal",
+        "region": None,
+        "location": None,
+        "units": 5,
+        "gross": Decimal("6000"),
+        "net": Decimal("5900"),
+        "order_id": None,
+        "line_id": None,
+    }
     args.update(overrides)
     return si.base_key(**args)
 
