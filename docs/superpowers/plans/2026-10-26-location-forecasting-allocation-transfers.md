@@ -523,7 +523,7 @@ git commit -m "feat(locations): add tenant-isolated locations table"
   - `network_readiness(locations: list[Location]) -> NetworkReadiness`
   - `@dataclass(frozen=True) NetworkReadiness(allocation_ready: bool, transfers_ready: bool, missing: list[str])`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 """Locations are registered from data as unconfirmed; readiness lists what is missing (spec §3.2–§3.3)."""
@@ -607,12 +607,12 @@ def test_readiness_unconfirmed_blocks_everything():
     assert "No warehouse is defined" in r.missing
 ```
 
-- [ ] **Step 2: Run it and confirm it fails**
+- [x] **Step 2: Run it and confirm it fails**
 
 Run: `cd backend && uv run pytest tests/test_locations_service.py -v`
 Expected: FAIL with `ModuleNotFoundError: app.services.locations`.
 
-- [ ] **Step 3: Implement `app/services/locations.py`**
+- [x] **Step 3: Implement `app/services/locations.py`**
 
 ```python
 """Location identity, registration from imported data, and network readiness.
@@ -704,12 +704,12 @@ def network_readiness(locations: list[Location]) -> NetworkReadiness:
     return NetworkReadiness(allocation_ready, transfers_ready, missing)
 ```
 
-- [ ] **Step 4: Run the tests and confirm they pass**
+- [x] **Step 4: Run the tests and confirm they pass**
 
 Run: `cd backend && uv run pytest tests/test_locations_service.py -v`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/app/services/locations.py backend/tests/test_locations_service.py
