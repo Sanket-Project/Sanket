@@ -17,6 +17,7 @@ const api = vi.hoisted(() => ({
   generate: vi.fn(),
   decisions: vi.fn(),
   skus: vi.fn(),
+  locationForecast: vi.fn(),
 }));
 
 vi.mock("@/api/forecasts", () => ({
@@ -25,6 +26,7 @@ vi.mock("@/api/forecasts", () => ({
 }));
 vi.mock("@/api/decisions", () => ({ decisionsApi: { list: api.decisions } }));
 vi.mock("@/api/skus", () => ({ skusApi: { list: api.skus } }));
+vi.mock("@/api/locations", () => ({ locationsApi: { forecast: api.locationForecast } }));
 vi.mock("@/api/export", () => ({ exportApi: { forecastXlsx: vi.fn(), signalsCsv: vi.fn() } }));
 vi.mock("@/hooks/useWorkspaceIndustry", () => ({ useWorkspaceIndustry: () => "fashion" }));
 
@@ -62,6 +64,21 @@ const renderPage = () =>
 
 const axiosError = (status: number, detail: string) =>
   Object.assign(new Error(detail), { isAxiosError: true, response: { status, data: { detail } } });
+
+it("shows a selected SKU's location forecast and degraded warning", async () => {
+  api.generate.mockResolvedValue(response(2));
+  api.skus.mockResolvedValue(skuList(2));
+  api.decisions.mockResolvedValue({ decisions: [] });
+  api.locationForecast.mockResolvedValue({ run_id: "run-1", degraded: true, unassigned_share: 0.1,
+    locations: [{ location_id: "a", code: "alwal", name: "Alwal", p10: [1, 2], p50: [3, 4], p90: [5, 6] }], reason: null });
+  const user = userEvent.setup();
+  renderPage();
+  await screen.findByText("Kurti 1");
+  await user.selectOptions(screen.getByRole("combobox", { name: "Location forecast SKU" }), "sku-1");
+  expect(await screen.findByText("Alwal")).toBeInTheDocument();
+  expect(screen.getByText("Location split incomplete: 10% of sales have no location")).toBeInTheDocument();
+  expect(screen.getByTitle("P10 1 – P90 5")).toHaveTextContent("3");
+});
 
 describe("Forecasts page (audit F04, F08)", () => {
   beforeEach(() => {

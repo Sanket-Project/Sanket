@@ -27,7 +27,16 @@ export type LocationPatch = Partial<
   Pick<Location, "name" | "kind" | "parent_location_id" | "lead_time_days_from_parent" | "is_active">
 >;
 
+export interface LocationForecast {
+  run_id: string | null;
+  degraded: boolean;
+  unassigned_share: number | null;
+  locations: { location_id: string; code: string; name: string; p10: number[]; p50: number[]; p90: number[] }[];
+  reason: string | null;
+}
+
 export const locationsApi = {
+  forecast: (skuId: string) => apiClient.get<LocationForecast>("/locations/forecast", { params: { sku_id: skuId } }).then((r) => r.data),
   list: () => apiClient.get<LocationsResponse>("/locations").then((r) => r.data),
   update: (id: string, patch: LocationPatch) =>
     apiClient

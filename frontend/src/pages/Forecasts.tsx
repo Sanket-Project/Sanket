@@ -40,6 +40,7 @@ import { forecastsApi } from "@/api/forecasts";
 import { decisionsApi } from "@/api/decisions";
 import { exportApi } from "@/api/export";
 import { skusApi } from "@/api/skus";
+import { locationsApi } from "@/api/locations";
 import { Button } from "@/components/ui/Button";
 import { ForecastConfidencePanel } from "@/components/charts/ForecastConfidencePanel";
 import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
@@ -439,6 +440,28 @@ const SKU_LABELS: Record<string, string> = {
 // ─────────────────────────────────────────────────────────────────────────────
 // Main page
 // ─────────────────────────────────────────────────────────────────────────────
+function LocationForecastView({ skuId, runId }: { skuId: string; runId: string | undefined }) {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["location-forecast", skuId, runId], queryFn: () => locationsApi.forecast(skuId),
+  });
+  if (isLoading) return <p>Loading location forecast…</p>;
+  if (isError) return <p role="alert">Location forecast could not be loaded.</p>;
+  if (!data) return null;
+  return <div className="space-y-3">
+    {data.degraded && <p className="text-sm text-amber-700" role="status">
+      Location split incomplete: {data.unassigned_share == null ? "Unknown" : Math.round(data.unassigned_share * 100)}% of sales have no location
+    </p>}
+    {!data.locations.length ? <p>{data.reason}</p> : <div className="overflow-x-auto"><table className="w-full text-left text-sm">
+      <thead><tr><th className="p-2">Location</th>{Array.from({ length: Math.max(...data.locations.map((l) => l.p50.length)) }, (_, i) =>
+        <th key={i} className="p-2">Week {i + 1}</th>)}</tr></thead>
+      <tbody>{data.locations.map((loc) => <tr key={loc.location_id} className="border-t border-line">
+        <th scope="row" className="p-2">{loc.name}</th>{loc.p50.map((p50, i) =>
+          <td key={i} className="p-2 tabular-nums" title={`P10 ${loc.p10[i]} – P90 ${loc.p90[i]}`}>{p50.toLocaleString()}</td>)}
+      </tr>)}</tbody>
+    </table></div>}
+  </div>;
+}
+
 export const ForecastsPage = () => {
   const industry = useWorkspaceIndustry();
   const accent = industryAccent[industry];
@@ -451,6 +474,7 @@ export const ForecastsPage = () => {
   const [horizon, setHorizon] = useState(defaultHorizon);
   const [result, setResult] = useState<ForecastResponse | null>(null);
   const [page, setPage] = useState(0);
+  const [locationSku, setLocationSku] = useState("");
 
   // Fetch SKUs for mapping ID to code and name/description
   const { data: skus = [] } = useQuery({
@@ -724,6 +748,14 @@ export const ForecastsPage = () => {
           </div>
 
           {/* Per-SKU Charts */}
+          {!isIndicative && <div className="rounded-2xl border border-line bg-surface p-4 space-y-3">
+            <h2 className="font-heading font-semibold">By location</h2>
+            <select aria-label="Location forecast SKU" value={locationSku} onChange={(e) => setLocationSku(e.target.value)}
+              className="rounded-lg border border-line bg-surface px-3 py-2 text-sm">
+              <option value="">Choose SKU</option>{grouped.map(([id]) => <option key={id} value={id}>{skuLookup.get(id)?.code ?? id}</option>)}
+            </select>
+            {locationSku && <LocationForecastView skuId={locationSku} runId={result?.run_id} />}
+          </div>}
           <div>
             <div className="flex items-center gap-2 mb-4">
               <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800/60" />

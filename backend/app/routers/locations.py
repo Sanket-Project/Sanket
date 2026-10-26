@@ -9,9 +9,9 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from app.core.rbac import require_admin
-from app.models.enums import LocationKind
+from app.models.enums import IndustryCode, LocationKind
 from app.models.location import Location
-from app.routers.industry_router import TenantId
+from app.routers.industry_router import ActiveIndustry, TenantId
 from app.services.locations import load_locations, network_readiness, sync_locations
 
 router = APIRouter(prefix="/locations", tags=["locations"])
@@ -47,6 +47,36 @@ async def list_locations(request: Request, tenant_id: TenantId) -> dict[str, Any
         await sync_locations(session, tenant_id)
         locs = await load_locations(session, tenant_id)
     return {"locations": [_out(l) for l in locs], "network": _network(locs)}
+
+
+@router.get("/forecast")
+async def location_forecast(request: Request, tenant_id: TenantId, ctx: ActiveIndustry,
+                            sku_id: uuid.UUID) -> dict[str, Any]:
+    from datetime import UTC, datetime
+
+    from app.services.decision_builder import latest_completed_run
+    from app.services.location_forecast import location_bands
+    from app.services.planning_inputs import FORECAST_MAX_AGE_DAYS, is_run_fresh
+
+    now = datetime.now(UTC)
+    db = request.app.state.db
+    async with db.session(str(tenant_id)) as session:
+        run = await latest_completed_run(session, tenant_id, IndustryCode(ctx.code))
+        if run is None or not is_run_fresh(run, now):
+            return {"run_id": None, "degraded": False, "unassigned_share": None, "locations": [],
+                    "reason": f"No forecast from the last {FORECAST_MAX_AGE_DAYS} days"}
+        bands = await location_bands(session, tenant_id, run.id, now)
+        locs = {l.id: l for l in await load_locations(session, tenant_id)}
+    metrics = run.metrics or {}
+    rows = [
+        {"location_id": str(loc_id), "code": locs[loc_id].code, "name": locs[loc_id].name,
+         "p10": b.p10, "p50": b.p50, "p90": b.p90}
+        for (sid, loc_id), b in bands.items() if sid == sku_id and loc_id in locs
+    ]
+    return {"run_id": str(run.id), "degraded": bool(metrics.get("location_degraded")),
+            "unassigned_share": metrics.get("unassigned_share"),
+            "locations": sorted(rows, key=lambda r: r["code"]),
+            "reason": None if rows else "No location forecast for this SKU"}
 
 
 @router.patch("/{location_id}")

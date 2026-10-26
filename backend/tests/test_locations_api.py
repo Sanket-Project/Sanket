@@ -85,3 +85,46 @@ async def test_analyst_cannot_patch(client, signed_in_workspace, db_session):
     response = await client.patch(f'/api/v1/locations/{loc}', json={'kind': 'warehouse'},
         headers={'Authorization': f"Bearer {login.json()['access_token']}"})
     assert response.status_code == 403, response.text
+
+
+async def test_forecast_without_fresh_run_explains_gap(client, signed_in_workspace):
+    from app.services.planning_inputs import FORECAST_MAX_AGE_DAYS
+    _, headers = await signed_in_workspace()
+    response = await client.get(f'/api/v1/locations/forecast?sku_id={uuid.uuid4()}', headers=headers)
+    assert response.status_code == 200, response.text
+    assert response.json()['locations'] == []
+    assert response.json()['reason'] == f'No forecast from the last {FORECAST_MAX_AGE_DAYS} days'
+
+
+async def test_location_forecast_p50_reconciles(client, signed_in_workspace, db_session):
+    from datetime import UTC, datetime, timedelta
+    from app.core.calendar import current_week_start, week_start_instant
+    from app.services.location_forecast import split_run_by_location
+
+    tenant, headers = await signed_in_workspace()
+    pid, sku, run = uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
+    now = datetime.now(UTC)
+    week = current_week_start(now)
+    await db_session.execute(text("INSERT INTO products (id, tenant_id, industry, name, category, status) "
+        "VALUES (:p, :t, 'fashion', 'K', 'Kurtis', 'active')"), {'p': str(pid), 't': str(tenant)})
+    await db_session.execute(text("INSERT INTO skus (id, tenant_id, product_id, industry, sku_code) "
+        "VALUES (:s, :t, :p, 'fashion', 'K-M')"), {'s': str(sku), 't': str(tenant), 'p': str(pid)})
+    await db_session.execute(text("INSERT INTO forecast_runs (id, tenant_id, industry, model_stack, "
+        "horizon_weeks, granularity, status, completed_at, metrics) VALUES (:r, :t, 'fashion', "
+        "ARRAY['test'], 4, 'weekly', 'completed', :n, '{}'::jsonb)"),
+        {'r': str(run), 't': str(tenant), 'n': now})
+    await db_session.execute(text("INSERT INTO forecast_results (tenant_id, run_id, sku_id, forecast_date, "
+        "p10, p50, p90, model_name) VALUES (:t, :r, :s, :w, 20, 40, 60, 'test')"),
+        {'t': str(tenant), 'r': str(run), 's': str(sku), 'w': week})
+    for i in range(1, 13):
+        for loc, units in [('Boduppal', 30), ('Alwal', 10)]:
+            await db_session.execute(text("INSERT INTO historical_sales (tenant_id, sku_id, industry, "
+                "sale_time, channel, units_sold, location) VALUES (:t, :s, 'fashion', :w, 'store', :u, :l)"),
+                {'t': str(tenant), 's': str(sku), 'w': week_start_instant(week - timedelta(weeks=i)), 'u': units, 'l': loc})
+    await split_run_by_location(db_session, tenant_id=tenant, industry='fashion', run_id=run, now=now)
+    await db_session.commit()
+    response = await client.get(f'/api/v1/locations/forecast?sku_id={sku}', headers=headers)
+    assert response.status_code == 200, response.text
+    rows = response.json()['locations']
+    assert len(rows) == 2
+    assert sum(r['p50'][0] for r in rows) == 40

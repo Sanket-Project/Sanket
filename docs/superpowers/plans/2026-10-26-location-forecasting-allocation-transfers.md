@@ -2567,11 +2567,11 @@ git commit -m "feat(ui): location filter on inventory and route-grouped transfer
   - `GET /api/v1/locations/forecast?sku_id=<uuid>`, returning `{"run_id": str | null, "degraded": bool, "unassigned_share": float | null, "locations": [{"location_id", "code", "name", "p10": [..], "p50": [..], "p90": [..]}], "reason": str | null}`.
   - `locationsApi.forecast(skuId: string)`.
 
-- [ ] **Step 1: Write the failing backend test.**
+- [x] **Step 1: Write the failing backend test.**
   - With the fixture from Task 8 split, the endpoint returns two locations whose `p50[0]` values sum to the SKU p50.
   - With no fresh run, it returns `locations == []` and the reason `"No forecast from the last 14 days"`. Use the actual `FORECAST_MAX_AGE_DAYS` value in the message.
 
-- [ ] **Step 2: Run it and confirm it fails.** Then implement:
+- [x] **Step 2: Run it and confirm it fails.** Then implement:
 
 ```python
 @router.get("/forecast")
@@ -2606,13 +2606,13 @@ async def location_forecast(request: Request, tenant_id: TenantId, ctx: ActiveIn
 
 Import `ActiveIndustry` from `app.routers.industry_router` and `IndustryCode` from `app.models.enums`. Declare this route **before** `@router.patch("/{location_id}")`. It uses GET, so it can't collide with the PATCH, but keep it above anyway for readability.
 
-- [ ] **Step 3: Frontend.** Add `forecast: (skuId) => apiClient.get(`/locations/forecast`, { params: { sku_id: skuId } }).then((r) => r.data)` to `locationsApi`. On `Forecasts.tsx`, when a SKU is selected, render a "By location" table with one row per location and the weekly p50 values (p10–p90 on hover/title). Show the `degraded` badge text "Location split incomplete: {pct}% of sales have no location", or show `reason` when `locations` is empty. Write the Vitest case first, watch it fail, then implement.
+- [x] **Step 3: Frontend.** Add `forecast: (skuId) => apiClient.get(`/locations/forecast`, { params: { sku_id: skuId } }).then((r) => r.data)` to `locationsApi`. On `Forecasts.tsx`, when a SKU is selected, render a "By location" table with one row per location and the weekly p50 values (p10–p90 on hover/title). Show the `degraded` badge text "Location split incomplete: {pct}% of sales have no location", or show `reason` when `locations` is empty. Write the Vitest case first, watch it fail, then implement.
 
-- [ ] **Step 4: Run the tests and confirm they pass**
+- [x] **Step 4: Run the tests and confirm they pass**
 
 Run: `cd backend && uv run pytest tests/test_locations_api.py -v` and `cd frontend && npx vitest run src/pages/Forecasts.test.tsx && npm run typecheck`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/app/routers/locations.py backend/tests/test_locations_api.py frontend/src/api/locations.ts frontend/src/pages/Forecasts.tsx frontend/src/pages/Forecasts.test.tsx
