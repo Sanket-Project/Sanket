@@ -80,6 +80,7 @@ describe("Forecasts page (audit F04, F08)", () => {
     expect(screen.getByText(/has not been shown to beat simple baselines on every SKU/)).toBeInTheDocument();
     const text = document.body.textContent ?? "";
     expect(text).not.toMatch(/\bTFT\b|DeepAR|Prophet|Live ensemble|12% above|sell-through projected/);
+    expect(text).not.toMatch(/Buy now|No purchase needed|Maintain current levels|no urgent action needed|stockout risk is elevated|Place purchase orders/i);
   });
 
   it("pages through more SKUs than fit on one screen", async () => {

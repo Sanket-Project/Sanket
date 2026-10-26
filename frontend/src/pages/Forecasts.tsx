@@ -172,9 +172,9 @@ function QuantileGuide({ accent }: { accent: string }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Buy recommendation
+// Forecast shape summary (ordering also requires inventory and lead times).
 // ─────────────────────────────────────────────────────────────────────────────
-function getBuyRecommendation(rows: ForecastRow[]) {
+function getForecastSummary(rows: ForecastRow[]) {
   const p50s = rows.map((r) => r.p50);
   const p90s = rows.map((r) => r.p90);
   const p10s = rows.map((r) => r.p10);
@@ -189,33 +189,33 @@ function getBuyRecommendation(rows: ForecastRow[]) {
 
   if (rising && wideband) {
     return {
-      badge: "Buy now — and stock up",
+      badge: "Projected demand rising · wide range",
       badgeCls: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/40",
       dotCls: "bg-amber-400",
-      message: "Demand is rising and the forecast band is wide — stockout risk is elevated. Increase safety stock above normal reorder levels.",
+      message: "The median forecast rises across this window, with a wide forecast range. Review stock coverage and lead times in Decisions before choosing an order.",
     };
   }
   if (rising) {
     return {
-      badge: "Yes — buy now",
+      badge: "Projected demand rising",
       badgeCls: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/40",
       dotCls: "bg-emerald-500",
-      message: "Demand is trending up over the forecast window. Place purchase orders now to cover projected growth.",
+      message: "The median forecast rises across this window. Review stock coverage and lead times in Decisions before choosing an order.",
     };
   }
   if (falling) {
     return {
-      badge: "No purchase needed",
+      badge: "Projected demand falling",
       badgeCls: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/40",
       dotCls: "bg-rose-500",
-      message: "Demand is projected to decline. Hold current stock and avoid over-ordering to prevent excess inventory.",
+      message: "The median forecast falls across this window. Ordering needs also depend on stock coverage and lead times; review Decisions.",
     };
   }
   return {
-    badge: "Maintain current levels",
+    badge: "Projected median broadly flat",
     badgeCls: "bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700/40",
     dotCls: "bg-slate-400",
-    message: "Demand is stable. Replenish at your normal reorder point — no urgent action needed.",
+    message: "The median forecast changes little across this window. This does not establish whether stock is sufficient; review coverage and lead times in Decisions.",
   };
 }
 
@@ -253,7 +253,7 @@ function SkuForecastChart({
   const trendColor = isUp ? "text-emerald-600 dark:text-emerald-400" : trend < 0 ? "text-rose-500 dark:text-rose-400" : "text-slate-400";
 
   const displayHeight = expanded ? 300 : 200;
-  const rec = getBuyRecommendation(rows);
+  const rec = getForecastSummary(rows);
 
   return (
     <div className="glass rounded-2xl overflow-hidden card-hover-premium">
