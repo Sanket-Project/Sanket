@@ -101,3 +101,19 @@ async def test_score_endpoint_reports_evidence_and_withholds_volatility(client, 
     assert body["evidence"]["status"] in {"unavailable", "insufficient", "stale", "available"}
     if body["evidence"]["status"] != "available":
         assert body["volatility"] is None
+
+
+def test_hybrid_trend_withholds_agreement_without_evidence():
+    """The Hybrid page showed 'They mostly agree' from a zero-sample trend."""
+    from types import SimpleNamespace
+
+    from app.models.enums import IndustryCode
+    from app.services.hybrid_forecast import _trend_out
+
+    empty = SimpleNamespace(score=0.0, volatility=0.0, sample_count=0, by_kind={}, drivers=[],
+                            demand_factors=[], horizon_days=90)
+    out = _trend_out(empty, IndustryCode.fashion, records=[], now=NOW)
+
+    assert out.volatility is None
+    assert out.evidence["status"] == "unavailable"
+    assert out.evidence["agreement_reportable"] is False

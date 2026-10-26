@@ -49,6 +49,7 @@ from app.schemas.trends import (
 from app.services.industry_config import filter_signals_by_focus, resolve_effective_config
 from app.services.industry_context import get_industry_context
 from app.services.inventory import InventorySnapshot, current_levels, resolve_on_hand
+from app.services.signal_evidence import signal_evidence
 
 log = structlog.get_logger(__name__)
 
@@ -426,17 +427,7 @@ async def compute_hybrid_forecast(
         industry=industry,
         horizon_weeks=horizon_weeks,
         generated_at=datetime.now(UTC),
-        trend=TrendScoreOut(
-            industry=industry,
-            score=result.trend.score,
-            volatility=result.trend.volatility,
-            sample_count=result.trend.sample_count,
-            by_kind=result.trend.by_kind,
-            drivers=result.trend.drivers,
-            demand_factors=getattr(result.trend, "demand_factors", []),
-            horizon_days=result.trend.horizon_days,
-            as_of=datetime.now(UTC),
-        ),
+        trend=_trend_out(result.trend, industry, records=signal_records, now=datetime.now(UTC)),
         explanation=result.explanation,
         scenarios=scenarios,
         series=series_payload,
@@ -455,6 +446,35 @@ async def compute_hybrid_forecast(
         beta=float(result.params.beta),
         scenarios={k: v.to_dict() for k, v in result.scenarios.items()},
         drivers=result.trend.drivers,
+    )
+
+
+def _trend_out(trend: Any, industry: IndustryCode, *, records: list, now: datetime) -> TrendScoreOut:
+    """The hybrid run's trend, with its evidence and no agreement from too little.
+
+    A trend computed from zero samples has volatility 0, which the UI used to
+    show as "sources mostly agree"; agreement is only reported when the
+    evidence supports it (app.services.signal_evidence).
+    """
+    evidence = signal_evidence(
+        captured_at=[r.captured_at for r in records],
+        sources=[r.source for r in records],
+        industry=industry.value,
+        now=now,
+        lookback_hours=24 * 7,
+        last_run=None,
+    )
+    return TrendScoreOut(
+        industry=industry,
+        score=trend.score,
+        volatility=trend.volatility if evidence["agreement_reportable"] else None,
+        evidence=evidence,
+        sample_count=trend.sample_count,
+        by_kind=trend.by_kind,
+        drivers=trend.drivers,
+        demand_factors=getattr(trend, "demand_factors", []),
+        horizon_days=trend.horizon_days,
+        as_of=now,
     )
 
 
