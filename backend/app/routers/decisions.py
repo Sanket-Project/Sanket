@@ -20,6 +20,7 @@ from app.core.exceptions import AuthenticationError
 from app.core.rbac import require_admin
 from app.models.enums import DecisionStatus, IndustryCode
 from app.models.product import Sku
+from app.models.location import Location
 from app.models.recommendation import Recommendation
 from app.models.tenant import Tenant
 from app.routers.industry_router import ActiveIndustry, TenantId, UserId
@@ -83,7 +84,7 @@ async def list_decisions(
     ctx: ActiveIndustry,
     tenant_id: TenantId,
     status: str = Query(default="open", pattern="^(open|accepted|dismissed|expired|all)$"),
-    kind: str | None = Query(default=None, pattern="^(purchase_order|excess_stock|safety_stock_update)$"),
+    kind: str | None = Query(default=None, pattern="^(purchase_order|excess_stock|safety_stock_update|allocation|transfer)$"),
     limit: int = Query(default=100, ge=1, le=500),
 ) -> dict[str, Any]:
     """The decision queue for the active industry, most urgent first."""
@@ -116,9 +117,17 @@ async def list_decisions(
             await session.execute(stmt.order_by(Recommendation.created_at.desc()).limit(limit))
         ).scalars().all()
         codes = await _sku_codes(session, tenant_id, [r.sku_id for r in rows])
+        location_ids = {lid for r in rows for lid in (r.location_id, r.source_location_id) if lid}
+        location_codes = dict((await session.execute(
+            select(Location.id, Location.code).where(
+                Location.tenant_id == tenant_id, Location.id.in_(location_ids))
+        )).all()) if location_ids else {}
 
     urgency_rank = {"critical": 0, "high": 1, "normal": 2, "low": 3}
     items = [_serialize(r, now, sku_code=codes.get(r.sku_id)) for r in rows]
+    for item, rec in zip(items, rows, strict=True):
+        item["location_code"] = location_codes.get(rec.location_id)
+        item["source_location_code"] = location_codes.get(rec.source_location_id)
     items.sort(key=lambda i: (urgency_rank.get(i["urgency"], 9), -i["confidence"]))
 
     return {

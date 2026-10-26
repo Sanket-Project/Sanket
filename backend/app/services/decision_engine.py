@@ -36,7 +36,7 @@ from typing import Literal
 
 from app.services.forecast_confidence import ConfidenceScore
 
-DecisionKind = Literal["purchase_order", "excess_stock", "safety_stock_update"]
+DecisionKind = Literal["purchase_order", "excess_stock", "safety_stock_update", "allocation", "transfer"]
 Urgency = Literal["critical", "high", "normal", "low"]
 
 #: p90 − p10 spans this many standard deviations for a normal distribution.
@@ -105,6 +105,10 @@ class PolicyConfig:
     #: Below this confidence score a recommendation is still produced but marked
     #: advisory — the user should look at the data before acting on it.
     min_confidence_to_act: int = 60
+    min_allocation_units: int = 1
+    min_transfer_units: int = 2
+    transfer_lead_time_days: int = 2
+    transfer_cost_per_unit: float | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -133,6 +137,8 @@ class Decision:
     reasons: list[Reason] = field(default_factory=list)
     economics: dict = field(default_factory=dict)
     inputs: dict = field(default_factory=dict)
+    location_id: str | None = None
+    source_location_id: str | None = None
 
     def as_dict(self) -> dict:
         return {
@@ -148,6 +154,8 @@ class Decision:
             "reasons": [r.as_dict() for r in self.reasons],
             "economics": self.economics,
             "inputs": self.inputs,
+            "location_id": self.location_id,
+            "source_location_id": self.source_location_id,
         }
 
 

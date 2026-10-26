@@ -51,6 +51,12 @@ class Recommendation(UUIDPrimaryKey, TimestampMixin, Base):
         UUID(as_uuid=True), ForeignKey("skus.id", ondelete="CASCADE"), nullable=False
     )
     run_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    location_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("locations.id", ondelete="SET NULL")
+    )
+    source_location_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("locations.id", ondelete="SET NULL")
+    )
 
     kind: Mapped[DecisionKind] = mapped_column(
         SAEnum(DecisionKind, name="decision_kind", create_constraint=False, native_enum=False),

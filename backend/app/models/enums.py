@@ -121,6 +121,8 @@ class DecisionKind(enum.StrEnum):
     purchase_order = "purchase_order"
     excess_stock = "excess_stock"
     safety_stock_update = "safety_stock_update"
+    allocation = "allocation"
+    transfer = "transfer"
 
 
 class DecisionStatus(enum.StrEnum):

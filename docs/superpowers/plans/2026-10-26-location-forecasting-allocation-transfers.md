@@ -1908,15 +1908,15 @@ git commit -m "feat(planning): DC-to-store allocation with equal-cover rationing
   - `PolicyConfig` gains `min_allocation_units: int = 1`, `min_transfer_units: int = 2`, `transfer_lead_time_days: int = 2`, `transfer_cost_per_unit: float | None = None`, all read by `load_policy`.
   - Serialised decisions gain `location_id`, `source_location_id`, `location_code` and `source_location_code`.
 
-- [ ] **Step 1: Write the failing tests.** All four are required.
+- [x] **Step 1: Write the failing tests.** All four are required.
   - **(a)** `persist_decisions` with two `allocation` decisions for the same SKU and different `location_id` both persist as `open`. This proves the unique index includes the location.
   - **(b)** Two `purchase_order` decisions for the same SKU still violate the open-unique index (`IntegrityError`), so the old guarantee is kept.
   - **(c)** `load_policy({"decisions": {"min_transfer_units": 5, "transfer_cost_per_unit": 12.5}})` returns those values; `load_policy(None).transfer_cost_per_unit is None`.
   - **(d)** The ROI service ignores allocation and transfer rows. Persist one accepted `allocation` and call the ROI summary function used by `GET /roi` (find it with `grep -n "_is_po" backend/app/services/roi.py`). Assert that the working-capital figures are unchanged from an empty ledger.
 
-- [ ] **Step 2: Run them and confirm they fail.**
+- [x] **Step 2: Run them and confirm they fail.**
 
-- [ ] **Step 3: Write the migration**
+- [x] **Step 3: Write the migration**
 
 ```python
 """Location-aware decisions: allocation / transfer kinds, origin + destination.
@@ -1988,7 +1988,7 @@ def downgrade() -> None:
     op.drop_column("recommendations", "location_id")
 ```
 
-- [ ] **Step 4: Update the code**
+- [x] **Step 4: Update the code**
   - `enums.py` `DecisionKind`: add `allocation = "allocation"` and `transfer = "transfer"`.
   - `recommendation.py`: add `location_id` and `source_location_id` as `Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("locations.id", ondelete="SET NULL"))`.
   - `decision_engine.Decision`: append `location_id: str | None = None` and `source_location_id: str | None = None` after `inputs`, and add both keys to `as_dict()`.
@@ -1998,12 +1998,12 @@ def downgrade() -> None:
   - `decision_builder.serialize` and `routers/decisions._serialize`: add `location_id` and `source_location_id` (as strings or `None`). In `routers/decisions.list_decisions`, load `{id: code}` for the referenced location ids and add `location_code` and `source_location_code`.
   - `roi.py`: `_is_po` already restricts to `purchase_order`. Change nothing there; the test from step 1 (d) proves it.
 
-- [ ] **Step 5: Run the tests and confirm they pass**
+- [x] **Step 5: Run the tests and confirm they pass**
 
 Run: `cd backend && uv run pytest tests/test_location_decisions_ledger.py tests/test_decision_engine.py tests/test_decision_expiry.py tests/test_roi_tiers.py -v`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/alembic/versions/0027_recommendation_locations.py backend/app/models backend/app/services/decision_engine.py backend/app/services/decision_builder.py backend/app/routers/decisions.py backend/tests/test_location_decisions_ledger.py

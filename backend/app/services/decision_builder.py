@@ -86,6 +86,11 @@ def load_policy(tenant_settings: dict | None) -> PolicyConfig:
             min_confidence_to_act=int(
                 raw.get("min_confidence_to_act", base.min_confidence_to_act)
             ),
+            min_allocation_units=int(raw.get("min_allocation_units", base.min_allocation_units)),
+            min_transfer_units=int(raw.get("min_transfer_units", base.min_transfer_units)),
+            transfer_lead_time_days=int(raw.get("transfer_lead_time_days", base.transfer_lead_time_days)),
+            transfer_cost_per_unit=(None if raw.get("transfer_cost_per_unit") is None
+                                    else float(raw["transfer_cost_per_unit"])),
         )
     except (TypeError, ValueError):
         log.warning("decisions.policy.invalid", raw=raw)
@@ -498,6 +503,8 @@ async def persist_decisions(
             sku_id=sku_uuid,
             run_id=run_id,
             kind=d.kind,
+            location_id=uuid.UUID(d.location_id) if d.location_id else None,
+            source_location_id=uuid.UUID(d.source_location_id) if d.source_location_id else None,
             status=DecisionStatus.open,
             urgency=d.urgency,
             headline=d.headline,
@@ -578,6 +585,8 @@ def serialize(rec: Recommendation, *, sku_code: str | None = None) -> dict[str, 
         "sku_id": str(rec.sku_id),
         "sku_code": sku_code,
         "kind": str(rec.kind),
+        "location_id": str(rec.location_id) if rec.location_id else None,
+        "source_location_id": str(rec.source_location_id) if rec.source_location_id else None,
         "status": str(rec.status),
         "urgency": str(rec.urgency),
         "headline": rec.headline,
