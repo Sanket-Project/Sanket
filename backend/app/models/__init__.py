@@ -10,7 +10,7 @@ from app.models.industry import Industry, IndustryProfile
 from app.models.integration import IntegrationConnection
 from app.models.inventory import InventoryLevel
 from app.models.invite import Invite
-from app.models.location import Location
+from app.models.location import Location, LocationForecastResult
 from app.models.pharma import PharmaBatch
 from app.models.product import Product, Sku
 from app.models.recommendation import Recommendation
@@ -35,6 +35,7 @@ __all__ = [
     "Invite",
     "InventoryLevel",
     "Location",
+    "LocationForecastResult",
     "PharmaBatch",
     "Plan",
     "Product",

@@ -1118,7 +1118,7 @@ git commit -m "feat(forecast): share_split_v1 maths for per-location forecasts"
 **Interfaces:**
 - Produces: ORM `LocationForecastResult` with fields `id, tenant_id, run_id, sku_id, location_id, forecast_date, p10, p50, p90, share, share_basis, method, created_at`, primary key `(id, forecast_date)`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 """location_forecast_results: partitioned, RLS-isolated, maintained (spec §4.3)."""
@@ -1158,9 +1158,9 @@ async def test_rls_isolated(db_session, app_role_db, make_tenant):
     assert n == 1
 ```
 
-- [ ] **Step 2: Run it and confirm it fails.**
+- [x] **Step 2: Run it and confirm it fails.**
 
-- [ ] **Step 3: Implement the migration**
+- [x] **Step 3: Implement the migration**
 
 ```python
 """Add location_forecast_results — per-(SKU, location) forecasts (location spec §4.3).
@@ -1268,7 +1268,7 @@ Before relying on this:
 - Open `0024_trend_signal_partitions.py` and confirm `_maintain_fn(include_trend_signals=True)` produces exactly the three-table body copied above. If it differs, copy its body verbatim and only append the location block.
 - Partition children inherit RLS from a partitioned parent only for queries through the parent. `test_force_rls_enabled_on_all_tenant_tables` filters `relkind = 'r'`. If it flags the new child partitions, follow whatever `forecast_results` partitions do (check `sql/003_rls_policies.sql` and migration 0013) and apply the same.
 
-- [ ] **Step 4: Add the model** to `app/models/location.py`. Extend the imports with `from datetime import date, datetime`, `from decimal import Decimal`, `from sqlalchemy import Date, DateTime, Numeric, func`.
+- [x] **Step 4: Add the model** to `app/models/location.py`. Extend the imports with `from datetime import date, datetime`, `from decimal import Decimal`, `from sqlalchemy import Date, DateTime, Numeric, func`.
 
 ```python
 class LocationForecastResult(Base):
@@ -1297,12 +1297,12 @@ class LocationForecastResult(Base):
     __mapper_args__ = {"primary_key": [id, forecast_date]}
 ```
 
-- [ ] **Step 5: Run the tests and confirm they pass**
+- [x] **Step 5: Run the tests and confirm they pass**
 
 Run: `cd backend && uv run pytest tests/test_location_forecast_schema.py tests/test_partitions.py tests/test_rls_isolation.py -v`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/alembic/versions/0026_location_forecast_results.py backend/app/models/location.py backend/tests/test_location_forecast_schema.py
