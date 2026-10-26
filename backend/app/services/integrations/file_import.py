@@ -1097,7 +1097,8 @@ async def import_rows(
                 stats["rows_imported"] += 1
 
         else:  # sales
-            default_currency = _clean_currency(currency) or await _workspace_currency(
+            upload_currency = _clean_currency(currency)
+            default_currency = upload_currency or await _workspace_currency(
                 session, tenant_id
             )
             created_without_currency: set[str] = set()
@@ -1113,12 +1114,15 @@ async def import_rows(
             accepted = []
             for m in mapped:
                 sku_currency = currencies.get(m["sku_id"])
-                if m.get("_currency") and sku_currency and m["_currency"] != sku_currency:
+                # A file-level choice declares the source currency just like a
+                # row column. Workspace defaults only price newly created SKUs.
+                declared_currency = m.get("_currency") or upload_currency
+                if declared_currency and sku_currency and declared_currency != sku_currency:
                     stats["rows_skipped"] += 1
                     if len(stats["errors"]) < 50:
                         stats["errors"].append(
                             f"Row {m['_row']}: SKU {m['_sku_code']} is priced in {sku_currency}, "
-                            f"but this row is in {m['_currency']} — revenue in different "
+                            f"but this row is in {declared_currency} — revenue in different "
                             "currencies cannot be combined"
                         )
                     continue

@@ -126,6 +126,32 @@ async def test_a_row_in_another_currency_than_its_sku_is_rejected(app_role_db, m
     assert any("USD" in e and "INR" in e for e in stats["errors"])
 
 
+async def test_explicit_upload_currency_must_match_an_existing_sku(app_role_db, make_tenant):
+    tenant = await make_tenant()
+    await _import(app_role_db, tenant, "sku,date,quantity,price\nEXISTING-USD,2026-08-24,2,9", currency="USD")
+    stats = await _import(
+        app_role_db, tenant, "sku,date,quantity,price\nEXISTING-USD,2026-08-31,1,500", currency="INR"
+    )
+    assert stats["rows_inserted"] == 0
+    assert stats["rows_skipped"] == 1
+    assert any("USD" in e and "INR" in e for e in stats["errors"])
+    assert await _currency_of(app_role_db, tenant, "EXISTING-USD") == "USD"
+
+
+async def test_workspace_default_does_not_redeclare_existing_sku_currency(app_role_db, db_session, make_tenant):
+    tenant = await make_tenant()
+    await _import(app_role_db, tenant, "sku,date,quantity,price\nEXISTING-USD,2026-08-24,2,9", currency="USD")
+    await db_session.execute(
+        text("UPDATE tenants SET settings = jsonb_set(settings, '{currency}', '\"INR\"') WHERE id = :t"),
+        {"t": str(tenant)},
+    )
+    await db_session.commit()
+    stats = await _import(app_role_db, tenant, "sku,date,quantity,price\nEXISTING-USD,2026-08-31,1,9")
+    assert stats["rows_inserted"] == 1
+    assert stats["errors"] == []
+    assert await _currency_of(app_role_db, tenant, "EXISTING-USD") == "USD"
+
+
 async def test_sku_created_without_a_currency_takes_the_workspace_currency(
     client, db_session, signed_in_workspace
 ):
