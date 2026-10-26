@@ -18,8 +18,86 @@ import httpx
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def tie_services_to_launcher() -> None:
+    """Make every process started from here die with this launcher, however it ends.
+
+    Windows keeps children running when their parent dies, and closing the console
+    window ends this process without running ``finally`` — which left the services
+    holding their ports. A kill-on-close job object covers that, and Task Manager too.
+    """
+    if os.name != "nt":
+        return
+    import ctypes
+    from ctypes import wintypes
+
+    class BasicLimits(ctypes.Structure):
+        _fields_ = [
+            ("per_process_user_time", ctypes.c_int64),
+            ("per_job_user_time", ctypes.c_int64),
+            ("limit_flags", wintypes.DWORD),
+            ("minimum_working_set", ctypes.c_size_t),
+            ("maximum_working_set", ctypes.c_size_t),
+            ("active_process_limit", wintypes.DWORD),
+            ("affinity", ctypes.c_size_t),
+            ("priority_class", wintypes.DWORD),
+            ("scheduling_class", wintypes.DWORD),
+        ]
+
+    class ExtendedLimits(ctypes.Structure):
+        _fields_ = [
+            ("basic", BasicLimits),
+            ("io_counters", ctypes.c_uint64 * 6),
+            ("process_memory_limit", ctypes.c_size_t),
+            ("job_memory_limit", ctypes.c_size_t),
+            ("peak_process_memory", ctypes.c_size_t),
+            ("peak_job_memory", ctypes.c_size_t),
+        ]
+
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel32.CreateJobObjectW.restype = wintypes.HANDLE
+    kernel32.GetCurrentProcess.restype = wintypes.HANDLE
+    kernel32.SetInformationJobObject.argtypes = [
+        wintypes.HANDLE,
+        ctypes.c_int,
+        ctypes.c_void_p,
+        wintypes.DWORD,
+    ]
+    kernel32.AssignProcessToJobObject.argtypes = [wintypes.HANDLE, wintypes.HANDLE]
+    limits = ExtendedLimits()
+    # Kill on close; breakaway is allowed only for start_outside_launcher.
+    limits.basic.limit_flags = 0x2000 | 0x800
+    job = kernel32.CreateJobObjectW(None, None)
+    if not (
+        job
+        and kernel32.SetInformationJobObject(job, 9, ctypes.byref(limits), ctypes.sizeof(limits))
+        and kernel32.AssignProcessToJobObject(job, kernel32.GetCurrentProcess())
+    ):
+        print(
+            f"Warning: services will outlive this window (Windows error {ctypes.get_last_error()}). "
+            "Stop them with Ctrl+C or scripts\\stop-dev.bat.",
+            file=sys.stderr,
+        )
+    # The job handle stays open on purpose; Windows closes it when this process ends.
+
+
+def start_outside_launcher(command: list[str]) -> subprocess.Popen:
+    """Start a process that must outlive the launcher, such as the user's browser."""
+    flags = (
+        subprocess.CREATE_BREAKAWAY_FROM_JOB | subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
+    )
+    return subprocess.Popen(command, creationflags=flags)  # noqa: S603 — fixed local argv
+
+
 def open_local_app(port: int) -> None:
-    webbrowser.open(f"http://127.0.0.1:{port}/")
+    url = f"http://127.0.0.1:{port}/"
+    if os.name != "nt":
+        webbrowser.open(url)
+        return
+    try:
+        # A browser launched from inside the job would close along with the launcher.
+        start_outside_launcher(["cmd.exe", "/d", "/c", "start", "", url])
+    except OSError:
+        webbrowser.open(url)
 
 
 def require_free_ports(ports: list[int]) -> None:
@@ -29,7 +107,9 @@ def require_free_ports(ports: list[int]) -> None:
                 probe.bind(("127.0.0.1", port))
             except OSError as exc:
                 raise RuntimeError(
-                    f"Port {port} is occupied. Stop its owner or select another port; no process was killed."
+                    f"Port {port} is occupied. If SANKET is already running, use that window or run "
+                    "scripts\\stop-dev.bat; otherwise stop the port's owner or select another port. "
+                    "No process was killed."
                 ) from exc
 
 
@@ -86,6 +166,7 @@ def main() -> int:
     children = []
     handles = []
     try:
+        tie_services_to_launcher()
         from app.config import get_settings
 
         settings = get_settings()
