@@ -18,7 +18,7 @@ import clsx from "clsx";
 import { inventoryApi, validateInventoryRows, downloadInventoryTemplate } from "@/api/inventory";
 import { exportApi } from "@/api/export";
 import toast from "react-hot-toast";
-import type { InventoryLevel, InventoryUpsertItem } from "@/api/inventory";
+import type { InventoryLevel, InventoryUpsertItem, SkuCoverage } from "@/api/inventory";
 import { skusApi } from "@/api/skus";
 import { parseFile } from "@/utils/csvImport";
 import type { ParsedRow } from "@/utils/csvImport";
@@ -38,25 +38,31 @@ const INVENTORY_OPTIONAL_COLUMNS = ["inbound_units", "reserved_units", "location
 
 type CoverageStatus = "healthy" | "low" | "critical" | "overstock" | "unknown";
 
-function classifyCoverage(level: InventoryLevel): CoverageStatus {
-  const avail = level.available_units;
-  // Without a demand rate we classify on absolute on-hand alone,
-  // using inbound as a buffer signal.
-  if (avail === 0 && level.inbound_units === 0) return "critical";
-  if (avail === 0) return "low";
-  if (avail < 20) return "low"; // arbitrary low-stock threshold for display
-  return "healthy";
-}
-
-function classifyCoverageWithContext(
-  level: InventoryLevel,
-  context?: { daysOfCover: number | null; leadTimeDays: number },
-): CoverageStatus {
-  if (typeof context?.daysOfCover === "number") {
-    if (context.daysOfCover <= context.leadTimeDays) return "critical";
-    if (context.daysOfCover <= context.leadTimeDays * 1.5) return "low";
+/**
+ * What a stock row shows, straight from /inventory/coverage: the location's
+ * own cover when its sales support one, otherwise the SKU-wide (pooled) cover
+ * labelled as such, otherwise unknown with the reason. Never a fixed unit
+ * threshold, and never dependent on whether a recommendation exists.
+ */
+function rowCoverage(sku: SkuCoverage | undefined, location: string) {
+  if (!sku) {
+    return { status: "unknown" as CoverageStatus, label: "Cover unknown", reason: "No coverage data for this SKU yet." };
   }
-  return classifyCoverage(level);
+  const loc = sku.locations.find((l) => l.location === location);
+  if (loc?.status && loc.cover_days != null) {
+    return { status: loc.status as CoverageStatus, label: `Store cover ${loc.cover_days} days`, reason: loc.reason };
+  }
+  if (sku.sku_wide.status !== "unknown" && sku.sku_wide.cover_days != null) {
+    return {
+      status: sku.sku_wide.status as CoverageStatus,
+      label: `SKU-wide cover ${sku.sku_wide.cover_days} days (all locations)`,
+      reason: loc?.reason ?? sku.sku_wide.reason,
+    };
+  }
+  if (sku.sku_wide.status === "healthy") {
+    return { status: "healthy" as CoverageStatus, label: "No sales expected", reason: sku.sku_wide.reason };
+  }
+  return { status: "unknown" as CoverageStatus, label: "Cover unknown", reason: sku.sku_wide.reason };
 }
 
 const STATUS_CONFIG: Record<CoverageStatus, { label: string; classes: string; dot: string }> = {
@@ -64,7 +70,7 @@ const STATUS_CONFIG: Record<CoverageStatus, { label: string; classes: string; do
   low:       { label: "Low",        classes: "bg-amber-50 text-amber-700 border-amber-200",        dot: "bg-amber-400"   },
   critical:  { label: "Critical",   classes: "bg-red-50 text-red-700 border-red-200",              dot: "bg-red-500"     },
   overstock: { label: "Overstock",  classes: "bg-blue-50 text-blue-700 border-blue-200",           dot: "bg-blue-400"    },
-  unknown:   { label: "No data",    classes: "bg-slate-50 text-slate-500 border-slate-200",        dot: "bg-slate-300"   },
+  unknown:   { label: "Unknown",    classes: "bg-slate-50 text-slate-500 border-slate-200",        dot: "bg-slate-300"   },
 };
 
 const StatusBadge = ({ status }: { status: CoverageStatus }) => {
@@ -123,6 +129,16 @@ export const InventoryPage = () => {
     staleTime: 5 * 60_000,
   });
 
+  const { data: coverageData } = useQuery({
+    queryKey: ["inventory-coverage", industry],
+    queryFn: () => inventoryApi.coverage(),
+    staleTime: 60_000,
+  });
+  const coverageBySku = useMemo(
+    () => new Map((coverageData?.skus ?? []).map((s) => [s.sku_id, s])),
+    [coverageData?.skus],
+  );
+
   const { data: decisionData } = useQuery({
     queryKey: ["decisions", industry, "open", "inventory-context"],
     queryFn: () => decisionsApi.list({ status: "open", limit: 500 }),
@@ -162,15 +178,9 @@ export const InventoryPage = () => {
   const totalOnHand = levels.reduce((s, l) => s + l.on_hand_units, 0);
   const totalInbound = levels.reduce((s, l) => s + l.inbound_units, 0);
   const totalAvailable = levels.reduce((s, l) => s + l.available_units, 0);
-  const contextualStatus = (level: InventoryLevel) => {
-    const decision = decisionBySku.get(level.sku_id);
-    return classifyCoverageWithContext(level, decision ? {
-      daysOfCover: decision.inputs.days_of_cover,
-      leadTimeDays: decision.inputs.lead_time_days,
-    } : undefined);
-  };
-  const nCritical = levels.filter((level) => contextualStatus(level) === "critical").length;
-  const nLow = levels.filter((level) => contextualStatus(level) === "low").length;
+  const statusOf = (level: InventoryLevel) => rowCoverage(coverageBySku.get(level.sku_id), level.location).status;
+  const nCritical = levels.filter((level) => statusOf(level) === "critical").length;
+  const nLow = levels.filter((level) => statusOf(level) === "low").length;
   const nEstimate = levels.filter((l) => l.source === "seed" || l.source === "fallback").length;
   const hasEstimates = nEstimate > 0;
 
@@ -356,11 +366,8 @@ export const InventoryPage = () => {
               <tbody className="divide-y divide-slate-50">
                 {filtered.map((lvl) => {
                   const decision = decisionBySku.get(lvl.sku_id);
-                  const status = classifyCoverageWithContext(lvl, decision ? {
-                    daysOfCover: decision.inputs.days_of_cover,
-                    leadTimeDays: decision.inputs.lead_time_days,
-                  } : undefined);
-                  const cover = decision?.inputs.days_of_cover;
+                  const cov = rowCoverage(coverageBySku.get(lvl.sku_id), lvl.location);
+                  const status = cov.status;
                   const img = getProductImage(lvl.sku_id, industry, images, lvl.sku_code);
                   return (
                     <tr key={`${lvl.sku_id}-${lvl.location}`} className="hover:bg-slate-50/60 transition-colors">
@@ -381,9 +388,9 @@ export const InventoryPage = () => {
                         </span>
                       </td>
                       <td className="py-3 px-3 font-mono text-sm text-emerald-600">{lvl.inbound_units > 0 ? `+${fmtUnits(lvl.inbound_units)}` : "—"}</td>
-                      <td className="py-3 px-3"><div className="flex min-w-[130px] flex-col items-start gap-1"><StatusBadge status={status} /><span className="text-xs text-content-muted">{typeof cover === "number" ? `${cover.toFixed(0)} days cover` : "Cover pending"}</span></div></td>
+                      <td className="py-3 px-3"><div className="flex min-w-[130px] flex-col items-start gap-1"><StatusBadge status={status} /><span className="text-xs text-content-muted">{cov.label}</span></div></td>
                       <td className="max-w-[320px] py-3 px-3 text-xs leading-5 text-content-muted">
-                        {decision?.reasons[0]?.text ?? (status === "healthy" ? "Stock is above the immediate risk threshold." : "Available stock is below the operating buffer.")}
+                        {cov.reason || decision?.reasons[0]?.text}
                       </td>
                       <td className="py-3 px-3">
                         {decision ? <Link to="/workspace/decisions" className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-semibold text-[var(--accent)]">{decision.headline}<ArrowRight size={12} /></Link> : <span className="text-xs text-content-subtle">No action</span>}
@@ -401,11 +408,12 @@ export const InventoryPage = () => {
           <div className="mt-4 flex flex-wrap items-center gap-4 pt-4 border-t border-slate-100">
             <div className="flex items-center gap-1.5 text-xs text-slate-500">
               <Info size={11} className="text-slate-400" />
-              <span className="font-semibold text-slate-600">Available</span> = on-hand − reserved
+              <span className="font-semibold text-slate-600">Available</span> = on-hand − reserved ·
+              Critical = cover at or below lead time · Low = within 1.5× lead time · Unknown = no demand basis or stock older than 30 days
             </div>
             <div className="flex items-center gap-3 ml-auto">
               {Object.entries(STATUS_CONFIG)
-                .filter(([k]) => k !== "unknown" && k !== "overstock")
+                .filter(([k]) => k !== "overstock")
                 .map(([key, cfg]) => (
                   <div key={key} className="flex items-center gap-1.5 text-xs text-slate-500">
                     <span className={clsx("h-2 w-2 rounded-full", cfg.dot)} />

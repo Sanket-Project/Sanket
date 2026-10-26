@@ -39,7 +39,54 @@ export interface InventoryUpsertResponse {
 
 // ── API calls ──────────────────────────────────────────────────────────────
 
+export type CoverageStatus = "healthy" | "low" | "critical" | "unknown";
+
+/** One location of a SKU. cover_days/status are null unless that location has its own sales. */
+export interface LocationCoverage {
+  location: string;
+  available_units: number;
+  on_hand_units: number;
+  inbound_units: number;
+  as_of: string | null;
+  stock_stale: boolean;
+  location_demand: { weekly_units: number | null; weeks_observed: number; basis: "location_sales" | null };
+  cover_days: number | null;
+  status: CoverageStatus | null;
+  reason: string;
+}
+
+export interface SkuCoverage {
+  sku_id: string;
+  sku_code: string;
+  lead_time_days: number;
+  lead_time_assumed: boolean;
+  demand: { basis: "forecast" | "trailing_actuals" | null; weekly_units: number | null; run_id: string | null; reason: string };
+  /** Pooled across every location. */
+  sku_wide: { available_units: number; inbound_units: number; cover_days: number | null; status: CoverageStatus; reason: string };
+  locations: LocationCoverage[];
+}
+
+export interface CoverageResponse {
+  industry: string;
+  as_of: string;
+  calendar: string;
+  policy: {
+    forecast_max_age_days: number;
+    forecast_weeks: number;
+    trailing_weeks: number;
+    min_weeks: number;
+    stale_stock_days: number;
+    low_multiplier: number;
+    transfer_suggestions: boolean;
+  };
+  skus: SkuCoverage[];
+}
+
 export const inventoryApi = {
+  /** Days of cover per SKU (pooled) and per location, from demand and lead time. */
+  coverage: (): Promise<CoverageResponse> =>
+    apiClient.get("/inventory/coverage").then((r) => r.data),
+
   /** Fetch current stock positions for the active industry */
   levels: (limit = 500): Promise<InventoryLevelsResponse> =>
     apiClient
