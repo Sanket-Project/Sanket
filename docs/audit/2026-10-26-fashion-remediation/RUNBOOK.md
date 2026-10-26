@@ -18,6 +18,17 @@ Wait for `http://127.0.0.1:8011/health`, `http://127.0.0.1:8002/health`, and `ht
 
 The seed creates an explicitly labelled synthetic workspace, seven fashion SKUs (one unsold, size 5XL), a test subscription, and stock at two locations. It derives upload CSVs by splitting each original synthetic total between two locations, preserving total demand. It does not insert sales. The UI test imports those files. Account details live in `e2e/fixture.json` and are local test credentials. The seed validates the explicit port, loopback address, application username and actual database role flags before writes; it refuses another database port or a privileged role.
 
+To prove the new-row path again without changing an existing tenant, seed a new unique slug before running Playwright:
+
+```powershell
+$env:DATABASE_URL='postgresql+asyncpg://sanket_app:remediation-local@127.0.0.1:55433/sanket'
+Push-Location backend
+& .venv/Scripts/python.exe -m scripts.seed_remediation_fixture --db-port 55433 --slug synthetic-remediation-fresh
+Pop-Location
+```
+
+Choose a new slug if that one has already been used. This updates `e2e/fixture.json` for the next journey and preserves existing tenants. On a clean tenant, verify the saved evidence has `training.rows_inserted = 1064`, `heldout.rows_inserted = 96`, and the second training upload has `rows_inserted = 0`, `rows_unchanged = 1064`, and `rows_updated = 0`. The doubled file row count comes from splitting each original total across two stores; portfolio demand is unchanged.
+
 Run the journey:
 
 ```powershell
