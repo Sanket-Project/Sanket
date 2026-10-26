@@ -2217,7 +2217,7 @@ git commit -m "feat(decisions): DC-to-store allocation recommendations"
   - `@dataclass(frozen=True, slots=True) Transfer(source: str, destination: str, units: int, deficit: float, excess: float)`
   - `match_transfers(sites: list[TransferSite], *, transfer_lead_days: int, moq: int = 1, min_units: int = 2) -> list[Transfer]`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```python
 """Store↔store transfers (spec §6). Pure."""
@@ -2285,9 +2285,9 @@ def test_invariants(raw):
     assert not ({t.source for t in out} & {t.destination for t in out})
 ```
 
-- [ ] **Step 2: Run them and confirm they fail.**
+- [x] **Step 2: Run them and confirm they fail.**
 
-- [ ] **Step 3: Implement `app/services/transfers.py`**
+- [x] **Step 3: Implement `app/services/transfers.py`**
 
 ```python
 """Store↔store transfers (location spec §6). Pure.
@@ -2360,12 +2360,12 @@ def match_transfers(
 
 Check `test_moves_excess_to_a_store_running_out` by hand: deficit = 20 − 2 = 18; cover = 1 day < 5; excess = 60 − 15 = 45; qty = 18. ✓
 
-- [ ] **Step 4: Run the tests and confirm they pass**
+- [x] **Step 4: Run the tests and confirm they pass**
 
 Run: `cd backend && uv run pytest tests/test_transfers.py -v`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/app/services/transfers.py backend/tests/test_transfers.py
