@@ -1,0 +1,119 @@
+============================= test session starts =============================
+platform win32 -- Python 3.14.3, pytest-9.1.0, pluggy-1.6.0
+rootdir: C:\Users\admin\Desktop\Prisma\backend
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.14.0, Faker-40.23.0, asyncio-1.4.0, cov-7.1.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 517 items
+
+tests\test_accept_invite.py ...........                                  [  2%]
+tests\test_auth.py ....................                                  [  5%]
+tests\test_billing.py .......................                            [ 10%]
+tests\test_cache.py ......                                               [ 11%]
+tests\test_calendar_convention.py ....                                   [ 12%]
+tests\test_connector_catalog.py .....                                    [ 13%]
+tests\test_decision_engine.py ..........................                 [ 18%]
+tests\test_dedupe_sales.py ..........                                    [ 20%]
+tests\test_distributed_lock.py .....                                     [ 21%]
+tests\test_entitlement.py ..................                             [ 24%]
+tests\test_external_signals.py ......                                    [ 25%]
+tests\test_fashion_sizes.py .......................                      [ 30%]
+tests\test_file_import.py .............................................  [ 39%]
+tests\test_financial_currency.py ...                                     [ 39%]
+tests\test_firebase_auth.py .........                                    [ 41%]
+tests\test_forecast_accuracy.py ............                             [ 43%]
+tests\test_forecast_backtest.py .....                                    [ 44%]
+tests\test_forecast_gate.py .....                                        [ 45%]
+tests\test_health.py ...                                                 [ 46%]
+tests\test_idempotency.py .....                                          [ 47%]
+tests\test_industry_config.py ..........                                 [ 49%]
+tests\test_industry_context.py .........                                 [ 50%]
+tests\test_industry_migration.py .........                               [ 52%]
+tests\test_industry_scope.py ......................                      [ 56%]
+tests\test_integrations_hub_db.py .......                                [ 58%]
+tests\test_inventory_coverage.py ..........                              [ 60%]
+tests\test_inventory_service.py ........                                 [ 61%]
+tests\test_ml_loader_sql.py ..                                           [ 62%]
+tests\test_partitions.py ........                                        [ 63%]
+tests\test_pharma_gxp.py ...                                             [ 64%]
+tests\test_rate_limit.py ........                                        [ 65%]
+tests\test_rbac.py ...                                                   [ 66%]
+tests\test_remediation_seed.py .....                                     [ 67%]
+tests\test_rls_isolation.py ....                                         [ 68%]
+tests\test_roi_tiers.py .....                                            [ 69%]
+tests\test_sales_currency.py .........                                   [ 70%]
+tests\test_sales_identity.py ..........                                  [ 72%]
+tests\test_sales_import_replay.py ............                           [ 75%]
+tests\test_sales_record_identity_migration.py ..                         [ 75%]
+tests\test_scenario_simulator.py ...................                     [ 79%]
+tests\test_shopify_sync.py ..........                                    [ 81%]
+tests\test_sql_source.py .....................                           [ 85%]
+tests\test_suite_isolation.py .                                          [ 85%]
+tests\test_trend_evidence.py ........                                    [ 86%]
+tests\test_upload_api_replay.py ...                                      [ 87%]
+tests\test_validation_errors.py ....                                     [ 88%]
+tests\test_webhook_delivery.py ......                                    [ 89%]
+tests\test_webhook_replay.py ......                                      [ 90%]
+tests\test_whatsapp_digest.py .............................              [ 96%]
+tests\test_woocommerce_sync.py ........                                  [ 97%]
+tests\test_zero_demand_import.py ............                            [100%]
+
+============================== warnings summary ===============================
+tests/test_accept_invite.py::test_accepted_invite_inherits_the_workspace_industry
+  C:\Users\admin\Desktop\Prisma\backend\app\schemas\demo_request.py:18: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class DemoRequestOut(BaseModel):
+
+tests/test_accept_invite.py: 10 warnings
+tests/test_auth.py: 18 warnings
+tests/test_calendar_convention.py: 1 warning
+tests/test_dedupe_sales.py: 2 warnings
+tests/test_entitlement.py: 17 warnings
+tests/test_fashion_sizes.py: 2 warnings
+tests/test_financial_currency.py: 3 warnings
+tests/test_forecast_accuracy.py: 1 warning
+tests/test_forecast_backtest.py: 5 warnings
+tests/test_forecast_gate.py: 5 warnings
+tests/test_health.py: 1 warning
+tests/test_industry_scope.py: 15 warnings
+tests/test_integrations_hub_db.py: 2 warnings
+tests/test_inventory_coverage.py: 2 warnings
+tests/test_rbac.py: 2 warnings
+tests/test_roi_tiers.py: 1 warning
+tests/test_sales_currency.py: 3 warnings
+tests/test_sql_source.py: 3 warnings
+tests/test_suite_isolation.py: 1 warning
+tests/test_trend_evidence.py: 1 warning
+tests/test_upload_api_replay.py: 3 warnings
+tests/test_validation_errors.py: 3 warnings
+tests/test_webhook_delivery.py: 1 warning
+  C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\alembic\config.py:612: DeprecationWarning: No path_separator found in configuration; falling back to legacy splitting on spaces, commas, and colons for prepend_sys_path.  Consider adding path_separator=os to Alembic config.
+    util.warn_deprecated(
+
+tests/test_accept_invite.py::test_accepted_invite_inherits_the_workspace_industry
+  C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\passlib\handlers\argon2.py:716: DeprecationWarning: Accessing argon2.__version__ is deprecated and will be removed in a future release. Use importlib.metadata directly to query for argon2-cffi's packaging metadata.
+    _argon2_cffi.__version__, max_version)
+
+tests/test_auth.py::test_sandbox_session_missing_account_returns_503
+  C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\pydantic_core\core_schema.py:4350: SAWarning: The garbage collector is trying to clean up non-checked-in connection <AdaptedConnection <asyncpg.connection.Connection object at 0x00000263465974D0>>, which will be terminated.  Please ensure that SQLAlchemy pooled connections are returned to the pool explicitly, either by calling ``close()`` or by using appropriate context managers to manage their lifecycle.
+    return {k: v for k, v in kwargs.items() if v is not None}
+
+tests/test_billing.py::test_zero_cost_plan_without_razorpay_id_is_incomplete_not_active
+tests/test_billing.py::test_trial_length_comes_from_plan_not_caller
+tests/test_billing.py::test_second_trial_is_not_granted
+tests/test_billing.py::test_notifications_are_buffered_until_flush
+  C:\Users\admin\Desktop\Prisma\backend\app\services\billing\subscription_manager.py:194: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    session.add(sub)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_fashion_sizes.py::test_create_and_edit_skus_with_extended_sizes
+  C:\Users\admin\Desktop\Prisma\backend\app\routers\skus.py:37: StarletteDeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    raise ValidationError(f"SKU attribute errors: {'; '.join(errors)}")
+
+tests/test_industry_scope.py::test_assert_industry_refuses_an_unknown_code
+  C:\Users\admin\Desktop\Prisma\backend\app\core\industry_scope.py:100: StarletteDeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    raise ValidationError(f"Unknown industry code: {requested}") from None
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================ 517 passed, 111 warnings in 400.96s (0:06:40) ================

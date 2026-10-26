@@ -1,0 +1,29 @@
+2026-10-26 09:46:25 [warning  ] config.secrets.weak            detail='METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset � third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key' note='Must be fixed before production deploy'
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 0001, Baseline migration � applies sql/001_extensions.sql + 002_schema.sql + 003_rls_policies.sql
+INFO  [alembic.runtime.migration] Running upgrade 0001 -> 0002, Add rss, pinterest, tiktok, instagram to trend_signal_source enum.
+INFO  [alembic.runtime.migration] Running upgrade 0002 -> 0003, Add weather and competitor_price to trend_signal_source enum.
+INFO  [alembic.runtime.migration] Running upgrade 0003 -> 0004, Add analytics improvement tables: forecast_accuracy_metrics, supplier_lead_time_log,
+pos_ingest, data_quality_issues.
+INFO  [alembic.runtime.migration] Running upgrade 0004 -> 0005, Add firebase_uid to users and relax password_hash for Firebase auth.
+INFO  [alembic.runtime.migration] Running upgrade 0005 -> 0006, Add nullable in_stock availability flag to historical_sales.
+INFO  [alembic.runtime.migration] Running upgrade 0006 -> 0007, Add inventory_levels � real warehouse stock feed for the insight layer.
+INFO  [alembic.runtime.migration] Running upgrade 0007 -> 0008, Make hybrid_forecast_runs an async job record.
+INFO  [alembic.runtime.migration] Running upgrade 0008 -> 0009, Add fda and logistics to trend_signal_source enum.
+INFO  [alembic.runtime.migration] Running upgrade 0009 -> 0010, Rename Stripe billing columns to Razorpay.
+INFO  [alembic.runtime.migration] Running upgrade 0010 -> 0011, Reconcile the schema and harden tenant isolation.
+INFO  [alembic.runtime.migration] Running upgrade 0011 -> 0012, Seed the agrocenter + hardware industry definitions.
+INFO  [alembic.runtime.migration] Running upgrade 0012 -> 64b00842a1e6, add_bypass_rls_to_policies
+INFO  [alembic.runtime.migration] Running upgrade 64b00842a1e6 -> 0013, Automate range-partition creation for historical_sales / forecast_results.
+INFO  [alembic.runtime.migration] Running upgrade 0013 -> 0014, Index audit: covering index for the sales-analytics aggregate hot path.
+INFO  [alembic.runtime.migration] Running upgrade 0014 -> 0015, Add invites � pending team-member invitations for onboarding's team step.
+INFO  [alembic.runtime.migration] Running upgrade 0015 -> 0016, Grant SELECT on alembic_version to the least-privilege app role.
+INFO  [alembic.runtime.migration] Running upgrade 0016 -> 0017, Billing P0 guards: plan-owned trial length + one-live-subscription-per-tenant.
+INFO  [alembic.runtime.migration] Running upgrade 0017 -> 0018, Seed the least-privilege account used by the public sandbox CTA.
+INFO  [alembic.runtime.migration] Running upgrade 0018 -> 0019, Add recommendations � the persisted decision ledger behind the ROI dashboard.
+INFO  [alembic.runtime.migration] Running upgrade 0019 -> 0020, Industry-scoped workspaces: one authoritative industry per tenant.
+INFO  [alembic.runtime.migration] Running upgrade 0020 -> 0021, Grant UPDATE on plans to sanket_app role for plan synchronization.
+INFO  [alembic.runtime.migration] Running upgrade 0021 -> 0022, Sales record identity: make re-imports idempotent without deleting anything.
+INFO  [alembic.runtime.migration] Running upgrade 0022 -> 0023, Narrow, tenant-checked write paths for the append-only sales ledger.
+INFO  [alembic.runtime.migration] Running upgrade 0023 -> 0024, Rolling monthly partitions for trend_signals.

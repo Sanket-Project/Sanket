@@ -501,8 +501,8 @@ def test_label_preserved(): assert FASHION.normalize_sku_attributes({"size": "xx
 
 **Files:** Modify `frontend/src/api/integrations.ts`, `frontend/src/pages/Integrations.tsx`, `frontend/src/pages/onboarding/StepData.tsx`, `frontend/src/pages/ForecastAccuracy.tsx`, `frontend/src/api/forecastAccuracy.ts`, `frontend/src/api/forecasts.ts` (`backtest`); Test `frontend/src/pages/ForecastAccuracy.test.tsx`, `frontend/src/pages/Integrations.test.tsx` (append).
 
-- [ ] **Step 1: Failing tests** — upload result "0 new · 459 already imported · 0 corrected"; "Weekly/daily totals (corrections replace)" option sends `identity=period`; accuracy page shows "Production accuracy" and separately "Backtest (cutoff 31 Aug 2026)" with exclusion reasons; backtest form posts a Monday cutoff.
-- [ ] **Steps 2–4**, **Step 5: Commit** `feat(ui): replay-aware upload results and date-matched accuracy sections (F01, F02)`
+- [x] **Step 1: Failing tests** — upload result "0 new · 459 already imported · 0 corrected"; "Weekly/daily totals (corrections replace)" option sends `identity=period`; accuracy page shows "Production accuracy" and separately "Backtest (cutoff 31 Aug 2026)" with exclusion reasons; backtest form posts a Monday cutoff.
+- [x] **Steps 2–4**, **Step 5: Commit** — `db8528b`; verification recorded in `docs/audit/2026-10-26-fashion-remediation/task24/RESULTS.md`.
 
 ---
 
@@ -514,23 +514,23 @@ def test_label_preserved(): assert FASHION.normalize_sku_attributes({"size": "xx
 
 **Interfaces — Produces:** `load_fixture(training_csv, heldout_csv) -> pd.DataFrame` (unique_id, ds Monday, y, explicit zero weeks); `folds(panel, cutoffs, horizon) -> list[Fold]` asserting `train.ds.max() < cutoff <= test.ds.min()`; `evaluate(panel, models, val_cutoffs, test_cutoff, horizon) -> dict`; CLI `python -m benchmarks.rolling_origin --out <dir>`.
 
-- [ ] **Step 1: Failing tests** — leakage assertion fires when a fold's train window overlaps test; fold dates are Mondays; WAPE/bias/coverage math on a hand-computed panel; routing selected from validation folds only (a model that wins only on the test fold is never chosen); omitted coverage counts SKUs with < 8 weeks at a cutoff.
-- [ ] **Step 2–4:** implement with models: Chronos (seed 25102026, `num_samples` default), last value, MA(4), seasonal naive(52) with omission when < 52 weeks, Croston-SBA (statsforecast), ADIDA (repo). Run CLI with the real Chronos model on CPU; write `results.json` + `results.md`.
-- [ ] **Step 5: Commit** `feat(ml): reproducible rolling-origin evaluation with frozen cutoffs and leakage checks`
-- [ ] **Step 6 (conditional):** if a routing rule beats Chronos on validation **and** test, implement it in `zero_shot.py` behind the same tests (separate task, separate commit); else document the limitation in the forecast UI copy and report.
+- [x] **Step 1: Failing tests** — leakage assertion, Monday dates, hand-computed metrics, validation-only routing, short-history omission, complete horizons and matching routing denominators. Ten tests pass after review corrections.
+- [x] **Step 2–4:** all six real models evaluated on CPU; results and immutable model/version/fixture metadata saved in the evaluation directory. Repeated metrics match exactly on this host.
+- [x] **Step 5: Commit** — `02f1d61`.
+- [x] **Step 6 (conditional):** routing improved validation but failed held-out comparison (13.22% versus Chronos 7.45% WAPE). Production routing unchanged; limitation disclosed in UI and report.
 
 ### Task 26: Configurable E2E stack and the full-journey spec
 
 **Files:** Modify `frontend/playwright.config.ts` (`E2E_BASE_URL`, `E2E_SKIP_WEBSERVER`), `frontend/vite.config.ts` (`VITE_PROXY_TARGET`); create `frontend/e2e/fashion-remediation.spec.ts` (runs only when `E2E_REMEDIATION=1`), `backend/scripts/seed_remediation_fixture.py` (refuses any port other than an explicit `--db-port`, labels data synthetic), `docs/audit/2026-10-26-fashion-remediation/start-remediation-stack.ps1`, `RUNBOOK.md`.
 
-- [ ] **Step 1:** write the spec: login → upload training CSV → replay (assert "0 new") → upload held-out actuals → Forecasts generate (assert source, 6 SKUs, omitted unsold SKU with reason) → backtest at 2026-08-31 → Accuracy shows date-matched backtest WAPE and 48 points → Inventory (two locations, distinct store cover) → Decisions refresh + accept one → Scenario preset → export forecast.xlsx (assert week columns) → screenshots to evidence dir.
-- [ ] **Step 2:** run against the isolated stack → iterate until green with real services.
-- [ ] **Step 3: Commit** `test(e2e): isolated fashion remediation journey`
+- [x] **Step 1:** real-service opt-in spec covers the complete specified journey, independent date/SKU WAPE calculation, and every XLSX Monday/Sunday pair.
+- [x] **Step 2:** clean-tenant run passed (1 test, 1.1m): 1,064 training inserts, 96 held-out inserts, 0 new on replay. Screenshots and evidence saved.
+- [x] **Step 3: Commit** — `e4ca770`, with clean-tenant runbook note `2cca2ae`. Includes minimal root-cause fixes for stale Vite config selection and hidden modal accessibility ancestry.
 
 ### Task 27: Verification, review and report
 
-- [ ] Run all six commands; record exact counts/exit codes/warnings.
-- [ ] Migrations: fresh DB (`55433`) and a disposable restore of `pg_dump` from the audit DB (read-only dump).
-- [ ] RLS neighbours: `tests/test_rls_isolation.py`, `test_industry_scope.py`, `test_entitlement.py`, `test_rbac.py` within the full run.
-- [ ] `superpowers:requesting-code-review`; address findings.
-- [ ] Write `docs/audit/2026-10-26-fashion-remediation/REPORT.md` + `verification-summary.json`.
+- [x] All six commands passed; 149 frontend, 517 backend and 56 ML tests. Exact counts, warnings and exit codes recorded.
+- [x] Fresh DB `55433`, read-only populated current-audit dump/restore on `55434`, and recreated synthetic legacy `0021` dump/restore/upgrade to `0024` passed. Original historical audit DB/dump unavailable; this limitation is explicit in the report.
+- [x] RLS/industry/entitlement/RBAC neighbours included and passed in the full backend run.
+- [x] Manual requesting-code-review workflow with independent focused reviewer; addressed benchmark, currency, latest-forecast/ROI, E2E and UI evidence findings. No remaining focused-review blockers.
+- [x] `REPORT.md` and `verification-summary.json` written with final evidence and remaining external prerequisites.

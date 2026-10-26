@@ -45,3 +45,22 @@ Without `E2E_REMEDIATION=1`, the remediation test is skipped. It never targets t
 Artifacts are saved in `e2e/`: screenshots, `journey-evidence.json`, and `forecast.xlsx`. The downloaded workbook must contain explicit Monday-start and Sunday-end columns. API/ML/frontend logs and `fresh-migration.log` are beside this runbook. Chronos runs on CPU with 100 samples and the configured `amazon/chronos-t5-small` checkpoint.
 
 To stop, identify the API/ML/Vite PIDs bound to the isolated service ports and stop only those processes; then stop `sanket-remediation-db` and `sanket-remediation-redis`. Preserve the containers and evidence for review. No deployment, messages, payments, or real purchase orders are part of this workflow.
+
+## Rolling-origin evaluation
+
+From the repository root, with the ML environment installed:
+
+```powershell
+Set-Location backend/ml
+$env:ML_CHRONOS_REPO='amazon/chronos-t5-small'
+$env:ML_DEVICE='cpu'
+& .venv/Scripts/python.exe -m benchmarks.rolling_origin --out ../../docs/audit/2026-10-26-fashion-remediation/evaluation
+```
+
+The harness fixes 100 samples, seed 25102026, four validation cutoffs and one held-out test cutoff. It reads the two original synthetic CSVs without modifying them. Results record the actual resolved model revision, fixture hashes, dependency versions and preprocessing settings. Compare those provenance fields before comparing runs on different environments; the recorded two runs were identical on this CPU host.
+
+## Restore verification
+
+`restore/verify-current-restore.ps1` makes a read-only dump from the settled synthetic database on 55433 and restores into an **empty** `sanket` database in the separate `sanket-remediation-restore-db` container on 55434. That container uses PostgreSQL 16/pgvector, administrative password `remediation-restore-local`, and an existing `sanket_app` login with the same local test password, NOSUPERUSER and NOBYPASSRLS. The script refuses a populated target, checks migration head, reconciles counts/totals and verifies scoped, unscoped and foreign-context reads through the app role. The binary dump remains local; its SHA is in the JSON evidence.
+
+The independent `restore/verify_legacy_upgrade.py` uses two other disposable databases in that same container. Its preconditions and evidence are documented in `restore/LEGACY-VERIFICATION.md`. It verifies a recreated synthetic 0021→0024 upgrade, not the unavailable original historical audit database. Preserve existing verification databases and use the saved evidence instead of overwriting them.

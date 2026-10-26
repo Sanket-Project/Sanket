@@ -1,0 +1,98 @@
+
+> sanket-frontend@0.1.0 build
+> tsc -b && vite build --config vite.config.ts
+
+vite v5.4.21 building for production...
+transforming...
+✓ 3471 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                     2.50 kB │ gzip:   0.98 kB
+dist/assets/LandingPage-BH9doAUb.css               23.12 kB │ gzip:   4.65 kB
+dist/assets/Legal-Q9zTpJ7Z.css                     34.72 kB │ gzip:   6.78 kB
+dist/assets/index-DKMbh-5-.css                    114.18 kB │ gzip:  19.08 kB
+dist/assets/use-reduced-motion-arr6JC4v.js          0.18 kB │ gzip:   0.16 kB
+dist/assets/dataQuality-r8G8audF.js                 0.20 kB │ gzip:   0.17 kB
+dist/assets/minus-D0JIP985.js                       0.29 kB │ gzip:   0.24 kB
+dist/assets/loader-circle-BMxRat22.js               0.31 kB │ gzip:   0.26 kB
+dist/assets/forecasts-YZWtZ9so.js                   0.34 kB │ gzip:   0.21 kB
+dist/assets/notifications-CCF6QziO.js               0.35 kB │ gzip:   0.19 kB
+dist/assets/salesAnalytics-DDsQ56l-.js              0.36 kB │ gzip:   0.23 kB
+dist/assets/circle-x-VDpJTdsw.js                    0.38 kB │ gzip:   0.28 kB
+dist/assets/trending-down-DsRJn5pN.js               0.38 kB │ gzip:   0.28 kB
+dist/assets/dollar-sign-BTlqOmvZ.js                 0.39 kB │ gzip:   0.29 kB
+dist/assets/globe-B_-UEwq0.js                       0.41 kB │ gzip:   0.29 kB
+dist/assets/database-CdHlldvE.js                    0.41 kB │ gzip:   0.30 kB
+dist/assets/circle-alert-C3pQ1L9-.js                0.42 kB │ gzip:   0.29 kB
+dist/assets/zap-CixJK5r8.js                         0.43 kB │ gzip:   0.31 kB
+dist/assets/ConfirmDialog-GhLSlQ_l.js               0.45 kB │ gzip:   0.29 kB
+dist/assets/receipt-hrfqy0ML.js                     0.46 kB │ gzip:   0.31 kB
+dist/assets/list-DaM-ZrTH.js                        0.47 kB │ gzip:   0.29 kB
+dist/assets/Spinner-f110eg7b.js                     0.48 kB │ gzip:   0.30 kB
+dist/assets/refresh-cw-D2cM0e-m.js                  0.49 kB │ gzip:   0.32 kB
+dist/assets/tag-CBhQ6ugu.js                         0.50 kB │ gzip:   0.35 kB
+dist/assets/save-BPG6Q7-2.js                        0.50 kB │ gzip:   0.33 kB
+dist/assets/webhook-C-sdNnHH.js                     0.52 kB │ gzip:   0.37 kB
+dist/assets/layers-C9tW_SHz.js                      0.53 kB │ gzip:   0.34 kB
+dist/assets/file-spreadsheet-DA87KBhm.js            0.55 kB │ gzip:   0.33 kB
+dist/assets/building-2-CUJ88rkz.js                  0.61 kB │ gzip:   0.35 kB
+dist/assets/EmptyState-1jfKwLW7.js                  0.66 kB │ gzip:   0.39 kB
+dist/assets/uploadSummary-B8NGvCfr.js               0.71 kB │ gzip:   0.47 kB
+dist/assets/Card-0p9TF56V.js                        0.82 kB │ gzip:   0.47 kB
+dist/assets/wheat-CBg1rSPC.js                       1.05 kB │ gzip:   0.44 kB
+dist/assets/export-D4z7BUXT.js                      1.07 kB │ gzip:   0.43 kB
+dist/assets/truck-49WrMgzS.js                       1.09 kB │ gzip:   0.51 kB
+dist/assets/useWebSocket-uIVCZMOQ.js                1.12 kB │ gzip:   0.64 kB
+dist/assets/useFormattedCurrency-iycY7yOh.js        1.14 kB │ gzip:   0.65 kB
+dist/assets/integrations-BqoY8NEx.js                1.19 kB │ gzip:   0.47 kB
+dist/assets/products-HRn3_t-f.js                    1.21 kB │ gzip:   0.67 kB
+dist/assets/NotFound-ByY-0ftV.js                    1.30 kB │ gzip:   0.65 kB
+dist/assets/Table-BqxaVel8.js                       1.30 kB │ gzip:   0.67 kB
+dist/assets/Modal-BLgyjNK0.js                       2.16 kB │ gzip:   1.10 kB
+dist/assets/skus-Bq6hWNva.js                        2.22 kB │ gzip:   0.97 kB
+dist/assets/KPICard-BHV3mKJJ.js                     2.42 kB │ gzip:   1.17 kB
+dist/assets/productImages-C504pHsD.js               2.57 kB │ gzip:   1.03 kB
+dist/assets/AcceptInvite-Dc8WQsFw.js                2.85 kB │ gzip:   1.24 kB
+dist/assets/PharmaBatches-a1dYn1Q8.js               4.08 kB │ gzip:   1.89 kB
+dist/assets/ForgotPassword-Bc80-Hfn.js              4.16 kB │ gzip:   1.59 kB
+dist/assets/ROIDashboard-CP5AUX1w.js                5.33 kB │ gzip:   2.14 kB
+dist/assets/LiveSales-C2rNnHil.js                   5.50 kB │ gzip:   2.15 kB
+dist/assets/Profile-B9jVKpYp.js                     6.10 kB │ gzip:   1.91 kB
+dist/assets/ResetPassword-DzVso0Uz.js               7.03 kB │ gzip:   2.40 kB
+dist/assets/FinancialImpact-DjBYIT67.js             7.38 kB │ gzip:   2.28 kB
+dist/assets/Signals-BMgXSp6f.js                     7.47 kB │ gzip:   3.02 kB
+dist/assets/DataQuality-Yl27ydMl.js                 7.78 kB │ gzip:   3.01 kB
+dist/assets/Notifications-CxoSVfSd.js               7.84 kB │ gzip:   2.81 kB
+dist/assets/Legal-ox-wjcd4.js                      10.41 kB │ gzip:   4.05 kB
+dist/assets/SalesAnalytics-JOw9Q8vj.js             10.49 kB │ gzip:   3.69 kB
+dist/assets/Decisions-BCibmu7u.js                  12.70 kB │ gzip:   4.28 kB
+dist/assets/Billing-j7yJ4_wU.js                    13.63 kB │ gzip:   4.88 kB
+dist/assets/ForecastAccuracy-Bgw06jOf.js           13.75 kB │ gzip:   5.12 kB
+dist/assets/Inventory-kJTvLpKE.js                  13.85 kB │ gzip:   4.99 kB
+dist/assets/ProductDetail-BEx7BJYm.js              14.20 kB │ gzip:   4.24 kB
+dist/assets/ShortageAlerts-C0f1Ab6X.js             14.29 kB │ gzip:   3.99 kB
+dist/assets/Settings-BF3CXdn6.js                   15.15 kB │ gzip:   4.88 kB
+dist/assets/SkuDetail-Ct3Ruizg.js                  16.63 kB │ gzip:   5.48 kB
+dist/assets/WhatIfScenario-X_ZBV7wP.js             17.12 kB │ gzip:   5.56 kB
+dist/assets/Line-D4R20J43.js                       17.68 kB │ gzip:   5.75 kB
+dist/assets/Products-Bor9me8G.js                   18.26 kB │ gzip:   5.45 kB
+dist/assets/Skus-8oRGlPHP.js                       18.42 kB │ gzip:   4.89 kB
+dist/assets/Webhooks-BY66o-I3.js                   18.44 kB │ gzip:   5.25 kB
+dist/assets/Dashboard-CfGXfRk6.js                  22.60 kB │ gzip:   7.36 kB
+dist/assets/ComposedChart-BumIp6Dl.js              22.75 kB │ gzip:   6.19 kB
+dist/assets/Login-BwUnFBb2.js                      24.59 kB │ gzip:   7.59 kB
+dist/assets/Forecasts-Cnzw4JrH.js                  27.74 kB │ gzip:   8.89 kB
+dist/assets/Integrations-BzSlIpTz.js               29.43 kB │ gzip:   9.06 kB
+dist/assets/TrendAnalysis-CD8_LoGt.js              55.70 kB │ gzip:  15.10 kB
+dist/assets/LandingPage-CPOBw8sT.js                69.45 kB │ gzip:  20.13 kB
+dist/assets/OnboardingPage-Bwjd-gl2.js            111.82 kB │ gzip:  34.59 kB
+dist/assets/proxy-CEUVHQtF.js                     114.63 kB │ gzip:  37.90 kB
+dist/assets/generateCategoricalChart-BY2mafxt.js  365.90 kB │ gzip: 101.66 kB
+dist/assets/index-7Gfe0hff.js                     849.55 kB │ gzip: 219.47 kB
+dist/assets/csvImport-DNzs_QkJ.js                 980.96 kB │ gzip: 284.44 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 53.20s

@@ -1,0 +1,75 @@
+2026-10-26 09:54:06 [info     ] censoring.done                 detection_mode=none imputed_fraction=0.0 n_obs=420 n_obs_imputed=0 n_series=5 n_series_corrected=0 units_added=0.0
+2026-10-26 09:54:31 [info     ] chronos.pipeline.loading       device=cpu repo=amazon/chronos-t5-small
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+
+Loading weights:   0%|          | 0/131 [00:00<?, ?it/s]
+Loading weights: 100%|##########| 131/131 [00:00<00:00, 12457.29it/s]
+2026-10-26 09:54:34 [info     ] chronos.pipeline.ready         device=cpu repo=amazon/chronos-t5-small
+2026-10-26 09:54:49 [info     ] censoring.done                 detection_mode=none imputed_fraction=0.0 n_obs=440 n_obs_imputed=0 n_series=5 n_series_corrected=0 units_added=0.0
+2026-10-26 09:55:03 [info     ] censoring.done                 detection_mode=none imputed_fraction=0.0 n_obs=460 n_obs_imputed=0 n_series=5 n_series_corrected=0 units_added=0.0
+2026-10-26 09:55:21 [info     ] censoring.done                 detection_mode=none imputed_fraction=0.0 n_obs=480 n_obs_imputed=0 n_series=5 n_series_corrected=0 units_added=0.0
+2026-10-26 09:55:46 [info     ] censoring.done                 detection_mode=heuristic imputed_fraction=0.0075 n_obs=532 n_obs_imputed=4 n_series=6 n_series_corrected=1 units_added=227.0
+{
+  "models": {
+    "chronos": 7.4548518554536605,
+    "last_value": 12.360939431396787,
+    "ma4": 23.4548825710754,
+    "seasonal_naive52": 18.98470097357441,
+    "croston_sba": 22.763125083510293,
+    "adida": 23.007416563658836
+  },
+  "routing": {
+    "per_sku": {
+      "GOWN-M": "seasonal_naive52",
+      "GOWN-XL": "adida",
+      "KURTI-M": "chronos",
+      "KURTI-XL": "ma4",
+      "LEGGING-M": "chronos"
+    },
+    "rules": {
+      "per_sku": {
+        "GOWN-M": "seasonal_naive52",
+        "GOWN-XL": "adida",
+        "KURTI-M": "chronos",
+        "KURTI-XL": "ma4",
+        "LEGGING-M": "chronos"
+      },
+      "intermittency": {
+        "GOWN-M": "chronos",
+        "GOWN-XL": "adida",
+        "KURTI-M": "chronos",
+        "KURTI-XL": "chronos",
+        "LEGGING-M": "chronos"
+      }
+    },
+    "selected_rule": "per_sku",
+    "validation_rules": {
+      "per_sku": {
+        "points": 160,
+        "wape": 19.960702416394266,
+        "bias_pct": -0.13764459123263342,
+        "coverage_p10_p90": null
+      },
+      "intermittency": {
+        "points": 160,
+        "wape": 20.954934755436238,
+        "bias_pct": -1.0739908412582746,
+        "coverage_p10_p90": 55.625
+      }
+    },
+    "validation": {
+      "points": 160,
+      "wape": 19.960702416394266,
+      "bias_pct": -0.13764459123263342,
+      "coverage_p10_p90": null
+    },
+    "test": {
+      "points": 48,
+      "wape": 13.222461271344955,
+      "bias_pct": 4.745827287030309,
+      "coverage_p10_p90": null
+    },
+    "eligible_for_production": false
+  }
+}

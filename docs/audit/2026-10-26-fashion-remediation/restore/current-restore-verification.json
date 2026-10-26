@@ -1,0 +1,15 @@
+{
+  "application_role_bypassrls": false,
+  "other_tenant_sales_visible": 0,
+  "source_port": 55433,
+  "synthetic_only": true,
+  "unscoped_sales_visible": 0,
+  "dump_sha256": "2B2E12EABAD640500B360390D98CBEE92F7EC1347459B22CB61F235771718FC3",
+  "own_tenant_sales_visible": 1160,
+  "revision": "0024",
+  "application_role_superuser": false,
+  "restore_port": 55434,
+  "matching_counts": true,
+  "source_backup_read_only": true,
+  "original_pre_fix_audit_database_available": false
+}
