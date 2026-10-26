@@ -23,7 +23,7 @@ import { WorkspaceIndustryBadge } from "@/components/layout/WorkspaceIndustryBad
 import { Button } from "@/components/ui/Button";
 import { useIndustryContext } from "@/hooks/useIndustryContext";
 import { Badge } from "@/components/ui/Badge";
-import { useCurrencyStore } from "@/stores/currency";
+import { CurrencyMenu } from "@/components/layout/CurrencyMenu";
 import { shortageAlertsApi } from "@/api/shortageAlerts";
 import { decisionsApi } from "@/api/decisions";
 import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
@@ -39,7 +39,6 @@ export const TopBar = () => {
     navigate("/", { replace: true });
     await logout();
   };
-  const { currency, setCurrency } = useCurrencyStore();
   const activeIndustry = useWorkspaceIndustry();
   const toggleMobile = useSidebarStore((s) => s.toggleMobile);
   const mobileOpen = useSidebarStore((s) => s.mobileOpen);
@@ -215,18 +214,8 @@ export const TopBar = () => {
 
       {/* Right: controls */}
       <div className="flex items-center gap-2.5">
-        {/* Currency */}
-        <button
-          onClick={() => setCurrency(currency === "USD" ? "INR" : "USD")}
-          className="h-9 px-3 flex items-center gap-1.5 rounded-xl border border-line bg-surface text-content-muted hover:text-content hover:bg-surface-2 transition-all duration-150 tactile-press shrink-0"
-          title="Switch currency profile"
-          aria-label={`Switch to ${currency === "USD" ? "INR" : "USD"} currency`}
-        >
-          <span className="font-mono text-xs font-semibold" style={{ color: "var(--accent)" }}>
-            {currency === "USD" ? "$" : "₹"}
-          </span>
-          <span className="text-xs font-semibold tracking-wide">{currency}</span>
-        </button>
+        {/* Currency: shown as recorded unless the user sets a dated rate */}
+        <CurrencyMenu />
 
         {/* Dark mode */}
         <button

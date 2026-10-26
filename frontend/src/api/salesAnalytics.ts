@@ -1,9 +1,16 @@
 import { apiClient } from "@/api/client";
 
+/**
+ * Revenue is in the currency of the SKUs that sold. When a bucket mixes
+ * currencies the API does not add them up: gross/net are null and the
+ * per-currency figures are in revenue_by_currency.
+ */
 export interface SalesBucket {
   units_sold: number;
-  gross_revenue: number;
-  net_revenue: number;
+  gross_revenue: number | null;
+  net_revenue: number | null;
+  currency: string | null;
+  revenue_by_currency: Record<string, number>;
   returns: number;
   transactions: number;
   period_start: string;
@@ -18,19 +25,25 @@ export interface SalesSummaryResponse {
   week: SalesBucket;
   month: SalesBucket;
   year: SalesBucket;
+  /** The single currency of all revenue shown, or null when there are several. */
+  currency: string | null;
+  currencies: string[];
 }
 
 export interface SalesTimeseriesPoint {
   bucket: string;
   units_sold: number;
-  gross_revenue: number;
-  net_revenue: number;
+  gross_revenue: number | null;
+  net_revenue: number | null;
+  revenue_by_currency?: Record<string, number>;
 }
 
 export interface SalesTimeseriesResponse {
   industry: string;
   granularity: "day" | "week" | "month";
   lookback_days: number;
+  currency: string | null;
+  currencies: string[];
   series: SalesTimeseriesPoint[];
 }
 
@@ -40,6 +53,7 @@ export interface TopProductRow {
   product_name: string;
   units_sold: number;
   gross_revenue: number;
+  currency: string | null;
   returns: number;
 }
 

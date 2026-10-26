@@ -1,8 +1,12 @@
 import { apiClient } from "@/api/client";
 
+/** Per-currency sums; the only meaningful totals when currencies are mixed. */
+export type TotalsByCurrency = Record<string, Record<string, number>>;
+
 export interface FinancialSkuRow {
   sku_id: string;
   sku_code: string;
+  currency: string | null;
   unit_price: number;
   unit_cost: number;
   p50_demand: number;
@@ -17,15 +21,19 @@ export interface FinancialImpactResponse {
   industry: string;
   horizon_weeks: number;
   run_id?: string;
-  total_revenue_at_risk: number;
-  total_excess_cost: number;
-  net_impact: number;
+  /** Null when exposure spans several currencies (totals are then null too). */
+  currency: string | null;
+  total_revenue_at_risk: number | null;
+  total_excess_cost: number | null;
+  net_impact: number | null;
+  totals_by_currency: TotalsByCurrency;
   by_sku: FinancialSkuRow[];
 }
 
 export interface CostAnalysisRow {
   sku_id: string;
   sku_code: string;
+  currency: string | null;
   unit_cost: number;
   unit_price: number;
   on_hand_units: number;
@@ -41,7 +49,13 @@ export interface CostAnalysisRow {
 export interface CostAnalysisResponse {
   industry: string;
   holding_cost_pct: number;
-  totals: { annual_holding_cost: number; stockout_exposure_cost: number; total_impact: number };
+  currency: string | null;
+  totals: {
+    annual_holding_cost: number | null;
+    stockout_exposure_cost: number | null;
+    total_impact: number | null;
+  };
+  totals_by_currency: TotalsByCurrency;
   skus: CostAnalysisRow[];
 }
 

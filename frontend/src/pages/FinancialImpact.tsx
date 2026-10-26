@@ -14,7 +14,19 @@ export const FinancialImpactPage = () => {
   const industry = useWorkspaceIndustry();
   const [horizon, setHorizon] = useState(12);
   const { formatPrice } = useFormattedCurrency();
-  const fmt = (n: number) => formatPrice(n, "USD", { compact: true });
+  const fmt = (n: number, currency: string | null) => formatPrice(n, currency, { compact: true });
+  /** A total in its currency, or each currency's total side by side — never a sum. */
+  const fmtTotal = (
+    total: number | null | undefined,
+    currency: string | null | undefined,
+    byCurrency: Record<string, Record<string, number>> | undefined,
+    field: string,
+  ) =>
+    total != null
+      ? fmt(total, currency ?? null)
+      : Object.entries(byCurrency ?? {})
+          .map(([code, t]) => fmt(t[field] ?? 0, code))
+          .join(" · ") || "—";
 
   const { data: impact, isLoading: loadingImpact } = useQuery({
     queryKey: ["financial-impact", industry, horizon],
@@ -77,19 +89,19 @@ export const FinancialImpactPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <KPICard
           label="Revenue at Risk"
-          value={fmt(impact?.total_revenue_at_risk ?? 0)}
+          value={fmtTotal(impact?.total_revenue_at_risk, impact?.currency, impact?.totals_by_currency, "revenue_at_risk")}
           icon={<TrendingUp size={16} />}
           tone="warning"
         />
         <KPICard
           label="Excess Inventory Cost"
-          value={fmt(impact?.total_excess_cost ?? 0)}
+          value={fmtTotal(impact?.total_excess_cost, impact?.currency, impact?.totals_by_currency, "excess_inventory_cost")}
           icon={<Package size={16} />}
           tone="default"
         />
         <KPICard
           label="Total Financial Impact"
-          value={fmt(impact?.net_impact ?? 0)}
+          value={fmtTotal(impact?.net_impact, impact?.currency, impact?.totals_by_currency, "total_impact")}
           icon={<AlertTriangle size={16} />}
           tone="danger"
         />
@@ -101,15 +113,15 @@ export const FinancialImpactPage = () => {
           <div className="grid grid-cols-3 gap-4 mb-4 text-sm">
             <div className="bg-blue-50 rounded-lg p-3">
               <p className="text-slate-500 text-xs">Annual Holding Cost</p>
-              <p className="font-bold text-slate-800">{fmt(costs.totals.annual_holding_cost)}</p>
+              <p className="font-bold text-slate-800">{fmtTotal(costs.totals.annual_holding_cost, costs.currency, costs.totals_by_currency, "holding_cost_annual")}</p>
             </div>
             <div className="bg-orange-50 rounded-lg p-3">
               <p className="text-slate-500 text-xs">Stockout Exposure</p>
-              <p className="font-bold text-slate-800">{fmt(costs.totals.stockout_exposure_cost)}</p>
+              <p className="font-bold text-slate-800">{fmtTotal(costs.totals.stockout_exposure_cost, costs.currency, costs.totals_by_currency, "stockout_exposure_cost")}</p>
             </div>
             <div className="bg-red-50 rounded-lg p-3">
               <p className="text-slate-500 text-xs">Combined Impact</p>
-              <p className="font-bold text-red-700">{fmt(costs.totals.total_impact)}</p>
+              <p className="font-bold text-red-700">{fmtTotal(costs.totals.total_impact, costs.currency, costs.totals_by_currency, "total_impact")}</p>
             </div>
           </div>
 
@@ -139,10 +151,10 @@ export const FinancialImpactPage = () => {
                       )}
                     </td>
                     <td className="py-2 px-3">{fmtCompact(sku.safety_stock)}</td>
-                    <td className="py-2 px-3 text-blue-600">{fmt(sku.holding_cost_annual)}</td>
-                    <td className="py-2 px-3 text-indigo-500">{fmt(sku.excess_holding_cost ?? 0)}</td>
-                    <td className="py-2 px-3 text-orange-600">{fmt(sku.stockout_exposure_cost)}</td>
-                    <td className="py-2 px-3 font-semibold text-red-600">{fmt(sku.total_impact)}</td>
+                    <td className="py-2 px-3 text-blue-600">{fmt(sku.holding_cost_annual, sku.currency)}</td>
+                    <td className="py-2 px-3 text-indigo-500">{fmt(sku.excess_holding_cost ?? 0, sku.currency)}</td>
+                    <td className="py-2 px-3 text-orange-600">{fmt(sku.stockout_exposure_cost, sku.currency)}</td>
+                    <td className="py-2 px-3 font-semibold text-red-600">{fmt(sku.total_impact, sku.currency)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -169,10 +181,10 @@ export const FinancialImpactPage = () => {
                     <td className="py-2 px-3 font-mono text-xs text-slate-700">{row.sku_code}</td>
                     <td className="py-2 px-3">{fmtCompact(row.p50_demand)}</td>
                     <td className="py-2 px-3">{fmtCompact(row.p90_demand)}</td>
-                    <td className="py-2 px-3">{fmt(row.unit_price)}</td>
-                    <td className="py-2 px-3 text-amber-600 font-medium">{fmt(row.revenue_at_risk)}</td>
-                    <td className="py-2 px-3 text-blue-600">{fmt(row.excess_inventory_cost)}</td>
-                    <td className="py-2 px-3 font-semibold text-red-600">{fmt(row.total_impact)}</td>
+                    <td className="py-2 px-3">{fmt(row.unit_price, row.currency)}</td>
+                    <td className="py-2 px-3 text-amber-600 font-medium">{fmt(row.revenue_at_risk, row.currency)}</td>
+                    <td className="py-2 px-3 text-blue-600">{fmt(row.excess_inventory_cost, row.currency)}</td>
+                    <td className="py-2 px-3 font-semibold text-red-600">{fmt(row.total_impact, row.currency)}</td>
                   </tr>
                 ))}
               </tbody>

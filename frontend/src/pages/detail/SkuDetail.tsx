@@ -184,7 +184,7 @@ function SkuForecastChart({ rows, accent, skuCode }: { rows: ForecastRow[]; acce
 export const SkuDetailPage = () => {
   const { id = "" } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { formatPrice, activeCurrency } = useFormattedCurrency();
+  const { formatPrice, conversionNote } = useFormattedCurrency();
   const qc = useQueryClient();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const industry = useWorkspaceIndustry();
@@ -403,7 +403,7 @@ export const SkuDetailPage = () => {
         <MetricTile
           label="Unit Cost"
           value={formatPrice(sku.unit_cost, sku.currency)}
-          sub={`Currency: ${activeCurrency}`}
+          sub={conversionNote(sku.currency) ?? `Currency: ${sku.currency}`}
           icon={<DollarSign size={15} />}
         />
         <MetricTile

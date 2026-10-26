@@ -95,7 +95,7 @@ function SkuMiniCard({ sku, gradient, onClick }: {
         <div className="grid grid-cols-3 gap-1.5 mb-2.5">
           <div className="text-center bg-slate-50 dark:bg-slate-800/40 rounded-lg p-1.5">
             <div className="text-xs font-bold text-slate-800 dark:text-slate-100">
-              {price != null ? formatPrice(price) : "—"}
+              {price != null ? formatPrice(price, sku.currency) : "—"}
             </div>
             <div className="text-[8px] text-slate-400 dark:text-slate-500">price</div>
           </div>

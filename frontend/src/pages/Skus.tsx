@@ -138,7 +138,7 @@ function SkuCard({ sku, accent, fields, images, onClick }: {
         <div className="flex items-center justify-between mb-3">
           <div>
             <div className="text-xl font-black text-slate-900 dark:text-white tabular-nums">
-              {sku.unit_price != null ? formatPrice(Number(sku.unit_price)) : "—"}
+              {sku.unit_price != null ? formatPrice(Number(sku.unit_price), sku.currency) : "—"}
             </div>
             <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">{fields.price}</div>
           </div>
@@ -234,7 +234,7 @@ function SkuRow({ sku, gradient, fields, onClick }: {
 
       {/* Price */}
       <div className="text-right shrink-0 w-20 hidden sm:block">
-        <div className="text-sm font-bold text-slate-800 dark:text-slate-100">{sku.unit_price != null ? formatPrice(Number(sku.unit_price)) : "—"}</div>
+        <div className="text-sm font-bold text-slate-800 dark:text-slate-100">{sku.unit_price != null ? formatPrice(Number(sku.unit_price), sku.currency) : "—"}</div>
         <div className="text-[10px] text-slate-400 dark:text-slate-500">{fields.price}</div>
       </div>
 

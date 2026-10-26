@@ -111,7 +111,11 @@ export const SalesAnalyticsPage = () => {
   if (loadingSummary) return <PageLoader />;
 
   const today = summary?.today;
-  const liveRevenue = (today?.gross_revenue ?? 0) + live.revenue;
+  const currency = summary?.currency ?? null;
+  const mixed = (summary?.currencies.length ?? 0) > 1;
+  // Live sale events carry no currency, so they are only added to a
+  // single-currency total; a mixed workspace shows the reconciled figures.
+  const liveRevenue = mixed ? null : (today?.gross_revenue ?? 0) + live.revenue;
   const liveUnits = (today?.units_sold ?? 0) + live.units;
   const liveTxns = (today?.transactions ?? 0) + live.transactions;
 
@@ -144,7 +148,7 @@ export const SalesAnalyticsPage = () => {
                 (pulse ? "text-emerald-600" : "text-content")
               }
             >
-              {formatPrice(liveRevenue)}
+              {liveRevenue == null ? moneyOf(today, currency) : formatPrice(liveRevenue, currency)}
             </div>
             <DeltaPill delta={today?.revenue_delta} />
           </div>
@@ -178,12 +182,12 @@ export const SalesAnalyticsPage = () => {
 
       {/* Period KPI strip */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <PeriodCard label="This Year" bucket={summary?.year} />
-        <PeriodCard label="This Month" bucket={summary?.month} />
-        <PeriodCard label="This Week" bucket={summary?.week} />
+        <PeriodCard label="This Year" bucket={summary?.year} currency={currency} />
+        <PeriodCard label="This Month" bucket={summary?.month} currency={currency} />
+        <PeriodCard label="This Week" bucket={summary?.week} currency={currency} />
         <KPICard
           label="Avg Order Value"
-          value={formatPrice(avgOrder(summary?.month))}
+          value={mixed ? "Mixed currencies" : formatPrice(avgOrder(summary?.month), currency)}
           icon={<Receipt size={16} />}
           subtitle="This month, gross / transaction"
         />
@@ -218,6 +222,14 @@ export const SalesAnalyticsPage = () => {
           </div>
         ) : chartData.length === 0 ? (
           <EmptyState />
+        ) : (timeseries?.currencies.length ?? 0) > 1 ? (
+          <div className="h-[300px] flex flex-col items-center justify-center text-center text-sm text-content-muted">
+            <p className="font-medium text-content">Mixed currencies</p>
+            <p className="mt-1 max-w-sm">
+              Sales are recorded in {timeseries?.currencies.join(" and ")}. Amounts in different
+              currencies are not added together, so there is no single revenue line to draw.
+            </p>
+          </div>
         ) : (
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={chartData} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
@@ -247,7 +259,7 @@ export const SalesAnalyticsPage = () => {
                 }}
                 labelFormatter={(d) => format(parseISO(d as string), "MMM d, yyyy")}
                 formatter={(value: number, name) => [
-                  name === "revenue" ? formatPrice(value) : fmtNumber(value),
+                  name === "revenue" ? formatPrice(value, timeseries?.currency) : fmtNumber(value),
                   name === "revenue" ? "Revenue" : "Units",
                 ]}
               />
@@ -305,7 +317,7 @@ export const SalesAnalyticsPage = () => {
                     <td className="py-2 px-3 font-medium text-slate-800">{p.product_name}</td>
                     <td className="py-2 px-3 font-mono text-xs text-slate-500">{p.sku_code}</td>
                     <td className="py-2 px-3 tabular-nums font-semibold">{fmtNumber(p.units_sold)}</td>
-                    <td className="py-2 px-3 text-emerald-600 font-medium">{formatPrice(p.gross_revenue)}</td>
+                    <td className="py-2 px-3 text-emerald-600 font-medium">{formatPrice(p.gross_revenue, p.currency)}</td>
                     <td className="py-2 px-3 text-slate-500 tabular-nums">{fmtNumber(p.returns)}</td>
                   </tr>
                 ))}
@@ -321,16 +333,42 @@ export const SalesAnalyticsPage = () => {
 // ── small presentational helpers ─────────────────────────────────────────────
 
 const avgOrder = (b?: SalesBucket): number => {
-  if (!b || b.transactions === 0) return 0;
+  if (!b || b.transactions === 0 || b.gross_revenue == null) return 0;
   return b.gross_revenue / b.transactions;
 };
 
-const PeriodCard = ({ label, bucket }: { label: string; bucket?: SalesBucket }) => {
+/** One bucket's revenue: a single amount, or each currency side by side. */
+const BucketMoney = ({ bucket, currency }: { bucket?: SalesBucket; currency: string | null }) => {
   const { formatPrice } = useFormattedCurrency();
+  if (!bucket) return <>—</>;
+  if (bucket.gross_revenue != null) return <>{formatPrice(bucket.gross_revenue, bucket.currency ?? currency)}</>;
+  return (
+    <>
+      {Object.entries(bucket.revenue_by_currency)
+        .map(([code, value]) => formatPrice(value, code))
+        .join(" · ")}
+    </>
+  );
+};
+
+const moneyOf = (bucket: SalesBucket | undefined, currency: string | null) => (
+  <BucketMoney bucket={bucket} currency={currency} />
+);
+
+const PeriodCard = ({
+  label,
+  bucket,
+  currency,
+}: {
+  label: string;
+  bucket?: SalesBucket;
+  currency: string | null;
+}) => {
+  const mixed = bucket != null && bucket.gross_revenue == null;
   return (
     <KPICard
-      label={label}
-      value={formatPrice(bucket?.gross_revenue ?? 0)}
+      label={mixed ? `${label} · mixed currencies` : label}
+      value={moneyOf(bucket, currency)}
       delta={bucket?.revenue_delta ?? undefined}
       icon={<DollarSign size={16} />}
       subtitle={`${fmtNumber(bucket?.units_sold ?? 0)} units · ${fmtNumber(bucket?.transactions ?? 0)} orders`}

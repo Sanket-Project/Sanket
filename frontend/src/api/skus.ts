@@ -103,7 +103,7 @@ export const skusApi = {
               description: row.description || undefined,
               unit_cost: row.unit_cost ? Number(row.unit_cost) : undefined,
               unit_price: row.unit_price ? Number(row.unit_price) : undefined,
-              currency: row.currency || "USD",
+              currency: row.currency ? row.currency.trim().toUpperCase() : undefined,
               lead_time_days: row.lead_time_days
                 ? Number(row.lead_time_days)
                 : (row.lead_time ? Number(row.lead_time) : undefined),
