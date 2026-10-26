@@ -77,6 +77,7 @@ describe("Forecasts page (audit F04, F08)", () => {
     for (let i = 1; i <= 6; i += 1) expect(screen.getByText(`Kurti ${i}`)).toBeInTheDocument();
     expect(screen.getAllByText(/Chronos zero-shot/).length).toBeGreaterThan(0);
     expect(screen.getByText(/no external signals applied/i)).toBeInTheDocument();
+    expect(screen.getByText(/has not been shown to beat simple baselines on every SKU/)).toBeInTheDocument();
     const text = document.body.textContent ?? "";
     expect(text).not.toMatch(/\bTFT\b|DeepAR|Prophet|Live ensemble|12% above|sell-through projected/);
   });

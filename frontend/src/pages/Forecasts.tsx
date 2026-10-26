@@ -689,6 +689,10 @@ export const ForecastsPage = () => {
         </div>
       ) : (
         <div className="space-y-5">
+          <p className="text-sm text-content-muted">
+            Chronos has not been shown to beat simple baselines on every SKU. Validate forecasts
+            against your own sales before relying on them.
+          </p>
           {/* Summary KPIs */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <SummaryCard
