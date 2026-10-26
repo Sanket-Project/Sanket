@@ -151,6 +151,7 @@ export const InventoryPage = () => {
   const qc = useQueryClient();
   const [importOpen, setImportOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
   const images = useProductImagesStore((s) => s.images);
 
   // ── Data fetching ────────────────────────────────────────────────────────
@@ -206,12 +207,13 @@ export const InventoryPage = () => {
   // ── Derived stats ────────────────────────────────────────────────────────
   const levels = useMemo(() => data?.levels ?? [], [data?.levels]);
   const filtered = useMemo(() => {
-    if (!search.trim()) return levels;
     const q = search.toLowerCase();
     return levels.filter(
-      (l) => l.sku_code.toLowerCase().includes(q) || l.location.toLowerCase().includes(q),
+      (l) => (!locationFilter || l.location.trim().toLowerCase() === locationFilter.trim().toLowerCase()) &&
+        (!search.trim() || l.sku_code.toLowerCase().includes(q) || l.location.toLowerCase().includes(q)),
     );
-  }, [levels, search]);
+  }, [levels, search, locationFilter]);
+  const locationOptions = [...new Set((coverageData?.skus ?? []).flatMap((sku) => sku.locations.map((l) => l.location)))].sort();
 
   const totalOnHand = levels.reduce((s, l) => s + l.on_hand_units, 0);
   const totalInbound = levels.reduce((s, l) => s + l.inbound_units, 0);
@@ -368,6 +370,13 @@ export const InventoryPage = () => {
         description="Each row answers three questions: what do we have, why does it matter, and what should happen next?"
       >
         {/* Search */}
+        <label className="mb-3 flex items-center gap-2 text-sm">Location
+          <select aria-label="Location" value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)}
+            className="rounded-lg border border-line bg-surface px-3 py-2 text-content">
+            <option value="">All locations</option>
+            {locationOptions.map((location) => <option key={location} value={location}>{location}</option>)}
+          </select>
+        </label>
         <div className="mb-4 relative">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
@@ -423,6 +432,7 @@ export const InventoryPage = () => {
                   const decision = decisionBySku.get(lvl.sku_id);
                   const skuCov = coverageBySku.get(lvl.sku_id);
                   const cov = rowCoverage(skuCov, lvl.location, coverageFailed);
+                  const locationCov = skuCov?.locations.find((l) => l.location === lvl.location);
                   const status = cov.status;
                   const img = getProductImage(lvl.sku_id, industry, images, lvl.sku_code);
                   return (
@@ -447,8 +457,12 @@ export const InventoryPage = () => {
                       <td className="py-3 px-3"><div className="flex min-w-[130px] flex-col items-start gap-1"><StatusBadge status={status} /><span className="text-xs text-content-muted">{cov.label}</span>{skuCov?.lead_time_assumed && <span className="rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">Lead time assumed ({skuCov.lead_time_days}-day default)</span>}</div></td>
                       <td className="max-w-[320px] py-3 px-3 text-xs leading-5 text-content-muted">
                         {cov.reason || decision?.reasons[0]?.text}
+                        {locationCov?.demand_basis === "forecast" && <p className="mt-1 text-xs font-medium">From location forecast</p>}
                       </td>
                       <td className="py-3 px-3">
+                        {locationCov?.open_transfer && <Link to="/workspace/decisions" className="block text-xs font-semibold text-[var(--accent)]">
+                          Transfer {locationCov.open_transfer.units} to {locationCov.open_transfer.destination} suggested
+                        </Link>}
                         {decision ? (
                           <Link to="/workspace/decisions" className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-semibold text-[var(--accent)]">{decision.headline}<ArrowRight size={12} /></Link>
                         ) : "nextAction" in cov && cov.nextAction ? (

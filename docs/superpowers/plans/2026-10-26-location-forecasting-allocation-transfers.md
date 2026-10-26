@@ -2526,7 +2526,7 @@ git commit -m "feat(settings): store/warehouse network setup"
 - Modify: `frontend/src/pages/Inventory.tsx`, `frontend/src/pages/Decisions.tsx`
 - Test: `frontend/src/pages/Inventory.test.tsx`, `frontend/src/pages/Decisions.test.tsx` (add cases)
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
   - **Inventory:**
     - A location `<select>` built from the location codes in the coverage response filters the location rows.
     - A location row with `demand_basis: "forecast"` shows the badge "From location forecast".
@@ -2536,18 +2536,18 @@ git commit -m "feat(settings): store/warehouse network setup"
     - `purchase_order` items render exactly as before. The existing tests must still pass unchanged.
     - When the refresh response has `notes`, they are shown in an info panel titled "Network setup needed" that links to Settings.
 
-- [ ] **Step 2: Run them and confirm they fail.**
+- [x] **Step 2: Run them and confirm they fail.**
 
 Run: `cd frontend && npx vitest run src/pages/Inventory.test.tsx src/pages/Decisions.test.tsx`
 
-- [ ] **Step 3: Implement.** Add the minimal UI to make the tests pass. Group items with a pure helper, `groupByRoute(items)` in `Decisions.tsx` (or `frontend/src/pages/decisionsRoutes.ts` if `Decisions.tsx` is already large). It returns `{key, source, destination, items, units}[]`, ordered by the most urgent item in each group. Accept and dismiss buttons reuse the existing per-item handlers.
+- [x] **Step 3: Implement.** Add the minimal UI to make the tests pass. Group items with a pure helper, `groupByRoute(items)` in `Decisions.tsx` (or `frontend/src/pages/decisionsRoutes.ts` if `Decisions.tsx` is already large). It returns `{key, source, destination, items, units}[]`, ordered by the most urgent item in each group. Accept and dismiss buttons reuse the existing per-item handlers.
 
-- [ ] **Step 4: Run the full frontend checks and confirm they pass**
+- [x] **Step 4: Run the full frontend checks and confirm they pass**
 
 Run: `cd frontend && npx vitest run && npm run typecheck && npm run lint`
 Expected: PASS. Any failure that also fails on `main` before your change must be reported, not hidden. See the memory note about the billing specs that were already red on main.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/api/inventory.ts frontend/src/api/decisions.ts frontend/src/pages

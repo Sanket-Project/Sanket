@@ -66,6 +66,21 @@ const renderPage = () =>
     </QueryClientProvider>,
   );
 
+it("filters location rows and shows their forecast basis and suggested transfer", async () => {
+  api.levels.mockResolvedValue({ industry: "fashion", count: 2, levels: [level("Boduppal", 30), level("Alwal", 190)] });
+  api.coverage.mockResolvedValue(coverage({ locations: [
+    { ...loc("Boduppal", 30, 10.5, "critical"), demand_basis: "forecast", open_transfer: null },
+    { ...loc("Alwal", 190, 90, "excess"), demand_basis: "trailing_actuals", open_transfer: { units: 12, destination: "boduppal" } },
+  ] }));
+  renderPage();
+  expect(await screen.findByText("From location forecast")).toBeInTheDocument();
+  expect(screen.getByText("Transfer 12 to boduppal suggested")).toBeInTheDocument();
+  fireEvent.change(screen.getByRole("combobox", { name: "Location" }), { target: { value: "Alwal" } });
+  const rows = screen.getAllByRole("row").slice(1);
+  expect(rows).toHaveLength(1);
+  expect(rows[0]).toHaveTextContent("Alwal");
+});
+
 describe("Inventory coverage (audit F09)", () => {
   beforeEach(() => {
     api.levels.mockResolvedValue({ industry: "fashion", count: 2, levels: [level("Boduppal", 30), level("Alwal", 190)] });

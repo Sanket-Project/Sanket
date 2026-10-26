@@ -84,7 +84,7 @@ export const TopBar = () => {
   });
   const decisionRisks = (decisionData?.decisions ?? []).filter((decision) => {
     const cover = decision.inputs.days_of_cover;
-    return typeof cover === "number" && cover <= decision.inputs.lead_time_days;
+    return typeof cover === "number" && typeof decision.inputs.lead_time_days === "number" && cover <= decision.inputs.lead_time_days;
   }).slice(0, 5);
   const warningCount = (openAlerts?.length ?? 0) || decisionRisks.length;
 

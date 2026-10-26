@@ -67,12 +67,13 @@ export function buildIndicativePlan(
   horizon: number,
   start: Date = new Date(),
 ): ForecastResponse | null {
-  const eligible = decisions.filter((d) => d.inputs.demand_p50_over_window > 0);
+  const eligible = decisions.filter((d) => typeof d.inputs.demand_p50_over_window === "number" &&
+    d.inputs.demand_p50_over_window > 0 && typeof d.inputs.protection_days === "number");
   if (!eligible.length) return null;
 
   const rows = eligible.flatMap((d) => {
-    const weeks = Math.max(1, d.inputs.protection_days / 7);
-    const weekly = Math.round(d.inputs.demand_p50_over_window / weeks);
+    const weeks = Math.max(1, d.inputs.protection_days! / 7);
+    const weekly = Math.round(d.inputs.demand_p50_over_window! / weeks);
     return Array.from({ length: horizon }, (_, i) => {
       const date = new Date(start);
       date.setUTCDate(start.getUTCDate() + (i + 1) * 7);

@@ -29,7 +29,9 @@ import {
   type DecisionUrgency,
   type ConfidenceBand,
   type SkippedSku,
+  type DecisionInputs,
 } from "@/api/decisions";
+import { groupByRoute } from "@/pages/decisionsRoutes";
 import { invalidatePlanningData } from "@/api/planningKeys";
 
 const URGENCY_STYLE: Record<DecisionUrgency, { label: string; variant: "danger" | "warning" | "info" | "default" }> = {
@@ -63,6 +65,7 @@ export const DecisionsPage = () => {
   const [sortBy, setSortBy] = useState<"urgency" | "cover" | "value">("urgency");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [skipped, setSkipped] = useState<SkippedSku[]>([]);
+  const [notes, setNotes] = useState<string[]>([]);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["decisions", industry, statusFilter],
@@ -80,6 +83,7 @@ export const DecisionsPage = () => {
     onSuccess: (res) => {
       invalidate();
       setSkipped(res.skipped ?? []);
+      setNotes(res.notes ?? []);
       if (res.reason) toast(res.reason, { icon: "ℹ️", duration: 6000 });
       else toast.success(`${res.generated} recommendation(s) from ${res.skus_evaluated} SKUs`);
     },
@@ -189,6 +193,10 @@ export const DecisionsPage = () => {
           <Link to="/workspace/inventory" className="mt-1 inline-block text-xs font-semibold underline">Update stock in Inventory</Link>
         </div>
       )}
+      {notes.length > 0 && <Card title="Network setup needed">
+        <ul>{notes.map((note) => <li key={note}>{note}</li>)}</ul>
+        <Link to="/workspace/settings?tab=network" className="text-sm underline">Set up network in Settings</Link>
+      </Card>}
 
       {totals && totals.purchase_orders > 0 && (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -300,7 +308,7 @@ export const DecisionsPage = () => {
         </Card>
       ) : (
         <div className="space-y-3">
-          {visibleDecisions.map((d) => (
+          {visibleDecisions.filter((d) => d.kind !== "allocation" && d.kind !== "transfer").map((d) => (
             <DecisionRow
               key={d.id}
               decision={d}
@@ -318,6 +326,18 @@ export const DecisionsPage = () => {
               })}
             />
           ))}
+          {groupByRoute(visibleDecisions).map((group) => <section key={group.key} className="space-y-3">
+            <h2 className="font-heading font-semibold">{`${group.source} → ${group.destination} · ${group.items.length} lines · ${group.units} units`}</h2>
+            {group.items.map((d) => <DecisionRow key={d.id} decision={d} expanded={expanded === d.id}
+              onToggle={() => setExpanded(expanded === d.id ? null : d.id)}
+              onAccept={(units) => accept.mutate({ id: d.id, units })} onDismiss={() => dismiss.mutate(d.id)}
+              busy={accept.isPending || dismiss.isPending} selected={selected.has(d.id)}
+              onSelectedChange={(checked) => setSelected((current) => {
+                const next = new Set(current);
+                if (checked) next.add(d.id); else next.delete(d.id);
+                return next;
+              })} />)}
+          </section>)}
         </div>
       )}
     </div>
@@ -416,7 +436,7 @@ function DecisionRow({
             {typeof cover === "number" && (
               <div className="flex justify-between">
                 <dt className="text-content-subtle">Cover left</dt>
-                <dd className={cover <= d.inputs.lead_time_days ? "font-semibold text-rose-600" : "font-semibold"}>
+                <dd className={cover <= (d.inputs.lead_time_days ?? 0) ? "font-semibold text-rose-600" : "font-semibold"}>
                   {cover.toFixed(0)} days
                 </dd>
               </div>
@@ -478,7 +498,7 @@ function DecisionRow({
           {isOpen && d.kind !== "purchase_order" && (
             <div className="flex gap-2">
               <Button size="sm" icon={<Check size={14} />} disabled={busy} onClick={() => onAccept()}>
-                Acknowledge
+                {d.kind === "allocation" || d.kind === "transfer" ? "Accept" : "Acknowledge"}
               </Button>
               <Button size="sm" variant="ghost" disabled={busy} onClick={onDismiss}>
                 Dismiss
@@ -500,7 +520,15 @@ function DecisionRow({
 
 /** The full derivation. Nothing here is rounded away — it is the audit trail. */
 function Working({ decision: d }: { decision: Decision }) {
-  const i = d.inputs;
+  if (d.kind === "allocation" || d.kind === "transfer") return <div className="border-t border-line bg-surface-2 px-5 py-4">
+    <p className="mb-3 text-sm font-semibold">Frozen planning inputs</p>
+    <dl className="grid gap-2 sm:grid-cols-2">{Object.entries(d.inputs).map(([key, value]) => <div key={key}>
+      <dt className="text-xs text-content-subtle">{key.charAt(0).toUpperCase() + key.slice(1).replaceAll("_", " ")}</dt>
+      <dd className="break-words text-sm">{value == null ? "Unavailable" : typeof value === "object" ? JSON.stringify(value) : String(value)}</dd>
+    </div>)}</dl>
+    <p className="mt-3 text-xs">Baseline: {d.baseline_units} units. Advisory only — execute the move in your own system.</p>
+  </div>;
+  const i = d.inputs as DecisionInputs;
   const rows: Array<[string, string]> = [
     ["Supplier lead time", `${i.lead_time_days} days`],
     ["Review cycle", `${i.review_period_days} days`],

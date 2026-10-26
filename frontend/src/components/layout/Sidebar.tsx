@@ -211,7 +211,7 @@ export const Sidebar = () => {
   const riskCount = decisionData?.decisions.filter((decision) => {
     const cover = decision.inputs.days_of_cover;
     return decision.urgency === "critical" || decision.urgency === "high" ||
-      (typeof cover === "number" && cover <= decision.inputs.lead_time_days);
+      (typeof cover === "number" && typeof decision.inputs.lead_time_days === "number" && cover <= decision.inputs.lead_time_days);
   }).length ?? 0;
   const badgeFor = (to: string) => to.endsWith("/decisions") ? openDecisionCount : to.endsWith("/alerts") ? riskCount : undefined;
   const normalizedSearch = search.trim().toLowerCase();

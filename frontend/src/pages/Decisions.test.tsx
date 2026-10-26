@@ -48,6 +48,30 @@ const renderPage = () =>
     </QueryClientProvider>,
   );
 
+it("groups allocation and transfer lines by route and expands frozen network inputs", async () => {
+  api.list.mockResolvedValue(listOf([
+    decision({ id: "a1", kind: "allocation", source_location_code: "dc", location_code: "alwal", recommended_units: 10 }),
+    decision({ id: "a2", kind: "allocation", source_location_code: "dc", location_code: "alwal", recommended_units: 20 }),
+    decision({ id: "t1", kind: "transfer", source_location_code: "boduppal", location_code: "alwal", recommended_units: 5,
+      inputs: { unit_cost: null, unit_price: null, deficit: 5, excess: 20 }, reasons: [] }),
+  ]));
+  renderPage();
+  expect(await screen.findByText("dc → alwal · 2 lines · 30 units")).toBeInTheDocument();
+  expect(screen.getByText("boduppal → alwal · 1 lines · 5 units")).toBeInTheDocument();
+  fireEvent.click(screen.getAllByRole("button", { name: "Show working" })[2]);
+  expect(await screen.findByText("Deficit")).toBeInTheDocument();
+});
+
+it("shows network setup notes after refresh", async () => {
+  api.list.mockResolvedValue(listOf([]));
+  api.refresh.mockResolvedValue({ generated: 0, skus_evaluated: 0, skipped: [],
+    notes: ["No warehouse is defined"], decisions: [], totals: listOf([]).totals });
+  renderPage();
+  fireEvent.click(await screen.findByRole("button", { name: /recompute from latest forecast/i }));
+  expect(await screen.findByText("Network setup needed")).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Set up network in Settings" })).toHaveAttribute("href", "/workspace/settings?tab=network");
+});
+
 describe("Decisions page (deep audit F3, F6, F8, F14)", () => {
   beforeEach(() => {
     Object.values(api).forEach((fn) => fn.mockReset());

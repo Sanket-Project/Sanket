@@ -1,6 +1,6 @@
 import { apiClient } from "@/api/client";
 
-export type DecisionKind = "purchase_order" | "excess_stock" | "safety_stock_update";
+export type DecisionKind = "purchase_order" | "excess_stock" | "safety_stock_update" | "allocation" | "transfer";
 export type DecisionStatus = "open" | "accepted" | "dismissed" | "expired";
 export type DecisionUrgency = "critical" | "high" | "normal" | "low";
 export type ConfidenceBand = "high" | "moderate" | "low" | "insufficient";
@@ -72,7 +72,11 @@ export interface Decision {
   unit_price: number | null;
   reasons: DecisionReason[];
   economics: DecisionEconomics;
-  inputs: DecisionInputs;
+  inputs: Partial<DecisionInputs> & Record<string, unknown>;
+  location_id?: string | null;
+  source_location_id?: string | null;
+  location_code?: string | null;
+  source_location_code?: string | null;
   linked_alert_id: string | null;
   created_at: string | null;
   decided_at: string | null;
@@ -107,6 +111,7 @@ export interface DecisionListResponse {
 }
 
 export interface RefreshResponse {
+  notes?: string[];
   industry: string;
   generated: number;
   skus_evaluated: number;

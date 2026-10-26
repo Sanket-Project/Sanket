@@ -56,6 +56,8 @@ export interface LocationCoverage {
   /** Set for excess stock: what to do instead of reordering. */
   next_action?: string | null;
   reason: string;
+  demand_basis?: "forecast" | "trailing_actuals" | null;
+  open_transfer?: { units: number; destination: string } | null;
 }
 
 export interface SkuCoverage {

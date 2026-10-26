@@ -157,7 +157,7 @@ export const PlanningBriefDashboard = () => {
     totals?.critical ?? 0,
     open.filter((decision) => {
       const cover = decision.inputs?.days_of_cover;
-      return typeof cover === "number" && cover <= decision.inputs.lead_time_days;
+      return typeof cover === "number" && typeof decision.inputs.lead_time_days === "number" && cover <= decision.inputs.lead_time_days;
     }).length,
   );
   const currency = totals?.currency ?? "INR";
@@ -286,7 +286,7 @@ export const PlanningBriefDashboard = () => {
                 </p>
                 {hasDecision ? (
                   <p className="mt-1 text-xs text-content-muted">
-                    {typeof cover === "number" ? `${cover.toFixed(0)} days cover` : "Coverage pending"} · Service level target: {primary ? `${Math.round(primary.inputs.service_level * 100)}%` : "—"}
+                    {typeof cover === "number" ? `${cover.toFixed(0)} days cover` : "Coverage pending"} · Service level target: {typeof primary?.inputs.service_level === "number" ? `${Math.round(primary.inputs.service_level * 100)}%` : "Unavailable"}
                   </p>
                 ) : (
                   <p className="mt-1 text-xs text-content-muted">No order recommendation is shown because Sanket has not produced an auditable action for this industry.</p>

@@ -98,7 +98,8 @@ export const ShortageAlertsPage = () => {
   const riskDecisions = (decisions.data?.decisions ?? []).filter((decision) =>
     decision.urgency === "critical" ||
     decision.urgency === "high" ||
-    (decision.inputs.days_of_cover ?? Number.POSITIVE_INFINITY) <= decision.inputs.lead_time_days,
+    (typeof decision.inputs.lead_time_days === "number" &&
+      (decision.inputs.days_of_cover ?? Number.POSITIVE_INFINITY) <= decision.inputs.lead_time_days),
   );
   const decisionFallbackActive = (alerts.data?.length ?? 0) === 0 && riskDecisions.length > 0;
   const counts = decisionFallbackActive
