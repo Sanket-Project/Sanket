@@ -129,10 +129,13 @@ For each (SKU, location) with sales:
 - **Window:** the last **12 complete weeks** (`CALENDAR` week buckets), each
   week weighted with an exponential decay of **4-week half-life**.
 - **Out-of-stock weeks** (`in_stock = false` at that location) are dropped from
-  both numerator and denominator. Lost sales must not shrink a share. Unknown
-  `in_stock` (NULL) is kept.
-- `s_sku(l)` = weighted units at l ÷ weighted units of the SKU *including*
-  unassigned units. The SKU's unassigned share is `u = 1 − Σ_l s_sku(l)`.
+  that location's rate, in both its weighted units and its weighted weeks. Lost
+  sales must not shrink a share. Unknown `in_stock` (NULL) is kept. Weeks with
+  no sales row count as observed zero.
+- `rate(l)` = Σ w·units at l ÷ Σ w over l's in-stock weeks. Unassigned sales
+  have their own rate, `rate(∅)`, over all weeks.
+  `s_sku(l) = rate(l) / (Σ_l rate(l) + rate(∅))`; the SKU's unassigned share
+  is `u = rate(∅) / (Σ_l rate(l) + rate(∅))`.
 - **Shrinkage for sparse SKUs:**
   `s(l) = (n·s_sku(l) + k·s_cat(l)) / (n + k)`, where `n` = effective weighted
   weeks with SKU sales, `k = 4`, and `s_cat(l)` is the same computation over the
