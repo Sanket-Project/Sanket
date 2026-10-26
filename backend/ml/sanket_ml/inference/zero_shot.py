@@ -305,12 +305,18 @@ class ZeroShotForecaster:
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         pipeline = get_chronos_pipeline(self.settings)
         ctx_tensors = [torch.tensor(v, dtype=torch.float32) for v in context_arrays.values()]
-        forecast = pipeline.predict(
-            ctx_tensors,
-            prediction_length=horizon,
-            num_samples=num_samples,
-        )
-        arr = forecast.cpu().numpy() if isinstance(forecast, torch.Tensor) else np.asarray(forecast)
+        size = max(1, int(self.settings.zero_shot_batch_size))
+        parts: list[np.ndarray] = []
+        for start in range(0, len(ctx_tensors), size):
+            forecast = pipeline.predict(
+                ctx_tensors[start : start + size],
+                prediction_length=horizon,
+                num_samples=num_samples,
+            )
+            parts.append(
+                forecast.cpu().numpy() if isinstance(forecast, torch.Tensor) else np.asarray(forecast)
+            )
+        arr = np.concatenate(parts, axis=0)
         # arr shape (N, num_samples, horizon)
         p10 = np.quantile(arr, 0.1, axis=1)
         p50 = np.quantile(arr, 0.5, axis=1)

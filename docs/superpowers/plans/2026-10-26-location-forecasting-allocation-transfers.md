@@ -200,7 +200,7 @@ git commit -m "feat(forecast): configurable SKU cap instead of a hard 50"
 **Interfaces:**
 - Produces: `MLSettings.zero_shot_batch_size: int = 256`; `MLSettings.zero_shot_max_series: int = 30000`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 """Chronos is called in bounded batches, and results keep series order."""
@@ -244,12 +244,12 @@ def test_default_series_cap_fits_a_multi_branch_tenant():
 
 If `ZeroShotForecaster.__init__` needs more than `settings` (for example a loader that opens a DB), construct it with `object.__new__(zero_shot.ZeroShotForecaster)` and set `fc.settings = settings` instead. The test exercises `_chronos_predict` only.
 
-- [ ] **Step 2: Run it and confirm it fails**
+- [x] **Step 2: Run it and confirm it fails**
 
 Run: `cd backend/ml && uv run pytest tests/test_zero_shot_batching.py -v`
 Expected: FAIL. Either `MLSettings` has no field `zero_shot_batch_size`, or `batch_sizes == [10]`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `config.py`, next to `zero_shot_max_series`:
 
@@ -283,12 +283,12 @@ Replace the body of `_chronos_predict` with:
         return p10, p50, p90
 ```
 
-- [ ] **Step 4: Run the tests and confirm they pass**
+- [x] **Step 4: Run the tests and confirm they pass**
 
 Run: `cd backend/ml && uv run pytest tests/test_zero_shot_batching.py tests/test_zero_shot_eligibility.py tests/test_zero_shot_censoring.py -v`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/ml/sanket_ml/config.py backend/ml/sanket_ml/inference/zero_shot.py backend/ml/tests/test_zero_shot_batching.py

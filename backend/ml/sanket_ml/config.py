@@ -93,8 +93,9 @@ class MLSettings(BaseSettings):
     zero_shot_default_context_weeks: int = 104
     zero_shot_num_samples: int = 100
     zero_shot_min_observations: int = 8
-    # Cap on number of series per zero-shot request to keep cold inference bounded.
-    zero_shot_max_series: int = 500
+    # Guard on total series; batches below bound memory per prediction call.
+    zero_shot_max_series: int = 30000
+    zero_shot_batch_size: int = 256
 
     # ── Inference DoS protection / admission control ─────────────────────────
     # Forecasting is CPU-heavy and can take tens of seconds. Without bounds a
