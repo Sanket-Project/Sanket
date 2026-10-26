@@ -8,7 +8,9 @@ import structlog
 from fastapi import APIRouter, Query, Request
 
 from app.routers.industry_router import ActiveIndustry, TenantId
-from app.services.forecast_accuracy import compute_accuracy
+from app.models.enums import IndustryCode
+from app.services.decision_builder import latest_completed_run
+from app.services.forecast_accuracy import compute_accuracy, compute_location_accuracy
 
 log = structlog.get_logger(__name__)
 router = APIRouter(prefix="/forecast", tags=["forecast-accuracy"])
@@ -30,6 +32,11 @@ async def forecast_accuracy(
     """
     db = request.app.state.db
     async with db.session(str(tenant_id)) as session:
-        return await compute_accuracy(
+        result = await compute_accuracy(
             session, tenant_id=tenant_id, industry=ctx.code, limit=limit
         )
+        run = await latest_completed_run(session, tenant_id, IndustryCode(ctx.code))
+        result["locations"] = await compute_location_accuracy(
+            session, tenant_id=tenant_id, industry=ctx.code, run_id=run.id if run else None
+        )
+        return result

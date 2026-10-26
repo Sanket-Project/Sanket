@@ -25,15 +25,85 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.calendar import CALENDAR, WEEK, week_bucket, week_start_instant
+from app.core.calendar import CALENDAR, WEEK, current_week_start, week_bucket, week_start_instant
 from app.models.enums import IndustryCode
 from app.models.forecast import ForecastResult, ForecastRun
 from app.models.product import Sku
 from app.models.sales import HistoricalSale
+from app.models.location import Location, LocationForecastResult
 
 MAX_RUNS = 60
 MAX_RESULTS = 50_000
 MAX_BACKTESTS = 5
+
+
+def mase(actual: list[float], forecast: list[float], history: list[float], season: int) -> float | None:
+    """Mean absolute scaled error against an in-sample seasonal-naive scale."""
+    if not actual or len(actual) != len(forecast):
+        return None
+    lag = season if len(history) > season else 1
+    diffs = [abs(history[i] - history[i - lag]) for i in range(lag, len(history))]
+    scale = sum(diffs) / len(diffs) if diffs else 0.0
+    if scale <= 0:
+        return None
+    mae = sum(abs(a - f) for a, f in zip(actual, forecast, strict=True)) / len(actual)
+    return round(mae / scale, 4)
+
+
+async def compute_location_accuracy(
+    session: AsyncSession, *, tenant_id: uuid.UUID, industry: str, run_id: uuid.UUID | None
+) -> dict[str, Any]:
+    """Score a run's location totals against completed, observed sales weeks."""
+    result: dict[str, Any] = {"method": "share_split_v1", "weighted_mase": None, "locations": []}
+    if run_id is None:
+        return result
+    forecasts = (await session.execute(
+        select(Location.code, LocationForecastResult.forecast_date,
+               func.sum(LocationForecastResult.p50).label("p50"))
+        .join(Location, Location.id == LocationForecastResult.location_id)
+        .where(LocationForecastResult.tenant_id == tenant_id, Location.tenant_id == tenant_id,
+               LocationForecastResult.run_id == run_id,
+               LocationForecastResult.forecast_date < current_week_start())
+        .group_by(Location.code, LocationForecastResult.forecast_date)
+    )).all()
+    if not forecasts:
+        return result
+    first = min(r.forecast_date for r in forecasts)
+    bucket = week_bucket(HistoricalSale.sale_time).label("week")
+    code = func.lower(func.btrim(HistoricalSale.location)).label("code")
+    sales = (await session.execute(
+        select(code, bucket, func.sum(HistoricalSale.units_sold).label("units"))
+        .where(HistoricalSale.tenant_id == tenant_id,
+               HistoricalSale.industry == IndustryCode(industry),
+               HistoricalSale.sale_time >= week_start_instant(first - 104 * WEEK),
+               HistoricalSale.sale_time < week_start_instant(current_week_start()))
+        .group_by(code, bucket)
+    )).all()
+    actuals: dict[str, dict[date, float]] = defaultdict(dict)
+    for r in sales:
+        actuals[r.code][r.week.date()] = float(r.units)
+    by_location: dict[str, list] = defaultdict(list)
+    for r in forecasts:
+        if r.forecast_date in actuals[r.code]:
+            by_location[r.code].append(r)
+    rows = []
+    for loc, points in sorted(by_location.items()):
+        points.sort(key=lambda r: r.forecast_date)
+        observed_history = {w: u for w, u in actuals[loc].items() if w < first}
+        history = []
+        if observed_history:
+            week = min(observed_history)
+            while week < first:
+                history.append(observed_history.get(week, 0.0))
+                week += WEEK
+        actual = [actuals[loc][p.forecast_date] for p in points]
+        score = mase(actual, [float(p.p50) for p in points], history, season=52)
+        rows.append({"location": loc, "mase": score, "units": sum(actual), "weeks": len(points)})
+    valid = [r for r in rows if r["mase"] is not None]
+    units = sum(r["units"] for r in valid)
+    result["locations"] = rows
+    result["weighted_mase"] = round(sum(r["mase"] * r["units"] for r in valid) / units, 4) if units else None
+    return result
 
 EXCLUSION_REASONS = (
     "legacy_calendar",              # run predates the Monday-UTC calendar; dates unreliable

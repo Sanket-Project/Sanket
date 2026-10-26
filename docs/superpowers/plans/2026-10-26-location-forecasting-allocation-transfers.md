@@ -1661,7 +1661,7 @@ git commit -m "feat(inventory): location cover from the location forecast when f
   - `async compute_location_accuracy(session, *, tenant_id, industry, run_id) -> dict` returning
     `{"method": "share_split_v1", "weighted_mase": float | None, "locations": [{"location": code, "mase": float | None, "units": float, "weeks": int}]}`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```python
 from app.services.forecast_accuracy import mase
@@ -1682,9 +1682,9 @@ def test_mase_flat_history_is_undefined():
 
 Also add one DB test: the 12-week + 2-week-ahead setup from Task 8, plus actual sales for the 2 forecast weeks at each location. Assert `compute_location_accuracy` returns two locations with non-`None` MASE and `weighted_mase` equal to the unit-weighted mean of the two.
 
-- [ ] **Step 2: Run them and confirm they fail.**
+- [x] **Step 2: Run them and confirm they fail.**
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```python
 def mase(actual: list[float], forecast: list[float], history: list[float], season: int) -> float | None:
@@ -1708,12 +1708,12 @@ def mase(actual: list[float], forecast: list[float], history: list[float], seaso
 - `weighted_mase` = Σ(mase × units) / Σ units over locations where mase is not `None`.
 - Return locations sorted by code.
 
-- [ ] **Step 4: Run the tests and confirm they pass**
+- [x] **Step 4: Run the tests and confirm they pass**
 
 Run: `cd backend && uv run pytest tests/test_location_accuracy.py tests/test_forecast_accuracy.py -v`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/app/services/forecast_accuracy.py backend/app/routers backend/tests/test_location_accuracy.py
