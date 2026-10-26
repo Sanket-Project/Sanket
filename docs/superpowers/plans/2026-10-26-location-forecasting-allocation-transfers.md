@@ -731,15 +731,15 @@ git commit -m "feat(locations): register locations from data and report network 
 
 Before writing the test, read `tests/test_decision_expiry.py` or another API test to see how an authenticated `client` request is made: header names, how a user and tenant are created, and the api prefix. Copy that exact helper pattern.
 
-- [ ] **Step 1: Write the failing test.** Using that helper pattern:
+- [x] **Step 1: Write the failing test.** Using that helper pattern:
   - **(a)** `GET /locations` on a tenant with sales at "Alwal" returns one `unconfirmed` location and `network.allocation_ready == False`.
   - **(b)** As admin, `PATCH` a DC to `kind="warehouse"` and a store to `kind="store", parent_location_id=<dc>, lead_time_days_from_parent=3`. A following `GET` reports `allocation_ready == True`.
   - **(c)** `PATCH` setting a store's parent to another *store* returns 422 with detail `"Parent must be a warehouse of this workspace"`.
   - **(d)** A non-admin (analyst) `PATCH` returns 403.
 
-- [ ] **Step 2: Run it and confirm it fails** (404 on `/locations`).
+- [x] **Step 2: Run it and confirm it fails** (404 on `/locations`).
 
-- [ ] **Step 3: Implement the router**
+- [x] **Step 3: Implement the router**
 
 ```python
 """Store / warehouse network: list (registering any newly seen codes) and edit."""
@@ -826,12 +826,12 @@ async def update_location(
 
 Note: `exclude_unset` lets a client clear `parent_location_id` by sending `null` explicitly.
 
-- [ ] **Step 4: Run the tests and confirm they pass**
+- [x] **Step 4: Run the tests and confirm they pass**
 
 Run: `cd backend && uv run pytest tests/test_locations_api.py tests/test_rbac.py -v`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/app/routers/locations.py backend/app/main.py backend/tests/test_locations_api.py

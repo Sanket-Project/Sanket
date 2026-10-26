@@ -397,6 +397,7 @@ def create_app() -> FastAPI:
     from app.routers.integrations import router as integrations_router
     from app.routers.integrations_hub import router as integrations_hub_router
     from app.routers.inventory import router as inventory_router
+    from app.routers.locations import router as locations_router
     from app.routers.invites import router as invites_router
     from app.routers.notifications import router as notifications_router
     from app.routers.onboarding import router as onboarding_router
@@ -485,6 +486,7 @@ def create_app() -> FastAPI:
     #  make it meaningful.)
     app.include_router(anomaly_router, prefix=api_prefix, dependencies=gated)
     app.include_router(inventory_router, prefix=api_prefix, dependencies=gated)
+    app.include_router(locations_router, prefix=api_prefix, dependencies=gated)
     app.include_router(financial_router, prefix=api_prefix, dependencies=gated)
     app.include_router(sales_analytics_router, prefix=api_prefix, dependencies=gated)
     app.include_router(export_router, prefix=api_prefix, dependencies=gated)
