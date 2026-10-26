@@ -1736,7 +1736,7 @@ git commit -m "feat(accuracy): per-location MASE for share_split_v1 forecasts"
   - `allocate(stores: list[StoreNeed], supply: float, moq: int = 1, min_units: int = 1) -> dict[str, int]` — units per store; stores with 0 are omitted
   - `cover_level(stores, supply) -> float` — the water-filling level T in days
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```python
 """DC→store allocation (spec §5.2). Pure."""
@@ -1801,9 +1801,9 @@ def test_never_exceeds_supply_or_need(raw, supply, moq):
 
 If `hypothesis` is not in the backend dev dependencies (`grep hypothesis backend/pyproject.toml`), add it with `cd backend && uv add --dev hypothesis` and commit `pyproject.toml` and `uv.lock` with this task.
 
-- [ ] **Step 2: Run them and confirm they fail.**
+- [x] **Step 2: Run them and confirm they fail.**
 
-- [ ] **Step 3: Implement `app/services/allocation.py`**
+- [x] **Step 3: Implement `app/services/allocation.py`**
 
 ```python
 """DC→store allocation (location spec §5.2). Pure.
@@ -1881,12 +1881,12 @@ def allocate(
 
 Check `test_shortage_equalises_cover` by hand: with supply 30 the level is T = 10, so a = 20 and b = 10, which are already whole. Check `test_surplus_ships_exact_needs`: the needs are 20 and 12, summing to 32 ≤ 100.
 
-- [ ] **Step 4: Run the tests and confirm they pass**
+- [x] **Step 4: Run the tests and confirm they pass**
 
 Run: `cd backend && uv run pytest tests/test_allocation.py -v`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/app/services/allocation.py backend/tests/test_allocation.py backend/pyproject.toml backend/uv.lock

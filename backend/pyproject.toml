@@ -109,3 +109,8 @@ testpaths = ["tests"]
 [tool.coverage.run]
 source = ["app"]
 omit = ["tests/*", "app/main.py"]
+
+[dependency-groups]
+dev = [
+    "hypothesis",
+]
