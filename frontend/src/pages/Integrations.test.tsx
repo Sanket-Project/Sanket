@@ -1,5 +1,13 @@
 import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { UploadPanel } from "./Integrations";
+
+const api = vi.hoisted(() => ({ analyze: vi.fn(), upload: vi.fn(), success: vi.fn() }));
+vi.mock("@/api/integrations", () => ({ integrationsApi: api }));
+vi.mock("react-hot-toast", () => ({ default: { success: api.success, error: vi.fn() } }));
 
 /**
  * Source-level assertion. Integrations is a 950-line page of provider panels
@@ -10,6 +18,22 @@ import { describe, expect, it } from "vitest";
 const source = readFileSync("src/pages/Integrations.tsx", "utf8");
 
 describe("integrations", () => {
+  it("sends period identity when totals are selected and reports unchanged rows", async () => {
+    api.analyze.mockResolvedValue({ headers: ["sku", "qty", "date"], sample_rows: [],
+      suggested_mapping: { sku: "sku", quantity: "qty", timestamp: "date" } });
+    api.upload.mockResolvedValue({ kind: "sales", rows_inserted: 0, rows_unchanged: 459,
+      rows_updated: 0, rows_skipped: 0, identity_mode: "period", warnings: [] });
+    const done = vi.fn();
+    const { container } = render(<QueryClientProvider client={new QueryClient()}><UploadPanel onDone={done} /></QueryClientProvider>);
+    const user = userEvent.setup();
+    await user.upload(container.querySelector('input[type="file"]') as HTMLInputElement, new File(["sku,qty,date"], "sales.csv"));
+    await user.click(await screen.findByLabelText(/Daily or weekly totals/));
+    await user.click(screen.getByRole("button", { name: /import/i }));
+    await waitFor(() => expect(done).toHaveBeenCalled());
+    expect(api.upload).toHaveBeenCalledWith(expect.any(File), "sales", expect.any(Object), { identity: "period", currency: undefined });
+    expect(api.success).toHaveBeenCalledWith("0 new · 459 already imported · 0 corrected");
+  });
+
   it("never sends a target industry", () => {
     expect(source).not.toMatch(/target_industry/);
   });

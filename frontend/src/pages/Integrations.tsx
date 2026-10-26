@@ -174,7 +174,7 @@ const UPLOAD_KINDS = [
   { key: "products", label: "Product catalog", cols: "SKU, Name, Category, Price" },
 ] as const;
 
-function UploadPanel({ onDone }: { onDone: () => void }) {
+export function UploadPanel({ onDone }: { onDone: () => void }) {
   const [kind, setKind] = useState<(typeof UPLOAD_KINDS)[number]["key"]>("sales");
   const [file, setFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);

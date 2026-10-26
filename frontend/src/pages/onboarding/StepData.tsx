@@ -31,6 +31,7 @@ const ImportCard = ({ icon, title, description, kind, onImported }: ImportCardPr
   const [busy, setBusy] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<UploadResult | null>(null);
+  const [identity, setIdentity] = useState<"transaction" | "period">("transaction");
 
   // Analysis states
   const [headers, setHeaders] = useState<string[] | null>(null);
@@ -105,7 +106,7 @@ const ImportCard = ({ icon, title, description, kind, onImported }: ImportCardPr
     if (!file) return;
     setBusy(true);
     try {
-      const res = await integrationsApi.upload(file, kind, mapping);
+      const res = await integrationsApi.upload(file, kind, mapping, kind === "sales" ? { identity } : {});
       // A re-uploaded sales file inserts nothing new; that is success, not failure.
       const main =
         kind === "products"
@@ -123,7 +124,7 @@ const ImportCard = ({ icon, title, description, kind, onImported }: ImportCardPr
       }
       setResult(res);
       onImported(kind, res);
-      toast.success(`Imported ${main.toLocaleString()} ${kind === "products" ? "SKUs" : "sales rows"}`);
+      toast.success(describeUploadResult(res));
     } catch {
       /* interceptor surfaces the toast */
     } finally {
@@ -155,6 +156,22 @@ const ImportCard = ({ icon, title, description, kind, onImported }: ImportCardPr
 
         {file && !analyzing && headers && (
           <div className="mt-3 space-y-3 animate-fade-in">
+            {kind === "sales" && (
+              <fieldset className="space-y-2 rounded-xl border border-line p-3 text-xs">
+                <legend>If this file is uploaded again</legend>
+                <label className="flex items-center gap-2">
+                  <input type="radio" name="sales-identity" checked={identity === "transaction"}
+                    onChange={() => setIdentity("transaction")} />
+                  Individual sales (identical rows are skipped)
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="radio" name="sales-identity" checked={identity === "period"}
+                    onChange={() => setIdentity("period")} />
+                  Weekly/daily totals (corrections replace)
+                </label>
+                <p className="text-content-subtle">For totals, use one row per SKU, location, channel and date.</p>
+              </fieldset>
+            )}
             <div className="rounded-xl border border-line p-3 bg-surface-2/40 space-y-2.5 shadow-sm">
               <div className="text-[10px] font-bold uppercase tracking-wider text-content-muted">
                 Map File Columns

@@ -14,6 +14,9 @@ export const forecastsApi = {
     apiClient
       .post<ForecastResponse>("/forecasts/generate", body)
       .then((r) => r.data),
+  /** Explicit, leakage-free backtest: forecast from history before a past Monday. */
+  backtest: (body: { cutoff: string; horizon?: number }) =>
+    apiClient.post<ForecastResponse>("/forecasts/backtest", body).then((r) => r.data),
   health: () =>
     apiClient
       .get<{ status: string }>("/forecasts/ml-health")

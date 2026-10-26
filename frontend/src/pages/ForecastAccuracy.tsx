@@ -1,34 +1,124 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { BarChart3, AlertCircle, CheckCircle2, Circle, Loader2 } from "@/components/ui/icons";
-import { forecastAccuracyApi } from "@/api/forecastAccuracy";
-import { forecastConfidenceApi } from "@/api/forecasts";
+import { BarChart3, CheckCircle2, Circle, Loader2 } from "@/components/ui/icons";
+import { forecastAccuracyApi, type ForecastAccuracyResponse } from "@/api/forecastAccuracy";
+import { forecastConfidenceApi, forecastsApi } from "@/api/forecasts";
 import { salesAnalyticsApi } from "@/api/salesAnalytics";
 import { dataQualityApi } from "@/api/dataQuality";
 import { Card } from "@/components/ui/Card";
 import { CategoryBar } from "@/components/charts/CategoryBar";
 import { PageLoader } from "@/components/ui/Spinner";
 import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
+import { getErrorMessage } from "@/utils/errors";
 
-const mapeColor = (mape: number | null) => {
-  if (mape === null) return "text-slate-400";
-  if (mape < 10) return "text-emerald-600";
-  if (mape < 25) return "text-amber-500";
-  return "text-red-500";
+const pct = (v: number | null | undefined) => (v == null ? "—" : `${v.toFixed(1)}%`);
+const signedPct = (v: number | null | undefined) => (v == null ? "—" : `${v > 0 ? "+" : ""}${v.toFixed(1)}%`);
+const fmtDay = (iso: string) =>
+  new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(
+    new Date(`${iso}T00:00:00Z`),
+  );
+
+/** Why forecasts were not scored, in words (keys from GET /forecast/accuracy). */
+const EXCLUSION_TEXT: Record<string, (n: number) => string> = {
+  generated_after_period_start: (n) => `${n} forecast${n === 1 ? "" : "s"} made after ${n === 1 ? "its" : "their"} week had begun`,
+  trained_on_period: (n) => `${n} forecast${n === 1 ? "" : "s"} whose model had already seen that week`,
+  period_not_complete: (n) => `${n} for weeks that have not finished yet`,
+  awaiting_actuals: (n) => `${n} for weeks the sales feed has not reached yet`,
+  legacy_calendar: (n) => `${n} from older runs dated on Sundays, which cannot be matched to a week reliably`,
 };
 
-const mapeLabel = (mape: number | null) => {
-  if (mape === null) return "—";
-  if (mape < 10) return "Excellent";
-  if (mape < 25) return "Good";
-  return "Needs work";
+/** A Monday strictly before the current UTC week — the only valid backtest cutoff. */
+export function backtestCutoffError(value: string, today: Date = new Date()): string | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return "Enter a date.";
+  const d = new Date(`${value}T00:00:00Z`);
+  if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== value) return "Enter a valid date.";
+  if (d.getUTCDay() !== 1) return "The cutoff must be a Monday — weeks start on Monday (UTC).";
+  const thisMonday = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+  thisMonday.setUTCDate(thisMonday.getUTCDate() - ((thisMonday.getUTCDay() + 6) % 7));
+  if (d >= thisMonday) return "The cutoff must be before the current week.";
+  return null;
+}
+
+const Exclusions = ({ excluded }: { excluded: ForecastAccuracyResponse["excluded"] }) => {
+  const items = Object.entries(excluded ?? {}).filter(([, n]) => n > 0);
+  if (!items.length) return null;
+  return (
+    <Card title="Not scored" description="Forecasts that could not be compared fairly with actual sales">
+      <ul className="space-y-1 text-sm text-content-muted">
+        {items.map(([reason, n]) => (
+          <li key={reason}>{(EXCLUSION_TEXT[reason] ?? ((k: number) => `${k} · ${reason}`))(n)}</li>
+        ))}
+      </ul>
+    </Card>
+  );
+};
+
+const BacktestPanel = ({ runs }: { runs: ForecastAccuracyResponse["backtest"]["runs"] }) => {
+  const industry = useWorkspaceIndustry();
+  const qc = useQueryClient();
+  const [cutoff, setCutoff] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const run = useMutation({
+    mutationFn: (c: string) => forecastsApi.backtest({ cutoff: c, horizon: 8 }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["forecast-accuracy", industry] }),
+    onError: (e) => setError(getErrorMessage(e, "The backtest could not be run.")),
+  });
+
+  const submit = () => {
+    const problem = backtestCutoffError(cutoff);
+    setError(problem);
+    if (!problem) run.mutate(cutoff);
+  };
+
+  return (
+    <Card
+      title="Backtests"
+      description="Forecasts made after the fact, from history before a past Monday only. Leakage-free, but not production accuracy."
+    >
+      <div className="flex flex-wrap items-end gap-2">
+        <label className="text-xs text-content-muted" htmlFor="backtest-cutoff">
+          Forecast as if it were (a past Monday)
+          <input
+            id="backtest-cutoff"
+            type="text"
+            inputMode="numeric"
+            placeholder="YYYY-MM-DD"
+            value={cutoff}
+            onChange={(e) => setCutoff(e.target.value)}
+            className="mt-1 block rounded-lg border border-line bg-surface-2 px-2 py-1.5 font-mono text-sm"
+          />
+        </label>
+        <Button size="sm" variant="secondary" loading={run.isPending} onClick={submit}>
+          Run backtest
+        </Button>
+      </div>
+      {error && <p className="mt-2 text-xs text-rose-600">{error}</p>}
+      {runs.length > 0 && (
+        <ul className="mt-4 divide-y divide-line text-sm">
+          {runs.map((r) => (
+            <li key={r.run_id} className="flex flex-wrap justify-between gap-2 py-2">
+              <span className="font-medium text-content">
+                Backtest from {r.cutoff ? fmtDay(r.cutoff) : "unknown cutoff"} · made after the fact
+              </span>
+              <span className="text-content-muted">
+                {r.points} points · {r.skus} SKUs · WAPE {pct(r.wape)} · bias {signedPct(r.bias_pct)} · P10–P90
+                coverage {pct(r.coverage_p10_p90)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  );
 };
 
 export const ForecastAccuracyPage = () => {
   const industry = useWorkspaceIndustry();
 
-  const { data: accuracy, isLoading } = useQuery({
+  const { data: accuracy, isLoading, isError } = useQuery({
     queryKey: ["forecast-accuracy", industry],
     queryFn: () => forecastAccuracyApi.list(100),
   });
@@ -39,7 +129,7 @@ export const ForecastAccuracyPage = () => {
   });
 
   const hasAccuracyRows = (accuracy?.rows.length ?? 0) > 0;
-  const readinessEnabled = !isLoading && !hasAccuracyRows;
+  const readinessEnabled = !isLoading && !isError && !hasAccuracyRows;
 
   const {
     data: confidence,
@@ -72,8 +162,10 @@ export const ForecastAccuracyPage = () => {
   });
 
   if (isLoading) return <PageLoader />;
+  if (isError) return <Card title="Accuracy unavailable"><p>Could not load accuracy results. Try again later.</p></Card>;
 
   const rows = accuracy?.rows ?? [];
+  const backtests = accuracy?.backtest.runs ?? [];
 
   if (rows.length === 0) {
     const hasForecastRun = Boolean(confidence?.run_id);
@@ -82,51 +174,51 @@ export const ForecastAccuracyPage = () => {
     const completedRequirements = [hasForecastRun, hasSalesHistory, hasHealthyInputs].filter(Boolean).length;
 
     return (
-      <AccuracyReadiness
-        completedRequirements={completedRequirements}
-        forecast={{
-          complete: hasForecastRun,
-          loading: confidenceLoading,
-          unavailable: confidenceUnavailable,
-          detail: hasForecastRun
-            ? "A completed forecast run is available."
-            : confidence?.reason ?? "Run a forecast to establish the prediction baseline.",
-        }}
-        sales={{
-          complete: hasSalesHistory,
-          loading: salesLoading,
-          unavailable: salesUnavailable,
-          detail: hasSalesHistory
-            ? `${salesHistory?.series.length ?? 0} weekly sales bucket${salesHistory?.series.length === 1 ? " is" : "s are"} available; accuracy waits for actuals recorded after the forecast.`
-            : "No weekly sales history was found in the last 90 days.",
-        }}
-        quality={{
-          complete: hasHealthyInputs,
-          loading: qualityLoading,
-          unavailable: qualityUnavailable,
-          detail: quality
-            ? `${quality.health_score}/100 health score · ${quality.critical} critical issue${quality.critical === 1 ? "" : "s"}.`
-            : "Data-quality status has not been verified yet.",
-        }}
-      />
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold tracking-tight">Production accuracy</h1>
+        <AccuracyReadiness
+          completedRequirements={completedRequirements}
+          forecast={{
+            complete: hasForecastRun,
+            loading: confidenceLoading,
+            unavailable: confidenceUnavailable,
+            detail: hasForecastRun
+              ? "A completed forecast run is available."
+              : confidence?.reason ?? "Run a forecast to establish the prediction baseline.",
+          }}
+          sales={{
+            complete: hasSalesHistory,
+            loading: salesLoading,
+            unavailable: salesUnavailable,
+            detail: hasSalesHistory
+              ? `${salesHistory?.series.length ?? 0} weekly sales bucket${salesHistory?.series.length === 1 ? " is" : "s are"} available; accuracy waits for actuals recorded after the forecast.`
+              : "No weekly sales history was found in the last 90 days.",
+          }}
+          quality={{
+            complete: hasHealthyInputs,
+            loading: qualityLoading,
+            unavailable: qualityUnavailable,
+            detail: quality
+              ? `${quality.health_score}/100 health score · ${quality.critical} critical issue${quality.critical === 1 ? "" : "s"}.`
+              : "Data-quality status has not been verified yet.",
+          }}
+        />
+        {accuracy && <Exclusions excluded={accuracy.excluded} />}
+        <BacktestPanel runs={backtests} />
+      </div>
     );
   }
 
-  // Aggregate MAPE by model for bar chart
+  // Average WAPE by model for the bar chart (WAPE is undefined when nothing sold)
   const byModel: Record<string, number[]> = {};
   for (const row of rows) {
-    if (row.mape !== null) {
-      (byModel[row.model_name] ??= []).push(row.mape);
-    }
+    if (row.wape !== null) (byModel[row.model_name] ??= []).push(row.wape);
   }
-  const modelAvg = Object.entries(byModel).map(([model, mapes]) => ({
+  const modelAvg = Object.entries(byModel).map(([model, values]) => ({
     category: model,
-    count: Math.round(mapes.reduce((a, b) => a + b, 0) / mapes.length),
-  })).sort((a, b) => a.count - b.count);
-
-  const overallMape = rows.length > 0 && rows.some((r) => r.mape !== null)
-    ? rows.filter((r) => r.mape !== null).reduce((s, r) => s + r.mape!, 0) / rows.filter((r) => r.mape !== null).length
-    : null;
+    count: Math.round(values.reduce((a, b) => a + b, 0) / values.length),
+  }));
+  const summary = accuracy?.summary;
 
   return (
     <div className="space-y-6">
@@ -135,75 +227,59 @@ export const ForecastAccuracyPage = () => {
           <div className="flex items-center gap-2 text-[var(--accent)] text-sm font-medium uppercase tracking-wider">
             <BarChart3 size={14} /> Forecast Accuracy
           </div>
-          <h1 className="text-3xl font-bold tracking-tight mt-1">Model performance & anomaly log</h1>
-          <p className="text-slate-500 mt-1">
-            Forecast error by SKU and model · {accuracy?.source === "cached" ? "Pre-computed" : "Live"} calculation
+          <h1 className="text-3xl font-bold tracking-tight mt-1">Production accuracy</h1>
+          <p className="text-slate-500 mt-1 max-w-2xl">
+            Each forecast week (Monday, UTC) compared with what sold that week, using only forecasts
+            made before the week began. {summary?.points ?? 0} SKU-weeks across {summary?.skus ?? 0} SKUs.
           </p>
         </div>
-        {overallMape !== null && (
-          <div className="text-right">
-            <p className="text-xs text-slate-400 uppercase tracking-wide">Overall MAPE</p>
-            <p className={`text-2xl font-bold ${mapeColor(overallMape)}`}>{overallMape.toFixed(1)}%</p>
-            <p className={`text-xs ${mapeColor(overallMape)}`}>{mapeLabel(overallMape)}</p>
-          </div>
-        )}
+        <div className="text-right">
+          <p className="text-xs text-slate-400 uppercase tracking-wide">Portfolio WAPE</p>
+          <p className="text-2xl font-bold text-content">{pct(summary?.wape)}</p>
+          <p className="text-xs text-content-muted">
+            bias {signedPct(summary?.bias_pct)} · P10–P90 coverage {pct(summary?.coverage_p10_p90)}
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Model MAPE bar chart */}
-        <Card title="Avg MAPE by model" description="Lower is better — target < 10%">
+        <Card title="Average WAPE by model" description="Lower is better">
           {modelAvg.length > 0 ? (
             <CategoryBar data={modelAvg} accent="var(--accent)" />
           ) : (
-            <p className="text-slate-400 text-sm py-8 text-center">No accuracy data yet — run a forecast first</p>
+            <p className="text-slate-400 text-sm py-8 text-center">No demand in the scored weeks — WAPE is undefined.</p>
           )}
         </Card>
 
-        {/* Accuracy table */}
-        <Card className="lg:col-span-2" title="Per-SKU accuracy" description="Sorted by MAPE ascending">
-          {rows.length === 0 ? (
-            <div className="py-12 text-center">
-              <BarChart3 size={32} className="mx-auto text-slate-200 mb-3" />
-              <p className="text-slate-400 text-sm">No forecast vs. actuals data available yet.</p>
-              <p className="text-slate-300 text-xs mt-1">Generate a forecast and allow a week of actuals to accumulate.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-slate-100">
-                    {["SKU", "Model", "MAPE", "WAPE", "Obs", "Quality"].map((h) => (
-                      <th key={h} className="text-left py-2 px-3 text-slate-500 font-medium text-xs">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.slice(0, 30).map((row, i) => (
-                    <tr key={i} className="border-b border-slate-50 hover:bg-slate-50/50">
-                      <td className="py-2 px-3 font-mono text-xs text-slate-600">{row.sku_id.slice(0, 8)}…</td>
-                      <td className="py-2 px-3"><Badge>{row.model_name}</Badge></td>
-                      <td className={`py-2 px-3 font-semibold ${mapeColor(row.mape)}`}>
-                        {row.mape !== null ? `${row.mape.toFixed(1)}%` : "—"}
-                      </td>
-                      <td className="py-2 px-3 text-slate-500">
-                        {row.wape !== null ? `${row.wape.toFixed(1)}%` : "—"}
-                      </td>
-                      <td className="py-2 px-3 text-slate-500">{row.n_obs}</td>
-                      <td className="py-2 px-3">
-                        {row.mape !== null && row.mape < 10 ? (
-                          <CheckCircle2 size={14} className="text-emerald-500" />
-                        ) : (
-                          <AlertCircle size={14} className="text-amber-400" />
-                        )}
-                      </td>
-                    </tr>
+        <Card className="lg:col-span-2" title="Per-SKU accuracy" description="Sorted by WAPE, lowest first">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-100">
+                  {["SKU", "Model", "WAPE", "Bias", "P10–P90 coverage", "Weeks"].map((h) => (
+                    <th key={h} className="text-left py-2 px-3 text-slate-500 font-medium text-xs">{h}</th>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.slice(0, 30).map((row) => (
+                  <tr key={`${row.sku_id}-${row.model_name}`} className="border-b border-slate-50 hover:bg-slate-50/50">
+                    <td className="py-2 px-3 font-mono text-xs text-slate-600">{row.sku_code ?? `${row.sku_id.slice(0, 8)}…`}</td>
+                    <td className="py-2 px-3"><Badge>{row.model_name}</Badge></td>
+                    <td className="py-2 px-3 font-semibold">{pct(row.wape)}</td>
+                    <td className="py-2 px-3 text-slate-500">{signedPct(row.bias_pct)}</td>
+                    <td className="py-2 px-3 text-slate-500">{pct(row.coverage_p10_p90)}</td>
+                    <td className="py-2 px-3 text-slate-500">{row.n_obs}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </Card>
       </div>
+
+      {accuracy && <Exclusions excluded={accuracy.excluded} />}
+      <BacktestPanel runs={backtests} />
 
       {/* Anomaly log */}
       {anomalies && anomalies.sku_count > 0 && (
