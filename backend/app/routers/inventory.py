@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
+from app.core.money import totals_by_currency
 from app.core.rbac import require_admin
 from app.models.enums import IndustryCode
 from app.models.inventory import InventoryLevel
@@ -300,6 +301,7 @@ async def cost_analysis(
             {
                 "sku_id": str(sku.id),
                 "sku_code": sku.sku_code,
+                "currency": sku.currency,
                 "unit_cost": uc,
                 "unit_price": up,
                 "on_hand_units": round(on_hand, 2),
@@ -314,16 +316,20 @@ async def cost_analysis(
         )
 
     results.sort(key=lambda x: x["total_impact"], reverse=True)
-    total_holding = sum(r["holding_cost_annual"] for r in results)
-    total_stockout = sum(r["stockout_exposure_cost"] for r in results)
+    # Each SKU's costs are in its own currency: totals per currency, never mixed.
+    currency, totals, by_currency = totals_by_currency(
+        results, ("holding_cost_annual", "stockout_exposure_cost", "total_impact")
+    )
 
     return {
         "industry": ctx.code,
         "holding_cost_pct": holding_cost_pct,
+        "currency": currency,
         "totals": {
-            "annual_holding_cost": round(total_holding, 2),
-            "stockout_exposure_cost": round(total_stockout, 2),
-            "total_impact": round(total_holding + total_stockout, 2),
+            "annual_holding_cost": totals["holding_cost_annual"],
+            "stockout_exposure_cost": totals["stockout_exposure_cost"],
+            "total_impact": totals["total_impact"],
         },
+        "totals_by_currency": by_currency,
         "skus": results,
     }

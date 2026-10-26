@@ -8,9 +8,11 @@ import structlog
 from fastapi import APIRouter, Request
 from sqlalchemy import func, select
 
+from app.core.money import totals_by_currency
 from app.models.enums import IndustryCode
 from app.models.product import Sku
 from app.routers.industry_router import ActiveIndustry, TenantId
+from app.services.decision_builder import latest_completed_run
 
 log = structlog.get_logger(__name__)
 router = APIRouter(prefix="/financial", tags=["financial"])
@@ -26,30 +28,23 @@ async def financial_impact(
     horizon_weeks: int = 12,
 ) -> dict[str, Any]:
     """Compute revenue at risk (unmet upside demand) and excess inventory cost per SKU."""
-    from app.models.forecast import ForecastResult, ForecastRun
+    from app.models.forecast import ForecastResult
 
     db = request.app.state.db
     industry = IndustryCode(ctx.code)
 
     async with db.session(str(tenant_id)) as session:
-        # Get most recent completed forecast run
-        run = await session.scalar(
-            select(ForecastRun)
-            .where(
-                ForecastRun.tenant_id == tenant_id,
-                ForecastRun.industry == industry,
-                ForecastRun.status == "completed",
-            )
-            .order_by(ForecastRun.completed_at.desc())
-            .limit(1)
-        )
+        # The forecast a planner acts on — never an after-the-fact backtest.
+        run = await latest_completed_run(session, tenant_id, industry)
         if run is None:
             return {
                 "industry": ctx.code,
                 "horizon_weeks": horizon_weeks,
+                "currency": None,
                 "total_revenue_at_risk": 0,
                 "total_excess_cost": 0,
                 "net_impact": 0,
+                "totals_by_currency": {},
                 "by_sku": [],
             }
 
@@ -80,8 +75,6 @@ async def financial_impact(
         skus = {s.id: s for s in skus_rows.scalars().all()}
 
     by_sku: list[dict] = []
-    total_rar = 0.0
-    total_excess = 0.0
 
     for fc in fc_data:
         sku = skus.get(fc.sku_id)
@@ -99,13 +92,11 @@ async def financial_impact(
         excess_units = max(0, ss - p50)
         excess_cost = excess_units * unit_cost * HOLDING_COST_PCT
 
-        total_rar += revenue_at_risk
-        total_excess += excess_cost
-
         by_sku.append(
             {
                 "sku_id": str(fc.sku_id),
                 "sku_code": sku.sku_code,
+                "currency": sku.currency,
                 "unit_price": unit_price,
                 "unit_cost": unit_cost,
                 "p50_demand": round(p50, 1),
@@ -118,13 +109,20 @@ async def financial_impact(
         )
 
     by_sku.sort(key=lambda x: x["total_impact"], reverse=True)
+    # Exposure is in each SKU's currency; amounts in different currencies are
+    # reported side by side, never summed (and impact ranking is per currency).
+    currency, totals, by_currency = totals_by_currency(
+        by_sku, ("revenue_at_risk", "excess_inventory_cost", "total_impact")
+    )
 
     return {
         "industry": ctx.code,
         "horizon_weeks": horizon_weeks,
         "run_id": str(run.id),
-        "total_revenue_at_risk": round(total_rar, 2),
-        "total_excess_cost": round(total_excess, 2),
-        "net_impact": round(total_rar + total_excess, 2),
+        "currency": currency,
+        "total_revenue_at_risk": totals["revenue_at_risk"],
+        "total_excess_cost": totals["excess_inventory_cost"],
+        "net_impact": totals["total_impact"],
+        "totals_by_currency": by_currency,
         "by_sku": by_sku[:100],
     }
