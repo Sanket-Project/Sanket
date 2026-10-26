@@ -858,7 +858,7 @@ git commit -m "feat(locations): list and edit the store/warehouse network"
   - `split_week(p10: float, p50: float, p90: float, share: float) -> tuple[float, float, float]`
   - constants `WINDOW_WEEKS = 12`, `HALF_LIFE_WEEKS = 4.0`, `SHRINK_K = 4.0`, `Z90 = 1.2816`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```python
 """share_split_v1 maths (spec §4.1–§4.2). Pure: no database."""
@@ -951,11 +951,11 @@ def test_half_life_constant():
     assert HALF_LIFE_WEEKS == 4.0
 ```
 
-- [ ] **Step 2: Run them and confirm they fail** (`ModuleNotFoundError`).
+- [x] **Step 2: Run them and confirm they fail** (`ModuleNotFoundError`).
 
 Run: `cd backend && uv run pytest tests/test_location_shares.py -v`
 
-- [ ] **Step 3: Implement `app/services/location_shares.py`**
+- [x] **Step 3: Implement `app/services/location_shares.py`**
 
 ```python
 """share_split_v1: split a SKU forecast across locations (location spec §4.1–§4.2).
@@ -1096,12 +1096,12 @@ def split_week(p10: float, p50: float, p90: float, share: float) -> tuple[float,
     return max(0.0, lp50 - Z90 * sd), lp50, lp50 + Z90 * sd
 ```
 
-- [ ] **Step 4: Run the tests and confirm they pass**
+- [x] **Step 4: Run the tests and confirm they pass**
 
 Run: `cd backend && uv run pytest tests/test_location_shares.py -v`
 Expected: PASS. If `test_blend_long_history_tracks_sku` is off by the renormalisation, check that `sku.unassigned == 0` in that fixture. It is, so `scale == 1`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/app/services/location_shares.py backend/tests/test_location_shares.py
