@@ -79,6 +79,34 @@ async def _coverage(app_role_db, tenant):
         return await coverage(s, tenant_id=tenant, industry="fashion", now=NOW)
 
 
+async def test_location_forecast_is_preferred_over_trailing_actuals(
+    db_session, app_role_db, make_tenant
+):
+    tenant = await make_tenant()
+    sku = await _sku(db_session, tenant)
+    for loc in ("Boduppal", "Alwal"):
+        await _stock(db_session, tenant, sku, loc, 40)
+        await _weekly_sales(db_session, tenant, sku, 5, location=loc)
+    run = await _forecast(db_session, tenant, sku, completed=NOW, weekly_p50=40)
+    lid = uuid.uuid4()
+    await db_session.execute(text(
+        "INSERT INTO locations (id, tenant_id, code, name) VALUES (:l, :t, 'boduppal', 'Boduppal')"
+    ), {"l": str(lid), "t": str(tenant)})
+    for i in range(4):
+        await db_session.execute(text(
+            "INSERT INTO location_forecast_results (tenant_id, run_id, sku_id, location_id, "
+            "forecast_date, p10, p50, p90, share, share_basis, method) VALUES "
+            "(:t, :r, :s, :l, :d, 10, 20, 30, 0.5, 'sku_history', 'share_split_v1')"
+        ), {"t": str(tenant), "r": str(run), "s": str(sku), "l": str(lid),
+            "d": NOW.date() + timedelta(weeks=i)})
+    await db_session.commit()
+    result = (await _coverage(app_role_db, tenant))["skus"][0]
+    locations = {l["location"]: l for l in result["locations"]}
+    assert locations["Boduppal"]["demand_basis"] == "forecast"
+    assert locations["Boduppal"]["cover_days"] == 14.0
+    assert locations["Alwal"]["demand_basis"] == "trailing_actuals"
+
+
 async def test_two_stores_with_different_stock_and_demand(db_session, app_role_db, make_tenant):
     tenant = await make_tenant()
     sku = await _sku(db_session, tenant)

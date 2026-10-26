@@ -1604,15 +1604,15 @@ git commit -m "feat(forecast): split completed runs into per-location forecasts"
 - Consumes: the `location_forecast_results` + `locations` tables.
 - Produces: each location entry gains `"demand_basis": "forecast" | "trailing_actuals" | None`.
 
-- [ ] **Step 1: Write the failing test.** Add it to `test_inventory_coverage.py`, using the existing helpers there:
+- [x] **Step 1: Write the failing test.** Add it to `test_inventory_coverage.py`, using the existing helpers there:
   - Two stores, each selling 5/week in trailing actuals.
   - A fresh run whose location rows give Boduppal p50 = 20/week. Insert a `locations` row and `location_forecast_results` rows directly with SQL.
   - Assert Boduppal's location entry has `demand_basis == "forecast"` and `cover_days` computed from 20/week.
   - Assert Alwal, with no location rows, has `demand_basis == "trailing_actuals"`.
 
-- [ ] **Step 2: Run it and confirm it fails** (`KeyError: 'demand_basis'`).
+- [x] **Step 2: Run it and confirm it fails** (`KeyError: 'demand_basis'`).
 
-- [ ] **Step 3: Implement.** Inside `coverage()`, in the `if is_run_fresh(run, now):` branch, also load:
+- [x] **Step 3: Implement.** Inside `coverage()`, in the `if is_run_fresh(run, now):` branch, also load:
 
 ```python
         loc_rows = (
@@ -1636,12 +1636,12 @@ Initialise `loc_forecast_weekly: dict = {}` before the `if`, and add `text` to t
 
 Add `"demand_basis"` to the location dict.
 
-- [ ] **Step 4: Run the whole coverage file and confirm it passes**
+- [x] **Step 4: Run the whole coverage file and confirm it passes**
 
 Run: `cd backend && uv run pytest tests/test_inventory_coverage.py -v`
 Expected: all PASS. The existing assertions must still hold.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/app/services/coverage.py backend/tests/test_inventory_coverage.py

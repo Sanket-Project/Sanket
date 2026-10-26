@@ -29,7 +29,7 @@ from collections import defaultdict
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.calendar import CALENDAR, current_week_start, week_bucket, week_start_instant
@@ -116,6 +116,7 @@ async def coverage(
 
     # Forecast basis: the latest real (non-backtest) run, if recent enough.
     forecast_weekly: dict[uuid.UUID, float] = {}
+    loc_forecast_weekly: dict[tuple[uuid.UUID, str], float] = {}
     run = await latest_completed_run(session, tenant_id, ind)
     if is_run_fresh(run, now):
         rows = (
@@ -137,6 +138,14 @@ async def coverage(
             if len(per_sku[r.sku_id]) < FORECAST_WEEKS:
                 per_sku[r.sku_id].append(float(r.p50 or 0))
         forecast_weekly = {k: round(sum(v) / len(v), 2) for k, v in per_sku.items() if v}
+        loc_rows = (await session.execute(text(
+            "SELECT f.sku_id, l.code, avg(f.p50) AS p50 FROM location_forecast_results f "
+            "JOIN locations l ON l.id = f.location_id "
+            "WHERE f.tenant_id = :t AND f.run_id = :r AND f.forecast_date >= :w "
+            "AND f.forecast_date < :w4 GROUP BY f.sku_id, l.code"
+        ), {"t": str(tenant_id), "r": str(run.id), "w": this_week,
+            "w4": this_week + timedelta(weeks=FORECAST_WEEKS)})).all()
+        loc_forecast_weekly = {(r.sku_id, r.code): float(r.p50) for r in loc_rows}
 
     # Trailing complete weeks of actuals, per SKU and per (SKU, location).
     bucket = week_bucket(HistoricalSale.sale_time).label("week")
@@ -215,6 +224,11 @@ async def coverage(
             loc_weekly, loc_observed = _trailing_mean(
                 loc_weeks.get((sku_id, lvl.location.strip().lower()), {}), last_week
             )
+            demand_basis = "trailing_actuals" if loc_weekly is not None else None
+            key = (sku_id, lvl.location.strip().lower())
+            if key in loc_forecast_weekly:
+                loc_weekly = loc_forecast_weekly[key]
+                demand_basis = "forecast"
             loc_stale = lvl in stale
             if loc_weekly is None:
                 loc_cover, loc_status = None, None
@@ -229,6 +243,8 @@ async def coverage(
                 loc_cover = _cover(float(lvl.available_units), loc_weekly)
                 loc_status = _status(loc_cover, lead, review_days)
                 loc_reason = (
+                    f"Mean P50 of the next {FORECAST_WEEKS} location forecast weeks."
+                    if demand_basis == "forecast" else
                     f"Location sales: {loc_weekly:g} units a week over {loc_observed} week(s)."
                 )
             locations.append(
@@ -239,6 +255,7 @@ async def coverage(
                     "inbound_units": float(lvl.inbound_units or 0),
                     "as_of": lvl.as_of.isoformat() if lvl.as_of else None,
                     "stock_stale": loc_stale,
+                    "demand_basis": demand_basis,
                     "location_demand": {
                         "weekly_units": loc_weekly,
                         "weeks_observed": loc_observed,
