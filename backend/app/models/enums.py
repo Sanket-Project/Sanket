@@ -3,6 +3,12 @@ from __future__ import annotations
 import enum
 
 
+class LocationKind(enum.StrEnum):
+    warehouse = "warehouse"
+    store = "store"
+    unconfirmed = "unconfirmed"
+
+
 class IndustryCode(enum.StrEnum):
     fashion = "fashion"
     electronics = "electronics"

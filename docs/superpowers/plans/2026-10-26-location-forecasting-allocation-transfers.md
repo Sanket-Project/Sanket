@@ -313,7 +313,7 @@ git commit -m "feat(ml): batch Chronos zero-shot calls; raise series cap for mul
   - `LocationKind(StrEnum)` with values `warehouse`, `store`, `unconfirmed`.
   - ORM `Location` with fields `id, tenant_id, code, name, kind, parent_location_id, lead_time_days_from_parent, is_active, attributes, created_at, updated_at`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 """locations: tenant-isolated, unique per (tenant, code), kind constrained (spec §3.1)."""
@@ -356,12 +356,12 @@ async def test_locations_are_tenant_isolated(db_session, app_role_db, make_tenan
     assert codes == ["alwal"]
 ```
 
-- [ ] **Step 2: Run it and confirm it fails**
+- [x] **Step 2: Run it and confirm it fails**
 
 Run: `cd backend && uv run pytest tests/test_locations_schema.py -v`
 Expected: FAIL with `relation "locations" does not exist`.
 
-- [ ] **Step 3: Implement the migration**
+- [x] **Step 3: Implement the migration**
 
 `0025_locations.py`:
 
@@ -439,7 +439,7 @@ def downgrade() -> None:
     op.drop_table("locations")
 ```
 
-- [ ] **Step 4: Implement the enum and model**
+- [x] **Step 4: Implement the enum and model**
 
 In `enums.py`:
 
@@ -496,12 +496,12 @@ class Location(UUIDPrimaryKey, TimestampMixin, Base):
 
 Check that `TimestampMixin` maps `created_at` and `updated_at`. It does for `InventoryLevel`, which uses it with the same migration columns.
 
-- [ ] **Step 5: Run the tests and confirm they pass**
+- [x] **Step 5: Run the tests and confirm they pass**
 
 Run: `cd backend && uv run pytest tests/test_locations_schema.py tests/test_rls_isolation.py -v`
 Expected: PASS. `test_force_rls_enabled_on_all_tenant_tables` also covers the new table.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/alembic/versions/0025_locations.py backend/app/models/location.py backend/app/models/enums.py backend/app/models/__init__.py backend/tests/test_locations_schema.py
