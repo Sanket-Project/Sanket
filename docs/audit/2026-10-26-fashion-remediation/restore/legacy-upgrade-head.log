@@ -1,0 +1,6 @@
+2026-10-26 10:09:46 [warning  ] config.secrets.weak            detail='METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset — third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key' note='Must be fixed before production deploy'
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 0021 -> 0022, Sales record identity: make re-imports idempotent without deleting anything.
+INFO  [alembic.runtime.migration] Running upgrade 0022 -> 0023, Narrow, tenant-checked write paths for the append-only sales ledger.
+INFO  [alembic.runtime.migration] Running upgrade 0023 -> 0024, Rolling monthly partitions for trend_signals.

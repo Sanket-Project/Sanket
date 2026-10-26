@@ -1,0 +1,77 @@
+{
+  "status": "passed",
+  "synthetic_only": true,
+  "original_audit_database_available": false,
+  "source": "recreated synthetic sanket_legacy_source on loopback:55434",
+  "target": "sanket_legacy_upgrade",
+  "source_revision_unchanged": "0021",
+  "target_revision": "0024",
+  "dump_sha256": "2280f87ba16b6d0bfb3a5ed7ee32608bb3e714bf553f9a4baae44ed00d39a06f",
+  "dump_bytes": 480624,
+  "dump_read_only": true,
+  "rows_and_totals_preserved": true,
+  "before": {
+    "role": "sanket_app",
+    "role_flags": {
+      "rolsuper": false,
+      "rolbypassrls": false
+    },
+    "tenants": [
+      {
+        "tenant_id": "25a00000-0000-4000-8000-000000000001",
+        "rows": 5,
+        "units": 24,
+        "foreign_rows_visible": 0,
+        "content_sha256": "30880d1bc6799dcefe2d9c0c63909b5ad9b4c1f13fdb150c5a4e61b9ecf60efd"
+      },
+      {
+        "tenant_id": "25a00000-0000-4000-8000-000000000002",
+        "rows": 2,
+        "units": 10,
+        "foreign_rows_visible": 0,
+        "content_sha256": "dd6fdde9544e773938d24d5b580b3e4e686cfd7d13f98e1f5d96e4409997dce7"
+      }
+    ]
+  },
+  "after": {
+    "role": "sanket_app",
+    "role_flags": {
+      "rolsuper": false,
+      "rolbypassrls": false
+    },
+    "tenants": [
+      {
+        "tenant_id": "25a00000-0000-4000-8000-000000000001",
+        "rows": 5,
+        "units": 24,
+        "foreign_rows_visible": 0,
+        "content_sha256": "30880d1bc6799dcefe2d9c0c63909b5ad9b4c1f13fdb150c5a4e61b9ecf60efd",
+        "key_groups": [
+          {
+            "record_key": "upload|f|faa803f8d883ad6475850d59669db25b#1",
+            "copies": 2
+          },
+          {
+            "record_key": "upload|o|LEGACY-ORDER-1|1#1",
+            "copies": 2
+          }
+        ],
+        "unkeyed_rows": 1
+      },
+      {
+        "tenant_id": "25a00000-0000-4000-8000-000000000002",
+        "rows": 2,
+        "units": 10,
+        "foreign_rows_visible": 0,
+        "content_sha256": "dd6fdde9544e773938d24d5b580b3e4e686cfd7d13f98e1f5d96e4409997dce7",
+        "key_groups": [
+          {
+            "record_key": "upload|o|LEGACY-ORDER-1|1#1",
+            "copies": 2
+          }
+        ],
+        "unkeyed_rows": 0
+      }
+    ]
+  }
+}
