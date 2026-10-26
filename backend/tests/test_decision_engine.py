@@ -250,3 +250,45 @@ def test_features_from_series_derives_interval_width():
         weekly_units=[10] * 20, p10_sum=80.0, p50_sum=100.0, p90_sum=140.0
     )
     assert f.relative_interval_width == pytest.approx(0.6)
+
+
+# ── Unknown money stays unknown (deep audit F3) ──────────────────────────────
+
+
+def _po(sku: SkuEconomics):
+    return next(d for d in decide(sku=sku, band=flat_band(), confidence=confident())
+                if d.kind == "purchase_order")
+
+
+def test_unknown_unit_cost_yields_no_capital_figures():
+    sku = SkuEconomics(sku_id="a", sku_code="A", on_hand_units=0, unit_cost=0.0,
+                       unit_price=100.0, cost_known=False)
+    order = _po(sku)
+    for key in ("capital_committed", "baseline_capital", "working_capital_released",
+                "holding_cost_over_window"):
+        assert order.economics[key] is None, key
+    assert order.economics["revenue_protected"] > 0
+    assert order.inputs["unit_cost"] is None
+
+
+def test_unknown_unit_price_yields_no_revenue_protected():
+    sku = SkuEconomics(sku_id="a", sku_code="A", on_hand_units=0, unit_cost=40.0,
+                       unit_price=0.0, price_known=False)
+    econ = _po(sku).economics
+    assert econ["revenue_protected"] is None
+    assert econ["capital_committed"] > 0
+
+
+def test_a_recorded_zero_cost_is_a_known_zero():
+    sku = SkuEconomics(sku_id="a", sku_code="A", on_hand_units=0, unit_cost=0.0, unit_price=100.0)
+    assert _po(sku).economics["capital_committed"] == 0.0
+
+
+def test_excess_stock_with_unknown_cost_does_not_claim_locked_capital():
+    sku = SkuEconomics(sku_id="a", sku_code="A", on_hand_units=5000, unit_cost=0.0,
+                       cost_known=False)
+    excess = next(d for d in decide(sku=sku, band=flat_band(), confidence=confident())
+                  if d.kind == "excess_stock")
+    assert excess.economics["capital_locked"] is None
+    assert excess.economics["annual_holding_cost"] is None
+    assert all(r.code != "capital_locked" for r in excess.reasons)

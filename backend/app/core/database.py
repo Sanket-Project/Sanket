@@ -181,7 +181,7 @@ class Database:
         (a common dev-machine footgun, since only the deploy pipeline runs
         `alembic upgrade head` automatically). Returns True when up to date.
 
-        Never raises — a check failure should not block startup.
+        Never raises; an unreadable version is not evidence of readiness.
         """
         from pathlib import Path
 
@@ -199,7 +199,7 @@ class Database:
                 applied = {row[0] for row in result}
         except Exception as exc:
             log.warning("database.migration_check.skipped", error=str(exc))
-            return True
+            return False
 
         if applied == heads:
             log.info("database.migration_check.ok", revision=sorted(heads))

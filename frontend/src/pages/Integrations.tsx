@@ -42,6 +42,7 @@ import { industryDisplay } from "@/utils/colors";
 import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { fmtRelative } from "@/utils/format";
 import { getErrorMessage } from "@/utils/errors";
+import { connectionGroups } from "@/utils/integrationGroups";
 import { describeUploadResult } from "@/utils/uploadSummary";
 
 const ICONS: Record<string, AppIcon> = {
@@ -175,13 +176,14 @@ const UPLOAD_KINDS = [
 ] as const;
 
 export function UploadPanel({ onDone }: { onDone: () => void }) {
+  const queryClient = useQueryClient();
   const [kind, setKind] = useState<(typeof UPLOAD_KINDS)[number]["key"]>("sales");
   const [file, setFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Analysis states
   const [headers, setHeaders] = useState<string[] | null>(null);
-  const [sampleRows, setSampleRows] = useState<Record<string, any>[] | null>(null);
+  const [sampleRows, setSampleRows] = useState<Record<string, unknown>[] | null>(null);
   const [mapping, setMapping] = useState<Record<string, string>>({});
   // How re-uploaded sales rows are recognised, and the currency of the prices.
   const [identity, setIdentity] = useState<"transaction" | "period">("transaction");
@@ -209,6 +211,9 @@ export function UploadPanel({ onDone }: { onDone: () => void }) {
     onSuccess: (r) => {
       toast.success(describeUploadResult(r));
       r.warnings?.forEach((w) => toast(w, { icon: "⚠️" }));
+      // Imported history/catalogue/stock changes all derived views, including
+      // forecasts cached before visiting Integrations.
+      void queryClient.invalidateQueries();
       onDone();
     },
     onError: (e: unknown) =>
@@ -828,9 +833,10 @@ export const IntegrationsPage = () => {
       .filter((group) => group.connectors.length > 0);
   }, [category, data, search, statusFilter]);
 
-  const priorityConnectors = useMemo(() => data?.groups
-    .flatMap((group) => group.connectors)
-    .filter((connector) => connector.connected || connector.status === "error" || connector.status === "requested") ?? [], [data]);
+  const { attention, connected } = useMemo(
+    () => connectionGroups(data?.groups.flatMap((group) => group.connectors) ?? []),
+    [data],
+  );
 
   if (isLoading || !data) return <PageLoader />;
 
@@ -851,14 +857,26 @@ export const IntegrationsPage = () => {
         </div>
       </div>
 
-      {priorityConnectors.length > 0 && (
+      {attention.length > 0 && (
         <section>
           <div className="mb-3 flex items-center justify-between gap-3">
-            <div><h2 className="text-sm font-semibold text-content">Connections needing your attention</h2><p className="mt-0.5 text-xs text-content-muted">Connected, syncing, requested, and failed sources appear before the full catalogue.</p></div>
-            <Badge variant={priorityConnectors.some((connector) => connector.status === "error") ? "danger" : "success"}>{priorityConnectors.length}</Badge>
+            <div><h2 className="text-sm font-semibold text-content">Needs attention</h2><p className="mt-0.5 text-xs text-content-muted">Failed syncs and connection requests that are waiting on you.</p></div>
+            <Badge variant={attention.some((connector) => connector.status === "error") ? "danger" : "warning"}>{attention.length}</Badge>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {priorityConnectors.map((connector) => <ConnectorCard key={`priority-${connector.key}`} c={connector} onOpen={setSelected} />)}
+            {attention.map((connector) => <ConnectorCard key={`attention-${connector.key}`} c={connector} onOpen={setSelected} />)}
+          </div>
+        </section>
+      )}
+
+      {connected.length > 0 && (
+        <section>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div><h2 className="text-sm font-semibold text-content">Connected sources</h2><p className="mt-0.5 text-xs text-content-muted">Working connections. Open one to sync, upload or disconnect.</p></div>
+            <Badge variant="success">{connected.length}</Badge>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {connected.map((connector) => <ConnectorCard key={`connected-${connector.key}`} c={connector} onOpen={setSelected} />)}
           </div>
         </section>
       )}

@@ -17,7 +17,8 @@ vi.mock("@/api/salesAnalytics", () => ({ salesAnalyticsApi: { timeseries: vi.fn(
 vi.mock("@/api/dataQuality", () => ({ dataQualityApi: { report: vi.fn().mockResolvedValue({ critical: 0, health_score: 90 }) } }));
 vi.mock("@/hooks/useWorkspaceIndustry", () => ({ useWorkspaceIndustry: () => "fashion" }));
 
-import { ForecastAccuracyPage, backtestCutoffError } from "@/pages/ForecastAccuracy";
+import { ForecastAccuracyPage } from "@/pages/ForecastAccuracy";
+import { backtestCutoffError } from "@/pages/forecastAccuracyRules";
 
 const excluded = { legacy_calendar: 0, period_not_complete: 0, trained_on_period: 0,
   generated_after_period_start: 0, awaiting_actuals: 0 };

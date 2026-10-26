@@ -39,7 +39,8 @@ export interface InventoryUpsertResponse {
 
 // ── API calls ──────────────────────────────────────────────────────────────
 
-export type CoverageStatus = "healthy" | "low" | "critical" | "unknown";
+/** "excess": cover beyond 2 × (lead time + review period) — the decision engine's excess rule. */
+export type CoverageStatus = "healthy" | "low" | "critical" | "excess" | "unknown";
 
 /** One location of a SKU. cover_days/status are null unless that location has its own sales. */
 export interface LocationCoverage {
@@ -52,6 +53,8 @@ export interface LocationCoverage {
   location_demand: { weekly_units: number | null; weeks_observed: number; basis: "location_sales" | null };
   cover_days: number | null;
   status: CoverageStatus | null;
+  /** Set for excess stock: what to do instead of reordering. */
+  next_action?: string | null;
   reason: string;
 }
 
@@ -62,7 +65,14 @@ export interface SkuCoverage {
   lead_time_assumed: boolean;
   demand: { basis: "forecast" | "trailing_actuals" | null; weekly_units: number | null; run_id: string | null; reason: string };
   /** Pooled across every location. */
-  sku_wide: { available_units: number; inbound_units: number; cover_days: number | null; status: CoverageStatus; reason: string };
+  sku_wide: {
+    available_units: number;
+    inbound_units: number;
+    cover_days: number | null;
+    status: CoverageStatus;
+    next_action?: string | null;
+    reason: string;
+  };
   locations: LocationCoverage[];
 }
 
@@ -77,6 +87,8 @@ export interface CoverageResponse {
     min_weeks: number;
     stale_stock_days: number;
     low_multiplier: number;
+    excess_multiplier?: number;
+    review_period_days?: number;
     transfer_suggestions: boolean;
   };
   skus: SkuCoverage[];

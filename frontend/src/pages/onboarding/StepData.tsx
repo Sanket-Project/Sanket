@@ -51,7 +51,7 @@ const ImportCard = ({ icon, title, description, kind, onImported }: ImportCardPr
       const data = await integrationsApi.analyze(selectedFile, kind);
       setHeaders(data.headers);
       setMapping(data.suggested_mapping || {});
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(getErrorMessage(err, "Failed to analyze file structure"));
       setFile(null);
     } finally {

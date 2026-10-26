@@ -244,11 +244,12 @@ export const SkuDetailPage = () => {
   });
 
   // Auto-generate forecast on mount and when SKU or horizon changes
+  const generateForecast = runForecast.mutate;
   useEffect(() => {
     if (sku) {
-      runForecast.mutate();
+      generateForecast();
     }
-  }, [sku, horizon]);
+  }, [sku, horizon, generateForecast]);
 
   const { images, uploadImage, removeImage } = useProductImagesStore();
 

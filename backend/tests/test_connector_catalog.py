@@ -36,3 +36,16 @@ def test_secret_fields_are_flagged():
             looks_secret = any(w in field.key for w in ("token", "secret", "password", "key", "dsn", "json"))
             if looks_secret and field.key not in ("client_id", "application_id", "account_id"):
                 assert field.secret, f"{spec.key}.{field.key} should be marked secret"
+
+
+def test_quickbills_is_a_planned_product_import_request():
+    spec = get_spec("quickbills")
+    assert spec is not None
+    assert spec.name == "QuickBills"
+    assert spec.category.value == "erp"
+    assert spec.availability == ConnectorAvailability.planned
+    assert spec.feeds == ("products",)
+    assert "export format" in spec.summary.lower()
+    assert spec.docs_url is None
+    assert all(not field.secret and not field.required for field in spec.auth_fields)
+    assert any(field.key == "contact_email" for field in spec.auth_fields)

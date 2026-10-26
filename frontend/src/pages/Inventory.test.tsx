@@ -1,20 +1,29 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CoverageResponse, CoverageStatus, InventoryLevel, LocationCoverage } from "@/api/inventory";
 
-const api = vi.hoisted(() => ({ levels: vi.fn(), coverage: vi.fn() }));
+const api = vi.hoisted(() => ({ levels: vi.fn(), coverage: vi.fn(), upsert: vi.fn() }));
 
 vi.mock("@/api/inventory", () => ({
-  inventoryApi: { levels: api.levels, coverage: api.coverage, upsert: vi.fn() },
+  inventoryApi: { levels: api.levels, coverage: api.coverage, upsert: api.upsert },
   validateInventoryRows: vi.fn(),
   downloadInventoryTemplate: vi.fn(),
 }));
 vi.mock("@/api/skus", () => ({ skusApi: { list: vi.fn().mockResolvedValue([]) } }));
 vi.mock("@/api/decisions", () => ({ decisionsApi: { list: vi.fn().mockResolvedValue({ decisions: [] }) } }));
 vi.mock("@/api/export", () => ({ exportApi: { inventoryCsv: vi.fn() } }));
+// The real modal is a multi-step file flow; this stand-in drives onImport directly.
+vi.mock("@/components/ui/ImportModal", () => ({
+  ImportModal: ({ onImport }: { onImport: (rows: unknown[], p: () => void) => Promise<unknown> }) => (
+    <button type="button" onClick={() => {
+      api.upsert.mockResolvedValue({ upserted: 1 });
+      void onImport([{ sku_code: "PALAZZO-XL", on_hand_units: "20" }], () => {});
+    }}>Run test import</button>
+  ),
+}));
 vi.mock("@/hooks/useWorkspaceIndustry", () => ({ useWorkspaceIndustry: () => "fashion" }));
 
 import { InventoryPage } from "@/pages/Inventory";
@@ -94,5 +103,87 @@ describe("Inventory coverage (audit F09)", () => {
     expect(await screen.findByText("Store cover 10.5 days")).toBeInTheDocument();
     expect(screen.getByText("SKU-wide cover 61.6 days (all locations)")).toBeInTheDocument();
     expect(screen.getByText("1 critical · 0 low")).toBeInTheDocument();
+  });
+});
+
+describe("Inventory remediation (deep audit F8, F9, F14, F16)", () => {
+  beforeEach(() => {
+    api.levels.mockReset();
+    api.coverage.mockReset();
+    api.upsert.mockReset();
+    api.levels.mockResolvedValue({ industry: "fashion", count: 1, levels: [level("Boduppal", 30)] });
+  });
+
+  it("says stock could not be loaded instead of claiming there is none", async () => {
+    api.levels.mockRejectedValue(new Error("503"));
+    api.coverage.mockResolvedValue(coverage({}));
+
+    renderPage();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/stock could not be loaded/i);
+    expect(screen.queryByText("No stock data yet")).not.toBeInTheDocument();
+  });
+
+  it("says cover is unavailable when coverage fails, never Unknown/No action as if computed", async () => {
+    api.coverage.mockRejectedValue(new Error("503"));
+
+    renderPage();
+
+    expect(await screen.findByText(/cover could not be loaded/i)).toBeInTheDocument();
+    expect(screen.queryByText("No action")).not.toBeInTheDocument();
+  });
+
+  it("refetches coverage when the user refreshes stock", async () => {
+    api.coverage.mockResolvedValue(coverage({}));
+    renderPage();
+    await screen.findByText(/SKU-wide cover 61.6 days/);
+    const before = api.coverage.mock.calls.length;
+
+    fireEvent.click(screen.getByRole("button", { name: /refresh/i }));
+
+    await waitFor(() => expect(api.coverage.mock.calls.length).toBeGreaterThan(before));
+  });
+
+  it("shows the new cover immediately after an import changes stock", async () => {
+    api.coverage.mockResolvedValueOnce(coverage({}));
+    renderPage();
+    await screen.findByText(/SKU-wide cover 61.6 days/);
+    api.coverage.mockResolvedValue(coverage({
+      sku_wide: { available_units: 20, inbound_units: 0, cover_days: 5.6, status: "critical", reason: "" },
+    }));
+
+    fireEvent.click(screen.getByRole("button", { name: "Run test import" }));
+
+    expect(await screen.findByText(/SKU-wide cover 5.6 days/)).toBeInTheDocument();
+  });
+
+  it("labels provenance explicitly instead of 'Real'", async () => {
+    api.levels.mockResolvedValue({ industry: "fashion", count: 1, levels: [{ ...level("Boduppal", 30), source: "csv" }] });
+    api.coverage.mockResolvedValue(coverage({}));
+
+    renderPage();
+
+    expect(await screen.findByText(/CSV import · as of 25 Oct 2026/)).toBeInTheDocument();
+    expect(screen.queryByText("Real")).not.toBeInTheDocument();
+  });
+
+  it("flags an assumed lead time beside the cover", async () => {
+    api.coverage.mockResolvedValue(coverage({ lead_time_assumed: true }));
+
+    renderPage();
+
+    expect(await screen.findByText("Lead time assumed (14-day default)")).toBeInTheDocument();
+  });
+
+  it("calls long cover excess and suggests the excess-stock next action", async () => {
+    api.coverage.mockResolvedValue(coverage({
+      sku_wide: { available_units: 1000, inbound_units: 0, cover_days: 466.7, status: "excess",
+        reason: "", next_action: "Pause reorders, review inbound stock, and consider a transfer or markdown." },
+    }));
+
+    renderPage();
+
+    expect(await screen.findAllByText("Excess")).not.toHaveLength(0);
+    expect(screen.getByText(/Pause reorders, review inbound stock/)).toBeInTheDocument();
   });
 });

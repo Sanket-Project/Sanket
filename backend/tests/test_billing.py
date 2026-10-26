@@ -216,6 +216,9 @@ def _mock_session(*, plan, tenant, live_sub=None, prior_sub_id=None):
     lookup → scalar() for trial eligibility.
     """
     session = AsyncMock()
+    # AsyncSession.add is synchronous; an AsyncMock here returns a coroutine
+    # nobody awaits, which warned on every call.
+    session.add = MagicMock()
     session.get.side_effect = [plan, tenant]
     session.execute.return_value = MagicMock(scalar_one_or_none=MagicMock(return_value=live_sub))
     session.scalar.return_value = prior_sub_id

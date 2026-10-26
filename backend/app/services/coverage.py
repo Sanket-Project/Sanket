@@ -16,7 +16,10 @@ recommendations:
   figure presented as a store's.
 
 Status: unknown (no basis / no fresh stock), critical (cover <= lead time), low
-(<= ``LOW_MULTIPLIER`` x lead time), healthy. No transfer suggestions are made.
+(<= ``LOW_MULTIPLIER`` x lead time), excess (cover > ``EXCESS_MULTIPLIER`` x the
+lead-time + review-period protection window — an approximation, in days of
+cover on available stock, of the decision engine's excess-stock rule, which
+also counts inbound units and safety stock), healthy. No transfer suggestions are made.
 """
 
 from __future__ import annotations
@@ -34,28 +37,46 @@ from app.models.enums import IndustryCode
 from app.models.forecast import ForecastResult
 from app.models.inventory import InventoryLevel
 from app.models.product import Sku
+from app.models.tenant import Tenant
 from app.models.sales import HistoricalSale
-from app.services.decision_builder import latest_completed_run
+from app.services.decision_builder import latest_completed_run, load_policy
 from app.services.decision_engine import DEFAULT_LEAD_TIME_DAYS
+from app.services.planning_inputs import (
+    FORECAST_MAX_AGE_DAYS,
+    STALE_STOCK_DAYS,
+    is_run_fresh,
+    stock_is_stale,
+)
 
-FORECAST_MAX_AGE_DAYS = 14
 FORECAST_WEEKS = 4
 TRAILING_WEEKS = 8
 MIN_WEEKS = 4
-STALE_STOCK_DAYS = 30
 LOW_MULTIPLIER = 1.5
+#: Mirrors the multiplier of the decision engine's excess-stock decision
+#: (position > 2 x order-up-to). Coverage applies it to days of cover on
+#: available stock only, so it is an approximation of that rule, not a copy.
+EXCESS_MULTIPLIER = 2
+EXCESS_ACTION = (
+    "Pause reorders, review inbound stock, and consider a transfer or markdown."
+)
 
 _POOLED = "Cover is SKU-wide (all locations pooled)"
 
 
-def _status(cover_days: float | None, lead: int) -> str:
+def _status(cover_days: float | None, lead: int, review_days: int) -> str:
     if cover_days is None:
         return "healthy"  # demand basis exists and expects no sales
     if cover_days <= lead:
         return "critical"
     if cover_days <= lead * LOW_MULTIPLIER:
         return "low"
+    if cover_days > EXCESS_MULTIPLIER * (lead + review_days):
+        return "excess"
     return "healthy"
+
+
+def _next_action(status: str | None) -> str | None:
+    return EXCESS_ACTION if status == "excess" else None
 
 
 def _cover(available: float, weekly: float) -> float | None:
@@ -79,6 +100,8 @@ async def coverage(
     this_week = current_week_start(now)
     window_start = this_week - timedelta(weeks=TRAILING_WEEKS)
     last_week = this_week - timedelta(weeks=1)
+    tenant = await session.get(Tenant, tenant_id)
+    review_days = load_policy(tenant.settings if tenant else None).review_period_days
 
     stock_rows = (
         await session.execute(
@@ -88,19 +111,13 @@ async def coverage(
         )
     ).all()
     if not stock_rows:
-        return _envelope(now, [])
+        return _envelope(now, [], review_days)
     sku_ids = list({lvl.sku_id for lvl, _, _ in stock_rows})
 
     # Forecast basis: the latest real (non-backtest) run, if recent enough.
     forecast_weekly: dict[uuid.UUID, float] = {}
     run = await latest_completed_run(session, tenant_id, ind)
-    run_fresh = bool(
-        run is not None
-        and run.completed_at is not None
-        and (now - (run.completed_at if run.completed_at.tzinfo else run.completed_at.replace(tzinfo=UTC)))
-        <= timedelta(days=FORECAST_MAX_AGE_DAYS)
-    )
-    if run_fresh:
+    if is_run_fresh(run, now):
         rows = (
             await session.execute(
                 select(ForecastResult.sku_id, ForecastResult.forecast_date,
@@ -171,10 +188,7 @@ async def coverage(
                 f"only {observed} of the last {TRAILING_WEEKS} weeks have sales."
             )
 
-        stale = [
-            lvl for lvl in levels
-            if lvl.as_of is None or now - lvl.as_of > timedelta(days=STALE_STOCK_DAYS)
-        ]
+        stale = [lvl for lvl in levels if stock_is_stale(lvl.as_of, now)]
         available = sum(float(lvl.available_units) for lvl in levels)
         inbound = sum(float(lvl.inbound_units or 0) for lvl in levels)
 
@@ -190,7 +204,7 @@ async def coverage(
             ) + f"; cover needs a stock position from the last {STALE_STOCK_DAYS} days."
         else:
             sku_cover = _cover(available, weekly or 0.0)
-            sku_status = _status(sku_cover, lead)
+            sku_status = _status(sku_cover, lead, review_days)
             sku_reason = (
                 "No sales expected over the window." if sku_cover is None
                 else f"{_POOLED}: {available:g} available / {weekly:g} units a week."
@@ -213,7 +227,7 @@ async def coverage(
                 loc_reason = "Stock position at this location is out of date."
             else:
                 loc_cover = _cover(float(lvl.available_units), loc_weekly)
-                loc_status = _status(loc_cover, lead)
+                loc_status = _status(loc_cover, lead, review_days)
                 loc_reason = (
                     f"Location sales: {loc_weekly:g} units a week over {loc_observed} week(s)."
                 )
@@ -232,6 +246,7 @@ async def coverage(
                     },
                     "cover_days": loc_cover,
                     "status": loc_status,
+                    "next_action": _next_action(loc_status),
                     "reason": loc_reason,
                 }
             )
@@ -253,16 +268,17 @@ async def coverage(
                     "inbound_units": inbound,
                     "cover_days": sku_cover,
                     "status": sku_status,
+                    "next_action": _next_action(sku_status),
                     "reason": sku_reason,
                 },
                 "locations": locations,
             }
         )
     out.sort(key=lambda s: s["sku_code"] or "")
-    return _envelope(now, out)
+    return _envelope(now, out, review_days)
 
 
-def _envelope(now: datetime, skus: list[dict]) -> dict[str, Any]:
+def _envelope(now: datetime, skus: list[dict], review_days: int) -> dict[str, Any]:
     return {
         "as_of": now.isoformat(),
         "calendar": CALENDAR,
@@ -273,6 +289,8 @@ def _envelope(now: datetime, skus: list[dict]) -> dict[str, Any]:
             "min_weeks": MIN_WEEKS,
             "stale_stock_days": STALE_STOCK_DAYS,
             "low_multiplier": LOW_MULTIPLIER,
+            "excess_multiplier": EXCESS_MULTIPLIER,
+            "review_period_days": review_days,
             "transfer_suggestions": False,
         },
         "skus": skus,

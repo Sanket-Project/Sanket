@@ -114,7 +114,8 @@ class Settings(BaseSettings):
     # A viewer role limited what a visitor could change, but they were still
     # reading the development workspace's real data. Migration 0020 creates a
     # dedicated `sandbox` workspace, scoped to one industry, for this to point at.
-    sandbox_enabled: bool = True
+    public_signup_enabled: bool = False
+    sandbox_enabled: bool = False
     sandbox_tenant_slug: str = "sandbox"
     sandbox_email: str = "sandbox@sanket.app"
 

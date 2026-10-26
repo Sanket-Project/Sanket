@@ -36,7 +36,7 @@ export const TopBar = () => {
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
-    navigate("/", { replace: true });
+    navigate("/login", { replace: true });
     await logout();
   };
   const activeIndustry = useWorkspaceIndustry();

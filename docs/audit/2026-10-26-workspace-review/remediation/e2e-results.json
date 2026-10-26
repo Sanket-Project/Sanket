@@ -1,0 +1,91 @@
+{
+  "f1": {
+    "sameDocument": true,
+    "aRowsVisibleToB": 0
+  },
+  "f2": {
+    "openExcludesExpired": true,
+    "acceptStatus": 409,
+    "detail": "Recommendation expired at 2026-10-24T11:29:11.337106+00:00. Recompute decisions to act on current stock, forecast and lead-time inputs."
+  },
+  "f3_f6_f7": {
+    "horizon": {
+      "horizon_weeks": 12,
+      "requested_horizon_weeks": 26,
+      "forecast_weeks_available": 12,
+      "horizon_capped_reason": "The forecast covers 12 weeks, so the simulation stops at 12 weeks instead of the 26 requested. Weeks beyond the forecast are not invented.",
+      "review_weeks": 4,
+      "holding_cost_pct": 0.25,
+      "service_level": 0.97
+    },
+    "readiness": {
+      "forecast_run_id": "38db576f-1a90-4d01-8e1e-e0651f4daa92",
+      "forecast_completed_at": "2026-10-26T05:29:11.337106+00:00",
+      "forecast_age_days": 0.3,
+      "forecast_stale": false,
+      "skus_missing_stock": [],
+      "skus_stale_stock": [
+        "SYN-A-SCARF"
+      ],
+      "skus_lead_time_assumed": [
+        "SYN-A-KURTI"
+      ],
+      "skus_missing_cost": [
+        "SYN-A-KURTI",
+        "SYN-A-SCARF"
+      ],
+      "skus_missing_price": [],
+      "assumed_lead_time_days": 14,
+      "advisory": true
+    },
+    "valuation": {
+      "skus_with_cost": 2,
+      "skus_with_price": 4,
+      "skus_total": 4
+    },
+    "baselineMargin": null,
+    "purchaseSpendImpact": null
+  },
+  "f12_320": {
+    "clientWidth": 320,
+    "scrollWidth": 320,
+    "viewport": 320,
+    "maxSliderRight": 291
+  },
+  "f12_390": {
+    "clientWidth": 390,
+    "scrollWidth": 390,
+    "viewport": 390,
+    "maxSliderRight": 361
+  },
+  "f12_768": {
+    "clientWidth": 768,
+    "scrollWidth": 768,
+    "viewport": 768,
+    "maxSliderRight": 739
+  },
+  "f10_f11_light": {
+    "textContrast": 15.72,
+    "placeholderContrast": 7.24,
+    "escapedFocus": 0,
+    "placeholderInput": true
+  },
+  "f10_f11_dark": {
+    "textContrast": 12.72,
+    "placeholderContrast": 9.1,
+    "escapedFocus": 0,
+    "placeholderInput": true
+  },
+  "f15": {
+    "before": 500,
+    "afterPush": 0,
+    "afterBack": 500
+  },
+  "f9": {
+    "coverageRefetched": 200,
+    "decisionsRefetched": 200
+  },
+  "f4": {
+    "url": "http://localhost:5174/api/v1/analytics/sales/timeseries?granularity=week&lookback_days=84"
+  }
+}

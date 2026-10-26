@@ -153,7 +153,7 @@ function productMeta(industry: IndustryCode, kw: string): { name: string; catego
 function buildProductDrivers(regional: TrendSignal[], industry: IndustryCode): GroupedDriver[] {
   const byProduct = new Map<string, { kw: string; sum: number; wsum: number }>();
   for (const r of regional) {
-    const kw = String((r.payload as any)?.product || "").trim();
+    const kw = String(r.payload?.product || "").trim();
     if (!kw) continue;
     const key = kw.toLowerCase();
     const w = Math.max(0.1, Number(r.confidence) || 0.5);
@@ -1091,20 +1091,20 @@ export const TrendAnalysisPage = () => {
     new Set([
       ...ALL_STATES,
       ...regionalData
-        .map((item: any) => item.payload?.state)
-        .filter((s: any) => s && s !== "Unknown"),
+        .map((item) => item.payload?.state)
+        .filter((s): s is string => typeof s === "string" && s !== "Unknown"),
     ])
   ).sort() as string[];
 
   // When a state is selected we expand to its full district breakdown (modeled
   // per district); otherwise we show the national headline centers from the feed.
   const stateSelected = selectedState !== "all";
-  const baseRegional: any[] = stateSelected
-    ? regionalData.filter((item: any) => item.payload?.state === selectedState)
+  const baseRegional: TrendSignal[] = stateSelected
+    ? regionalData.filter((item) => item.payload?.state === selectedState)
     : regionalData;
 
   // Filter regional demand records based on active user filters
-  const filteredRegional = baseRegional.filter((item: any) => {
+  const filteredRegional = baseRegional.filter((item) => {
     const payload = item.payload || {};
     const matchesTier = selectedTier === "all" || String(payload.tier).toLowerCase() === selectedTier.toLowerCase();
 
@@ -1122,9 +1122,9 @@ export const TrendAnalysisPage = () => {
   const coolestRegion = sortedByScore[sortedByScore.length - 1];
 
   const getTierAvg = (tierName: string) => {
-    const sList = baseRegional.filter((s: any) => String(s.payload?.tier).toLowerCase() === tierName.toLowerCase());
+    const sList = baseRegional.filter((s) => String(s.payload?.tier).toLowerCase() === tierName.toLowerCase());
     if (sList.length === 0) return 0;
-    const sum = sList.reduce((acc: number, cur: any) => acc + Number(cur.normalized_score), 0);
+    const sum = sList.reduce((acc: number, cur) => acc + Number(cur.normalized_score), 0);
     return Math.round((sum / sList.length) * 100);
   };
   const t1Avg = getTierAvg("tier1");
@@ -1401,16 +1401,16 @@ export const TrendAnalysisPage = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-fade-in stagger-3">
-              {filteredRegional.map((s: any) => {
+              {filteredRegional.map((s) => {
                 const scoreVal = Number(s.normalized_score);
                 const scorePct = Math.round(scoreVal * 100);
                 const absPct = Math.min(100, Math.abs(scorePct));
                 
                 const tierName = String(s.payload?.tier || "TIER3").toUpperCase();
-                const city = s.payload?.city || "Unknown Center";
-                const state = s.payload?.state || "Unknown State";
-                const keyword = s.payload?.product || cleanLabel(s.series_key);
-                const category = s.payload?.category || "Category";
+                const city = String(s.payload?.city || "Unknown Center");
+                const state = String(s.payload?.state || "Unknown State");
+                const keyword = String(s.payload?.product || cleanLabel(s.series_key));
+                const category = String(s.payload?.category || "Category");
                 
                 const isPositive = scoreVal >= 0.05;
                 const isNegative = scoreVal <= -0.05;

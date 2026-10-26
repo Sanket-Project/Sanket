@@ -23,6 +23,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Search,
+  X,
   type AppIcon,
 } from "@/components/ui/icons";
 import { useQuery } from "@tanstack/react-query";
@@ -65,6 +66,27 @@ const BuildStamp = () => {
     </p>
   );
 };
+
+const DESKTOP_QUERY = "(min-width: 1024px)";
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
+
+/** Matches Tailwind's `lg` breakpoint, where the sidebar is a permanent rail. */
+function useIsDesktop() {
+  const [desktop, setDesktop] = useState(
+    () => typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia(DESKTOP_QUERY).matches,
+  );
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
+    const mq = window.matchMedia(DESKTOP_QUERY);
+    const onChange = () => setDesktop(mq.matches);
+    mq.addEventListener?.("change", onChange);
+    return () => mq.removeEventListener?.("change", onChange);
+  }, []);
+  return desktop;
+}
+
+const isApplePlatform = () =>
+  typeof navigator !== "undefined" && /Mac|iPhone|iPad|iPod/i.test(navigator.platform || navigator.userAgent);
 
 interface NavEntry {
   to: string;
@@ -170,6 +192,10 @@ export const Sidebar = () => {
   const { collapsed, toggle, setCollapsed, mobileOpen, setMobileOpen } = useSidebarStore();
   const [search, setSearch] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
+  const asideRef = useRef<HTMLElement>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
+  const isDesktop = useIsDesktop();
+  const drawerOpen = !isDesktop && mobileOpen;
   const isPharma = industry === "pharma";
   const closeMobile = () => setMobileOpen(false);
   // Rail collapse is a desktop concept; the mobile drawer always shows full nav.
@@ -216,6 +242,59 @@ export const Sidebar = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [toggle, setCollapsed, setMobileOpen]);
 
+  // Accessible drawer (deep audit F11): on open, remember the opener and move
+  // focus inside; the page behind becomes inert. On close, restore focus. A
+  // closed drawer on mobile is inert so it cannot be tabbed into off-screen.
+  useEffect(() => {
+    const aside = asideRef.current;
+    const main = document.getElementById("app-main-column");
+    if (isDesktop) {
+      aside?.removeAttribute("inert");
+      aside?.removeAttribute("aria-hidden");
+      main?.removeAttribute("inert");
+      return;
+    }
+    if (mobileOpen) {
+      openerRef.current = document.activeElement as HTMLElement | null;
+      aside?.removeAttribute("inert");
+      aside?.removeAttribute("aria-hidden");
+      main?.setAttribute("inert", "");
+      window.setTimeout(() => searchRef.current?.focus(), 0);
+      return;
+    }
+    aside?.setAttribute("inert", "");
+    aside?.setAttribute("aria-hidden", "true");
+    main?.removeAttribute("inert");
+    const opener = openerRef.current;
+    openerRef.current = null;
+    if (opener?.isConnected) opener.focus();
+  }, [mobileOpen, isDesktop]);
+
+  const trapFocus = (event: React.KeyboardEvent<HTMLElement>) => {
+    if (!drawerOpen || event.key !== "Tab" || !asideRef.current) return;
+    // Only controls that can actually take focus count: the desktop-only
+    // Collapse button is display:none here, and using it as the wrap point let
+    // Tab escape the drawer.
+    // Safari < 17.4 lacks checkVisibility; a display:none element has no boxes.
+    const all = Array.from(asideRef.current.querySelectorAll<HTMLElement>(FOCUSABLE));
+    const shown = all.filter((el) =>
+      typeof el.checkVisibility === "function" ? el.checkVisibility() : el.getClientRects().length > 0,
+    );
+    // No element reporting a box means no layout information at all: use every control.
+    const items = shown.length ? shown : all;
+    if (!items.length) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    const active = document.activeElement;
+    if (event.shiftKey && (active === first || !asideRef.current.contains(active))) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && (active === last || !asideRef.current.contains(active))) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+
   // Swipe-left to close on mobile
   useEffect(() => {
     if (!mobileOpen) return;
@@ -244,7 +323,9 @@ export const Sidebar = () => {
         />
       )}
       <aside
+        ref={asideRef}
         aria-label="Main navigation"
+        onKeyDown={trapFocus}
         className={clsx(
           "flex flex-col shrink-0 transition-all duration-300 ease-in-out",
           // Mobile drawer mode
@@ -269,28 +350,41 @@ export const Sidebar = () => {
           className="shrink-0 rounded-xl shadow-md"
         />
         {!c && (
-          <div className="animate-slide-in leading-none">
+          <div className="animate-slide-in flex-1 leading-none">
             <div className="font-display font-bold text-content lg:text-[#BDD9D7] tracking-tight text-sm">SANKET</div>
             <div className="mt-1.5 text-[9px] uppercase tracking-widest text-content-subtle lg:text-[#BDD9D7]/50 font-semibold">
               Predictive OS
             </div>
           </div>
         )}
+        {drawerOpen && (
+          <button
+            type="button"
+            onClick={closeMobile}
+            aria-label="Close navigation"
+            className="ml-auto grid h-9 w-9 place-items-center rounded-lg text-content-muted hover:bg-surface-3 hover:text-content lg:hidden"
+          >
+            <X size={18} aria-hidden="true" />
+          </button>
+        )}
       </div>
 
       {!c && (
         <div className="px-4 pt-4">
           <label className="relative block">
-            <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#BDD9D7]/55" aria-hidden="true" />
+            <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-content-subtle lg:text-[#BDD9D7]/55" aria-hidden="true" />
+            {/* Semantic tokens on the light mobile drawer; the teal-on-dark
+                treatment applies only to the desktop rail (deep audit F10). */}
             <input
               ref={searchRef}
+              type="search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Find a workspace…"
+              placeholder="Find a page…"
               aria-label="Search navigation"
-              className="h-9 w-full rounded-xl border border-white/10 bg-white/[0.06] pl-9 pr-12 text-xs text-white outline-none placeholder:text-[#BDD9D7]/45 focus:border-[#BDD9D7]/45 focus:ring-2 focus:ring-[#BDD9D7]/10"
+              className="h-9 w-full rounded-xl border border-line bg-surface-2 pl-9 pr-14 text-xs text-content outline-none placeholder:text-content-muted focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)] lg:border-white/10 lg:bg-white/[0.06] lg:text-white lg:placeholder:text-[#BDD9D7]/60 lg:focus:border-[#BDD9D7]/45 lg:focus:ring-[#BDD9D7]/10"
             />
-            <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 rounded border border-white/10 px-1.5 py-0.5 font-mono text-[9px] text-[#BDD9D7]/50">⌘K</span>
+            <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 rounded border border-line px-1.5 py-0.5 font-mono text-[9px] text-content-subtle lg:border-white/10 lg:text-[#BDD9D7]/60" aria-hidden="true">{isApplePlatform() ? "⌘K" : "Ctrl K"}</span>
           </label>
         </div>
       )}
@@ -306,7 +400,7 @@ export const Sidebar = () => {
           </div>
         ))}
         {!c && search.trim() && visibleSections.every((section) => section.entries.length === 0) && (
-          <p className="px-4 py-6 text-center text-xs text-[#BDD9D7]/55">No workspace matches “{search}”.</p>
+          <p className="px-4 py-6 text-center text-xs text-content-subtle lg:text-[#BDD9D7]/60">No page matches “{search}”.</p>
         )}
 
         {isPharma && (

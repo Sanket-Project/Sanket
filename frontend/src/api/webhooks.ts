@@ -20,7 +20,7 @@ export interface WebhookDelivery {
   attempt_count: number;
   response_status: number | null;
   response_body: string | null;
-  payload: Record<string, any>;
+  payload: Record<string, unknown>;
   delivered_at: string | null;
   next_retry_at: string | null;
   created_at: string;

@@ -21,7 +21,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 import structlog
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.alert import ShortageAlert
@@ -85,6 +85,9 @@ class DailyDigest:
     open_alerts: int = 0
     total_units: int = 0
     total_value: float = 0.0
+    #: Orders with no recorded value (unknown price and cost). While any exist
+    #: the total is withheld — a sum of only the valued ones is not the total.
+    unvalued: int = 0
     more_count: int = 0
     generated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     #: Set when there is genuinely nothing to say, so callers can skip sending
@@ -103,7 +106,8 @@ class DailyDigest:
             "items": [i.as_dict() for i in self.items],
             "open_alerts": self.open_alerts,
             "total_units": self.total_units,
-            "total_value": self.total_value,
+            "total_value": None if self.unvalued else self.total_value,
+            "unvalued": self.unvalued,
             "more_count": self.more_count,
             "generated_at": self.generated_at.isoformat(),
             "empty_reason": self.empty_reason,
@@ -129,6 +133,11 @@ async def build_digest(
                     Recommendation.tenant_id == tenant_id,
                     Recommendation.industry == ind,
                     Recommendation.status == DecisionStatus.open,
+                    # Same rule as the queue: past expires_at it is not actionable.
+                    or_(
+                        Recommendation.expires_at.is_(None),
+                        Recommendation.expires_at > datetime.now(UTC),
+                    ),
                     Recommendation.kind == "purchase_order",
                     Recommendation.confidence >= config.min_confidence,
                 )
@@ -185,6 +194,8 @@ async def build_digest(
         if value <= 0:
             value = float(econ.get("working_capital_released") or 0)
             label = "frees up"
+        if econ.get("revenue_protected") is None and econ.get("working_capital_released") is None:
+            digest.unvalued += 1
 
         digest.items.append(
             DigestItem(
@@ -254,7 +265,13 @@ def render_text(digest: DailyDigest) -> str:
         lines.append(f"…and {digest.more_count} more in the app.")
         lines.append("")
 
-    if digest.total_value > 0:
+    if digest.unvalued:
+        plural = "order has" if digest.unvalued == 1 else "orders have"
+        lines.append(
+            f"{digest.unvalued} {plural} no recorded value, so no total is shown — "
+            "add unit costs and prices in the app."
+        )
+    elif digest.total_value > 0:
         lines.append(
             f"Total at stake: {format_money(digest.total_value, digest.currency)} "
             f"across {digest.total_units:,} units."

@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-26",
+  "frontend": {
+    "typecheck": "passed",
+    "lint": {
+      "errors": 0,
+      "warnings": 28
+    },
+    "tests": {
+      "files": 36,
+      "passed": 151,
+      "seconds": 88.46
+    }
+  },
+  "backend": {
+    "passed": 528,
+    "warnings": 108,
+    "seconds": 232.88
+  },
+  "mobile": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "scenario": {
+      "mainClientWidth": 382,
+      "mainScrollWidth": 428,
+      "sliderRightEdge": 403
+    },
+    "drawerFocusAfterTab": "Amounts: As recorded"
+  },
+  "productionSourceChanged": false
+}

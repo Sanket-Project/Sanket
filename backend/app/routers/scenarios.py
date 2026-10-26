@@ -9,6 +9,7 @@ endpoint says so rather than simulating a made-up demand curve.
 from __future__ import annotations
 
 import uuid
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
@@ -18,18 +19,23 @@ from sqlalchemy import select
 
 from app.core.exceptions import AuthenticationError
 from app.models.enums import IndustryCode
+from app.models.inventory import InventoryLevel
 from app.models.product import Sku
 from app.models.tenant import Tenant
 from app.routers.industry_router import ActiveIndustry, TenantId
 from app.services import scenario as sim
 from app.services.decision_builder import (
     MAX_SKUS,
-    forecast_bands,
     latest_completed_run,
     load_policy,
 )
 from app.services.decision_engine import DEFAULT_LEAD_TIME_DAYS, SkuEconomics
-from app.services.inventory import current_levels
+from app.services.planning_inputs import (
+    future_forecast_bands,
+    is_run_fresh,
+    run_age_days,
+    stock_is_stale,
+)
 
 log = structlog.get_logger(__name__)
 router = APIRouter(prefix="/scenarios", tags=["scenarios"])
@@ -122,13 +128,18 @@ async def simulate(
                 ),
             )
 
-        bands = await forecast_bands(session, tenant_id, run.id)
+        now = datetime.now(UTC)
+        bands = await future_forecast_bands(session, tenant_id, run.id, now)
         if body.sku_ids:
             wanted = set(body.sku_ids)
             bands = {k: v for k, v in bands.items() if k in wanted}
         if not bands:
             raise HTTPException(
-                status_code=422, detail="The latest forecast run produced no SKU-level results."
+                status_code=422,
+                detail=(
+                    "The latest forecast run has no SKU-level results for the current or "
+                    "future weeks. Generate a new forecast."
+                ),
             )
 
         ids = list(bands)[:MAX_SKUS]
@@ -145,28 +156,43 @@ async def simulate(
         if not sku_rows:
             raise HTTPException(status_code=422, detail="No active SKUs matched the forecast run.")
 
-        stock = await current_levels(
-            session, tenant_id=tenant_id, industry=ctx.code, sku_ids=[s.id for s in sku_rows]
-        )
+        levels = (
+            await session.execute(
+                select(InventoryLevel).where(
+                    InventoryLevel.tenant_id == tenant_id,
+                    InventoryLevel.industry == industry,
+                    InventoryLevel.sku_id.in_([s.id for s in sku_rows]),
+                )
+            )
+        ).scalars().all()
+
+    by_sku: dict[uuid.UUID, list[InventoryLevel]] = {}
+    for lvl in levels:
+        by_sku.setdefault(lvl.sku_id, []).append(lvl)
 
     currency = sku_rows[0].currency or "INR"
     economics = []
     band_map: dict[str, sim.DemandBand] = {}
     for s in sku_rows:
-        snap = stock.get(str(s.id))
+        rows = by_sku.get(s.id, [])
+        # A SKU with no stock record starts from zero on hand: that is the
+        # simulation's explicit assumption, disclosed in `readiness` below.
         economics.append(
             SkuEconomics(
                 sku_id=str(s.id),
                 sku_code=s.sku_code,
-                on_hand_units=float(snap.on_hand_units) if snap else 0.0,
-                reserved_units=float(snap.reserved_units) if snap else 0.0,
-                inbound_units=float(snap.inbound_units) if snap else 0.0,
+                on_hand_units=sum(float(r.on_hand_units or 0) for r in rows),
+                reserved_units=sum(float(r.reserved_units or 0) for r in rows),
+                inbound_units=sum(float(r.inbound_units or 0) for r in rows),
                 lead_time_days=int(s.lead_time_days or DEFAULT_LEAD_TIME_DAYS),
                 moq=int(s.moq or 1),
                 unit_cost=float(s.unit_cost or 0),
                 unit_price=float(s.unit_price or 0),
                 currency=s.currency or "INR",
                 configured_safety_stock=int(s.safety_stock or 0),
+                cost_known=s.unit_cost is not None,
+                price_known=s.unit_price is not None,
+                lead_time_assumed=s.lead_time_days is None,
             )
         )
         band_map[str(s.id)] = bands[s.id]
@@ -184,9 +210,10 @@ async def simulate(
     payload["run_id"] = str(run.id)
     payload["skus_simulated"] = len(economics)
     payload["stock_coverage"] = {
-        "skus_with_recorded_stock": sum(1 for s in sku_rows if str(s.id) in stock),
+        "skus_with_recorded_stock": sum(1 for s in sku_rows if by_sku.get(s.id)),
         "skus_total": len(sku_rows),
     }
+    payload["readiness"] = _readiness(run, sku_rows, by_sku, now)
 
     log.info(
         "scenario.simulated",
@@ -196,3 +223,35 @@ async def simulate(
         horizon=body.horizon_weeks,
     )
     return payload
+
+
+def _readiness(
+    run: Any, sku_rows: list[Sku], by_sku: dict[uuid.UUID, list[InventoryLevel]], now: datetime
+) -> dict[str, Any]:
+    """Which inputs this simulation stands on, judged by the same contract as
+    coverage and decisions. Any gap makes the result advisory."""
+    codes = sorted(sku_rows, key=lambda s: s.sku_code)
+    missing_stock = [s.sku_code for s in codes if not by_sku.get(s.id)]
+    stale_stock = [
+        s.sku_code for s in codes
+        if by_sku.get(s.id) and any(stock_is_stale(r.as_of, now) for r in by_sku[s.id])
+    ]
+    lead_assumed = [s.sku_code for s in codes if s.lead_time_days is None]
+    missing_cost = [s.sku_code for s in codes if s.unit_cost is None]
+    missing_price = [s.sku_code for s in codes if s.unit_price is None]
+    stale = not is_run_fresh(run, now)
+    return {
+        "forecast_run_id": str(run.id),
+        "forecast_completed_at": run.completed_at.isoformat() if run.completed_at else None,
+        "forecast_age_days": run_age_days(run, now),
+        "forecast_stale": stale,
+        "skus_missing_stock": missing_stock,
+        "skus_stale_stock": stale_stock,
+        "skus_lead_time_assumed": lead_assumed,
+        "skus_missing_cost": missing_cost,
+        "skus_missing_price": missing_price,
+        "assumed_lead_time_days": DEFAULT_LEAD_TIME_DAYS,
+        "advisory": bool(
+            stale or missing_stock or stale_stock or lead_assumed or missing_cost or missing_price
+        ),
+    }

@@ -30,7 +30,7 @@ from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 import structlog
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.calendar import week_bucket
@@ -94,9 +94,17 @@ def _money_line(
     evidence: int,
     details: list[dict] | None = None,
     additive: bool = True,
+    unvalued: int = 0,
 ) -> RoiLine:
     rounded = {c: round(v, 2) for c, v in per_currency.items()}
-    if not rounded:
+    if unvalued:
+        # A sum of only the valued orders would read as the whole; say so instead.
+        plural = "order has" if unvalued == 1 else "orders have"
+        basis = f"{basis} {unvalued} {plural} no recorded unit cost or price, so no total is shown."
+        rounded = {}
+    if unvalued:
+        value: float | None = None
+    elif not rounded:
         value: float | None = 0.0
     elif len(rounded) == 1:
         value = next(iter(rounded.values()))
@@ -129,6 +137,11 @@ async def _recommendations(
         Recommendation.industry == industry,
         Recommendation.status == status,
     )
+    if status == DecisionStatus.open:
+        # Past expires_at the queue no longer offers it, so it is not opportunity.
+        q = q.where(
+            or_(Recommendation.expires_at.is_(None), Recommendation.expires_at > datetime.now(UTC))
+        )
     if since is not None:
         q = q.where(Recommendation.decided_at >= since)
     return list((await session.execute(q)).scalars().all())
@@ -138,13 +151,28 @@ def _is_po(r: Recommendation) -> bool:
     return str(r.kind) == "purchase_order"
 
 
+def _cost_known(r: Recommendation) -> bool:
+    """unit_cost is NOT NULL (0 when unknown); the inputs blob records whether
+    a cost was actually recorded."""
+    inputs = r.inputs or {}
+    return not ("unit_cost" in inputs and inputs["unit_cost"] is None)
+
+
 def _opportunity(open_recs: list[Recommendation]) -> list[RoiLine]:
     at_risk: dict[str, float] = defaultdict(float)
     order_value: dict[str, float] = defaultdict(float)
     pos = [r for r in open_recs if _is_po(r)]
+    unpriced = unvalued_cost = 0
     for r in pos:
-        at_risk[r.currency] += float((r.economics or {}).get("revenue_protected") or 0)
-        order_value[r.currency] += float(r.recommended_units) * float(r.unit_cost or 0)
+        revenue = (r.economics or {}).get("revenue_protected")
+        if revenue is None and "revenue_protected" in (r.economics or {}):
+            unpriced += 1
+        else:
+            at_risk[r.currency] += float(revenue or 0)
+        if _cost_known(r):
+            order_value[r.currency] += float(r.recommended_units) * float(r.unit_cost or 0)
+        else:
+            unvalued_cost += 1
     return [
         _money_line(
             "open_revenue_at_risk",
@@ -154,6 +182,7 @@ def _opportunity(open_recs: list[Recommendation]) -> list[RoiLine]:
             "Forecast demand that current stock would not cover over each open order's "
             "protection window, valued at selling price. An estimate of what is at stake.",
             evidence=len(pos),
+            unvalued=unpriced,
         ),
         _money_line(
             "open_order_value",
@@ -162,6 +191,7 @@ def _opportunity(open_recs: list[Recommendation]) -> list[RoiLine]:
             dict(order_value),
             "Recommended units x unit cost for open purchase recommendations.",
             evidence=len(pos),
+            unvalued=unvalued_cost,
         ),
     ]
 
@@ -172,11 +202,15 @@ def _at_approval(accepted: list[Recommendation]) -> list[RoiLine]:
     covered: dict[str, float] = defaultdict(float)
     details: list[dict] = []
     pos = [r for r in accepted if _is_po(r)]
+    unvalued_cost = 0
     for r in pos:
         ordered = r.accepted_units if r.accepted_units is not None else r.recommended_units
         covered[r.currency] += float((r.economics or {}).get("revenue_protected") or 0)
         delta_units = float(r.baseline_units - ordered)
         if delta_units <= 0:
+            continue
+        if not _cost_known(r):
+            unvalued_cost += 1
             continue
         delta_value = delta_units * float(r.unit_cost or 0)
         wc[r.currency] += delta_value
@@ -211,6 +245,7 @@ def _at_approval(accepted: list[Recommendation]) -> list[RoiLine]:
             "approved, which Sanket does not record.",
             evidence=len(details),
             details=details,
+            unvalued=unvalued_cost,
         ),
         _money_line(
             "carrying_cost_implied",

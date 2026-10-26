@@ -1,0 +1,30 @@
+{
+  "expired_acceptance": {
+    "expired_days_ago": 30,
+    "accepted": false,
+    "rejected": {
+      "status_code": 409,
+      "detail": "Recommendation expired at 2026-09-26T11:40:34.696336+00:00. Recompute decisions to act on current stock, forecast and lead-time inputs."
+    }
+  },
+  "simulation_extension": {
+    "input_weeks": 12,
+    "requested_weeks": 26,
+    "apply_levers_pads": false,
+    "apply_levers_error": "Horizon of 26 weeks exceeds the 12-week forecast; weeks beyond the forecast would be invented.",
+    "simulated_weeks": 12,
+    "horizon_capped_reason": "The forecast covers 12 weeks, so the simulation stops at 12 weeks instead of the 26 requested. Weeks beyond the forecast are not invented."
+  },
+  "missing_cost_effect": {
+    "unit_cost": "unknown",
+    "unit_price": 100.0,
+    "baseline_gross_margin": null,
+    "baseline_purchase_spend": null,
+    "baseline_revenue": 10000.0,
+    "valuation_coverage": {
+      "skus_with_cost": 0,
+      "skus_with_price": 1,
+      "skus_total": 1
+    }
+  }
+}

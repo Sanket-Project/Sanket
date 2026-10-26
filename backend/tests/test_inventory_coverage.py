@@ -99,7 +99,46 @@ async def test_two_stores_with_different_stock_and_demand(db_session, app_role_d
     assert by_loc["Boduppal"]["cover_days"] == 10.5
     assert by_loc["Boduppal"]["status"] == "critical"
     assert by_loc["Alwal"]["cover_days"] == 266.0
-    assert by_loc["Alwal"]["status"] == "healthy"
+    # 266 days > 2 × (14-day lead + 28-day review): the engine's excess rule.
+    assert by_loc["Alwal"]["status"] == "excess"
+
+
+async def test_cover_far_beyond_the_protection_window_is_excess(db_session, app_role_db, make_tenant):
+    """Initial review: 252 and 466.7 days of cover were shown as Healthy / No action.
+
+    The decision engine already calls stock excess when the position exceeds
+    twice the order-up-to level for lead time + review period; coverage now uses
+    the same rule in days, so the two screens agree.
+    """
+    tenant = await make_tenant()
+    sku = await _sku(db_session, tenant, lead=14)
+    await _stock(db_session, tenant, sku, "default", 1000)
+    await _weekly_sales(db_session, tenant, sku, 15)  # 466.7 days of cover
+    await db_session.commit()
+
+    payload = await _coverage(app_role_db, tenant)
+    result = payload["skus"][0]
+
+    assert result["sku_wide"]["cover_days"] == 466.7
+    assert result["sku_wide"]["status"] == "excess"
+    assert "pause reorders" in result["sku_wide"]["next_action"].lower()
+    assert payload["policy"]["excess_multiplier"] == 2
+    assert payload["policy"]["review_period_days"] == 28
+
+
+async def test_cover_within_twice_the_protection_window_stays_healthy(
+    db_session, app_role_db, make_tenant
+):
+    tenant = await make_tenant()
+    sku = await _sku(db_session, tenant, lead=14)
+    await _stock(db_session, tenant, sku, "default", 100)
+    await _weekly_sales(db_session, tenant, sku, 10)  # 70 days < 2 × (14 + 28)
+    await db_session.commit()
+
+    result = (await _coverage(app_role_db, tenant))["skus"][0]
+
+    assert result["sku_wide"]["status"] == "healthy"
+    assert result["sku_wide"]["next_action"] is None
 
 
 async def test_without_store_tagged_sales_only_pooled_cover_is_given(db_session, app_role_db, make_tenant):

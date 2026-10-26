@@ -489,9 +489,11 @@ export const ForecastsPage = () => {
   });
 
   // Auto-generate forecast on mount and when industry/horizon changes.
+  // `mutate` is a stable callback, so this still runs only on those changes.
+  const generate = run.mutate;
   useEffect(() => {
-    run.mutate();
-  }, [industry, horizon]);
+    generate();
+  }, [industry, horizon, generate]);
 
   // Only when the live service failed: a flat, labelled plan from decision inputs.
   const indicativeResult = useMemo(

@@ -130,15 +130,17 @@ const ScrollProgress = () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // LIVE TICKER
 // ─────────────────────────────────────────────────────────────────────────────
+const TICKER_ACTIONS = [
+  "Synced 1,420 new sales — inventory positions updated across all locations.",
+  "Refreshed demand forecasts for 8,200 SKUs ahead of next week's planning.",
+  "Shortage alert: SKU-8820 is down to 4 days of cover — reorder ready to approve.",
+];
+
 const LiveTicker = () => {
-  const actions = [
-    "Synced 1,420 new sales — inventory positions updated across all locations.",
-    "Refreshed demand forecasts for 8,200 SKUs ahead of next week's planning.",
-    "Shortage alert: SKU-8820 is down to 4 days of cover — reorder ready to approve.",
-  ];
+  const actions = TICKER_ACTIONS;
   const [idx, setIdx] = useState(0);
   useEffect(() => {
-    const t = setInterval(() => setIdx((p) => (p + 1) % actions.length), 4500);
+    const t = setInterval(() => setIdx((p) => (p + 1) % TICKER_ACTIONS.length), 4500);
     return () => clearInterval(t);
   }, []);
 

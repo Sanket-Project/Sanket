@@ -147,3 +147,49 @@ async def test_roi_endpoint_carries_tiers(client, signed_in_workspace):
     r = await client.get("/api/v1/roi/summary", headers=headers)
     assert r.status_code == 200, r.text
     assert set(r.json()["tiers"]) == {"opportunity", "estimated_at_approval", "observed"}
+
+
+# ── Review follow-ups: expiry and unknown money (deep audit F2, F3) ──────────
+
+
+async def test_expired_open_recommendations_are_not_opportunity(app_role_db, make_tenant):
+    tenant = await make_tenant()
+    async with app_role_db.session(str(tenant)) as s:
+        rec = await _rec(s, tenant)
+        rec.expires_at = datetime.now(UTC) - timedelta(days=1)
+        s.add(rec)
+
+    lines = _lines(await _summary(app_role_db, tenant))
+
+    assert lines["open_revenue_at_risk"]["value"] == 0
+    assert lines["open_revenue_at_risk"]["evidence_count"] == 0
+
+
+async def test_unknown_cost_or_price_withholds_the_total(app_role_db, make_tenant):
+    tenant = await make_tenant()
+    async with app_role_db.session(str(tenant)) as s:
+        valued = await _rec(s, tenant)
+        unvalued = await _rec(s, tenant)
+        unvalued.unit_cost = Decimal("0")
+        unvalued.inputs = {"unit_cost": None, "unit_price": None}
+        unvalued.economics = {"revenue_protected": None}
+        s.add_all([valued, unvalued])
+
+    lines = _lines(await _summary(app_role_db, tenant))
+
+    for key in ("open_revenue_at_risk", "open_order_value"):
+        assert lines[key]["value"] is None, key
+        assert "1 order" in lines[key]["basis"], key
+
+
+async def test_approved_order_with_unknown_cost_has_no_working_capital_figure(app_role_db, make_tenant):
+    tenant = await make_tenant()
+    async with app_role_db.session(str(tenant)) as s:
+        rec = await _rec(s, tenant, status=DecisionStatus.accepted)
+        rec.unit_cost = Decimal("0")
+        rec.inputs = {"unit_cost": None, "holding_cost_pct": 0.25, "protection_days": 42}
+        s.add(rec)
+
+    lines = _lines(await _summary(app_role_db, tenant))
+
+    assert lines["working_capital_vs_baseline"]["value"] is None

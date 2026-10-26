@@ -1,0 +1,4 @@
+ ✓ src/components/auth/IdentityQueryProvider.test.tsx > IdentityQueryProvider > does not serve account A's cached data to account B in the same industry
+ ✓ src/components/auth/IdentityQueryProvider.test.tsx > IdentityQueryProvider > drops an in-flight response that belongs to the previous identity
+ ✓ src/components/auth/IdentityQueryProvider.test.tsx > IdentityQueryProvider > clears previous-session data on sign-out
+ ✓ src/components/auth/IdentityQueryProvider.test.tsx > IdentityQueryProvider > keeps the cache for the same identity across unrelated store updates

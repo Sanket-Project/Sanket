@@ -24,7 +24,10 @@ describe("integrations", () => {
     api.upload.mockResolvedValue({ kind: "sales", rows_inserted: 0, rows_unchanged: 459,
       rows_updated: 0, rows_skipped: 0, identity_mode: "period", warnings: [] });
     const done = vi.fn();
-    const { container } = render(<QueryClientProvider client={new QueryClient()}><UploadPanel onDone={done} /></QueryClientProvider>);
+    const client = new QueryClient();
+    client.setQueryData(["dashboard-forecast", "fashion"], { rows: [{ p50: 10 }] });
+    client.setQueryData(["dashboard-history", "fashion"], { series: [] });
+    const { container } = render(<QueryClientProvider client={client}><UploadPanel onDone={done} /></QueryClientProvider>);
     const user = userEvent.setup();
     await user.upload(container.querySelector('input[type="file"]') as HTMLInputElement, new File(["sku,qty,date"], "sales.csv"));
     await user.click(await screen.findByLabelText(/Daily or weekly totals/));
@@ -32,6 +35,8 @@ describe("integrations", () => {
     await waitFor(() => expect(done).toHaveBeenCalled());
     expect(api.upload).toHaveBeenCalledWith(expect.any(File), "sales", expect.any(Object), { identity: "period", currency: undefined });
     expect(api.success).toHaveBeenCalledWith("0 new · 459 already imported · 0 corrected");
+    expect(client.getQueryState(["dashboard-forecast", "fashion"])?.isInvalidated).toBe(true);
+    expect(client.getQueryState(["dashboard-history", "fashion"])?.isInvalidated).toBe(true);
   });
 
   it("never sends a target industry", () => {

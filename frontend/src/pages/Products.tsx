@@ -257,7 +257,7 @@ export const ProductsPage = () => {
     retry: 1,
   });
 
-  const products: Product[] = liveProducts || [];
+  const products: Product[] = useMemo(() => liveProducts || [], [liveProducts]);
 
   const create = useMutation({
     mutationFn: (body: ProductCreateBody) => productsApi.create(body),

@@ -29,24 +29,28 @@ export interface DecisionInputs {
   position_units: number;
   days_of_cover: number | null;
   moq: number;
-  unit_cost: number;
-  unit_price: number;
+  /** null = no recorded value; money derived from it is withheld. */
+  unit_cost: number | null;
+  unit_price: number | null;
+  /** True when the SKU has no supplier lead time and the 14-day default was used. */
+  lead_time_assumed?: boolean;
   forecast_horizon_weeks: number;
   holding_cost_pct: number;
 }
 
+/** Money fields are null when the unit cost/price they need is unknown. */
 export interface DecisionEconomics {
   currency: string;
-  capital_committed?: number;
-  baseline_capital?: number;
-  working_capital_released?: number;
-  holding_cost_over_window?: number;
-  revenue_protected?: number;
+  capital_committed?: number | null;
+  baseline_capital?: number | null;
+  working_capital_released?: number | null;
+  holding_cost_over_window?: number | null;
+  revenue_protected?: number | null;
   units_at_risk_without_order?: number;
   excess_units?: number;
-  capital_locked?: number;
-  annual_holding_cost?: number;
-  capital_delta?: number;
+  capital_locked?: number | null;
+  annual_holding_cost?: number | null;
+  capital_delta?: number | null;
   note?: string;
 }
 
@@ -64,8 +68,8 @@ export interface Decision {
   confidence: number;
   confidence_band: ConfidenceBand;
   currency: string;
-  unit_cost: number;
-  unit_price: number;
+  unit_cost: number | null;
+  unit_price: number | null;
   reasons: DecisionReason[];
   economics: DecisionEconomics;
   inputs: DecisionInputs;
@@ -73,16 +77,25 @@ export interface Decision {
   created_at: string | null;
   decided_at: string | null;
   expires_at: string | null;
+  /** Past expires_at: the server will refuse to accept it. */
+  expired?: boolean;
 }
 
+/** Money totals are null unless every order's value is known (see money_complete). */
 export interface DecisionTotals {
   purchase_orders: number;
   units_to_order: number;
-  capital_committed: number;
-  working_capital_released_vs_baseline: number;
-  revenue_protected: number;
+  capital_committed: number | null;
+  working_capital_released_vs_baseline: number | null;
+  revenue_protected: number | null;
+  money_complete?: boolean;
   critical: number;
   currency: string;
+}
+
+export interface SkippedSku {
+  sku_code: string;
+  reason: string;
 }
 
 export interface DecisionListResponse {
@@ -100,6 +113,8 @@ export interface RefreshResponse {
   run_id?: string | null;
   /** Present when nothing could be produced — explains why, e.g. no forecast run. */
   reason?: string;
+  /** SKUs left out because stock was missing or out of date. */
+  skipped?: SkippedSku[];
   decisions: Decision[];
   totals: DecisionTotals;
 }

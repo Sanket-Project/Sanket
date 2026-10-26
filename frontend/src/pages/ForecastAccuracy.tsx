@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { getErrorMessage } from "@/utils/errors";
+import { backtestCutoffError } from "@/pages/forecastAccuracyRules";
 
 const pct = (v: number | null | undefined) => (v == null ? "—" : `${v.toFixed(1)}%`);
 const signedPct = (v: number | null | undefined) => (v == null ? "—" : `${v > 0 ? "+" : ""}${v.toFixed(1)}%`);
@@ -30,17 +31,6 @@ const EXCLUSION_TEXT: Record<string, (n: number) => string> = {
   legacy_calendar: (n) => `${n} from older runs dated on Sundays, which cannot be matched to a week reliably`,
 };
 
-/** A Monday strictly before the current UTC week — the only valid backtest cutoff. */
-export function backtestCutoffError(value: string, today: Date = new Date()): string | null {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return "Enter a date.";
-  const d = new Date(`${value}T00:00:00Z`);
-  if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== value) return "Enter a valid date.";
-  if (d.getUTCDay() !== 1) return "The cutoff must be a Monday — weeks start on Monday (UTC).";
-  const thisMonday = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
-  thisMonday.setUTCDate(thisMonday.getUTCDate() - ((thisMonday.getUTCDay() + 6) % 7));
-  if (d >= thisMonday) return "The cutoff must be before the current week.";
-  return null;
-}
 
 const Exclusions = ({ excluded }: { excluded: ForecastAccuracyResponse["excluded"] }) => {
   const items = Object.entries(excluded ?? {}).filter(([, n]) => n > 0);
@@ -169,7 +159,8 @@ export const ForecastAccuracyPage = () => {
 
   if (rows.length === 0) {
     const hasForecastRun = Boolean(confidence?.run_id);
-    const hasSalesHistory = (salesHistory?.series.length ?? 0) > 0;
+    // A zero-filled window is not history; any recorded bucket is.
+    const hasSalesHistory = (salesHistory?.series ?? []).some((point) => point.units_sold != null);
     const hasHealthyInputs = Boolean(quality && quality.critical === 0);
     const completedRequirements = [hasForecastRun, hasSalesHistory, hasHealthyInputs].filter(Boolean).length;
 

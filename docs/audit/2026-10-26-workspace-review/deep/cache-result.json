@@ -1,0 +1,9 @@
+{
+  "result": {
+    "tenant": "A",
+    "decisions": [
+      "A-private-row"
+    ]
+  },
+  "tenantBNetworkCalls": 0
+}

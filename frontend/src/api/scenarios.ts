@@ -39,6 +39,7 @@ export interface ScenarioPreset {
   scenario: Partial<ScenarioLevers>;
 }
 
+/** Money is null unless every simulated SKU has the unit cost/price it needs. */
 export interface PortfolioTotals {
   currency: string;
   skus: number;
@@ -47,14 +48,14 @@ export interface PortfolioTotals {
   short_units: number;
   fill_rate: number;
   skus_stocking_out: number;
-  revenue: number;
-  gross_margin: number;
-  lost_revenue: number;
+  revenue: number | null;
+  gross_margin: number | null;
+  lost_revenue: number | null;
   avg_inventory_units: number;
   peak_inventory_units: number;
   units_ordered: number;
-  purchase_spend: number;
-  holding_cost: number;
+  purchase_spend: number | null;
+  holding_cost: number | null;
 }
 
 export interface SkuOutcome {
@@ -69,10 +70,10 @@ export interface SkuOutcome {
   avg_inventory_units: number;
   peak_inventory_units: number;
   ordered_units: number;
-  revenue: number;
-  gross_margin: number;
-  order_cost: number;
-  holding_cost: number;
+  revenue: number | null;
+  gross_margin: number | null;
+  order_cost: number | null;
+  holding_cost: number | null;
 }
 
 export interface SkuComparison {
@@ -83,10 +84,10 @@ export interface SkuComparison {
   delta: {
     fill_rate: number;
     short_units: number;
-    revenue: number;
-    gross_margin: number;
+    revenue: number | null;
+    gross_margin: number | null;
     units_ordered: number;
-    purchase_spend: number;
+    purchase_spend: number | null;
     avg_inventory_units: number;
   };
   weekly: {
@@ -99,7 +100,12 @@ export interface SkuComparison {
 export interface SimulationResult {
   scenario: Record<string, unknown> & { name: string };
   config: {
+    /** Weeks actually simulated — never more than the forecast covers. */
     horizon_weeks: number;
+    requested_horizon_weeks?: number;
+    forecast_weeks_available?: number;
+    /** Set when the request was longer than the forecast and was shortened. */
+    horizon_capped_reason?: string | null;
     review_weeks: number;
     holding_cost_pct: number;
     service_level: number;
@@ -108,10 +114,10 @@ export interface SimulationResult {
   result: PortfolioTotals;
   impact: {
     fill_rate_pts: number;
-    revenue: number;
-    gross_margin: number;
-    lost_revenue: number;
-    purchase_spend: number;
+    revenue: number | null;
+    gross_margin: number | null;
+    lost_revenue: number | null;
+    purchase_spend: number | null;
     avg_inventory_units: number;
     skus_stocking_out: number;
   };
@@ -119,6 +125,24 @@ export interface SimulationResult {
   run_id: string;
   skus_simulated: number;
   stock_coverage: { skus_with_recorded_stock: number; skus_total: number };
+  valuation_coverage?: { skus_with_cost: number; skus_with_price: number; skus_total: number };
+  /** Inputs judged by the same freshness contract as coverage and decisions. */
+  readiness?: ScenarioReadiness;
+}
+
+export interface ScenarioReadiness {
+  forecast_run_id: string;
+  forecast_completed_at: string | null;
+  forecast_age_days: number | null;
+  forecast_stale: boolean;
+  skus_missing_stock: string[];
+  skus_stale_stock: string[];
+  skus_lead_time_assumed: string[];
+  skus_missing_cost: string[];
+  skus_missing_price: string[];
+  assumed_lead_time_days: number;
+  /** True when any input is stale, missing or assumed. */
+  advisory: boolean;
 }
 
 export const scenariosApi = {

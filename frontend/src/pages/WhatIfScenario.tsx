@@ -29,8 +29,12 @@ import {
   DEFAULT_LEVERS,
   scenariosApi,
   type ScenarioLevers,
+  type ScenarioReadiness,
   type SimulationResult,
 } from "@/api/scenarios";
+
+type MoneyFmt = (n: number | null | undefined) => string;
+const UNAVAILABLE = "Unavailable";
 
 const RECOMMENDED_SCENARIO: ScenarioLevers = {
   ...DEFAULT_LEVERS,
@@ -84,7 +88,12 @@ export const WhatIfScenarioPage = () => {
     mutationFn: scenariosApi.simulate,
     onSuccess: (res, submittedLevers) => {
       setResult(res);
-      setLastSuccessfulLevers(submittedLevers);
+      // The server never simulates past the forecast; keep the slider honest.
+      const available = res.config.forecast_weeks_available;
+      const clamp = (l: ScenarioLevers) =>
+        available && l.horizon_weeks > available ? { ...l, horizon_weeks: available } : l;
+      setLastSuccessfulLevers(clamp(submittedLevers));
+      setLevers((current) => clamp(current));
       setError(null);
     },
     onError: (e) => {
@@ -117,7 +126,8 @@ export const WhatIfScenarioPage = () => {
   };
 
   const currency = result?.result.currency ?? "INR";
-  const fmt = (n: number) => formatPrice(n, currency, { compact: true });
+  const fmt: MoneyFmt = (n) => (n == null ? UNAVAILABLE : formatPrice(n, currency, { compact: true }));
+  const maxHorizon = result?.config.forecast_weeks_available ?? 52;
   const hasUnrunChanges = Boolean(
     result && lastSuccessfulLevers && !samePhysicalLevers(levers, lastSuccessfulLevers),
   );
@@ -165,7 +175,9 @@ export const WhatIfScenarioPage = () => {
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+        {/* min-w-0 lets grid children shrink below their content on phones. */}
+        <div data-layout="levers" className="min-w-0">
         <Card title="Levers" description="Each one changes the world, not the chart.">
           <div className="space-y-5">
             <Slider
@@ -226,17 +238,19 @@ export const WhatIfScenarioPage = () => {
             />
             <Slider
               label="Horizon"
-              value={levers.horizon_weeks}
-              min={4}
-              max={52}
+              value={Math.min(levers.horizon_weeks, maxHorizon)}
+              min={Math.min(4, maxHorizon)}
+              max={maxHorizon}
               step={1}
               unit=" wk"
               onChange={(v) => set("horizon_weeks", v)}
+              hint={result?.config.forecast_weeks_available ? `Limited to the ${maxHorizon} weeks the forecast covers` : undefined}
             />
           </div>
         </Card>
+        </div>
 
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           {error && !result && (
             <Card padding="none">
               <EmptyState
@@ -319,6 +333,25 @@ export const WhatIfScenarioPage = () => {
   );
 };
 
+function readinessNotes(r: ScenarioReadiness | undefined): string[] {
+  if (!r) return [];
+  const plural = (n: number) => (n === 1 ? " has" : "s have");
+  return [
+    r.forecast_stale && r.forecast_age_days != null
+      ? `The forecast completed ${Math.round(r.forecast_age_days)} days ago — older than the 14-day limit used for decisions.`
+      : null,
+    r.skus_missing_stock.length
+      ? `${r.skus_missing_stock.length} SKU${plural(r.skus_missing_stock.length)} no recorded stock and start from zero on hand.`
+      : null,
+    r.skus_stale_stock.length
+      ? `${r.skus_stale_stock.length} SKU${plural(r.skus_stale_stock.length)} stock older than 30 days.`
+      : null,
+    r.skus_lead_time_assumed.length
+      ? `${r.skus_lead_time_assumed.length} SKU${r.skus_lead_time_assumed.length === 1 ? " uses" : "s use"} the assumed ${r.assumed_lead_time_days}-day lead time.`
+      : null,
+  ].filter((note): note is string => Boolean(note));
+}
+
 function Results({
   result,
   fmt,
@@ -326,12 +359,19 @@ function Results({
   hasUnrunChanges,
 }: {
   result: SimulationResult;
-  fmt: (n: number) => string;
+  fmt: MoneyFmt;
   isRefreshing: boolean;
   hasUnrunChanges: boolean;
 }) {
   const i = result.impact;
-  const worst = result.by_sku.filter((s) => s.delta.gross_margin < 0).slice(0, 12);
+  // Rank by margin lost when it can be valued, otherwise by units short.
+  const worst = result.by_sku
+    .filter((s) => (s.delta.gross_margin != null ? s.delta.gross_margin < 0 : s.delta.short_units > 0))
+    .slice(0, 12);
+  const valuation = result.valuation_coverage;
+  const missingCost = valuation ? valuation.skus_total - valuation.skus_with_cost : 0;
+  const missingPrice = valuation ? valuation.skus_total - valuation.skus_with_price : 0;
+  const notes = readinessNotes(result.readiness);
   const coverage = result.stock_coverage;
   const estimated = coverage.skus_total - coverage.skus_with_recorded_stock;
   const impactSummary = buildImpactSummary(result, fmt);
@@ -344,12 +384,26 @@ function Results({
           <Badge variant="primary">Baseline comparison</Badge>
           <Badge variant="default">{result.skus_simulated} SKUs</Badge>
           <Badge variant="default">{result.config.horizon_weeks} weeks</Badge>
+          {result.readiness?.advisory && <Badge variant="warning">Advisory</Badge>}
           {isRefreshing && (
             <Badge variant="primary" dot>
               Updating
             </Badge>
           )}
         </div>
+
+        {result.config.horizon_capped_reason && (
+          <p className="mt-3 text-xs leading-relaxed text-content-muted">{result.config.horizon_capped_reason}</p>
+        )}
+
+        {notes.length > 0 && (
+          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+            <p className="font-semibold">Advisory result — these inputs are stale, missing or assumed:</p>
+            <ul className="mt-1 list-disc space-y-0.5 pl-4">
+              {notes.map((note) => <li key={note}>{note}</li>)}
+            </ul>
+          </div>
+        )}
 
         {(hasUnrunChanges || isRefreshing) && (
           <div
@@ -382,14 +436,14 @@ function Results({
           <Impact
             label="Gross margin"
             value={fmt(i.gross_margin)}
-            good={i.gross_margin >= 0}
-            detail={`${fmt(result.baseline.gross_margin)} → ${fmt(result.result.gross_margin)}`}
+            good={i.gross_margin == null ? null : i.gross_margin >= 0}
+            detail={i.gross_margin == null ? "Needs unit cost and price for every SKU" : `${fmt(result.baseline.gross_margin)} → ${fmt(result.result.gross_margin)}`}
           />
           <Impact
             label="Lost revenue"
             value={fmt(i.lost_revenue)}
-            good={i.lost_revenue <= 0}
-            detail="Demand you could not have shipped"
+            good={i.lost_revenue == null ? null : i.lost_revenue <= 0}
+            detail={i.lost_revenue == null ? "Needs unit price for every SKU" : "Demand you could not have shipped"}
           />
           <Impact
             label="SKUs stocking out"
@@ -400,8 +454,8 @@ function Results({
           <Impact
             label="Purchase spend"
             value={fmt(i.purchase_spend)}
-            good={i.purchase_spend <= 0}
-            detail="Extra capital the scenario forces you to commit"
+            good={i.purchase_spend == null ? null : i.purchase_spend <= 0}
+            detail={i.purchase_spend == null ? "Needs unit cost for every SKU" : "Extra capital the scenario forces you to commit"}
           />
           <Impact
             label="Average stock held"
@@ -411,7 +465,20 @@ function Results({
           />
         </div>
 
-        {estimated > 0 && (
+        {(missingCost > 0 || missingPrice > 0) && valuation && (
+          <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-line bg-surface-2 px-4 py-3">
+            <AlertTriangle size={15} className="mt-0.5 shrink-0 text-amber-500" />
+            <p className="text-xs leading-relaxed text-content-muted">
+              {missingCost > 0 && `${missingCost} of ${valuation.skus_total} SKUs missing unit cost. `}
+              {missingPrice > 0 && `${missingPrice} of ${valuation.skus_total} SKUs missing unit price. `}
+              Money figures that depend on them are withheld rather than treated as zero; quantities
+              above are unaffected.{" "}
+              <Link to="/workspace/data-quality" className="font-semibold text-[var(--accent)] underline-offset-2 hover:underline">Fix in Data Quality</Link>
+            </p>
+          </div>
+        )}
+
+        {estimated > 0 && !result.readiness && (
           <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
             <AlertTriangle size={15} className="mt-0.5 shrink-0 text-amber-500" />
             <p className="text-xs leading-relaxed text-amber-800 dark:text-amber-200">
@@ -423,7 +490,10 @@ function Results({
       </Card>
 
       {worst.length > 0 && (
-        <Card title="Where it hurts most" description="SKUs ranked by margin lost under this scenario.">
+        <Card
+          title="Where it hurts most"
+          description={i.gross_margin == null ? "SKUs with units short under this scenario; margin is shown where it can be valued." : "SKUs ranked by margin lost under this scenario."}
+        >
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -473,7 +543,7 @@ type InventoryPoint = {
   band: [number, number];
 };
 
-function buildImpactSummary(result: SimulationResult, fmt: (n: number) => string) {
+function buildImpactSummary(result: SimulationResult, fmt: MoneyFmt) {
   const { impact } = result;
   const fillRate =
     impact.fill_rate_pts < 0
@@ -482,11 +552,13 @@ function buildImpactSummary(result: SimulationResult, fmt: (n: number) => string
         ? `fill rate improves ${impact.fill_rate_pts.toFixed(1)} points`
         : "fill rate is unchanged";
   const grossMargin =
-    impact.gross_margin < 0
-      ? `gross margin falls ${fmt(Math.abs(impact.gross_margin))}`
-      : impact.gross_margin > 0
-        ? `gross margin improves ${fmt(impact.gross_margin)}`
-        : "gross margin is unchanged";
+    impact.gross_margin == null
+      ? "gross margin cannot be valued because unit costs or prices are missing"
+      : impact.gross_margin < 0
+        ? `gross margin falls ${fmt(Math.abs(impact.gross_margin))}`
+        : impact.gross_margin > 0
+          ? `gross margin improves ${fmt(impact.gross_margin)}`
+          : "gross margin is unchanged";
   const stockouts =
     impact.skus_stocking_out > 0
       ? `${impact.skus_stocking_out} more SKUs stock out`
@@ -658,17 +730,18 @@ function Impact({
   label: string;
   value: string;
   detail: string;
-  good: boolean;
+  /** null = the value is unknown, so it is neither good nor bad. */
+  good: boolean | null;
 }) {
   return (
-    <div className="rounded-xl border border-line bg-surface-2 p-4">
+    <div className="min-w-0 rounded-xl border border-line bg-surface-2 p-4">
       <p className="text-[11px] font-bold uppercase tracking-widest text-content-subtle">{label}</p>
       <p
         className={`mt-1.5 flex items-center gap-1.5 font-heading text-xl font-bold tabular-nums ${
-          good ? "text-emerald-600" : "text-rose-600"
+          good == null ? "text-content-subtle" : good ? "text-emerald-600" : "text-rose-600"
         }`}
       >
-        {good ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+        {good == null ? null : good ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
         {value}
       </p>
       <p className="mt-1 text-xs text-content-subtle">{detail}</p>
@@ -696,9 +769,9 @@ function Slider({
   onChange: (v: number) => void;
 }) {
   return (
-    <div>
-      <div className="flex items-baseline justify-between text-sm">
-        <span className="font-medium text-content-muted">{label}</span>
+    <div className="min-w-0">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-2 text-sm">
+        <span className="min-w-0 font-medium text-content-muted">{label}</span>
         <span className="font-semibold tabular-nums text-content">
           {value > 0 && unit === "%" ? "+" : ""}
           {value}
@@ -712,7 +785,7 @@ function Slider({
         step={step}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="mt-2 w-full accent-[var(--accent)]"
+        className="mt-2 block w-full min-w-0 max-w-full accent-[var(--accent)]"
         aria-label={label}
       />
       {hint && <p className="mt-1 text-[11px] leading-snug text-content-subtle">{hint}</p>}

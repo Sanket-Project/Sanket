@@ -445,6 +445,21 @@ CATALOG: list[ConnectorSpec] = [
     # export/ODBC/XML bridge rather than a cloud OAuth flow — the connect form
     # captures what the adapter will need.
     ConnectorSpec(
+        key="quickbills",
+        name="QuickBills",
+        category=ConnectorCategory.erp,
+        availability=ConnectorAvailability.planned,
+        summary="Planned product catalog import from QuickBills. "
+        "Export format and field mapping will be confirmed with your team before setup.",
+        feeds=("products",),
+        auth_fields=_request_only(
+            "We'll confirm your QuickBills version and a sample product export before enabling imports."
+        ),
+        icon="building-2",
+        accent="from-blue-600 to-indigo-700",
+        region="IN",
+    ),
+    ConnectorSpec(
         key="tally_prime",
         name="Tally Prime / ERP 9",
         category=ConnectorCategory.erp,

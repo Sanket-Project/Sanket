@@ -12,7 +12,7 @@ from a placeholder forecast is worse than no recommendation at all.
 from __future__ import annotations
 
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Any
@@ -25,6 +25,7 @@ from app.core.calendar import week_bucket
 from app.models.alert import ShortageAlert
 from app.models.enums import AlertStatus, DecisionStatus, IndustryCode
 from app.models.forecast import ForecastResult, ForecastRun
+from app.models.inventory import InventoryLevel
 from app.models.product import Sku
 from app.models.recommendation import Recommendation
 from app.models.sales import HistoricalSale
@@ -41,7 +42,14 @@ from app.services.forecast_confidence import (
     features_from_series,
     score_confidence,
 )
-from app.services.inventory import current_levels
+from app.services.planning_inputs import (
+    FORECAST_MAX_AGE_DAYS,
+    STALE_STOCK_DAYS,
+    future_forecast_bands,
+    is_run_fresh,
+    run_age_days,
+    stock_is_stale,
+)
 
 log = structlog.get_logger(__name__)
 
@@ -57,6 +65,10 @@ class BuildResult:
     run_id: uuid.UUID | None
     skus_evaluated: int
     reason: str | None = None  # populated when nothing could be produced
+    #: SKUs left out because an input was missing or out of date, with why.
+    skipped: list[dict[str, str]] = field(default_factory=list)
+    #: Per SKU id, when the forecast or stock behind its decision goes stale.
+    valid_until: dict[str, datetime] = field(default_factory=dict)
 
 
 def load_policy(tenant_settings: dict | None) -> PolicyConfig:
@@ -259,9 +271,18 @@ async def build_decisions(
     industry: str,
     policy: PolicyConfig,
     sku_ids: list[uuid.UUID] | None = None,
+    now: datetime | None = None,
 ) -> BuildResult:
-    """Compute (but do not persist) every decision for a tenant + industry."""
+    """Compute (but do not persist) every decision for a tenant + industry.
+
+    Uses the shared readiness contract (:mod:`app.services.planning_inputs`): a
+    run older than ``FORECAST_MAX_AGE_DAYS`` produces nothing, only the current
+    and future forecast weeks count as demand, and a SKU whose stock is missing
+    or older than ``STALE_STOCK_DAYS`` is skipped with a reason — never treated
+    as holding zero.
+    """
     ind = IndustryCode(industry)
+    now = now or datetime.now(UTC)
 
     run = await latest_completed_run(session, tenant_id, ind)
     if run is None:
@@ -275,7 +296,22 @@ async def build_decisions(
             ),
         )
 
-    bands = await forecast_bands(session, tenant_id, run.id)
+    if not is_run_fresh(run, now):
+        age = run_age_days(run, now)
+        return BuildResult(
+            decisions=[],
+            run_id=run.id,
+            skus_evaluated=0,
+            reason=(
+                f"The latest forecast completed {age:g} days ago — older than "
+                f"{FORECAST_MAX_AGE_DAYS} days. Generate a new forecast before recomputing "
+                "decisions."
+                if age is not None
+                else "The latest forecast run has no completion time. Generate a new forecast."
+            ),
+        )
+
+    bands = await future_forecast_bands(session, tenant_id, run.id, now)
     if sku_ids:
         wanted = set(sku_ids)
         bands = {k: v for k, v in bands.items() if k in wanted}
@@ -284,7 +320,10 @@ async def build_decisions(
             decisions=[],
             run_id=run.id,
             skus_evaluated=0,
-            reason="The latest forecast run produced no SKU-level results.",
+            reason=(
+                "The latest forecast run has no SKU-level results for the current or "
+                "future weeks."
+            ),
         )
 
     ids = list(bands)[:MAX_SKUS]
@@ -305,29 +344,57 @@ async def build_decisions(
             reason="No active SKUs matched the latest forecast run.",
         )
 
-    stock = await current_levels(
-        session, tenant_id=tenant_id, industry=industry, sku_ids=list(skus)
-    )
+    levels = (
+        await session.execute(
+            select(InventoryLevel).where(
+                InventoryLevel.tenant_id == tenant_id,
+                InventoryLevel.industry == ind,
+                InventoryLevel.sku_id.in_(list(skus)),
+            )
+        )
+    ).scalars().all()
+    by_sku: dict[uuid.UUID, list[InventoryLevel]] = {}
+    for lvl in levels:
+        by_sku.setdefault(lvl.sku_id, []).append(lvl)
     history = await weekly_history(session, tenant_id, ind, list(skus))
 
     decisions: list[Decision] = []
+    skipped: list[dict[str, str]] = []
+    valid_until: dict[str, datetime] = {}
+    completed = run.completed_at if run.completed_at.tzinfo else run.completed_at.replace(tzinfo=UTC)
+    run_valid_until = completed + timedelta(days=FORECAST_MAX_AGE_DAYS)
     for sku_id, sku in skus.items():
+        rows = by_sku.get(sku_id, [])
+        stock_problem = _stock_problem(rows, now)
+        if stock_problem:
+            skipped.append({"sku_code": sku.sku_code, "reason": stock_problem})
+            continue
+
+        oldest_stock = min(
+            lvl.as_of if lvl.as_of.tzinfo else lvl.as_of.replace(tzinfo=UTC) for lvl in rows
+        )
+        valid_until[str(sku_id)] = min(
+            run_valid_until, oldest_stock + timedelta(days=STALE_STOCK_DAYS)
+        )
+
         band = bands[sku_id]
-        snapshot = stock.get(str(sku_id))
         confidence, trailing = confidence_for(band, history.get(sku_id), run)
 
         econ = SkuEconomics(
             sku_id=str(sku_id),
             sku_code=sku.sku_code,
-            on_hand_units=float(snapshot.on_hand_units) if snapshot else 0.0,
-            reserved_units=float(snapshot.reserved_units) if snapshot else 0.0,
-            inbound_units=float(snapshot.inbound_units) if snapshot else 0.0,
+            on_hand_units=sum(float(lvl.on_hand_units or 0) for lvl in rows),
+            reserved_units=sum(float(lvl.reserved_units or 0) for lvl in rows),
+            inbound_units=sum(float(lvl.inbound_units or 0) for lvl in rows),
             lead_time_days=int(sku.lead_time_days or DEFAULT_LEAD_TIME_DAYS),
             moq=int(sku.moq or 1),
             unit_cost=float(sku.unit_cost or 0),
             unit_price=float(sku.unit_price or 0),
             currency=sku.currency or "INR",
             configured_safety_stock=int(sku.safety_stock or 0),
+            cost_known=sku.unit_cost is not None,
+            price_known=sku.unit_price is not None,
+            lead_time_assumed=sku.lead_time_days is None,
         )
         decisions.extend(
             decide(sku=econ, band=band, confidence=confidence, policy=policy,
@@ -335,7 +402,38 @@ async def build_decisions(
         )
 
     _sort(decisions)
-    return BuildResult(decisions=decisions, run_id=run.id, skus_evaluated=len(skus))
+    reason = None
+    if not decisions and skipped and len(skipped) == len(skus):
+        reason = (
+            "No SKU has a current stock position. Import stock recorded within the last "
+            f"{STALE_STOCK_DAYS} days before recomputing decisions."
+        )
+    return BuildResult(
+        decisions=decisions,
+        run_id=run.id,
+        skus_evaluated=len(skus) - len(skipped),
+        reason=reason,
+        skipped=skipped,
+        valid_until=valid_until,
+    )
+
+
+def _stock_problem(rows: list[InventoryLevel], now: datetime) -> str | None:
+    """Why a SKU's stock cannot support a decision, or None when it can."""
+    if not rows:
+        return "No recorded stock position."
+    stale = [lvl for lvl in rows if stock_is_stale(lvl.as_of, now)]
+    if not stale:
+        return None
+    dated = [lvl.as_of if lvl.as_of.tzinfo else lvl.as_of.replace(tzinfo=UTC)
+             for lvl in stale if lvl.as_of is not None]
+    if not dated:
+        return "Stock has no as-of date; a current stock position is required."
+    age = max((now - d).days for d in dated)
+    return (
+        f"Stock was last updated {age} days ago; a position from the last "
+        f"{STALE_STOCK_DAYS} days is required."
+    )
 
 
 _URGENCY_RANK = {"critical": 0, "high": 1, "normal": 2, "low": 3}
@@ -360,15 +458,21 @@ async def persist_decisions(
     decisions: list[Decision],
     alerts: dict[uuid.UUID, uuid.UUID] | None = None,
     ttl_days: int = 14,
+    valid_until: dict[str, datetime] | None = None,
+    now: datetime | None = None,
 ) -> list[Recommendation]:
     """Replace the open queue with a freshly computed one.
 
     Open rows are expired rather than deleted so the ROI ledger keeps a complete
     history of what was offered, and accepted/dismissed rows are never touched —
     those are the user's decisions, not ours to rewrite.
+
+    Each new row expires after ``ttl_days`` or when its inputs go stale
+    (``valid_until``), whichever comes first.
     """
     ind = IndustryCode(industry)
-    now = datetime.now(UTC)
+    now = now or datetime.now(UTC)
+    valid_until = valid_until or {}
 
     existing = (
         await session.execute(
@@ -410,7 +514,9 @@ async def persist_decisions(
             economics=d.economics,
             inputs=d.inputs,
             linked_alert_id=alerts.get(sku_uuid),
-            expires_at=now + timedelta(days=ttl_days),
+            expires_at=min(
+                now + timedelta(days=ttl_days), valid_until.get(d.sku_id, now + timedelta(days=ttl_days))
+            ),
         )
         session.add(rec)
         created.append(rec)
@@ -432,13 +538,20 @@ async def refresh(
     tenant_id: uuid.UUID,
     industry: str,
     tenant_settings: dict | None,
+    now: datetime | None = None,
 ) -> tuple[BuildResult, list[Recommendation]]:
-    """Recompute and persist the decision queue in one call."""
+    """Recompute and persist the decision queue in one call.
+
+    Whenever a forecast run exists the open queue is replaced — including by an
+    empty one. A refresh that finds the inputs stale, or finds nothing to do,
+    must not leave the previous recommendations open and acceptable.
+    """
+    now = now or datetime.now(UTC)
     policy = load_policy(tenant_settings)
     result = await build_decisions(
-        session, tenant_id=tenant_id, industry=industry, policy=policy
+        session, tenant_id=tenant_id, industry=industry, policy=policy, now=now
     )
-    if not result.decisions:
+    if result.run_id is None:
         return result, []
     alerts = await _open_alerts(session, tenant_id, IndustryCode(industry))
     rows = await persist_decisions(
@@ -448,8 +561,17 @@ async def refresh(
         run_id=result.run_id,
         decisions=result.decisions,
         alerts=alerts,
+        valid_until=result.valid_until,
+        now=now,
     )
     return result, rows
+
+
+def _known_money(rec: Recommendation, key: str) -> float | None:
+    inputs = rec.inputs or {}
+    if key in inputs and inputs[key] is None:
+        return None
+    return float(getattr(rec, key) or 0)
 
 
 def serialize(rec: Recommendation, *, sku_code: str | None = None) -> dict[str, Any]:
@@ -467,8 +589,10 @@ def serialize(rec: Recommendation, *, sku_code: str | None = None) -> dict[str, 
         "confidence": rec.confidence,
         "confidence_band": rec.confidence_band,
         "currency": rec.currency,
-        "unit_cost": float(rec.unit_cost or 0),
-        "unit_price": float(rec.unit_price or 0),
+        # The columns are NOT NULL, so an unknown cost/price is stored as 0;
+        # the inputs blob records whether it was known.
+        "unit_cost": _known_money(rec, "unit_cost"),
+        "unit_price": _known_money(rec, "unit_price"),
         "reasons": rec.reasons,
         "economics": rec.economics,
         "inputs": rec.inputs,

@@ -57,7 +57,7 @@ class ConflictError(SanketBaseError):
 class ValidationError(SanketBaseError):
     def __init__(self, detail: str) -> None:
         super().__init__(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=detail,
         )
 
@@ -103,7 +103,7 @@ class SKULimitExceededError(SanketBaseError):
 class GxPComplianceError(SanketBaseError):
     def __init__(self, detail: str) -> None:
         super().__init__(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"GxP compliance violation: {detail}",
         )
 

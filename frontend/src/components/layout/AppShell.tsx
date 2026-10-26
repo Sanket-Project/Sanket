@@ -5,6 +5,7 @@ import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { useSidebarStore } from "@/stores/sidebar";
 import { SubscriptionGate } from "@/components/auth/SubscriptionGate";
 import { SetupBanner } from "@/components/onboarding/SetupBanner";
+import { ScrollManager } from "@/components/layout/ScrollManager";
 
 export const AppShell = () => {
   const industry = useWorkspaceIndustry();
@@ -29,8 +30,10 @@ export const AppShell = () => {
       <div className="motion-bg" />
 
       <Sidebar />
+      <ScrollManager />
 
-      <div className="flex-1 flex flex-col overflow-hidden h-full">
+      {/* Made inert while the mobile navigation drawer is open (see Sidebar). */}
+      <div id="app-main-column" className="flex-1 flex flex-col overflow-hidden h-full">
         <TopBar />
         <main
           id="main-content"

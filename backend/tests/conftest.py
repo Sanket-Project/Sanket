@@ -234,15 +234,22 @@ async def pharma_tenant_id(db_session: AsyncSession) -> uuid.UUID:
 
 
 @pytest_asyncio.fixture
-async def client(setup_schema) -> AsyncIterator[AsyncClient]:
+async def client(setup_schema, monkeypatch) -> AsyncIterator[AsyncClient]:
     from app.main import create_app
+    from app.config import get_settings
 
+    # Legacy provisioning/industry tests explicitly exercise optional public
+    # flows. Runtime defaults remain private and are tested independently.
+    monkeypatch.setenv("PUBLIC_SIGNUP_ENABLED", "true")
+    monkeypatch.setenv("SANDBOX_ENABLED", "true")
+    get_settings.cache_clear()
     app = create_app()
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         # Trigger lifespan
         async with app.router.lifespan_context(app):
             yield ac
+    get_settings.cache_clear()
 
 
 @pytest_asyncio.fixture

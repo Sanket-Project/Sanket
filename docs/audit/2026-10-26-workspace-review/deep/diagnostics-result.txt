@@ -1,0 +1,32 @@
+2026-10-26 15:47:31 [info     ] decisions.accepted             decision_id=59b6c6a1-f1a4-49b4-b891-20af627a7982 tenant_id=d48d516d-3ed8-4ecc-9352-a0c073813c0c
+{
+  "expired_acceptance": {
+    "expired_days_ago": 30,
+    "accepted": true
+  },
+  "simulation_extension": {
+    "input_weeks": 12,
+    "output_weeks": 26,
+    "weeks_13_to_26": [
+      12.0,
+      12.0,
+      12.0,
+      12.0,
+      12.0,
+      12.0,
+      12.0,
+      12.0,
+      12.0,
+      12.0,
+      12.0,
+      12.0,
+      12.0,
+      12.0
+    ]
+  },
+  "missing_cost_effect": {
+    "unit_cost": 0.0,
+    "unit_price": 100.0,
+    "gross_margin_per_unit": 100.0
+  }
+}

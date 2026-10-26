@@ -63,6 +63,12 @@ class SkuEconomics:
     unit_price: float = 0.0
     currency: str = "INR"
     configured_safety_stock: int = 0
+    #: False when the SKU has no recorded unit cost / price. A missing value is
+    #: unknown, not free: money derived from it is reported as None, while a
+    #: recorded 0 stays a known 0.
+    cost_known: bool = True
+    price_known: bool = True
+    lead_time_assumed: bool = False
 
     @property
     def available_units(self) -> float:
@@ -206,6 +212,10 @@ def _z_for(service_level: float) -> float:
     return NormalDist().inv_cdf(sl)
 
 
+def _money(value: float, known: bool) -> float | None:
+    return round(value, 2) if known else None
+
+
 def _urgency(days_of_cover: float, lead_time_days: int) -> Urgency:
     if days_of_cover <= lead_time_days:
         return "critical"
@@ -295,11 +305,15 @@ def decide(
                 reasons=reasons,
                 economics={
                     "currency": sku.currency,
-                    "capital_committed": round(capital, 2),
-                    "baseline_capital": round(baseline_capital, 2),
-                    "working_capital_released": round(max(0.0, baseline_capital - capital), 2),
-                    "holding_cost_over_window": round(holding, 2),
-                    "revenue_protected": round(unmet_without_order * sku.unit_price, 2),
+                    "capital_committed": _money(capital, sku.cost_known),
+                    "baseline_capital": _money(baseline_capital, sku.cost_known),
+                    "working_capital_released": _money(
+                        max(0.0, baseline_capital - capital), sku.cost_known
+                    ),
+                    "holding_cost_over_window": _money(holding, sku.cost_known),
+                    "revenue_protected": _money(
+                        unmet_without_order * sku.unit_price, sku.price_known
+                    ),
                     "units_at_risk_without_order": round(unmet_without_order, 1),
                 },
                 inputs=_inputs_blob(
@@ -316,6 +330,22 @@ def decide(
     # queue does not fill with rounding noise.
     elif position > order_up_to * 2 and position - order_up_to > max(10.0, sku.moq):
         excess = position - order_up_to
+        excess_reasons = [
+            Reason(
+                "excess_position",
+                f"You hold {position:,.0f} units against {order_up_to:,.0f} needed "
+                f"through the next {protection_days} days",
+                impact_units=excess,
+            ),
+        ]
+        if sku.cost_known:
+            excess_reasons.append(
+                Reason(
+                    "capital_locked",
+                    f"{sku.currency} {excess * sku.unit_cost:,.0f} of working capital is "
+                    f"tied up in stock you will not sell in that window",
+                )
+            )
         decisions.append(
             Decision(
                 kind="excess_stock",
@@ -327,25 +357,13 @@ def decide(
                 urgency="low",
                 confidence=confidence.score,
                 confidence_band=confidence.band,
-                reasons=[
-                    Reason(
-                        "excess_position",
-                        f"You hold {position:,.0f} units against {order_up_to:,.0f} needed "
-                        f"through the next {protection_days} days",
-                        impact_units=excess,
-                    ),
-                    Reason(
-                        "capital_locked",
-                        f"{sku.currency} {excess * sku.unit_cost:,.0f} of working capital is "
-                        f"tied up in stock you will not sell in that window",
-                    ),
-                ],
+                reasons=excess_reasons,
                 economics={
                     "currency": sku.currency,
                     "excess_units": round(excess, 1),
-                    "capital_locked": round(excess * sku.unit_cost, 2),
-                    "annual_holding_cost": round(
-                        excess * sku.unit_cost * policy.holding_cost_pct, 2
+                    "capital_locked": _money(excess * sku.unit_cost, sku.cost_known),
+                    "annual_holding_cost": _money(
+                        excess * sku.unit_cost * policy.holding_cost_pct, sku.cost_known
                     ),
                 },
                 inputs=_inputs_blob(
@@ -393,7 +411,7 @@ def decide(
                 ],
                 economics={
                     "currency": sku.currency,
-                    "capital_delta": round((implied - configured) * sku.unit_cost, 2),
+                    "capital_delta": _money((implied - configured) * sku.unit_cost, sku.cost_known),
                 },
                 inputs=_inputs_blob(
                     sku, policy, lead_days, protection_days,
@@ -472,7 +490,7 @@ def _order_reasons(
                 )
             )
 
-    if sku.unit_cost > 0:
+    if sku.cost_known and sku.unit_cost > 0:
         reasons.append(
             Reason(
                 "carrying_cost",
@@ -528,8 +546,9 @@ def _inputs_blob(
         "position_units": round(position, 2),
         "days_of_cover": None if days_of_cover == float("inf") else round(days_of_cover, 1),
         "moq": sku.moq,
-        "unit_cost": sku.unit_cost,
-        "unit_price": sku.unit_price,
+        "unit_cost": sku.unit_cost if sku.cost_known else None,
+        "unit_price": sku.unit_price if sku.price_known else None,
+        "lead_time_assumed": sku.lead_time_assumed,
         "forecast_horizon_weeks": horizon_weeks,
         "holding_cost_pct": policy.holding_cost_pct,
     }

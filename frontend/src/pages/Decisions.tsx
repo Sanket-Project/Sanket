@@ -28,7 +28,9 @@ import {
   type Decision,
   type DecisionUrgency,
   type ConfidenceBand,
+  type SkippedSku,
 } from "@/api/decisions";
+import { invalidatePlanningData } from "@/api/planningKeys";
 
 const URGENCY_STYLE: Record<DecisionUrgency, { label: string; variant: "danger" | "warning" | "info" | "default" }> = {
   critical: { label: "Order now", variant: "danger" },
@@ -60,56 +62,67 @@ export const DecisionsPage = () => {
   const [statusFilter, setStatusFilter] = useState<"open" | "accepted" | "dismissed">("open");
   const [sortBy, setSortBy] = useState<"urgency" | "cover" | "value">("urgency");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [skipped, setSkipped] = useState<SkippedSku[]>([]);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["decisions", industry, statusFilter],
     queryFn: () => decisionsApi.list({ status: statusFilter, limit: 200 }),
   });
 
+  // Accepting or recomputing changes the queue, ROI and every screen that
+  // shows open decisions (sidebar badges, dashboard, inventory next actions).
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: ["decisions"] });
-    queryClient.invalidateQueries({ queryKey: ["roi-summary"] });
+    void invalidatePlanningData(queryClient);
   };
 
   const refresh = useMutation({
     mutationFn: decisionsApi.refresh,
     onSuccess: (res) => {
       invalidate();
+      setSkipped(res.skipped ?? []);
       if (res.reason) toast(res.reason, { icon: "ℹ️", duration: 6000 });
       else toast.success(`${res.generated} recommendation(s) from ${res.skus_evaluated} SKUs`);
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 
+  // Refresh whether or not the server accepted: a 409 (e.g. expired) means the
+  // queue on screen is out of date.
   const accept = useMutation({
     mutationFn: ({ id, units }: { id: string; units?: number }) => decisionsApi.accept(id, { units }),
-    onSuccess: () => {
-      invalidate();
-      toast.success("Recorded — this now counts towards your ROI ledger");
-    },
+    onSuccess: () => toast.success("Recorded — this now counts towards your ROI ledger"),
     onError: (e) => toast.error(getErrorMessage(e)),
+    onSettled: invalidate,
   });
 
   const dismiss = useMutation({
     mutationFn: (id: string) => decisionsApi.dismiss(id),
-    onSuccess: () => {
-      invalidate();
-      toast.success("Dismissed");
-    },
+    onSuccess: () => toast.success("Dismissed"),
     onError: (e) => toast.error(getErrorMessage(e)),
+    onSettled: invalidate,
   });
 
+  // Each accept is independent: one expired row must not hide that the
+  // others were recorded.
   const bulkAccept = useMutation({
     mutationFn: (items: Decision[]) =>
-      Promise.all(items.map((decision) => decisionsApi.accept(decision.id, {
+      Promise.allSettled(items.map((decision) => decisionsApi.accept(decision.id, {
         units: decision.kind === "purchase_order" ? decision.recommended_units : undefined,
       }))),
-    onSuccess: (_, items) => {
+    onSuccess: (outcomes) => {
       setSelected(new Set());
-      invalidate();
-      toast.success(`${items.length} decisions recorded in your ROI ledger`);
+      const failed = outcomes.filter((o): o is PromiseRejectedResult => o.status === "rejected");
+      const recorded = outcomes.length - failed.length;
+      if (failed.length) {
+        toast.error(
+          `${recorded} recorded, ${failed.length} could not be accepted: ${getErrorMessage(failed[0].reason)}`,
+        );
+      } else {
+        toast.success(`${recorded} decisions recorded in your ROI ledger`);
+      }
     },
     onError: (e) => toast.error(getErrorMessage(e)),
+    onSettled: invalidate,
   });
 
   const decisions = useMemo(() => data?.decisions ?? [], [data?.decisions]);
@@ -117,13 +130,21 @@ export const DecisionsPage = () => {
     const urgencyRank: Record<DecisionUrgency, number> = { critical: 0, high: 1, normal: 2, low: 3 };
     return [...decisions].sort((a, b) => {
       if (sortBy === "cover") return (a.inputs.days_of_cover ?? Number.POSITIVE_INFINITY) - (b.inputs.days_of_cover ?? Number.POSITIVE_INFINITY);
-      if (sortBy === "value") return (b.economics.revenue_protected ?? 0) - (a.economics.revenue_protected ?? 0);
+      // Unknown value sorts last rather than as zero.
+      if (sortBy === "value") return (b.economics.revenue_protected ?? -1) - (a.economics.revenue_protected ?? -1);
       return urgencyRank[a.urgency] - urgencyRank[b.urgency];
     });
   }, [decisions, sortBy]);
   const totals = data?.totals;
   const currency = totals?.currency ?? "INR";
-  const fmt = (n: number) => formatPrice(n, currency, { compact: true });
+  const fmt = (n: number | null | undefined) =>
+    n == null ? "Unavailable" : formatPrice(n, currency, { compact: true });
+  const missingCost = decisions.filter((d) => d.kind === "purchase_order" && d.unit_cost == null).length;
+  const missingPrice = decisions.filter((d) => d.kind === "purchase_order" && d.unit_price == null).length;
+  const valuationNote = [
+    missingCost ? `${missingCost} of ${totals?.purchase_orders ?? decisions.length} orders missing unit cost` : null,
+    missingPrice ? `${missingPrice} missing unit price` : null,
+  ].filter(Boolean).join(" · ");
 
   if (isLoading) return <PageLoader />;
 
@@ -149,6 +170,26 @@ export const DecisionsPage = () => {
         </Button>
       </div>
 
+      {isError && (
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200">
+          <span className="flex items-center gap-2"><AlertTriangle size={16} /> Decisions could not be loaded. This is not an empty queue.</span>
+          <Button size="sm" variant="secondary" onClick={() => void refetch()}>Retry</Button>
+        </div>
+      )}
+
+      {skipped.length > 0 && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+          <p className="font-semibold">{skipped.length} SKU{skipped.length === 1 ? " was" : "s were"} left out of the last recompute</p>
+          <ul className="mt-1 space-y-0.5 text-xs">
+            {skipped.slice(0, 8).map((item) => (
+              <li key={item.sku_code}><span className="font-mono font-semibold">{item.sku_code}</span> — {item.reason}</li>
+            ))}
+          </ul>
+          {skipped.length > 8 && <p className="mt-1 text-xs">…and {skipped.length - 8} more.</p>}
+          <Link to="/workspace/inventory" className="mt-1 inline-block text-xs font-semibold underline">Update stock in Inventory</Link>
+        </div>
+      )}
+
       {totals && totals.purchase_orders > 0 && (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <KPICard
@@ -161,20 +202,20 @@ export const DecisionsPage = () => {
           <KPICard
             label="Capital committed"
             value={fmt(totals.capital_committed)}
-            subtitle="If you accept every order"
+            subtitle={totals.capital_committed == null ? `Needs unit cost — ${valuationNote}` : "If you accept every order"}
             tone="default"
           />
           <KPICard
             label="Working capital vs. old policy (estimate)"
             value={fmt(totals.working_capital_released_vs_baseline)}
-            subtitle="If every order is placed as recommended, versus covering P90 the old way"
+            subtitle={totals.working_capital_released_vs_baseline == null ? "Needs unit cost for every order" : "If every order is placed as recommended, versus covering P90 the old way"}
             tone="success"
           />
           <KPICard
             label="Revenue at risk covered (estimate)"
             value={fmt(totals.revenue_protected)}
-            subtitle="Demand your stock cannot cover today"
-            tone={totals.revenue_protected > 0 ? "warning" : "default"}
+            subtitle={totals.revenue_protected == null ? "Needs unit price for every order" : "Demand your stock cannot cover today"}
+            tone={(totals.revenue_protected ?? 0) > 0 ? "warning" : "default"}
           />
         </div>
       )}
@@ -222,7 +263,7 @@ export const DecisionsPage = () => {
         </div>
       </div>
 
-      {decisions.length === 0 ? (
+      {isError ? null : decisions.length === 0 ? (
         <Card padding="none">
           <EmptyState
             icon={<Target size={22} />}
@@ -343,6 +384,9 @@ function DecisionRow({
               </Badge>
             )}
             {d.status !== "open" && <Badge variant="default">{d.status}</Badge>}
+            {d.inputs?.lead_time_assumed && (
+              <Badge variant="warning">Lead time assumed ({d.inputs.lead_time_days}-day default)</Badge>
+            )}
           </div>
 
           <h3 className="mt-2 text-lg font-semibold tracking-tight text-content">{d.headline}</h3>
@@ -395,6 +439,12 @@ function DecisionRow({
               <div className="flex justify-between">
                 <dt className="text-content-subtle">Capital locked up</dt>
                 <dd className="font-semibold text-amber-600">{fmt(d.economics.capital_locked)}</dd>
+              </div>
+            )}
+            {d.unit_cost == null && (
+              <div className="flex justify-between">
+                <dt className="text-content-subtle">Capital needed</dt>
+                <dd className="font-semibold text-content-subtle" title="No unit cost recorded for this SKU">Unavailable</dd>
               </div>
             )}
           </dl>

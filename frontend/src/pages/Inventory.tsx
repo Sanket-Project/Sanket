@@ -14,6 +14,7 @@ import {
   ArrowRight,
 } from "@/components/ui/icons";
 import clsx from "clsx";
+import { format, parseISO } from "date-fns";
 
 import { inventoryApi, validateInventoryRows, downloadInventoryTemplate } from "@/api/inventory";
 import { exportApi } from "@/api/export";
@@ -30,13 +31,14 @@ import { PageLoader } from "@/components/ui/Spinner";
 import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { decisionsApi, type Decision } from "@/api/decisions";
 import { getProductImage, useProductImagesStore } from "@/stores/productImages";
+import { invalidatePlanningData } from "@/api/planningKeys";
 
 // ── Coverage classification ────────────────────────────────────────────────
 
 const INVENTORY_REQUIRED_COLUMNS = ["sku_code", "on_hand_units"] as const;
 const INVENTORY_OPTIONAL_COLUMNS = ["inbound_units", "reserved_units", "location"] as const;
 
-type CoverageStatus = "healthy" | "low" | "critical" | "overstock" | "unknown";
+type CoverageStatus = "healthy" | "low" | "critical" | "excess" | "unknown" | "unavailable";
 
 /**
  * What a stock row shows, straight from /inventory/coverage: the location's
@@ -44,19 +46,32 @@ type CoverageStatus = "healthy" | "low" | "critical" | "overstock" | "unknown";
  * labelled as such, otherwise unknown with the reason. Never a fixed unit
  * threshold, and never dependent on whether a recommendation exists.
  */
-function rowCoverage(sku: SkuCoverage | undefined, location: string) {
+function rowCoverage(sku: SkuCoverage | undefined, location: string, failed = false) {
+  if (failed) {
+    return {
+      status: "unavailable" as CoverageStatus,
+      label: "Cover could not be loaded",
+      reason: "Coverage service unavailable — retry with Refresh. No status is inferred.",
+    };
+  }
   if (!sku) {
     return { status: "unknown" as CoverageStatus, label: "Cover unknown", reason: "No coverage data for this SKU yet." };
   }
   const loc = sku.locations.find((l) => l.location === location);
   if (loc?.status && loc.cover_days != null) {
-    return { status: loc.status as CoverageStatus, label: `Store cover ${loc.cover_days} days`, reason: loc.reason };
+    return {
+      status: loc.status as CoverageStatus,
+      label: `Store cover ${loc.cover_days} days`,
+      reason: loc.reason,
+      nextAction: loc.next_action ?? null,
+    };
   }
   if (sku.sku_wide.status !== "unknown" && sku.sku_wide.cover_days != null) {
     return {
       status: sku.sku_wide.status as CoverageStatus,
       label: `SKU-wide cover ${sku.sku_wide.cover_days} days (all locations)`,
       reason: loc?.reason ?? sku.sku_wide.reason,
+      nextAction: sku.sku_wide.next_action ?? null,
     };
   }
   if (sku.sku_wide.status === "healthy") {
@@ -69,8 +84,9 @@ const STATUS_CONFIG: Record<CoverageStatus, { label: string; classes: string; do
   healthy:   { label: "Healthy",    classes: "bg-emerald-50 text-emerald-700 border-emerald-200",  dot: "bg-emerald-400" },
   low:       { label: "Low",        classes: "bg-amber-50 text-amber-700 border-amber-200",        dot: "bg-amber-400"   },
   critical:  { label: "Critical",   classes: "bg-red-50 text-red-700 border-red-200",              dot: "bg-red-500"     },
-  overstock: { label: "Overstock",  classes: "bg-blue-50 text-blue-700 border-blue-200",           dot: "bg-blue-400"    },
+  excess:    { label: "Excess",     classes: "bg-blue-50 text-blue-700 border-blue-200",           dot: "bg-blue-400"    },
   unknown:   { label: "Unknown",    classes: "bg-slate-50 text-slate-500 border-slate-200",        dot: "bg-slate-300"   },
+  unavailable: { label: "Unavailable", classes: "bg-slate-50 text-slate-500 border-slate-200",     dot: "bg-slate-300"   },
 };
 
 const StatusBadge = ({ status }: { status: CoverageStatus }) => {
@@ -83,20 +99,42 @@ const StatusBadge = ({ status }: { status: CoverageStatus }) => {
   );
 };
 
-// ── Source badge — tells user if a row is real stock or an estimate ─────────
+// ── Provenance — where a stock row came from and when it was observed ──────
+// "Real" only meant "not seed/fallback", which says nothing about whether the
+// source is authentic; name the source and the as-of date instead.
 
-const SourceBadge = ({ source }: { source: string }) => {
-  const isFallback = source === "seed" || source === "fallback";
-  if (isFallback) {
-    return (
-      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700 border border-amber-200">
-        <AlertTriangle size={9} /> Estimate
-      </span>
-    );
-  }
+const SOURCE_LABELS: Record<string, string> = {
+  csv: "CSV import",
+  upload: "File upload",
+  excel: "Excel import",
+  manual: "Manual entry",
+  api: "API push",
+  webhook: "Webhook push",
+  seed: "Seed estimate",
+  fallback: "Estimate (safety stock × 2)",
+  synthetic: "Synthetic fixture",
+  synthetic_test: "Synthetic fixture",
+};
+
+function provenanceLabel(source: string, asOf: string | null): string {
+  const known = SOURCE_LABELS[source.toLowerCase()];
+  const name = known ?? `${source.replace(/[_-]+/g, " ").replace(/^\w/, (c) => c.toUpperCase())} sync`;
+  return asOf ? `${name} · as of ${format(parseISO(asOf), "d MMM yyyy")}` : `${name} · no as-of date`;
+}
+
+const SourceBadge = ({ source, asOf }: { source: string; asOf: string | null }) => {
+  const isEstimate = source === "seed" || source === "fallback";
   return (
-    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-      <CheckCircle size={9} /> Real
+    <span
+      className={clsx(
+        "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border",
+        isEstimate
+          ? "bg-amber-100 text-amber-700 border-amber-200"
+          : "bg-surface-2 text-content-muted border-line",
+      )}
+    >
+      {isEstimate && <AlertTriangle size={9} />}
+      {provenanceLabel(source, asOf)}
     </span>
   );
 };
@@ -116,7 +154,7 @@ export const InventoryPage = () => {
   const images = useProductImagesStore((s) => s.images);
 
   // ── Data fetching ────────────────────────────────────────────────────────
-  const { data, isLoading, isFetching, refetch } = useQuery({
+  const { data, isLoading, isFetching, isError: levelsFailed } = useQuery({
     queryKey: ["inventory-levels", industry],
     queryFn: () => inventoryApi.levels(),
     staleTime: 60_000,
@@ -129,7 +167,7 @@ export const InventoryPage = () => {
     staleTime: 5 * 60_000,
   });
 
-  const { data: coverageData } = useQuery({
+  const { data: coverageData, isError: coverageFailed } = useQuery({
     queryKey: ["inventory-coverage", industry],
     queryFn: () => inventoryApi.coverage(),
     staleTime: 60_000,
@@ -139,7 +177,7 @@ export const InventoryPage = () => {
     [coverageData?.skus],
   );
 
-  const { data: decisionData } = useQuery({
+  const { data: decisionData, isError: decisionsFailed } = useQuery({
     queryKey: ["decisions", industry, "open", "inventory-context"],
     queryFn: () => decisionsApi.list({ status: "open", limit: 500 }),
     staleTime: 60_000,
@@ -166,7 +204,7 @@ export const InventoryPage = () => {
   }, [skuData]);
 
   // ── Derived stats ────────────────────────────────────────────────────────
-  const levels = data?.levels ?? [];
+  const levels = useMemo(() => data?.levels ?? [], [data?.levels]);
   const filtered = useMemo(() => {
     if (!search.trim()) return levels;
     const q = search.toLowerCase();
@@ -178,7 +216,11 @@ export const InventoryPage = () => {
   const totalOnHand = levels.reduce((s, l) => s + l.on_hand_units, 0);
   const totalInbound = levels.reduce((s, l) => s + l.inbound_units, 0);
   const totalAvailable = levels.reduce((s, l) => s + l.available_units, 0);
-  const statusOf = (level: InventoryLevel) => rowCoverage(coverageBySku.get(level.sku_id), level.location).status;
+  const statusOf = (level: InventoryLevel) =>
+    rowCoverage(coverageBySku.get(level.sku_id), level.location, coverageFailed).status;
+  // Stock, cover and decisions are one picture: refresh them together so cover
+  // never describes the previous stock (deep audit F9).
+  const refreshAll = () => invalidatePlanningData(qc);
   const nCritical = levels.filter((level) => statusOf(level) === "critical").length;
   const nLow = levels.filter((level) => statusOf(level) === "low").length;
   const nEstimate = levels.filter((l) => l.source === "seed" || l.source === "fallback").length;
@@ -220,8 +262,7 @@ export const InventoryPage = () => {
       onProgress(Math.min(i + BATCH, rows.length), rows.length);
     }
 
-    qc.invalidateQueries({ queryKey: ["inventory-levels"] });
-    qc.invalidateQueries({ queryKey: ["cost-analysis"] });
+    await refreshAll();
     return { created, skipped: 0, failed, errors };
   };
 
@@ -242,7 +283,7 @@ export const InventoryPage = () => {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => refetch()}
+            onClick={() => void refreshAll()}
             disabled={isFetching}
             className="flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3 py-1.5 text-sm text-content-muted transition hover:border-line-strong hover:text-content disabled:opacity-50"
           >
@@ -266,6 +307,16 @@ export const InventoryPage = () => {
         </div>
       </div>
 
+      {levelsFailed && (
+        <div role="alert" className="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200">
+          <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+          <p>
+            Stock could not be loaded. The figures below are not a confirmed empty position — use
+            Refresh to try again.
+          </p>
+        </div>
+      )}
+
       {/* ── Estimate warning banner ─────────────────────────────────────────── */}
       {hasEstimates && (
         <div className="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
@@ -287,25 +338,25 @@ export const InventoryPage = () => {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <KPICard
           label="Total On-Hand"
-          value={fmtUnits(totalOnHand)}
+          value={levelsFailed ? "Unavailable" : fmtUnits(totalOnHand)}
           icon={<Package size={16} />}
           tone="default"
         />
         <KPICard
           label="Available (net reserved)"
-          value={fmtUnits(totalAvailable)}
+          value={levelsFailed ? "Unavailable" : fmtUnits(totalAvailable)}
           icon={<CheckCircle size={16} />}
           tone="default"
         />
         <KPICard
           label="Inbound"
-          value={fmtUnits(totalInbound)}
+          value={levelsFailed ? "Unavailable" : fmtUnits(totalInbound)}
           icon={<TrendingDown size={16} />}
           tone="default"
         />
         <KPICard
           label="At Risk"
-          value={`${nCritical} critical · ${nLow} low`}
+          value={levelsFailed || coverageFailed ? "Unavailable" : `${nCritical} critical · ${nLow} low`}
           icon={<AlertTriangle size={16} />}
           tone={nCritical > 0 ? "danger" : nLow > 0 ? "warning" : "default"}
         />
@@ -327,7 +378,11 @@ export const InventoryPage = () => {
           />
         </div>
 
-        {levels.length === 0 ? (
+        {levelsFailed ? (
+          <p className="py-10 text-center text-sm text-content-muted">
+            Stock rows are unavailable until the inventory service responds.
+          </p>
+        ) : levels.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="h-14 w-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
               <Warehouse size={24} className="text-slate-400" />
@@ -366,7 +421,8 @@ export const InventoryPage = () => {
               <tbody className="divide-y divide-slate-50">
                 {filtered.map((lvl) => {
                   const decision = decisionBySku.get(lvl.sku_id);
-                  const cov = rowCoverage(coverageBySku.get(lvl.sku_id), lvl.location);
+                  const skuCov = coverageBySku.get(lvl.sku_id);
+                  const cov = rowCoverage(skuCov, lvl.location, coverageFailed);
                   const status = cov.status;
                   const img = getProductImage(lvl.sku_id, industry, images, lvl.sku_code);
                   return (
@@ -374,7 +430,7 @@ export const InventoryPage = () => {
                       <td className="py-3 px-3">
                         <div className="flex min-w-[190px] items-center gap-3">
                           <img src={img} alt="" className="h-11 w-11 rounded-lg border border-line bg-surface-2 object-cover" />
-                          <div><p className="font-mono text-xs font-semibold text-content">{lvl.sku_code}</p><p className="mt-0.5 text-[11px] text-content-subtle">{lvl.location} · <SourceBadge source={lvl.source} /></p></div>
+                          <div><p className="font-mono text-xs font-semibold text-content">{lvl.sku_code}</p><p className="mt-0.5 text-[11px] text-content-subtle">{lvl.location} · <SourceBadge source={lvl.source} asOf={lvl.as_of} /></p></div>
                         </div>
                       </td>
                       <td className="py-3 px-3 font-bold tabular-nums">
@@ -382,18 +438,26 @@ export const InventoryPage = () => {
                           status === "critical" && "text-red-600",
                           status === "low" && "text-amber-600",
                           status === "healthy" && "text-emerald-600",
-                          status === "unknown" && "text-slate-400",
+                          (status === "unknown" || status === "unavailable") && "text-slate-400",
                         )}>
                           {fmtUnits(lvl.available_units)}
                         </span>
                       </td>
                       <td className="py-3 px-3 font-mono text-sm text-emerald-600">{lvl.inbound_units > 0 ? `+${fmtUnits(lvl.inbound_units)}` : "—"}</td>
-                      <td className="py-3 px-3"><div className="flex min-w-[130px] flex-col items-start gap-1"><StatusBadge status={status} /><span className="text-xs text-content-muted">{cov.label}</span></div></td>
+                      <td className="py-3 px-3"><div className="flex min-w-[130px] flex-col items-start gap-1"><StatusBadge status={status} /><span className="text-xs text-content-muted">{cov.label}</span>{skuCov?.lead_time_assumed && <span className="rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">Lead time assumed ({skuCov.lead_time_days}-day default)</span>}</div></td>
                       <td className="max-w-[320px] py-3 px-3 text-xs leading-5 text-content-muted">
                         {cov.reason || decision?.reasons[0]?.text}
                       </td>
                       <td className="py-3 px-3">
-                        {decision ? <Link to="/workspace/decisions" className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-semibold text-[var(--accent)]">{decision.headline}<ArrowRight size={12} /></Link> : <span className="text-xs text-content-subtle">No action</span>}
+                        {decision ? (
+                          <Link to="/workspace/decisions" className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-semibold text-[var(--accent)]">{decision.headline}<ArrowRight size={12} /></Link>
+                        ) : "nextAction" in cov && cov.nextAction ? (
+                          <span className="text-xs font-medium text-content">{cov.nextAction}</span>
+                        ) : decisionsFailed || status === "unavailable" ? (
+                          <span className="text-xs text-content-subtle">Unavailable — refresh to retry</span>
+                        ) : (
+                          <span className="text-xs text-content-subtle">No action</span>
+                        )}
                       </td>
                     </tr>
                   );
@@ -409,11 +473,11 @@ export const InventoryPage = () => {
             <div className="flex items-center gap-1.5 text-xs text-slate-500">
               <Info size={11} className="text-slate-400" />
               <span className="font-semibold text-slate-600">Available</span> = on-hand − reserved ·
-              Critical = cover at or below lead time · Low = within 1.5× lead time · Unknown = no demand basis or stock older than 30 days
+              Critical = cover at or below lead time · Low = within 1.5× lead time · Excess = cover beyond 2× (lead time + review period) · Unknown = no demand basis or stock older than 30 days
             </div>
             <div className="flex items-center gap-3 ml-auto">
               {Object.entries(STATUS_CONFIG)
-                .filter(([k]) => k !== "overstock")
+                .filter(([k]) => k !== "unavailable")
                 .map(([key, cfg]) => (
                   <div key={key} className="flex items-center gap-1.5 text-xs text-slate-500">
                     <span className={clsx("h-2 w-2 rounded-full", cfg.dot)} />

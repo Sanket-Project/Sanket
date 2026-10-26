@@ -32,7 +32,8 @@ export interface SalesSummaryResponse {
 
 export interface SalesTimeseriesPoint {
   bucket: string;
-  units_sold: number;
+  /** null before the tenant's first recorded sale (no records); 0 is an observed zero. */
+  units_sold: number | null;
   gross_revenue: number | null;
   net_revenue: number | null;
   revenue_by_currency?: Record<string, number>;
@@ -44,6 +45,12 @@ export interface SalesTimeseriesResponse {
   lookback_days: number;
   currency: string | null;
   currencies: string[];
+  /** Earliest recorded sale for the tenant + industry, if any. */
+  first_sale_at?: string | null;
+  /** The bucket containing "now" — still filling up, so incomplete. */
+  current_bucket?: string;
+  /** Units are gross; returns are not netted. */
+  units_basis?: string;
   series: SalesTimeseriesPoint[];
 }
 

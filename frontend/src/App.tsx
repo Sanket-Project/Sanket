@@ -1,6 +1,5 @@
 import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toaster } from "react-hot-toast";
 
@@ -10,12 +9,10 @@ import { OnboardingGate } from "@/components/auth/OnboardingGate";
 import { IndustryRoute } from "@/components/auth/IndustryRoute";
 import { AppShell } from "@/components/layout/AppShell";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { IdentityQueryProvider } from "@/components/auth/IdentityQueryProvider";
 import { SkeletonCard } from "@/components/ui/Skeleton";
 
 // Heavy pages — code split to keep the initial bundle lean
-const LandingPage = lazy(() =>
-  import("@/pages/LandingPage").then((m) => ({ default: m.LandingPage }))
-);
 const LoginPage = lazy(() =>
   import("@/pages/Login").then((m) => ({ default: m.LoginPage }))
 );
@@ -116,20 +113,6 @@ const NotificationsPage = lazy(() =>
   import("@/pages/Notifications").then((m) => ({ default: m.NotificationsPage }))
 );
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: (count, err) => {
-        const status = (err as { response?: { status?: number } })?.response?.status;
-        if (status && status < 500 && status !== 408) return false;
-        return count < 2;
-      },
-      staleTime: 30_000,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
-
 /** Consistent loading fallback for all lazy-loaded pages */
 const PageFallback = () => (
   <div className="space-y-4 p-8">
@@ -147,15 +130,16 @@ export default function App() {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter basename={import.meta.env.BASE_URL}>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
+      {/* Query cache is scoped to the signed-in identity (deep audit F1). */}
+      <IdentityQueryProvider>
         <Routes>
           <Route
             path="/"
             element={
               <ErrorBoundary>
                 <Suspense fallback={<PageFallback />}>
-                  <LandingPage />
+                  <Navigate to="/login" replace />
                 </Suspense>
               </ErrorBoundary>
             }
@@ -289,7 +273,11 @@ export default function App() {
             }
           />
         </Routes>
-      </BrowserRouter>
+        {/* Opt-in locally so the developer control never appears in product QA. */}
+        {import.meta.env.DEV && import.meta.env.VITE_SHOW_QUERY_DEVTOOLS === "true" && (
+          <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
+        )}
+      </IdentityQueryProvider>
 
       <Toaster
         position="top-right"
@@ -302,10 +290,6 @@ export default function App() {
           },
         }}
       />
-      {/* Opt-in locally so the developer control never appears in product QA. */}
-      {import.meta.env.DEV && import.meta.env.VITE_SHOW_QUERY_DEVTOOLS === "true" && (
-        <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
-      )}
-    </QueryClientProvider>
+    </BrowserRouter>
   );
 }

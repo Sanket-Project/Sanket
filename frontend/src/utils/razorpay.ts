@@ -1,8 +1,18 @@
 /** Helper for loading and launching Razorpay JS Checkout SDK modal. */
 
+/** The subset of the Checkout SDK this helper uses. */
+interface RazorpayInstance {
+  open: () => void;
+  on: (event: "payment.failed", handler: (response: RazorpayFailure) => void) => void;
+}
+type RazorpayConstructor = new (options: Record<string, unknown>) => RazorpayInstance;
+interface RazorpayFailure {
+  error: { code?: string; description?: string; reason?: string; [key: string]: unknown };
+}
+
 declare global {
   interface Window {
-    Razorpay?: any;
+    Razorpay?: RazorpayConstructor;
   }
 }
 
@@ -97,7 +107,7 @@ export interface RazorpayStandardOrderOptions {
     razorpay_signature: string;
   }) => void;
   onDismiss?: () => void;
-  onFailure?: (error: any) => void;
+  onFailure?: (error: RazorpayFailure["error"]) => void;
 }
 
 export async function openStandardOrderCheckout({
@@ -120,7 +130,7 @@ export async function openStandardOrderCheckout({
     return false;
   }
 
-  const options: Record<string, any> = {
+  const options: Record<string, unknown> = {
     key: keyId,
     amount,
     currency,
@@ -157,7 +167,7 @@ export async function openStandardOrderCheckout({
   const rzp = new window.Razorpay(options);
 
   if (onFailure) {
-    rzp.on("payment.failed", (response: any) => {
+    rzp.on("payment.failed", (response: RazorpayFailure) => {
       onFailure(response.error);
     });
   }

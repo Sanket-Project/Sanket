@@ -308,7 +308,7 @@ export const SkusPage = () => {
     retry: 1,
   });
 
-  const skus: Sku[] = liveSkus || [];
+  const skus: Sku[] = useMemo(() => liveSkus || [], [liveSkus]);
 
   const filtered = useMemo(() => {
     let list = skus;

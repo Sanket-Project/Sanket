@@ -223,8 +223,13 @@ async def sales_timeseries(
     granularity: Literal["day", "week", "month"] = "day",
     lookback_days: int = 30,
 ) -> dict[str, Any]:
-    """Bucketed units + revenue for charting. Gaps are zero-filled so the line
-    is continuous even on days with no sales."""
+    """Bucketed units + revenue for charting.
+
+    Buckets from the tenant's first recorded sale onward are zero-filled: a
+    bucket with no sales after trading began is an observed zero. Buckets before
+    the first sale are ``None`` — there are no records, which is not the same as
+    selling nothing. ``units_sold`` is gross units; returns are not netted.
+    """
     lookback_days = max(1, min(lookback_days, 730))
     db = request.app.state.db
     industry = IndustryCode(ctx.code)
@@ -258,7 +263,16 @@ async def sales_timeseries(
                     .order_by(bucket)
                 )
             ).fetchall()
+            first_sale = await session.scalar(
+                select(func.min(HistoricalSale.sale_time)).where(
+                    HistoricalSale.tenant_id == tenant_id,
+                    HistoricalSale.industry == industry,
+                )
+            )
 
+        first_bucket = (
+            _trunc_start(first_sale.astimezone(UTC), granularity) if first_sale else None
+        )
         by_bucket: dict[datetime, list[Any]] = {}
         for r in rows:
             key = _day_start(r.bucket.replace(tzinfo=UTC) if r.bucket.tzinfo is None else r.bucket)
@@ -269,6 +283,18 @@ async def sales_timeseries(
         series: list[dict] = []
         cursor = window_start
         while cursor <= now:
+            if first_bucket is None or cursor < first_bucket:
+                series.append(
+                    {
+                        "bucket": cursor.date().isoformat(),
+                        "units_sold": None,
+                        "gross_revenue": None,
+                        "net_revenue": None,
+                        "revenue_by_currency": {},
+                    }
+                )
+                cursor = _step(cursor, granularity)
+                continue
             bucket_rows = by_bucket.get(_day_start(cursor), [])
             money = _money(bucket_rows)
             series.append(
@@ -288,13 +314,17 @@ async def sales_timeseries(
             "lookback_days": lookback_days,
             "currency": currencies[0] if len(currencies) == 1 else None,
             "currencies": currencies,
+            "first_sale_at": first_sale.astimezone(UTC).isoformat() if first_sale else None,
+            # The bucket containing "now" is still filling up.
+            "current_bucket": _trunc_start(now, granularity).date().isoformat(),
+            "units_basis": "gross_units_sold_returns_not_netted",
             "series": series,
         }
 
     cache = get_response_cache(request)
     return await cache.get_or_set(
         tenant_id=tenant_id,
-        name="sales:timeseries",
+        name="sales:timeseries:v2",
         params={"industry": ctx.code, "granularity": granularity, "lookback_days": lookback_days},
         ttl_s=get_settings().api_cache_ttl_s,
         producer=_compute,

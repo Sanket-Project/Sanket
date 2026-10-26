@@ -171,3 +171,47 @@ def test_every_preset_builds_a_valid_scenario(key):
     )
     assert result["scenario"]["name"]
     assert "impact" in result
+
+
+# ── Horizon and unknown money (deep audit F3, F7) ────────────────────────────
+
+
+def test_horizon_is_capped_to_the_weeks_the_forecast_covers():
+    out = compare(skus=[sku()], bands={"s1": band(weeks=12)}, scenario=BASELINE,
+                  config=SimConfig(horizon_weeks=26))
+    assert out["config"]["horizon_weeks"] == 12
+    assert out["config"]["requested_horizon_weeks"] == 26
+    assert out["config"]["forecast_weeks_available"] == 12
+    assert "12 weeks" in out["config"]["horizon_capped_reason"]
+    assert len(out["by_sku"][0]["weekly"]["demand"]) == 12
+
+
+def test_horizon_within_the_forecast_is_not_capped():
+    out = compare(skus=[sku()], bands={"s1": band(weeks=26)}, scenario=BASELINE,
+                  config=SimConfig(horizon_weeks=12))
+    assert out["config"]["horizon_weeks"] == 12
+    assert out["config"]["horizon_capped_reason"] is None
+
+
+def test_unknown_cost_suppresses_margin_spend_and_holding():
+    out = compare(skus=[sku(unit_cost=0.0, cost_known=False)], bands={"s1": band()},
+                  scenario=Scenario(supplier_outage_weeks=8), config=CONFIG)
+    for side in ("baseline", "result"):
+        assert out[side]["gross_margin"] is None
+        assert out[side]["purchase_spend"] is None
+        assert out[side]["holding_cost"] is None
+        assert out[side]["revenue"] is not None
+        assert out[side]["shipped_units"] > 0
+    assert out["impact"]["gross_margin"] is None
+    assert out["impact"]["purchase_spend"] is None
+    assert out["by_sku"][0]["delta"]["gross_margin"] is None
+    assert out["valuation_coverage"] == {"skus_with_cost": 0, "skus_with_price": 1, "skus_total": 1}
+
+
+def test_one_unvalued_sku_suppresses_the_portfolio_total():
+    skus = [sku(), sku(sku_id="s2", sku_code="SKU-2", unit_price=0.0, price_known=False)]
+    out = compare(skus=skus, bands={"s1": band(), "s2": band()}, scenario=BASELINE, config=CONFIG)
+    assert out["baseline"]["revenue"] is None
+    assert out["baseline"]["lost_revenue"] is None
+    assert out["baseline"]["purchase_spend"] is not None  # every cost is known
+    assert out["valuation_coverage"]["skus_with_price"] == 1

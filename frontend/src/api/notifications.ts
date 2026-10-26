@@ -48,7 +48,9 @@ export interface DigestPreview {
     items: DigestItem[];
     open_alerts: number;
     total_units: number;
-    total_value: number;
+    /** null while any order has no recorded value (see unvalued). */
+    total_value: number | null;
+    unvalued?: number;
     more_count: number;
     generated_at: string;
     empty_reason: string | null;

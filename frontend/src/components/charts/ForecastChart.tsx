@@ -13,13 +13,17 @@ import { memo, useMemo } from "react";
 import { format, parseISO } from "date-fns";
 import type { ForecastRow } from "@/types/api";
 import { fmtNumber } from "@/utils/format";
+import { chartSummary, prepareHistory, type HistoryPoint } from "@/components/charts/forecastChartData";
 
 interface Props {
   rows: ForecastRow[];
-  history?: { date: string; actual: number }[];
+  /** Must use the same buckets as `rows` (weekly forecasts ⇒ weekly actuals). */
+  history?: HistoryPoint[];
   accent?: string;
   height?: number;
   compact?: boolean;
+  /** Unit of every plotted value, e.g. "units / week". */
+  unitLabel?: string;
 }
 
 type ChartPoint = {
@@ -61,11 +65,9 @@ export const ForecastChart = memo(function ForecastChart({
   accent = "#0B7A75",
   height = 260,
   compact = false,
+  unitLabel,
 }: Props) {
-  const validHistory = useMemo(
-    () => (history ?? []).filter((point) => Number.isFinite(point.actual) && point.actual > 0),
-    [history],
-  );
+  const validHistory = useMemo(() => prepareHistory(history), [history]);
   const data = useMemo<ChartPoint[]>(() => {
     const fcMap = new Map(rows.map((row) => [row.forecast_date, row]));
     const historyMap = new Map(validHistory.map((point) => [point.date.slice(0, 10), point.actual]));
@@ -82,12 +84,8 @@ export const ForecastChart = memo(function ForecastChart({
   }, [rows, validHistory]);
 
   const forecastStart = rows[0]?.forecast_date;
-  const summary = useMemo(() => {
-    if (!rows.length) return "No forecast data available.";
-    const first = rows[0];
-    const last = rows[rows.length - 1];
-    return `Expected demand from ${format(parseISO(first.forecast_date), "MMM d")} to ${format(parseISO(last.forecast_date), "MMM d, yyyy")}, ranging from ${fmtNumber(first.p50)} to ${fmtNumber(last.p50)} units.`;
-  }, [rows]);
+  const hasActuals = validHistory.some((point) => point.actual !== null);
+  const summary = useMemo(() => chartSummary(rows, validHistory), [rows, validHistory]);
 
   if (!data.length) {
     return <div className="grid h-56 place-items-center text-sm text-content-subtle">No forecast data yet.</div>;
@@ -98,7 +96,8 @@ export const ForecastChart = memo(function ForecastChart({
       <figcaption className="sr-only">{summary}</figcaption>
       {!compact && (
         <div className="mb-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-content-muted" aria-hidden="true">
-          {validHistory.length > 0 && <span className="inline-flex items-center gap-2"><span className="h-0.5 w-7 rounded bg-content" />Actual</span>}
+          {unitLabel && <span className="font-medium text-content-subtle">{unitLabel}</span>}
+          {hasActuals && <span className="inline-flex items-center gap-2"><span className="h-0.5 w-7 rounded bg-content" />Actual</span>}
           {rows.length > 0 && <span className="inline-flex items-center gap-2"><span className="w-7 border-t-2 border-dashed" style={{ borderColor: accent }} />Expected</span>}
           {rows.length > 0 && <span className="inline-flex items-center gap-2"><span className="h-3 w-7 rounded-sm" style={{ background: accent, opacity: 0.12 }} />Expected range</span>}
         </div>
@@ -143,7 +142,8 @@ export const ForecastChart = memo(function ForecastChart({
               stroke="var(--text)"
               strokeWidth={2}
               dot={false}
-              connectNulls
+              // A null bucket has no records: leave a gap rather than imply a value.
+              connectNulls={false}
               isAnimationActive={false}
               name="Actual"
             />
@@ -159,7 +159,7 @@ export const ForecastChart = memo(function ForecastChart({
               isAnimationActive={false}
               name="Expected"
             />
-            {validHistory.length && forecastStart ? (
+            {hasActuals && forecastStart ? (
               <ReferenceLine
                 x={forecastStart}
                 stroke="var(--border-strong)"

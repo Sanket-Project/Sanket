@@ -83,7 +83,7 @@ export const billingApi = {
     amount: number;
     currency?: string;
     receipt?: string;
-    notes?: Record<string, any>;
+    notes?: Record<string, string | number>;
   }) =>
     apiClient
       .post<{

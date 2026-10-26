@@ -130,7 +130,7 @@ async def session(request: Request, settings: SettingsDep) -> SessionInfo:
         if user_row is None and email:
             user_row = await db_session.scalar(select(User).where(User.email == email))
 
-        if user_row is None and email and not settings.is_production:
+        if user_row is None and email and not settings.is_production and settings.public_signup_enabled:
             tenant_row = await db_session.scalar(select(Tenant).where(Tenant.slug == "sanket-dev"))
             if tenant_row is not None:
                 from app.models.enums import UserRole
@@ -489,6 +489,8 @@ async def signup(body: SignUpRequest, request: Request, settings: SettingsDep) -
 
     If Firebase is enabled, also registers the user in Firebase Auth and sets custom claims.
     """
+    if not settings.public_signup_enabled:
+        raise HTTPException(status_code=403, detail="Access is by invitation. Contact your SANKET administrator.")
     db = request.app.state.db
     async with db.session_no_rls() as db_session:
         # Check if user email already exists
@@ -589,6 +591,8 @@ async def google_signup(
 
     Only available when Firebase is enabled (i.e. never in dev-fallback mode).
     """
+    if not settings.public_signup_enabled:
+        raise HTTPException(status_code=403, detail="Access is by invitation. Contact your SANKET administrator.")
     if not settings.firebase_enabled:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

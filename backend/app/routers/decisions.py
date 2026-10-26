@@ -14,7 +14,7 @@ from typing import Any
 import structlog
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 
 from app.core.exceptions import AuthenticationError
 from app.core.rbac import require_admin
@@ -49,6 +49,23 @@ class PolicyBody(BaseModel):
     min_confidence_to_act: int = Field(default=60, ge=0, le=100)
 
 
+def is_expired(rec: Any, now: datetime) -> bool:
+    """A recommendation is past its shelf life at ``expires_at`` (inclusive).
+
+    Its inputs — stock, forecast, lead time — were a snapshot at build time; once
+    it expires, acting on it means acting on data nobody has re-checked.
+    """
+    return rec.expires_at is not None and rec.expires_at <= now
+
+
+def _serialize(rec: Recommendation, now: datetime, sku_code: str | None = None) -> dict[str, Any]:
+    item = serialize(rec, sku_code=sku_code)
+    item["expired"] = is_expired(rec, now)
+    if item["expired"] and rec.status == DecisionStatus.open:
+        item["status"] = str(DecisionStatus.expired)
+    return item
+
+
 async def _sku_codes(session, tenant_id: uuid.UUID, ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
     if not ids:
         return {}
@@ -72,13 +89,26 @@ async def list_decisions(
     """The decision queue for the active industry, most urgent first."""
     db = request.app.state.db
     industry = IndustryCode(ctx.code)
+    now = datetime.now(UTC)
+    not_expired = or_(Recommendation.expires_at.is_(None), Recommendation.expires_at > now)
 
     async with db.session(str(tenant_id)) as session:
         stmt = select(Recommendation).where(
             Recommendation.tenant_id == tenant_id,
             Recommendation.industry == industry,
         )
-        if status != "all":
+        if status == "open":
+            stmt = stmt.where(Recommendation.status == DecisionStatus.open, not_expired)
+        elif status == "expired":
+            # Rows the next refresh will supersede, plus open rows already past
+            # their expiry — both are no longer actionable.
+            stmt = stmt.where(
+                or_(
+                    Recommendation.status == DecisionStatus.expired,
+                    and_(Recommendation.status == DecisionStatus.open, ~not_expired),
+                )
+            )
+        elif status != "all":
             stmt = stmt.where(Recommendation.status == DecisionStatus(status))
         if kind:
             stmt = stmt.where(Recommendation.kind == kind)
@@ -88,7 +118,7 @@ async def list_decisions(
         codes = await _sku_codes(session, tenant_id, [r.sku_id for r in rows])
 
     urgency_rank = {"critical": 0, "high": 1, "normal": 2, "low": 3}
-    items = [serialize(r, sku_code=codes.get(r.sku_id)) for r in rows]
+    items = [_serialize(r, now, sku_code=codes.get(r.sku_id)) for r in rows]
     items.sort(key=lambda i: (urgency_rank.get(i["urgency"], 9), -i["confidence"]))
 
     return {
@@ -100,20 +130,30 @@ async def list_decisions(
     }
 
 
+def _sum_known(values: list[Any]) -> float | None:
+    """Sum money figures, or None when any is unknown — a partial sum of only
+    the valued SKUs would read as the portfolio total."""
+    if any(v is None for v in values):
+        return None
+    return round(sum(float(v) for v in values), 2)
+
+
 def _totals(items: list[dict]) -> dict[str, Any]:
     orders = [i for i in items if i["kind"] == "purchase_order"]
+
+    def econ(key: str) -> list[Any]:
+        return [i["economics"].get(key) for i in orders]
+
+    money = {
+        "capital_committed": _sum_known(econ("capital_committed")),
+        "working_capital_released_vs_baseline": _sum_known(econ("working_capital_released")),
+        "revenue_protected": _sum_known(econ("revenue_protected")),
+    }
     return {
         "purchase_orders": len(orders),
         "units_to_order": sum(i["recommended_units"] for i in orders),
-        "capital_committed": round(
-            sum(float(i["economics"].get("capital_committed") or 0) for i in orders), 2
-        ),
-        "working_capital_released_vs_baseline": round(
-            sum(float(i["economics"].get("working_capital_released") or 0) for i in orders), 2
-        ),
-        "revenue_protected": round(
-            sum(float(i["economics"].get("revenue_protected") or 0) for i in orders), 2
-        ),
+        **money,
+        "money_complete": all(v is not None for v in money.values()),
         "critical": sum(1 for i in items if i["urgency"] == "critical"),
         "currency": orders[0]["currency"] if orders else (items[0]["currency"] if items else "INR"),
     }
@@ -150,6 +190,7 @@ async def refresh_decisions(
             "generated": 0,
             "skus_evaluated": result.skus_evaluated,
             "reason": result.reason,
+            "skipped": result.skipped,
             "decisions": [],
             "totals": _totals([]),
         }
@@ -159,6 +200,7 @@ async def refresh_decisions(
         "generated": len(items),
         "skus_evaluated": result.skus_evaluated,
         "run_id": str(result.run_id) if result.run_id else None,
+        "skipped": result.skipped,
         "decisions": items,
         "totals": _totals(items),
     }
@@ -179,6 +221,14 @@ async def accept_decision(
         rec = await _load(session, tenant_id, ctx.code, decision_id)
         if rec.status != DecisionStatus.open:
             raise HTTPException(status_code=409, detail=f"Already {rec.status}")
+        if is_expired(rec, datetime.now(UTC)):
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    f"Recommendation expired at {rec.expires_at.isoformat()}. "
+                    "Recompute decisions to act on current stock, forecast and lead-time inputs."
+                ),
+            )
         rec.status = DecisionStatus.accepted
         rec.accepted_units = body.units if body.units is not None else rec.recommended_units
         rec.decided_at = datetime.now(UTC)

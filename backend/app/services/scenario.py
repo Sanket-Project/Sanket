@@ -19,7 +19,7 @@ Pure and dependency-free; :func:`run` in ``scenario_runner`` supplies real data.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from statistics import NormalDist
 from typing import Any, Literal
 
@@ -102,10 +102,12 @@ class SkuOutcome:
     avg_inventory_units: float = 0.0
     peak_inventory_units: float = 0.0
     ordered_units: float = 0.0
-    revenue: float = 0.0
-    gross_margin: float = 0.0
-    order_cost: float = 0.0
-    holding_cost: float = 0.0
+    #: Money is None when the SKU's unit price or cost is unknown — a missing
+    #: cost is not free stock.
+    revenue: float | None = 0.0
+    gross_margin: float | None = 0.0
+    order_cost: float | None = 0.0
+    holding_cost: float | None = 0.0
     weekly_on_hand: list[float] = field(default_factory=list)
     weekly_demand: list[float] = field(default_factory=list)
 
@@ -126,11 +128,27 @@ class SkuOutcome:
             "avg_inventory_units": round(self.avg_inventory_units, 1),
             "peak_inventory_units": round(self.peak_inventory_units, 1),
             "ordered_units": round(self.ordered_units, 1),
-            "revenue": round(self.revenue, 2),
-            "gross_margin": round(self.gross_margin, 2),
-            "order_cost": round(self.order_cost, 2),
-            "holding_cost": round(self.holding_cost, 2),
+            "revenue": _round(self.revenue),
+            "gross_margin": _round(self.gross_margin),
+            "order_cost": _round(self.order_cost),
+            "holding_cost": _round(self.holding_cost),
         }
+
+
+def _round(value: float | None, digits: int = 2) -> float | None:
+    return None if value is None else round(value, digits)
+
+
+def _sum(values: list[float | None], digits: int = 2) -> float | None:
+    """Portfolio money: None when any SKU's figure is unknown, because a sum of
+    only the valued SKUs would read as the whole portfolio."""
+    if any(v is None for v in values):
+        return None
+    return round(sum(values), digits)  # type: ignore[arg-type]
+
+
+def _diff(a: float | None, b: float | None, digits: int = 2) -> float | None:
+    return None if a is None or b is None else round(a - b, digits)
 
 
 def apply_levers(
@@ -139,7 +157,14 @@ def apply_levers(
     """Translate levers into the physical inputs of the simulation.
 
     Returns ``(weekly_demand, weekly_sigma, lead_time_days, unit_cost, unit_price)``.
+    The forecast is never extended past its last week: callers cap ``horizon``
+    to the weeks the model actually produced.
     """
+    if horizon > len(band.p50):
+        raise ValueError(
+            f"Horizon of {horizon} weeks exceeds the {len(band.p50)}-week forecast; "
+            "weeks beyond the forecast would be invented."
+        )
     demand: list[float] = []
     sigma: list[float] = []
 
@@ -149,9 +174,7 @@ def apply_levers(
     elasticity_mult = max(0.05, price_mult ** scenario.price_elasticity) if price_mult > 0 else 1.0
 
     for w in range(horizon):
-        base = band.p50[w] if w < len(band.p50) else (band.p50[-1] if band.p50 else 0.0)
-        hi = band.p90[w] if w < len(band.p90) else (band.p90[-1] if band.p90 else 0.0)
-        lo = band.p10[w] if w < len(band.p10) else (band.p10[-1] if band.p10 else 0.0)
+        base, hi, lo = band.p50[w], band.p90[w], band.p10[w]
 
         shock = scenario.demand_shock_pct / 100.0
         if scenario.ramp_weeks > 0:
@@ -237,13 +260,19 @@ def simulate_sku(
                 if arrival < horizon:
                     pipeline[arrival] = pipeline.get(arrival, 0.0) + qty
                 out.ordered_units += qty
-                out.order_cost += qty * unit_cost
 
     out.avg_inventory_units = inv_sum / horizon
-    out.revenue = out.shipped_units * unit_price
-    out.gross_margin = out.shipped_units * (unit_price - unit_cost)
+    out.revenue = out.shipped_units * unit_price if sku.price_known else None
+    out.gross_margin = (
+        out.shipped_units * (unit_price - unit_cost)
+        if sku.price_known and sku.cost_known
+        else None
+    )
+    out.order_cost = out.ordered_units * unit_cost if sku.cost_known else None
     out.holding_cost = (
         out.avg_inventory_units * unit_cost * config.holding_cost_pct * (horizon / 52.0)
+        if sku.cost_known
+        else None
     )
     return out
 
@@ -260,15 +289,15 @@ def _portfolio(outcomes: list[SkuOutcome], currency: str) -> dict[str, Any]:
         "short_units": round(short, 0),
         "fill_rate": round((shipped / demand) if demand > 0 else 1.0, 4),
         "skus_stocking_out": sum(1 for o in outcomes if o.weeks_stocked_out > 0),
-        "revenue": round(sum(o.revenue for o in outcomes), 2),
-        "gross_margin": round(sum(o.gross_margin for o in outcomes), 2),
+        "revenue": _sum([o.revenue for o in outcomes]),
+        "gross_margin": _sum([o.gross_margin for o in outcomes]),
         # Filled in by `compare`, which knows each SKU's price under the scenario.
         "lost_revenue": 0.0,
         "avg_inventory_units": round(sum(o.avg_inventory_units for o in outcomes), 0),
         "peak_inventory_units": round(sum(o.peak_inventory_units for o in outcomes), 0),
         "units_ordered": round(sum(o.ordered_units for o in outcomes), 0),
-        "purchase_spend": round(sum(o.order_cost for o in outcomes), 2),
-        "holding_cost": round(sum(o.holding_cost for o in outcomes), 2),
+        "purchase_spend": _sum([o.order_cost for o in outcomes]),
+        "holding_cost": _sum([o.holding_cost for o in outcomes]),
     }
 
 
@@ -286,6 +315,17 @@ def compare(
     is attributable to the scenario rather than to modelling choices.
     """
     base_scenario = Scenario(name="Baseline", price_elasticity=scenario.price_elasticity)
+
+    simulated = [sk for sk in skus if bands.get(sk.sku_id) is not None and bands[sk.sku_id].p50]
+    available = min((len(bands[sk.sku_id].p50) for sk in simulated), default=0)
+    requested = config.horizon_weeks
+    capped_reason = None
+    if simulated and requested > available:
+        capped_reason = (
+            f"The forecast covers {available} weeks, so the simulation stops at {available} weeks "
+            f"instead of the {requested} requested. Weeks beyond the forecast are not invented."
+        )
+        config = replace(config, horizon_weeks=available)
 
     base_out: list[SkuOutcome] = []
     scen_out: list[SkuOutcome] = []
@@ -308,10 +348,10 @@ def compare(
                 "delta": {
                     "fill_rate": round(s.fill_rate - b.fill_rate, 4),
                     "short_units": round(s.short_units - b.short_units, 1),
-                    "revenue": round(s.revenue - b.revenue, 2),
-                    "gross_margin": round(s.gross_margin - b.gross_margin, 2),
+                    "revenue": _diff(s.revenue, b.revenue),
+                    "gross_margin": _diff(s.gross_margin, b.gross_margin),
                     "units_ordered": round(s.ordered_units - b.ordered_units, 1),
-                    "purchase_spend": round(s.order_cost - b.order_cost, 2),
+                    "purchase_spend": _diff(s.order_cost, b.order_cost),
                     "avg_inventory_units": round(
                         s.avg_inventory_units - b.avg_inventory_units, 1
                     ),
@@ -329,19 +369,29 @@ def compare(
 
     # Unmet demand valued at the scenario's selling price, computed per SKU
     # because prices differ (a portfolio-average price would be meaningless).
-    def lost(outcomes: list[SkuOutcome], sku_map: dict[str, SkuEconomics], mult: float) -> float:
-        return sum(
+    def lost(
+        outcomes: list[SkuOutcome], sku_map: dict[str, SkuEconomics], mult: float
+    ) -> float | None:
+        return _sum([
             o.short_units * (sku_map[o.sku_id].unit_price * mult)
+            if sku_map[o.sku_id].price_known else None
             for o in outcomes
             if o.sku_id in sku_map
-        )
+        ])
 
     sku_map = {s.sku_id: s for s in skus}
     price_mult = 1.0 + scenario.price_change_pct / 100.0
-    base_totals["lost_revenue"] = round(lost(base_out, sku_map, 1.0), 2)
-    scen_totals["lost_revenue"] = round(lost(scen_out, sku_map, price_mult), 2)
+    base_totals["lost_revenue"] = lost(base_out, sku_map, 1.0)
+    scen_totals["lost_revenue"] = lost(scen_out, sku_map, price_mult)
 
-    per_sku.sort(key=lambda r: r["delta"]["gross_margin"])
+    # Unvalued SKUs sort by units short instead of margin, after the valued ones.
+    per_sku.sort(
+        key=lambda r: (
+            r["delta"]["gross_margin"] is None,
+            r["delta"]["gross_margin"] or 0.0,
+            -r["delta"]["short_units"],
+        )
+    )
 
     return {
         "scenario": {
@@ -358,6 +408,9 @@ def compare(
         },
         "config": {
             "horizon_weeks": config.horizon_weeks,
+            "requested_horizon_weeks": requested,
+            "forecast_weeks_available": available,
+            "horizon_capped_reason": capped_reason,
             "review_weeks": config.review_weeks,
             "holding_cost_pct": config.holding_cost_pct,
             "service_level": config.service_level,
@@ -368,14 +421,10 @@ def compare(
             "fill_rate_pts": round(
                 (scen_totals["fill_rate"] - base_totals["fill_rate"]) * 100, 2
             ),
-            "revenue": round(scen_totals["revenue"] - base_totals["revenue"], 2),
-            "gross_margin": round(scen_totals["gross_margin"] - base_totals["gross_margin"], 2),
-            "lost_revenue": round(
-                scen_totals["lost_revenue"] - base_totals["lost_revenue"], 2
-            ),
-            "purchase_spend": round(
-                scen_totals["purchase_spend"] - base_totals["purchase_spend"], 2
-            ),
+            "revenue": _diff(scen_totals["revenue"], base_totals["revenue"]),
+            "gross_margin": _diff(scen_totals["gross_margin"], base_totals["gross_margin"]),
+            "lost_revenue": _diff(scen_totals["lost_revenue"], base_totals["lost_revenue"]),
+            "purchase_spend": _diff(scen_totals["purchase_spend"], base_totals["purchase_spend"]),
             "avg_inventory_units": round(
                 scen_totals["avg_inventory_units"] - base_totals["avg_inventory_units"], 0
             ),
@@ -383,6 +432,11 @@ def compare(
             - base_totals["skus_stocking_out"],
         },
         "by_sku": per_sku[:100],
+        "valuation_coverage": {
+            "skus_with_cost": sum(1 for sk in simulated if sk.cost_known),
+            "skus_with_price": sum(1 for sk in simulated if sk.price_known),
+            "skus_total": len(simulated),
+        },
     }
 
 

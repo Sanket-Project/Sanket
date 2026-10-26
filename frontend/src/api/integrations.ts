@@ -168,7 +168,7 @@ export const integrationsApi = {
       .post<{
         headers: string[];
         suggested_mapping: Record<string, string>;
-        sample_rows: Record<string, any>[];
+        sample_rows: Record<string, unknown>[];
       }>("/integrations/upload/analyze", form, {
         headers: { "Content-Type": "multipart/form-data" },
       })

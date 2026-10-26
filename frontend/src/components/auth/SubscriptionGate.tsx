@@ -85,6 +85,8 @@ export const SubscriptionGate = ({ children }: { children: React.ReactNode }) =>
       toast.error(getErrorMessage(e, "Payment verification failed"));
     },
   });
+  // Stable across renders, so the return-from-checkout effect runs once.
+  const verifyPayment = verify.mutate;
 
   // Handle redirect back from Razorpay hosted page
   useEffect(() => {
@@ -102,13 +104,13 @@ export const SubscriptionGate = ({ children }: { children: React.ReactNode }) =>
       // there permanently.
       window.history.replaceState({}, document.title, window.location.pathname);
 
-      verify.mutate({
+      verifyPayment({
         razorpay_payment_id: paymentId,
         razorpay_subscription_id: subId,
         razorpay_signature: sig,
       });
     }
-  }, []);
+  }, [verifyPayment]);
 
   // 2. Subscribe mutation
   const subscribe = useMutation({
