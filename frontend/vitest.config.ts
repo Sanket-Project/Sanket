@@ -15,5 +15,9 @@ export default defineConfig({
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
     css: false,
+    // Bound jsdom workers so concurrent ML/E2E verification does not starve
+    // interactive tests on developer machines. Keep the normal test timeouts.
+    minWorkers: 1,
+    maxWorkers: 2,
   },
 });
