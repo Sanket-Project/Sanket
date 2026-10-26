@@ -165,13 +165,13 @@ export const DecisionsPage = () => {
             tone="default"
           />
           <KPICard
-            label="Working capital released"
+            label="Working capital vs. old policy (estimate)"
             value={fmt(totals.working_capital_released_vs_baseline)}
-            subtitle="Versus covering p90 the old way"
+            subtitle="If every order is placed as recommended, versus covering P90 the old way"
             tone="success"
           />
           <KPICard
-            label="Revenue protected"
+            label="Revenue at risk covered (estimate)"
             value={fmt(totals.revenue_protected)}
             subtitle="Demand your stock cannot cover today"
             tone={totals.revenue_protected > 0 ? "warning" : "default"}

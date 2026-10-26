@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { WhatsAppStatus } from "@/components/dashboard/WhatsAppStatus";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import {
@@ -364,7 +365,7 @@ export const PlanningBriefDashboard = () => {
             <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-content-muted">Planning summary</h2>
             <div className="mt-1 divide-y divide-line">
               <SummaryItem icon={ShoppingBag} label="Orders due" value={String(totals?.purchase_orders ?? open.length)} detail={`${(totals?.units_to_order ?? 0).toLocaleString()} units`} />
-              <SummaryItem icon={PackageCheck} label="Revenue protected" value={fmt(totals?.revenue_protected ?? 0)} detail="if recommended actions are taken" tone="success" />
+              <SummaryItem icon={PackageCheck} label="Revenue at risk (estimate)" value={fmt(totals?.revenue_protected ?? 0)} detail="covered if the open orders are placed" tone="success" />
               <SummaryItem icon={AlertTriangle} label="Stockout approaching" value={String(stockoutRisk)} detail="SKUs at risk" tone="warning" />
               <SummaryItem icon={TrendingUp} label="Forecast confidence" value={`${portfolioConfidence}%`} detail="portfolio confidence" tone="info" />
               <SummaryItem icon={AlertTriangle} label="Data warnings" value={String(warnings)} detail="need attention" tone={warnings > 0 ? "danger" : "success"} />
@@ -376,7 +377,7 @@ export const PlanningBriefDashboard = () => {
             <dl className="mt-2 grid gap-2 sm:grid-cols-3 xl:grid-cols-1">
               <div className="flex items-center gap-3"><Database size={17} className="text-emerald-600" /><div><dt className="text-xs font-semibold text-content">Data freshness</dt><dd className="text-xs text-content-subtle">{quality.data ? "Audit updated" : "Checking sources"}</dd></div></div>
               <div className="flex items-center gap-3"><Plug size={17} className="text-emerald-600" /><div><dt className="text-xs font-semibold text-content">Integrations</dt><dd className="text-xs text-content-subtle">{integrations.data?.connected ?? 0} connected</dd></div></div>
-              <div className="flex items-center gap-3"><Check size={17} className="text-emerald-600" /><div><dt className="text-xs font-semibold text-content">WhatsApp delivery</dt><dd className="text-xs text-content-subtle">Digest enabled</dd></div></div>
+              <WhatsAppStatus />
             </dl>
           </section>
         </aside>
