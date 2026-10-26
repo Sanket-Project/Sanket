@@ -67,6 +67,7 @@ class BuildResult:
     skipped: list[dict[str, str]] = field(default_factory=list)
     #: Per SKU id, when the forecast or stock behind its decision goes stale.
     valid_until: dict[str, datetime] = field(default_factory=dict)
+    notes: list[str] = field(default_factory=list)
 
 
 def load_policy(tenant_settings: dict | None) -> PolicyConfig:
@@ -366,7 +367,11 @@ async def build_decisions(
     valid_until: dict[str, datetime] = {}
     completed = run.completed_at if run.completed_at.tzinfo else run.completed_at.replace(tzinfo=UTC)
     run_valid_until = completed + timedelta(days=FORECAST_MAX_AGE_DAYS)
+    conf_by_sku: dict[uuid.UUID, tuple[int, str]] = {}
     for sku_id, sku in skus.items():
+        band = bands[sku_id]
+        confidence, trailing = confidence_for(band, history.get(sku_id), run)
+        conf_by_sku[sku_id] = (confidence.score, confidence.band)
         rows = by_sku.get(sku_id, [])
         stock_problem = _stock_problem(rows, now)
         if stock_problem:
@@ -379,9 +384,6 @@ async def build_decisions(
         valid_until[str(sku_id)] = min(
             run_valid_until, oldest_stock + timedelta(days=STALE_STOCK_DAYS)
         )
-
-        band = bands[sku_id]
-        confidence, trailing = confidence_for(band, history.get(sku_id), run)
 
         econ = SkuEconomics(
             sku_id=str(sku_id),
@@ -404,9 +406,19 @@ async def build_decisions(
                    trailing_weekly_mean=trailing)
         )
 
+    from app.services.network_decisions import build_network_decisions
+
+    net = await build_network_decisions(
+        session, tenant_id=tenant_id, industry=industry, run=run, skus=skus,
+        levels=by_sku, confidence=conf_by_sku, policy=policy, now=now,
+    )
+    pooled_skipped = len(skipped)
+    evaluated_ids = set(valid_until) | {d.sku_id for d in net.decisions}
+    decisions.extend(net.decisions)
+    skipped.extend(net.skipped)
     _sort(decisions)
     reason = None
-    if not decisions and skipped and len(skipped) == len(skus):
+    if not decisions and pooled_skipped == len(skus):
         reason = (
             "No SKU has a current stock position. Import stock recorded within the last "
             f"{STALE_STOCK_DAYS} days before recomputing decisions."
@@ -414,10 +426,11 @@ async def build_decisions(
     return BuildResult(
         decisions=decisions,
         run_id=run.id,
-        skus_evaluated=len(skus) - len(skipped),
+        skus_evaluated=len(evaluated_ids),
         reason=reason,
         skipped=skipped,
         valid_until=valid_until,
+        notes=net.notes,
     )
 
 
@@ -553,6 +566,15 @@ async def refresh(
     """
     now = now or datetime.now(UTC)
     policy = load_policy(tenant_settings)
+    from app.services.location_forecast import ensure_location_split
+
+    run = await latest_completed_run(session, tenant_id, IndustryCode(industry))
+    if run is not None and is_run_fresh(run, now):
+        split = await ensure_location_split(session, tenant_id=tenant_id, industry=industry, run=run, now=now)
+        if split is not None:
+            # The splitter updates metrics with SQL; refresh the ORM identity
+            # before the network builder checks its degraded flag.
+            await session.refresh(run)
     result = await build_decisions(
         session, tenant_id=tenant_id, industry=industry, policy=policy, now=now
     )

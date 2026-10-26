@@ -166,6 +166,7 @@ def test_serialized_recommendation_keeps_unknown_cost_unknown():
         unit_cost=0, unit_price=100, reasons=[], economics={},
         inputs={"unit_cost": None, "unit_price": 100.0}, linked_alert_id=None,
         created_at=None, decided_at=None, expires_at=None,
+        location_id=None, source_location_id=None,
     )
     item = serialize(rec)
     assert item["unit_cost"] is None

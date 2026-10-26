@@ -2024,7 +2024,7 @@ git commit -m "feat(decisions): location-aware ledger with allocation and transf
   - `async build_network_decisions(session, *, tenant_id, industry: str, run: ForecastRun, skus: dict[uuid.UUID, Sku], levels: dict[uuid.UUID, list[InventoryLevel]], confidence: dict[uuid.UUID, tuple[int, str]], policy: PolicyConfig, now: datetime, include_transfers: bool = True) -> NetworkBuild` — this task builds allocations only; Task 15 adds transfers.
   - `BuildResult` gains `notes: list[str] = field(default_factory=list)`, which carries readiness messages to the API.
 
-- [ ] **Step 1: Write the failing tests.** Build the synthetic fixture: 1 DC + 6 stores, all `source='synthetic_test'`, never in the demo seed.
+- [x] **Step 1: Write the failing tests.** Build the synthetic fixture: 1 DC + 6 stores, all `source='synthetic_test'`, never in the demo seed.
   - Insert `locations` rows directly: DC with `kind='warehouse'`; stores with `kind='store'`, parent = DC, lead time 3 days.
   - Insert 1 SKU (`moq = 1`, `unit_cost = 400`, `unit_price = 960`).
   - Insert fresh inventory: DC 100 available; stores 0, 0, 5, 5, 20, 40.
@@ -2038,9 +2038,9 @@ git commit -m "feat(decisions): location-aware ledger with allocation and transf
   4. **Stale:** with a store's stock 30 days old, that store is in `skipped` with a stale reason and receives nothing.
   5. **Ledger:** after `refresh(...)`, `recommendations` holds `kind='allocation'` rows with `source_location_id` = DC and `location_id` = the store.
 
-- [ ] **Step 2: Run them and confirm they fail.**
+- [x] **Step 2: Run them and confirm they fail.**
 
-- [ ] **Step 3: Implement `network_decisions.py`.** The allocation part, per SKU:
+- [x] **Step 3: Implement `network_decisions.py`.** The allocation part, per SKU:
 
 ```python
 """Allocation (DC→store) and transfer (store↔store) decisions (location spec §5–§6).
@@ -2175,7 +2175,7 @@ async def build_network_decisions(
 - **Baseline (spec §5.3):** after the allocations for one DC are built, compute each store's units sold in the last `policy.review_period_days`. Query `historical_sales` once per refresh, grouped by `(sku_id, lower(btrim(location)))`. If their sum exceeds `supply`, scale them down proportionally and floor. Set `baseline_units` on each decision with `dataclasses.replace`. Put this in a helper `_baseline_units(...)` in the same file, and test it in test 1.
 - **Urgency:** `Urgency` is a type in `decision_engine`. Use its values (`"critical" | "high" | "normal" | "low"`) exactly as `decision_engine._urgency` returns them; read that function first.
 
-- [ ] **Step 4: Wire it into `decision_builder`**
+- [x] **Step 4: Wire it into `decision_builder`**
   - In `build_decisions`, inside the per-SKU loop, store `conf_by_sku[sku_id] = (confidence.score, confidence.band)`. Check the attribute names on `ConfidenceScore` in `app/services/forecast_confidence.py` first.
   - After the loop, call `net = await build_network_decisions(session, tenant_id=tenant_id, industry=industry, run=run, skus=skus, levels=by_sku, confidence=conf_by_sku, policy=policy, now=now)`.
   - Then `decisions.extend(net.decisions)` and `skipped.extend(net.skipped)`, and set `notes=net.notes` on the `BuildResult`.
@@ -2189,12 +2189,12 @@ async def build_network_decisions(
     ```
   - In `routers/decisions.refresh_decisions`, include `notes` in the response next to `skipped`.
 
-- [ ] **Step 5: Run the tests and confirm they pass**
+- [x] **Step 5: Run the tests and confirm they pass**
 
 Run: `cd backend && uv run pytest tests/test_network_decisions_allocation.py tests/test_decision_readiness.py tests/test_decision_expiry.py -v`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/app/services/network_decisions.py backend/app/services/decision_builder.py backend/app/routers/decisions.py backend/tests/test_network_decisions_allocation.py

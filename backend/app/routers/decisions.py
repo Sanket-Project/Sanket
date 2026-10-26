@@ -200,6 +200,7 @@ async def refresh_decisions(
             "skus_evaluated": result.skus_evaluated,
             "reason": result.reason,
             "skipped": result.skipped,
+            "notes": result.notes,
             "decisions": [],
             "totals": _totals([]),
         }
@@ -210,6 +211,7 @@ async def refresh_decisions(
         "skus_evaluated": result.skus_evaluated,
         "run_id": str(result.run_id) if result.run_id else None,
         "skipped": result.skipped,
+        "notes": result.notes,
         "decisions": items,
         "totals": _totals(items),
     }
