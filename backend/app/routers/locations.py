@@ -7,10 +7,13 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
+from sqlalchemy import func, select
 
 from app.core.rbac import require_admin
 from app.models.enums import IndustryCode, LocationKind
 from app.models.location import Location
+from app.models.inventory import InventoryLevel
+from app.models.sales import HistoricalSale
 from app.routers.industry_router import ActiveIndustry, TenantId
 from app.services.locations import load_locations, network_readiness, sync_locations
 
@@ -41,12 +44,29 @@ def _network(locs: list[Location]) -> dict[str, Any]:
 
 
 @router.get("")
-async def list_locations(request: Request, tenant_id: TenantId) -> dict[str, Any]:
+async def list_locations(request: Request, tenant_id: TenantId, ctx: ActiveIndustry) -> dict[str, Any]:
+    from datetime import UTC, datetime
+    from app.services.decision_builder import latest_completed_run
+    from app.services.planning_inputs import is_run_fresh
+
     db = request.app.state.db
     async with db.session(str(tenant_id)) as session:
         await sync_locations(session, tenant_id)
         locs = await load_locations(session, tenant_id)
-    return {"locations": [_out(l) for l in locs], "network": _network(locs)}
+        sale_code = func.lower(func.btrim(HistoricalSale.location))
+        stock_code = func.lower(func.btrim(InventoryLevel.location))
+        last_sales = dict((await session.execute(select(sale_code, func.max(HistoricalSale.sale_time))
+            .where(HistoricalSale.tenant_id == tenant_id).group_by(sale_code))).all())
+        last_stock = dict((await session.execute(select(stock_code, func.max(InventoryLevel.as_of))
+            .where(InventoryLevel.tenant_id == tenant_id).group_by(stock_code))).all())
+        run = await latest_completed_run(session, tenant_id, IndustryCode(ctx.code))
+        metrics = run.metrics or {} if is_run_fresh(run, datetime.now(UTC)) else {}
+    network = _network(locs)
+    network.update(unassigned_share=metrics.get("unassigned_share"), degraded=bool(metrics.get("location_degraded")))
+    return {"locations": [{**_out(l),
+        "last_sale_at": last_sales[l.code].isoformat() if last_sales.get(l.code) else None,
+        "last_stock_at": last_stock[l.code].isoformat() if last_stock.get(l.code) else None,
+    } for l in locs], "network": network}
 
 
 @router.get("/forecast")

@@ -70,14 +70,18 @@ it("shows a selected SKU's location forecast and degraded warning", async () => 
   api.skus.mockResolvedValue(skuList(2));
   api.decisions.mockResolvedValue({ decisions: [] });
   api.locationForecast.mockResolvedValue({ run_id: "run-1", degraded: true, unassigned_share: 0.1,
-    locations: [{ location_id: "a", code: "alwal", name: "Alwal", p10: [1, 2], p50: [3, 4], p90: [5, 6] }], reason: null });
+    locations: [{ location_id: "a", code: "alwal", name: "Alwal", p10: [1, 2], p50: [3, 4], p90: [5, 6] },
+      { location_id: "b", code: "boduppal", name: "Boduppal", p10: [2, 3], p50: [4, 5], p90: [6, 7] }], reason: null });
   const user = userEvent.setup();
   renderPage();
   await screen.findByText("Kurti 1");
   await user.selectOptions(screen.getByRole("combobox", { name: "Location forecast SKU" }), "sku-1");
-  expect(await screen.findByText("Alwal")).toBeInTheDocument();
+  expect(await screen.findByRole("rowheader", { name: "Alwal" })).toBeInTheDocument();
   expect(screen.getByText("Location split incomplete: 10% of sales have no location")).toBeInTheDocument();
   expect(screen.getByTitle("P10 1 – P90 5")).toHaveTextContent("3");
+  await user.selectOptions(screen.getByRole("combobox", { name: "Forecast location" }), "boduppal");
+  expect(screen.queryByRole("rowheader", { name: "Alwal" })).not.toBeInTheDocument();
+  expect(screen.getByRole("rowheader", { name: "Boduppal" })).toBeInTheDocument();
 });
 
 describe("Forecasts page (audit F04, F08)", () => {

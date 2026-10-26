@@ -13,6 +13,7 @@ service token.
 from __future__ import annotations
 
 from datetime import UTC, date, datetime, timedelta
+import uuid
 from typing import Annotated, Any
 
 import httpx
@@ -126,7 +127,27 @@ async def _forecast_via_ml(
     try:
         r = await _post_to_ml(request, url, payload, headers, settings.ml_api_timeout_s)
         r.raise_for_status()
-        return r.json()
+        result = r.json()
+        # The Forecasts page uses this proxy rather than the hybrid-run worker.
+        # Split the ML service's persisted SKU run before exposing its location
+        # view. For historical runs, shares use only history before the cutoff.
+        try:
+            from app.models.forecast import ForecastRun
+            from app.services.location_forecast import ensure_location_split
+
+            async with request.app.state.db.session(str(tenant_id)) as session:
+                run = await session.get(ForecastRun, uuid.UUID(result["run_id"]))
+                if run is None:
+                    result["location_reason"] = "The forecast run was not persisted; location split unavailable"
+                else:
+                    history_end = (run.metrics or {}).get("history_end")
+                    cutoff = datetime.fromisoformat(history_end).replace(tzinfo=UTC) if history_end else datetime.now(UTC)
+                    await ensure_location_split(session, tenant_id=tenant_id,
+                        industry=payload["industry"], run=run, now=cutoff)
+        except Exception as exc:
+            log.warning("forecasts.location_split_failed", error=str(exc))
+            result["location_reason"] = "Location split failed; the SKU forecast is still available"
+        return result
     except httpx.TimeoutException as exc:
         log.warning("forecasts.ml.timeout", tenant=str(tenant_id))
         raise HTTPException(status_code=504, detail="Forecast service timed out") from exc

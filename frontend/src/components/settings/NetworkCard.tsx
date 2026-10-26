@@ -24,6 +24,9 @@ export const NetworkCard = () => {
     {isError && <p role="alert">Locations could not be loaded. Try again.</p>}
     {mutation.isError && <p role="alert">{getErrorMessage(mutation.error, "Location could not be saved")}</p>}
     {data && <div className="space-y-4">
+      {data.network.degraded && <p role="status" className="text-sm text-amber-700">
+        Location split incomplete: {data.network.unassigned_share == null ? "Unknown" : Math.round(data.network.unassigned_share * 100)}% of sales have no location
+      </p>}
       <div className="flex flex-wrap gap-2">
         {data.network.allocation_ready && <Badge variant="success">Allocation ready</Badge>}
         {data.network.transfers_ready && <Badge variant="success">Transfers ready</Badge>}

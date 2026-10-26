@@ -1,0 +1,7 @@
+INFO:     Started server process [29452]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8013 (Press CTRL+C to quit)
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/131 [00:00<?, ?it/s]Loading weights: 100%|##########| 131/131 [00:00<00:00, 3853.68it/s]

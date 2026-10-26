@@ -88,6 +88,8 @@ async def test_location_forecast_is_preferred_over_trailing_actuals(
         await _stock(db_session, tenant, sku, loc, 40)
         await _weekly_sales(db_session, tenant, sku, 5, location=loc)
     run = await _forecast(db_session, tenant, sku, completed=NOW, weekly_p50=40)
+    await db_session.execute(text('UPDATE forecast_runs SET metrics = CAST(:m AS jsonb) WHERE id = :r'),
+        {'r': str(run), 'm': '{"location_degraded":true,"unassigned_share":0.1}'})
     lid = uuid.uuid4()
     await db_session.execute(text(
         "INSERT INTO locations (id, tenant_id, code, name) VALUES (:l, :t, 'boduppal', 'Boduppal')"
@@ -105,6 +107,7 @@ async def test_location_forecast_is_preferred_over_trailing_actuals(
     assert locations["Boduppal"]["demand_basis"] == "forecast"
     assert locations["Boduppal"]["cover_days"] == 14.0
     assert locations["Alwal"]["demand_basis"] == "trailing_actuals"
+    assert all(l['degraded'] is True and l['unassigned_share'] == 0.1 for l in locations.values())
 
 
 async def test_two_stores_with_different_stock_and_demand(db_session, app_role_db, make_tenant):

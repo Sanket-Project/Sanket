@@ -1,0 +1,18 @@
+{
+  "method": "share_split_v1",
+  "weighted_mase": 0.5317,
+  "locations": [
+    {
+      "location": "alwal",
+      "mase": 0.4199,
+      "units": 553.0,
+      "weeks": 8
+    },
+    {
+      "location": "boduppal",
+      "mase": 0.6036,
+      "units": 859.0,
+      "weeks": 8
+    }
+  ]
+}

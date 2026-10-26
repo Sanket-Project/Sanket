@@ -69,11 +69,12 @@ const renderPage = () =>
 it("filters location rows and shows their forecast basis and suggested transfer", async () => {
   api.levels.mockResolvedValue({ industry: "fashion", count: 2, levels: [level("Boduppal", 30), level("Alwal", 190)] });
   api.coverage.mockResolvedValue(coverage({ locations: [
-    { ...loc("Boduppal", 30, 10.5, "critical"), demand_basis: "forecast", open_transfer: null },
+    { ...loc("Boduppal", 30, 10.5, "critical"), demand_basis: "forecast", open_transfer: null, degraded: true, unassigned_share: 0.2 },
     { ...loc("Alwal", 190, 90, "excess"), demand_basis: "trailing_actuals", open_transfer: { units: 12, destination: "boduppal" } },
   ] }));
   renderPage();
   expect(await screen.findByText("From location forecast")).toBeInTheDocument();
+  expect(screen.getByText("Location split incomplete: 20% of sales have no location")).toBeInTheDocument();
   expect(screen.getByText("Transfer 12 to boduppal suggested")).toBeInTheDocument();
   fireEvent.change(screen.getByRole("combobox", { name: "Location" }), { target: { value: "Alwal" } });
   const rows = screen.getAllByRole("row").slice(1);

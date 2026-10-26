@@ -10,12 +10,16 @@ export interface Location {
   parent_location_id: string | null;
   lead_time_days_from_parent: number | null;
   is_active: boolean;
+  last_sale_at?: string | null;
+  last_stock_at?: string | null;
 }
 
 export interface Network {
   allocation_ready: boolean;
   transfers_ready: boolean;
   missing: string[];
+  degraded?: boolean;
+  unassigned_share?: number | null;
 }
 
 export interface LocationsResponse {

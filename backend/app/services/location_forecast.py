@@ -36,7 +36,7 @@ DEGRADED_UNASSIGNED_SHARE = 0.05
 class SplitSummary:
     series: int
     excluded: list[dict[str, str]] = field(default_factory=list)
-    unassigned_share: float = 0.0
+    unassigned_share: float | None = None
     degraded: bool = False
 
 
@@ -63,7 +63,7 @@ async def split_run_by_location(
 
     category = dict((await session.execute(
         select(Sku.id, Product.category).join(Product, Product.id == Sku.product_id)
-        .where(Sku.tenant_id == tenant_id, Sku.id.in_(list(weekly)))
+        .where(Sku.tenant_id == tenant_id, Sku.industry == ind)
     )).all())
 
     bucket = week_bucket(HistoricalSale.sale_time).label("week")
@@ -91,7 +91,7 @@ async def split_run_by_location(
         sku_obs[r.sku_id].append(WeekObs(wk, code, units, False if r.oos else None))
         cat = category.get(r.sku_id)
         if cat is not None:
-            cat_obs[cat].append(WeekObs(wk, code, units, None))
+            cat_obs[cat].append(WeekObs(wk, code, units, False if r.oos else None))
 
     cat_shares: dict[str, ShareResult] = {c: shares_from_obs(o, weeks) for c, o in cat_obs.items()}
 
@@ -125,10 +125,10 @@ async def split_run_by_location(
     for start in range(0, len(rows), 5000):
         await session.execute(insert(LocationForecastResult), rows[start : start + 5000])
 
-    unassigned_share = unassigned_units / total_units if total_units > 0 else 0.0
+    unassigned_share = unassigned_units / total_units if total_units > 0 else None
     summary = SplitSummary(series=series, excluded=excluded,
-                           unassigned_share=round(unassigned_share, 6),
-                           degraded=unassigned_share > DEGRADED_UNASSIGNED_SHARE)
+                           unassigned_share=round(unassigned_share, 6) if unassigned_share is not None else None,
+                           degraded=unassigned_share is not None and unassigned_share > DEGRADED_UNASSIGNED_SHARE)
     await session.execute(
         text("UPDATE forecast_runs SET metrics = metrics || CAST(:m AS jsonb) WHERE id = :r"),
         {"r": str(run_id), "m": json.dumps({

@@ -144,3 +144,43 @@ async def test_entirely_unassigned_sku_is_not_allocated_by_category(
             "WHERE run_id = :r AND sku_id = :s"
         ), {"r": str(run), "s": str(unassigned)})
     assert allocated == 0
+
+
+async def test_category_prior_does_not_reintroduce_stockout_bias(db_session, app_role_db, make_tenant):
+    tenant = await make_tenant()
+    sku = await _sku(db_session, tenant)
+    await _weekly_sales(db_session, tenant, sku, 10, weeks=WINDOW, location='a')
+    await _weekly_sales(db_session, tenant, sku, 10, weeks=WINDOW[6:], location='b')
+    await _weekly_sales(db_session, tenant, sku, 0, weeks=WINDOW[:6], location='b')
+    await db_session.execute(text("UPDATE historical_sales SET in_stock = FALSE WHERE tenant_id = :t "
+        "AND location = 'b' AND units_sold = 0"), {'t': str(tenant)})
+    run = await _forecast(db_session, tenant, sku, completed=NOW, weekly_p50=20)
+    await db_session.commit()
+    async with app_role_db.session(str(tenant)) as s:
+        await split_run_by_location(s, tenant_id=tenant, industry='fashion', run_id=run, now=NOW)
+        values = (await s.execute(text('SELECT DISTINCT p50 FROM location_forecast_results WHERE run_id = :r'),
+                                  {'r': str(run)})).scalars().all()
+    assert values == [10]
+
+
+async def test_new_sku_uses_category_sales_outside_forecast_run(db_session, app_role_db, make_tenant):
+    tenant = await make_tenant()
+    old = await _sku(db_session, tenant, code='OLD')
+    new = await _sku(db_session, tenant, code='NEW')
+    await _weekly_sales(db_session, tenant, old, 10, weeks=WINDOW, location='a')
+    run = await _forecast(db_session, tenant, new, completed=NOW, weekly_p50=10)
+    await db_session.commit()
+    async with app_role_db.session(str(tenant)) as s:
+        summary = await split_run_by_location(s, tenant_id=tenant, industry='fashion', run_id=run, now=NOW)
+    assert summary.series == 1
+
+
+async def test_missing_sales_do_not_claim_zero_unassigned_share(db_session, app_role_db, make_tenant):
+    tenant = await make_tenant()
+    sku = await _sku(db_session, tenant)
+    run = await _forecast(db_session, tenant, sku, completed=NOW, weekly_p50=10)
+    await db_session.commit()
+    async with app_role_db.session(str(tenant)) as s:
+        summary = await split_run_by_location(s, tenant_id=tenant, industry='fashion', run_id=run, now=NOW)
+    assert summary.unassigned_share is None
+    assert summary.excluded[0]['reason'] == 'No sales history for this SKU or its category'

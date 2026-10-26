@@ -458,6 +458,9 @@ export const InventoryPage = () => {
                       <td className="max-w-[320px] py-3 px-3 text-xs leading-5 text-content-muted">
                         {cov.reason || decision?.reasons[0]?.text}
                         {locationCov?.demand_basis === "forecast" && <p className="mt-1 text-xs font-medium">From location forecast</p>}
+                        {locationCov?.degraded && <p className="mt-1 text-xs font-medium text-amber-700">
+                          Location split incomplete: {locationCov.unassigned_share == null ? "Unknown" : Math.round(locationCov.unassigned_share * 100)}% of sales have no location
+                        </p>}
                       </td>
                       <td className="py-3 px-3">
                         {locationCov?.open_transfer && <Link to="/workspace/decisions" className="block text-xs font-semibold text-[var(--accent)]">

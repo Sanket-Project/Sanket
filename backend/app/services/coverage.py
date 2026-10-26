@@ -127,9 +127,11 @@ async def coverage(
 
     # Forecast basis: the latest real (non-backtest) run, if recent enough.
     forecast_weekly: dict[uuid.UUID, float] = {}
+    location_metrics: dict = {}
     loc_forecast_weekly: dict[tuple[uuid.UUID, str], float] = {}
     run = await latest_completed_run(session, tenant_id, ind)
     if is_run_fresh(run, now):
+        location_metrics = run.metrics or {}
         rows = (
             await session.execute(
                 select(ForecastResult.sku_id, ForecastResult.forecast_date,
@@ -267,6 +269,8 @@ async def coverage(
                     "as_of": lvl.as_of.isoformat() if lvl.as_of else None,
                     "stock_stale": loc_stale,
                     "demand_basis": demand_basis,
+                    "degraded": bool(location_metrics.get("location_degraded")),
+                    "unassigned_share": location_metrics.get("unassigned_share"),
                     "open_transfer": open_transfers.get(key),
                     "location_demand": {
                         "weekly_units": loc_weekly,

@@ -48,3 +48,10 @@ it("shows allocation readiness", async () => {
   renderCard();
   expect(await screen.findByText("Allocation ready")).toBeInTheDocument();
 });
+
+it("warns when unassigned sales make the location split incomplete", async () => {
+  api.list.mockResolvedValue({ locations, network: { allocation_ready: true, transfers_ready: true,
+    missing: [], degraded: true, unassigned_share: 0.2 } });
+  renderCard();
+  expect(await screen.findByText("Location split incomplete: 20% of sales have no location")).toBeInTheDocument();
+});

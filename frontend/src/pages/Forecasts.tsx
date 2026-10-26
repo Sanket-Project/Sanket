@@ -441,6 +441,7 @@ const SKU_LABELS: Record<string, string> = {
 // Main page
 // ─────────────────────────────────────────────────────────────────────────────
 function LocationForecastView({ skuId, runId }: { skuId: string; runId: string | undefined }) {
+  const [location, setLocation] = useState("");
   const { data, isLoading, isError } = useQuery({
     queryKey: ["location-forecast", skuId, runId], queryFn: () => locationsApi.forecast(skuId),
   });
@@ -448,13 +449,17 @@ function LocationForecastView({ skuId, runId }: { skuId: string; runId: string |
   if (isError) return <p role="alert">Location forecast could not be loaded.</p>;
   if (!data) return null;
   return <div className="space-y-3">
+    {data.locations.length > 0 && <select aria-label="Forecast location" value={location}
+      onChange={(e) => setLocation(e.target.value)} className="rounded-lg border border-line bg-surface px-3 py-2 text-sm">
+      <option value="">All locations</option>{data.locations.map((loc) => <option key={loc.location_id} value={loc.code}>{loc.name}</option>)}
+    </select>}
     {data.degraded && <p className="text-sm text-amber-700" role="status">
       Location split incomplete: {data.unassigned_share == null ? "Unknown" : Math.round(data.unassigned_share * 100)}% of sales have no location
     </p>}
     {!data.locations.length ? <p>{data.reason}</p> : <div className="overflow-x-auto"><table className="w-full text-left text-sm">
       <thead><tr><th className="p-2">Location</th>{Array.from({ length: Math.max(...data.locations.map((l) => l.p50.length)) }, (_, i) =>
         <th key={i} className="p-2">Week {i + 1}</th>)}</tr></thead>
-      <tbody>{data.locations.map((loc) => <tr key={loc.location_id} className="border-t border-line">
+      <tbody>{data.locations.filter((loc) => !location || loc.code === location).map((loc) => <tr key={loc.location_id} className="border-t border-line">
         <th scope="row" className="p-2">{loc.name}</th>{loc.p50.map((p50, i) =>
           <td key={i} className="p-2 tabular-nums" title={`P10 ${loc.p10[i]} – P90 ${loc.p90[i]}`}>{p50.toLocaleString()}</td>)}
       </tr>)}</tbody>

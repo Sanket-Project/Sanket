@@ -2629,15 +2629,15 @@ git commit -m "feat(forecasts): per-location forecast view"
 - Create: `backend/benchmarks/bench_location_pipeline.py`
 - Modify: `backend/benchmarks/README.md` (one section: how to run it and the measured numbers)
 
-- [ ] **Step 1: Write the benchmark.** Follow the structure of `backend/benchmarks/bench_sales_summary.py`, including how it connects and seeds; read it first.
+- [x] **Step 1: Write the benchmark.** Follow the structure of `backend/benchmarks/bench_sales_summary.py`, including how it connects and seeds; read it first.
   - Seed a synthetic tenant: 25,000 SKUs across 50 categories; 1 DC + 6 stores; 12 weeks of sales per (SKU, store) drawn from Poisson with per-store means 0.2–8; a completed run with 8 weeks of SKU forecasts; fresh inventory.
   - Time three steps: `split_run_by_location`, `build_network_decisions` (allocation + transfers) and `persist_decisions`.
   - Print rows/second and wall time for each step.
   - Seeding must use `source='synthetic_bench'` and a tenant slug starting `bench-`, and the benchmark must delete its tenant afterwards.
 
-- [ ] **Step 2: Run it** against the local dev DB (see `backend/benchmarks/README.md` for the connection). Record the numbers in the README. If any step takes over 120 s, write that down as a finding in the README and in your final report. Do not tune silently.
+- [x] **Step 2: Run it** against the local dev DB (see `backend/benchmarks/README.md` for the connection). Record the numbers in the README. If any step takes over 120 s, write that down as a finding in the README and in your final report. Do not tune silently.
 
-- [ ] **Step 3: Swecha holdout check (manual, recorded).**
+- [x] **Step 3: Swecha holdout check (manual, recorded).**
   1. Load `data/demo-swecha/01..03` training files and `05-inventory.csv` into a clean tenant through the normal upload API. See `docs/audit/2026-10-25-fashion-readiness/clean-run/` for the clean-import procedure used last time.
   2. Run a forecast.
   3. Load `04-heldout-8-weeks.csv`.
@@ -2645,7 +2645,7 @@ git commit -m "feat(forecasts): per-location forecast view"
 
   Record per-location MASE (Boduppal, Alwal) and the weighted MASE in `docs/audit/2026-10-26-location-forecasting/holdout.md`, with the exact commands used. Before any live test, check port ownership (`netstat -ano | findstr :8000` and `:8001`); duplicate bare-metal and Docker stacks are known to collide.
 
-- [ ] **Step 4: Full suites**
+- [x] **Step 4: Full suites**
 
 Run:
 
@@ -2657,7 +2657,7 @@ cd frontend && npx vitest run && npm run typecheck && npm run lint
 
 Expected: everything passes, except failures that are proven to exist on `main` before this work. List those by test id with the output.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/benchmarks docs/audit/2026-10-26-location-forecasting

@@ -58,6 +58,8 @@ export interface LocationCoverage {
   reason: string;
   demand_basis?: "forecast" | "trailing_actuals" | null;
   open_transfer?: { units: number; destination: string } | null;
+  degraded?: boolean;
+  unassigned_share?: number | null;
 }
 
 export interface SkuCoverage {

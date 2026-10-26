@@ -1,0 +1,18 @@
+2026-10-26 19:42:36 [warning  ] config.secrets.weak            detail="DATABASE_URL still uses the default 'changeme' password; METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset � third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key" note='Must be fixed before production deploy'
+2026-10-26 19:42:36 [info     ] database.rls_check.ok
+Seeded 250/25,000 SKUs
+Seeded 2,750/25,000 SKUs
+Seeded 5,250/25,000 SKUs
+Seeded 7,750/25,000 SKUs
+Seeded 10,250/25,000 SKUs
+Seeded 12,750/25,000 SKUs
+Seeded 15,250/25,000 SKUs
+Seeded 17,750/25,000 SKUs
+Seeded 20,250/25,000 SKUs
+Seeded 22,750/25,000 SKUs
+2026-10-26 19:47:38 [info     ] decisions.persisted            created=84858 industry=fashion superseded=0 tenant_id=4741adb1-9e89-45a2-8ccb-d635d39db394
+{"step": "split_run_by_location", "rows": 1200000, "seconds": 119.0792558999965, "rows_per_second": 10077.321956124479, "over_120_seconds": false}
+{"step": "build_network_decisions", "rows": 84858, "seconds": 26.429670700017596, "rows_per_second": 3210.7096968084247, "over_120_seconds": false}
+{"step": "persist_decisions", "rows": 84858, "seconds": 18.278357500006678, "rows_per_second": 4642.539681148539, "over_120_seconds": false}
+Cleaned benchmark tenant 4741adb1-9e89-45a2-8ccb-d635d39db394
+2026-10-26 19:48:06 [info     ] database.engine.disposed

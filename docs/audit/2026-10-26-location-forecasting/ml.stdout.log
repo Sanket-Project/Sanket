@@ -1,0 +1,9 @@
+2026-10-26 19:35:59 [info     ] startup.chronos.preload_skipped
+2026-10-26 19:35:59 [info     ] forecast.zero_shot.fallback    horizon=8 industry=fashion model=chronos reason=forced tenant=69c71cd8-b76b-43dc-95e0-da0b54de4aad
+2026-10-26 19:35:59 [info     ] sales.load.start               end=2026-10-26 freq=W industry=fashion start=2023-10-30 tenant=69c71cd8-b76b-43dc-95e0-da0b54de4aad
+2026-10-26 19:35:59 [info     ] sales.load.done                dropped_short=0 n_obs=1248 n_series=12
+2026-10-26 19:35:59 [info     ] censoring.done                 detection_mode=none imputed_fraction=0.0 n_obs=1248 n_obs_imputed=0 n_series=12 n_series_corrected=0 units_added=0.0
+2026-10-26 19:36:41 [info     ] chronos.pipeline.loading       device=cpu repo=amazon/chronos-t5-small
+2026-10-26 19:36:42 [info     ] chronos.pipeline.ready         device=cpu repo=amazon/chronos-t5-small
+2026-10-26 19:36:47 [info     ] zero_shot.forecast.done        context_source=database horizon=8 industry=fashion model=chronos_zero_shot n_series=12 tenant=69c71cd8-b76b-43dc-95e0-da0b54de4aad used_observations=1248
+INFO:     127.0.0.1:52020 - "POST /forecast HTTP/1.1" 200 OK

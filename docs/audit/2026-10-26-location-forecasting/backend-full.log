@@ -1,0 +1,39 @@
+...................F.................................................... [ 11%]
+........................................................................ [ 22%]
+........................................................................ [ 33%]
+........................................................................ [ 44%]
+........................................................................ [ 55%]
+........................................................................ [ 67%]
+........................................................................ [ 78%]
+........................................................................ [ 89%]
+....................................................................     [100%]
+================================== FAILURES ===================================
+______________________ test_never_exceeds_supply_or_need ______________________
+tests\test_allocation.py:52: in test_never_exceeds_supply_or_need
+    st.lists(st.tuples(st.floats(0, 200), st.floats(0, 400), st.floats(0, 20)), min_size=1, max_size=8),
+               ^^^
+E   hypothesis.errors.FailedHealthCheck: Input generation is slow: Hypothesis only generated 3 valid inputs after 2.81 seconds (1 inputs which exceeded the maximum allowed entropy).
+E   
+E              count | fraction |    slowest draws (seconds)
+E      raw   |    4  |    100%  |      --   0.001,  0.001,  0.004,  2.804
+E     supply |    3  |      0%  |      --      --      --      --      -- 
+E      moq   |    3  |      0%  |      --      --      --      --      -- 
+E   
+E   This could be for a few reasons:
+E   1. This strategy could be generating too much data per input. Try decreasing the amount of data generated, for example by decreasing the minimum size of collection strategies like st.lists().
+E   2. Some other expensive computation could be running during input generation. For example, if @st.composite or st.data() is interspersed with an expensive computation, HealthCheck.too_slow is likely to trigger. If this computation is unrelated to input generation, move it elsewhere. Otherwise, try making it more efficient, or disable this health check if that is not possible.
+E   
+E   If you expect input generation to take this long, you can disable this health check with @settings(suppress_health_check=[HealthCheck.too_slow]). See https://hypothesis.readthedocs.io/en/latest/reference/api.html#hypothesis.HealthCheck for details.
+============================== warnings summary ===============================
+tests/test_accept_invite.py::test_accepted_invite_inherits_the_workspace_industry
+  C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\passlib\handlers\argon2.py:716: DeprecationWarning: Accessing argon2.__version__ is deprecated and will be removed in a future release. Use importlib.metadata directly to query for argon2-cffi's packaging metadata.
+    _argon2_cffi.__version__, max_version)
+
+tests/test_forecast_sku_cap.py::test_run_keeps_more_than_fifty_skus
+  C:\Users\admin\Desktop\Prisma\backend\ml\sanket_ml\fusion\hybrid_forecaster.py:142: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    generated_at=datetime.utcnow(),
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_allocation.py::test_never_exceeds_supply_or_need - hypothes...
+1 failed, 643 passed, 2 warnings in 283.93s (0:04:43)

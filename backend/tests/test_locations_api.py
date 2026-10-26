@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import uuid
+import pytest
 
 from sqlalchemy import text
 
@@ -35,6 +36,8 @@ async def test_get_registers_sales_locations(client, signed_in_workspace, db_ses
     body = response.json()
     assert [(l['code'], l['kind']) for l in body['locations']] == [('alwal', 'unconfirmed')]
     assert body['network']['allocation_ready'] is False
+    assert body['locations'][0]['last_sale_at'] is not None
+    assert body['locations'][0]['last_stock_at'] is None
 
 
 async def test_admin_can_confirm_network(client, signed_in_workspace, db_session):
@@ -96,7 +99,8 @@ async def test_forecast_without_fresh_run_explains_gap(client, signed_in_workspa
     assert response.json()['reason'] == f'No forecast from the last {FORECAST_MAX_AGE_DAYS} days'
 
 
-async def test_location_forecast_p50_reconciles(client, signed_in_workspace, db_session):
+@pytest.mark.parametrize('forecast_path', ['manual_split', 'ml_proxy'])
+async def test_location_forecast_p50_reconciles(client, signed_in_workspace, db_session, monkeypatch, forecast_path):
     from datetime import UTC, datetime, timedelta
     from app.core.calendar import current_week_start, week_start_instant
     from app.services.location_forecast import split_run_by_location
@@ -121,8 +125,19 @@ async def test_location_forecast_p50_reconciles(client, signed_in_workspace, db_
             await db_session.execute(text("INSERT INTO historical_sales (tenant_id, sku_id, industry, "
                 "sale_time, channel, units_sold, location) VALUES (:t, :s, 'fashion', :w, 'store', :u, :l)"),
                 {'t': str(tenant), 's': str(sku), 'w': week_start_instant(week - timedelta(weeks=i)), 'u': units, 'l': loc})
-    await split_run_by_location(db_session, tenant_id=tenant, industry='fashion', run_id=run, now=now)
     await db_session.commit()
+    if forecast_path == 'manual_split':
+        await split_run_by_location(db_session, tenant_id=tenant, industry='fashion', run_id=run, now=now)
+        await db_session.commit()
+    else:
+        import httpx
+        from app.routers import forecasts
+        async def fake_ml(*args, **kwargs):
+            return httpx.Response(200, json={'run_id': str(run), 'rows': []},
+                                  request=httpx.Request('POST', 'http://ml/forecast'))
+        monkeypatch.setattr(forecasts, '_post_to_ml', fake_ml)
+        generated = await client.post('/api/v1/forecasts/generate', headers=headers, json={'horizon': 4})
+        assert generated.status_code == 200, generated.text
     response = await client.get(f'/api/v1/locations/forecast?sku_id={sku}', headers=headers)
     assert response.status_code == 200, response.text
     rows = response.json()['locations']

@@ -1,0 +1,28 @@
+create_clean_tenant 201
+login 200
+00-products.csv 200
+01-steady-training.csv 200
+02-seasonal-training.csv 200
+03-intermittent-training.csv 200
+05-inventory.csv 200
+forecast_before_holdout_import 200
+04-heldout-8-weeks.csv 200
+holdout_accuracy 200
+{
+  "method": "share_split_v1",
+  "weighted_mase": 0.5317,
+  "locations": [
+    {
+      "location": "alwal",
+      "mase": 0.4199,
+      "units": 553.0,
+      "weeks": 8
+    },
+    {
+      "location": "boduppal",
+      "mase": 0.6036,
+      "units": 859.0,
+      "weeks": 8
+    }
+  ]
+}
