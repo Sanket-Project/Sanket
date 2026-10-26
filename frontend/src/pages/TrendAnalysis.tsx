@@ -366,7 +366,7 @@ function strengthLabel(val: number) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Big trend score gauge card */
-function TrendScoreGauge({ score, loading, industry }: { score: TrendScore | undefined; loading: boolean; industry: IndustryCode }) {
+export function TrendScoreGauge({ score, loading, industry }: { score: TrendScore | undefined; loading: boolean; industry: IndustryCode }) {
   const cfg = INDUSTRY_CONFIG[industry];
   const data = score ?? {
     industry,
@@ -379,9 +379,28 @@ function TrendScoreGauge({ score, loading, industry }: { score: TrendScore | und
     by_kind: {},
     as_of: new Date().toISOString()
   };
-  const pct = scoreToPercent(data.score);
-  const v = verdict(data.score);
-  const agreement = Math.round((1 - data.volatility) * 100);
+  const ev = score?.evidence;
+  // Only enough fresh evidence supports a direction or an agreement figure.
+  // Zero samples once read as "stable demand, High (100%) agreement".
+  const ready = Boolean(score) && (ev ? ev.agreement_reportable : score?.volatility != null);
+  const pct = ready ? scoreToPercent(data.score) : 50;
+  const v = ready
+    ? verdict(data.score)
+    : !score
+      ? { text: "Signal score unavailable", sub: "The trend score could not be loaded.", tone: "flat" }
+      : {
+          text:
+            ev?.status === "unavailable"
+              ? "No signal evidence"
+              : ev?.status === "stale"
+                ? "Signals are stale"
+                : "Insufficient signal evidence",
+          sub: ev?.message || "Too few signal samples to say which way demand is moving.",
+          tone: "flat",
+        };
+  const agreement = ready && data.volatility != null ? Math.round((1 - data.volatility) * 100) : null;
+  const sampleCount = data.sample_count;
+  const needs = ev && sampleCount < ev.min_samples ? ` (needs ${ev.min_samples})` : "";
 
   const STROKE = 10;
   const R = 54;
@@ -429,7 +448,7 @@ function TrendScoreGauge({ score, loading, industry }: { score: TrendScore | und
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <DirIcon size={16} style={{ color: dirColor }} />
             <span className="text-2xl font-black tabular-nums" style={{ color: dirColor }}>
-              {data.score >= 0 ? "+" : ""}{Math.round(data.score * 100)}
+              {ready ? `${data.score >= 0 ? "+" : ""}${Math.round(data.score * 100)}` : "—"}
             </span>
             <span className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">score</span>
           </div>
@@ -444,7 +463,7 @@ function TrendScoreGauge({ score, loading, industry }: { score: TrendScore | und
             <div className="flex items-center gap-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
               <span className="text-slate-500 dark:text-slate-400">
-                <strong className="text-slate-700 dark:text-slate-200">{data.sample_count.toLocaleString()}</strong> signals
+                {`${sampleCount.toLocaleString()} sample${sampleCount === 1 ? "" : "s"}${needs}`}
               </span>
             </div>
             <div className="flex items-center gap-1.5">
@@ -455,7 +474,12 @@ function TrendScoreGauge({ score, loading, industry }: { score: TrendScore | und
         </div>
       </div>
 
-      {/* Agreement bar */}
+      {/* Agreement bar — only when there is evidence to measure it */}
+      {agreement == null ? (
+        <p className="mt-5 text-[10px] text-slate-400 dark:text-slate-500">
+          Signal agreement is not shown: there is not enough recent signal evidence to measure it.
+        </p>
+      ) : (
       <div className="mt-5">
         <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
           <span>Signal agreement</span>
@@ -473,6 +497,7 @@ function TrendScoreGauge({ score, loading, industry }: { score: TrendScore | und
           {agreement >= 70 ? "Sources are largely aligned — high confidence" : agreement >= 50 ? "Mixed signals — treat forecasts as directional" : "Sources conflict — treat as rough estimate"}
         </p>
       </div>
+      )}
     </div>
   );
 }

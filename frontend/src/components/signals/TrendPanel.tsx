@@ -95,6 +95,26 @@ export const TrendPanel = ({ score, loading }: Props) => {
     );
   }
 
+  // Zero or a handful of samples give volatility 0 — that is no evidence, not
+  // agreement. Without enough of it the forecast was not signal-adjusted.
+  const evidenceOk = score.evidence
+    ? score.evidence.agreement_reportable
+    : score.volatility != null && score.sample_count >= 3;
+  if (!evidenceOk) {
+    const n = score.sample_count;
+    return (
+      <div className="glass rounded-2xl p-6">
+        <h3 className="text-sm font-semibold text-slate-800">Market Trend</h3>
+        <div className="text-slate-700 text-sm mt-2 font-medium">No signal adjustment applied</div>
+        <p className="text-xs text-slate-500 mt-1">
+          {score.evidence?.message ||
+            `${n} signal sample${n === 1 ? "" : "s"} — too few to adjust the forecast or to say whether sources agree.`}
+        </p>
+      </div>
+    );
+  }
+  const volatility = score.volatility ?? 0;
+
   const direction =
     score.score > 0.05 ? "up" : score.score < -0.05 ? "down" : "flat";
   const Icon =
@@ -106,10 +126,10 @@ export const TrendPanel = ({ score, loading }: Props) => {
   }[direction];
 
   // Sources "agree" when they don't disagree — friendlier than raw volatility.
-  const agreement = Math.max(0, Math.min(100, (1 - score.volatility) * 100));
+  const agreement = Math.max(0, Math.min(100, (1 - volatility) * 100));
   const agreeWord =
-    score.volatility < 0.2 ? "They mostly agree"
-    : score.volatility < 0.5 ? "Somewhat mixed"
+    volatility < 0.2 ? "They mostly agree"
+    : volatility < 0.5 ? "Somewhat mixed"
     : "Mixed — treat as rough";
 
   return (

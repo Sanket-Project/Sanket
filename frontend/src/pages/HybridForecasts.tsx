@@ -167,7 +167,7 @@ export const HybridForecastsPage = () => {
             Adaptive Synthesis Setup
           </span>
         }
-        description="Fuses active ensemble parameters with current market drivers."
+        description="Adjusts the ML baseline with recent market signals — only when there are enough of them to measure."
         className="card-hover-premium shadow-md shadow-slate-100 dark:shadow-none animate-fade-in stagger-2"
       >
         <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mt-2">

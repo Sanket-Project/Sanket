@@ -334,10 +334,27 @@ export interface TrendDriver {
   captured_at?: string;
 }
 
+/** How much signal evidence stands behind a trend score (GET /trends/score). */
+export interface TrendEvidence {
+  status: "unavailable" | "insufficient" | "stale" | "available";
+  sample_count: number;
+  source_count: number;
+  newest_sample_at: string | null;
+  lookback_hours: number;
+  min_samples: number;
+  stale_after_hours: number;
+  /** Only true for "available": agreement is not measurable from less. */
+  agreement_reportable: boolean;
+  last_ingest: { finished_at?: string; samples?: number; persisted?: number; error?: string | null } | null;
+  message: string;
+}
+
 export interface TrendScore {
   industry: IndustryCode;
   score: number;
-  volatility: number;
+  /** Null when there is too little evidence to measure agreement — never "sources agree". */
+  volatility: number | null;
+  evidence?: TrendEvidence;
   sample_count: number;
   by_kind: Record<string, number>;
   drivers: TrendDriver[];
