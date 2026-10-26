@@ -9,7 +9,7 @@ outcome behind any of it.
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 from app.models.enums import (
@@ -22,6 +22,8 @@ from app.models.enums import (
 from app.models.product import Product, Sku
 from app.models.recommendation import Recommendation
 from app.services import roi
+from sqlalchemy import text
+import json
 
 
 async def _rec(s, tenant, *, status=DecisionStatus.open, currency="INR", alert=None,
@@ -57,6 +59,31 @@ async def _rec(s, tenant, *, status=DecisionStatus.open, currency="INR", alert=N
 async def _summary(app_role_db, tenant):
     async with app_role_db.session(str(tenant)) as s:
         return await roi.summary(s, tenant_id=tenant, industry="fashion")
+
+
+async def test_observed_improvement_uses_latest_forecast_not_an_average(db_session, app_role_db, make_tenant):
+    tenant = await make_tenant()
+    rec = await _rec(db_session, tenant)
+    sku = rec.sku_id
+    first = date(2026, 8, 31)
+    for completed, prediction, model in [(datetime(2026, 8, 23, tzinfo=UTC), 500, "chronos"),
+                                          (datetime(2026, 8, 30, tzinfo=UTC), 100, "moirai")]:
+        run = uuid.uuid4()
+        await db_session.execute(text("INSERT INTO forecast_runs (id, tenant_id, industry, model_stack, horizon_weeks, granularity, status, completed_at, metrics) VALUES (:r,:t,'fashion',ARRAY[:model],8,'weekly','completed',:c,CAST(:m AS jsonb))"),
+            {"r": run, "t": tenant, "model": model, "c": completed,
+             "m": json.dumps({"calendar": "W-MON-UTC", "history_end": str(first), "mode": "zero_shot"})})
+        for i in range(8):
+            await db_session.execute(text("INSERT INTO forecast_results (tenant_id,run_id,sku_id,forecast_date,p10,p50,p90,model_name) VALUES (:t,:r,:s,:d,:p,:p,:p,:model)"),
+                {"t": tenant, "r": run, "s": sku, "d": first + timedelta(weeks=i), "p": prediction, "model": model})
+    for i in range(-1, 8):
+        await db_session.execute(text("INSERT INTO historical_sales (tenant_id,sku_id,industry,sale_time,channel,units_sold) VALUES (:t,:s,'fashion',:d,'pos',:u)"),
+            {"t": tenant, "s": sku, "d": datetime.combine(first + timedelta(weeks=i), datetime.min.time(), tzinfo=UTC), "u": 100 if i % 2 == 0 else 200})
+    await db_session.commit()
+    async with app_role_db.session(str(tenant)) as session:
+        result = await roi._forecast_improvement(session, tenant, IndustryCode.fashion, datetime(2026, 8, 1, tzinfo=UTC))
+    assert result.value == 50.0
+    assert result.evidence_count == 8
+    assert {row["metric"]: row["value"] for row in result.details}["model_wape"] == .3333
 
 
 def _lines(result):

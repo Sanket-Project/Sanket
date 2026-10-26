@@ -26,18 +26,18 @@ from __future__ import annotations
 import uuid
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 import structlog
-from sqlalchemy import Date, cast, func, or_, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.calendar import CALENDAR, week_bucket
+from app.core.calendar import week_bucket
 from app.models.enums import DecisionStatus, IndustryCode
-from app.models.forecast import ForecastResult, ForecastRun
 from app.models.recommendation import Recommendation
 from app.models.sales import HistoricalSale
+from app.services.forecast_accuracy import MAX_RESULTS, compute_accuracy
 
 log = structlog.get_logger(__name__)
 
@@ -294,40 +294,23 @@ async def _forecast_improvement(
         ),
     )
 
-    history_end = cast(ForecastRun.metrics["history_end"].astext, Date)
-    fc_rows = (
-        await session.execute(
-            select(
-                ForecastResult.sku_id,
-                ForecastResult.forecast_date,
-                func.avg(ForecastResult.p50).label("p50"),
-            )
-            .join(ForecastRun, ForecastRun.id == ForecastResult.run_id)
-            .where(
-                ForecastResult.tenant_id == tenant_id,
-                ForecastRun.industry == industry,
-                ForecastRun.status == "completed",
-                ForecastRun.completed_at.isnot(None),
-                ForecastRun.metrics["calendar"].astext == CALENDAR,
-                or_(
-                    ForecastRun.metrics["mode"].astext.is_(None),
-                    ForecastRun.metrics["mode"].astext != "backtest",
-                ),
-                ForecastResult.forecast_date >= since.date(),
-                ForecastResult.forecast_date <= datetime.now(UTC).date() - timedelta(days=7),
-                # Out-of-sample only: made before the week began, not trained on it.
-                func.timezone("UTC", ForecastRun.completed_at) < ForecastResult.forecast_date,
-                history_end <= ForecastResult.forecast_date,
-            )
-            .group_by(ForecastResult.sku_id, ForecastResult.forecast_date)
-        )
-    ).fetchall()
+    # Use exactly the date-matched production points shown on the accuracy
+    # page. Averaging historical runs would invent a forecast nobody used.
+    accuracy = await compute_accuracy(
+        session, tenant_id=tenant_id, industry=industry.value, limit=MAX_RESULTS,
+    )
+    fc_rows = [
+        (uuid.UUID(row["sku_id"]), date.fromisoformat(week["week"]), week["p50"], week["actual"])
+        for row in accuracy["rows"]
+        for week in row["weeks"]
+        if date.fromisoformat(week["week"]) >= since.date()
+    ]
 
     if not fc_rows:
         empty.basis += " No out-of-sample forecast weeks have matured yet."
         return empty
 
-    sku_ids = {r.sku_id for r in fc_rows}
+    sku_ids = {row[0] for row in fc_rows}
     week = week_bucket(HistoricalSale.sale_time).label("week")
     actual_rows = (
         await session.execute(
@@ -351,14 +334,12 @@ async def _forecast_improvement(
     total_actual = 0.0
     matched = 0
 
-    for r in fc_rows:
-        wk = r.forecast_date  # a Monday on the W-MON-UTC calendar
-        actual = actuals.get((r.sku_id, wk))
-        prev = actuals.get((r.sku_id, wk - timedelta(weeks=1)))
-        if actual is None or prev is None:
-            continue
+    for sku_id, wk, prediction, actual in fc_rows:
+        # The scored week proves the feed reaches this period, so a preceding
+        # week with no sale is a real zero, as in the accuracy service.
+        prev = actuals.get((sku_id, wk - timedelta(weeks=1)), 0.0)
         matched += 1
-        abs_err_model += abs(float(r.p50 or 0) - actual)
+        abs_err_model += abs(float(prediction) - actual)
         abs_err_naive += abs(prev - actual)
         total_actual += actual
 

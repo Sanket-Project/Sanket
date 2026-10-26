@@ -37,15 +37,15 @@ async def _run(db, tenant, *, completed, history_end, mode="zero_shot", calendar
     return run_id
 
 
-async def _fc(db, tenant, run_id, sku, week, p50, p10=None, p90=None):
+async def _fc(db, tenant, run_id, sku, week, p50, p10=None, p90=None, model="chronos_zero_shot"):
     await db.execute(
         text(
             "INSERT INTO forecast_results (tenant_id, run_id, sku_id, forecast_date, p10, p50, p90, "
-            "model_name) VALUES (:t, :r, :s, :d, :p10, :p50, :p90, 'chronos_zero_shot')"
+            "model_name) VALUES (:t, :r, :s, :d, :p10, :p50, :p90, :model)"
         ),
         {"t": str(tenant), "r": str(run_id), "s": str(sku), "d": week,
          "p10": p10 if p10 is not None else p50 * 0.8, "p50": p50,
-         "p90": p90 if p90 is not None else p50 * 1.2},
+         "p90": p90 if p90 is not None else p50 * 1.2, "model": model},
     )
 
 
@@ -147,6 +147,22 @@ async def test_latest_forecast_made_before_the_week_wins(db_session, app_role_db
     assert week["p50"] == 90
     assert week["run_id"] == str(new)
     assert week["lead_weeks"] == 0
+
+
+async def test_latest_eligible_forecast_wins_even_when_model_changes(db_session, app_role_db, make_tenant):
+    tenant, sku = await _seed(db_session, make_tenant)
+    old = await _run(db_session, tenant, completed=datetime(2026, 8, 10, tzinfo=UTC),
+                     history_end=date(2026, 8, 10))
+    new = await _run(db_session, tenant, completed=datetime(2026, 8, 30, tzinfo=UTC), history_end=W1)
+    await _fc(db_session, tenant, old, sku, W1, 500)
+    await _fc(db_session, tenant, new, sku, W1, 90, model="moirai")
+    await _sale(db_session, tenant, sku, datetime(2026, 9, 1, tzinfo=UTC), 100)
+    await db_session.commit()
+    result = await _accuracy(app_role_db, tenant)
+    assert result["summary"]["points"] == 1
+    assert result["summary"]["wape"] == 10
+    assert result["rows"][0]["model_name"] == "moirai"
+    assert result["rows"][0]["weeks"][0]["run_id"] == str(new)
 
 
 async def test_legacy_sunday_dated_runs_are_not_scored(db_session, app_role_db, make_tenant):

@@ -129,7 +129,7 @@ async def compute_accuracy(
     runs = {r.id: _parse_run(r.id, r.completed_at, r.metrics) for r in run_rows}
     excluded: Counter[str] = Counter(dict.fromkeys(EXCLUSION_REASONS, 0))
 
-    production: dict[tuple[uuid.UUID, date, str], _Point] = {}
+    production: dict[tuple[uuid.UUID, date], _Point] = {}
     backtests: dict[uuid.UUID, list[_Point]] = defaultdict(list)
     if runs:
         results = (
@@ -171,7 +171,7 @@ async def compute_accuracy(
             if run.completed_at > starts:
                 excluded["generated_after_period_start"] += 1
                 continue
-            key = (r.sku_id, week, r.model_name)
+            key = (r.sku_id, week)
             current = production.get(key)
             if current is None or run.completed_at > current.run.completed_at:
                 production[key] = point
