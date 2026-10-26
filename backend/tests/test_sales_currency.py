@@ -124,3 +124,29 @@ async def test_a_row_in_another_currency_than_its_sku_is_rejected(app_role_db, m
     )
     assert stats["rows_inserted"] == 0
     assert any("USD" in e and "INR" in e for e in stats["errors"])
+
+
+async def test_sku_created_without_a_currency_takes_the_workspace_currency(
+    client, db_session, signed_in_workspace
+):
+    tenant, headers = await signed_in_workspace()
+    await db_session.execute(
+        text("UPDATE tenants SET settings = jsonb_set(settings, '{currency}', '\"INR\"') WHERE id = :t"),
+        {"t": str(tenant)},
+    )
+    await db_session.commit()
+    product = await client.post(
+        "/api/v1/products", headers=headers, json={"name": "Kurti (synthetic)", "category": "Kurtis"}
+    )
+
+    created = await client.post(
+        f"/api/v1/skus/{product.json()['id']}/skus", headers=headers, json={"sku_code": "K-INR"}
+    )
+    explicit = await client.post(
+        f"/api/v1/skus/{product.json()['id']}/skus", headers=headers,
+        json={"sku_code": "K-USD", "currency": "USD"},
+    )
+
+    assert created.status_code == 201, created.text
+    assert created.json()["currency"] == "INR"
+    assert explicit.json()["currency"] == "USD"

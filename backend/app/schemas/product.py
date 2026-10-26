@@ -53,7 +53,9 @@ class SkuCreate(BaseModel):
     description: str | None = None
     unit_cost: Decimal | None = Field(None, ge=0)
     unit_price: Decimal | None = Field(None, ge=0)
-    currency: str = Field(default="USD", min_length=3, max_length=3)
+    # None = the workspace currency (tenants.settings.currency), else USD. Never
+    # silently USD for a workspace that has said it trades in something else.
+    currency: str | None = Field(default=None, pattern=r"^[A-Z]{3}$")
     lead_time_days: int | None = Field(None, ge=0)
     moq: int = Field(default=1, ge=1)
     safety_stock: int = Field(default=0, ge=0)

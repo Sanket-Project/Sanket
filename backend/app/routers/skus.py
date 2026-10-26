@@ -19,6 +19,14 @@ log = structlog.get_logger(__name__)
 router = APIRouter(prefix="/skus", tags=["skus"])
 
 
+_FALLBACK_CURRENCY = "USD"  # the column default, used only when nothing better is known
+
+
+def _workspace_currency(settings: dict | None) -> str | None:
+    code = str((settings or {}).get("currency") or "").strip().upper()
+    return code if len(code) == 3 and code.isalpha() else None
+
+
 def _checked_attributes(ctx: IndustryContext, attributes: dict[str, Any]) -> dict[str, Any]:
     """Normalise industry attribute spellings, then refuse anything invalid (422)."""
     normalized = ctx.normalize_sku_attributes(attributes)
@@ -93,11 +101,15 @@ async def create_sku(
         if existing is not None:
             raise ConflictError(f"SKU code '{body.sku_code}' already exists")
 
+        fields = body.model_dump()
+        fields["currency"] = (
+            body.currency or _workspace_currency(tenant_row.settings) or _FALLBACK_CURRENCY
+        )
         new_sku = Sku(
             tenant_id=tenant_id,
             product_id=pid,
             industry=industry,
-            **body.model_dump(),
+            **fields,
         )
         session.add(new_sku)
         await session.flush()
