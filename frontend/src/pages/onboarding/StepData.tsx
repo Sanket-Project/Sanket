@@ -13,6 +13,7 @@ import { integrationsApi, type UploadResult } from "@/api/integrations";
 import { Button } from "@/components/ui/Button";
 import { FileDropzone } from "@/components/ui/FileDropzone";
 import { getErrorMessage } from "@/utils/errors";
+import { describeUploadResult } from "@/utils/uploadSummary";
 import type { StepHandle, StepProps } from "./types";
 
 type Kind = "products" | "sales";
@@ -105,7 +106,11 @@ const ImportCard = ({ icon, title, description, kind, onImported }: ImportCardPr
     setBusy(true);
     try {
       const res = await integrationsApi.upload(file, kind, mapping);
-      const main = kind === "products" ? res.skus_created : res.sales_rows;
+      // A re-uploaded sales file inserts nothing new; that is success, not failure.
+      const main =
+        kind === "products"
+          ? res.skus_created
+          : res.rows_inserted + res.rows_updated + res.rows_unchanged;
       if (main === 0) {
         const message =
           res.rows_total === 0
@@ -190,16 +195,16 @@ const ImportCard = ({ icon, title, description, kind, onImported }: ImportCardPr
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl bg-surface-2 px-3.5 py-2.5 text-xs animate-fade-in">
             <span className="inline-flex items-center gap-1.5 font-medium text-content">
               <CheckCircle2 size={14} className="text-emerald-600" aria-hidden="true" />
-              {result.rows_imported.toLocaleString()} of {result.rows_total.toLocaleString()} rows
+              {describeUploadResult(result)}
             </span>
             {kind === "products" ? (
               <span className="font-mono text-content-subtle">
                 {result.products_created} products · {result.skus_created} SKUs
               </span>
             ) : (
-              <span className="font-mono text-content-subtle">{result.sales_rows} sales rows</span>
+              <span className="font-mono text-content-subtle">{result.rows_total.toLocaleString()} rows in file</span>
             )}
-            {result.rows_skipped > 0 && (
+            {kind === "products" && result.rows_skipped > 0 && (
               <span className="font-mono text-amber-600">{result.rows_skipped} skipped</span>
             )}
           </div>

@@ -106,7 +106,24 @@ export interface UploadResult {
   skus_created: number;
   inventory_rows: number;
   sales_rows: number;
+  /** Sales replay accounting: new rows, rows already present, corrected rows. */
+  rows_inserted: number;
+  rows_unchanged: number;
+  rows_updated: number;
+  identity_mode: "transaction" | "period" | null;
+  warnings: string[];
   errors: string[];
+}
+
+export interface UploadOptions {
+  /**
+   * How a re-uploaded sales row is recognised: "transaction" lines (order and
+   * line id, else the row itself) or "period" totals — one row per SKU,
+   * location, channel and day, so a corrected export replaces the value.
+   */
+  identity?: "transaction" | "period";
+  /** ISO code of the prices in the file, for SKUs it creates. */
+  currency?: string;
 }
 
 export const integrationsApi = {
@@ -123,13 +140,20 @@ export const integrationsApi = {
    * verified session. No target_industry is sent: supplying a different one is
    * refused, and supplying the same one is just a chance to get it wrong.
    */
-  upload: (file: File, kind: string, columnMapping?: Record<string, string>) => {
+  upload: (
+    file: File,
+    kind: string,
+    columnMapping?: Record<string, string>,
+    options: UploadOptions = {},
+  ) => {
     const form = new FormData();
     form.append("file", file);
     form.append("kind", kind);
     if (columnMapping) {
       form.append("column_mapping", JSON.stringify(columnMapping));
     }
+    if (kind === "sales" && options.identity) form.append("identity", options.identity);
+    if (options.currency) form.append("currency", options.currency);
     return apiClient
       .post<UploadResult>("/integrations/upload", form, {
         headers: { "Content-Type": "multipart/form-data" },

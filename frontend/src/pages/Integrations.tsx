@@ -42,6 +42,7 @@ import { industryDisplay } from "@/utils/colors";
 import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { fmtRelative } from "@/utils/format";
 import { getErrorMessage } from "@/utils/errors";
+import { describeUploadResult } from "@/utils/uploadSummary";
 
 const ICONS: Record<string, AppIcon> = {
   "file-text": FileText,
@@ -182,6 +183,9 @@ function UploadPanel({ onDone }: { onDone: () => void }) {
   const [headers, setHeaders] = useState<string[] | null>(null);
   const [sampleRows, setSampleRows] = useState<Record<string, any>[] | null>(null);
   const [mapping, setMapping] = useState<Record<string, string>>({});
+  // How re-uploaded sales rows are recognised, and the currency of the prices.
+  const [identity, setIdentity] = useState<"transaction" | "period">("transaction");
+  const [currency, setCurrency] = useState("");
 
   const analyzeMutation = useMutation({
     mutationFn: (f: File) => integrationsApi.analyze(f, kind),
@@ -197,9 +201,14 @@ function UploadPanel({ onDone }: { onDone: () => void }) {
   });
 
   const upload = useMutation({
-    mutationFn: () => integrationsApi.upload(file as File, kind, mapping),
+    mutationFn: () =>
+      integrationsApi.upload(file as File, kind, mapping, {
+        identity,
+        currency: currency || undefined,
+      }),
     onSuccess: (r) => {
-      toast.success(`Imported ${r.rows_imported} of ${r.rows_total} rows`);
+      toast.success(describeUploadResult(r));
+      r.warnings?.forEach((w) => toast(w, { icon: "⚠️" }));
       onDone();
     },
     onError: (e: unknown) =>
@@ -431,6 +440,38 @@ function UploadPanel({ onDone }: { onDone: () => void }) {
               ))}
             </div>
           </div>
+
+          {kind === "sales" && (
+            <fieldset className="space-y-2 rounded-xl border border-line p-3 text-xs">
+              <legend className="px-1 font-semibold text-content">If this file is uploaded again</legend>
+              <label className="flex items-start gap-2">
+                <input type="radio" name="identity" checked={identity === "transaction"}
+                  onChange={() => setIdentity("transaction")} />
+                <span>
+                  <strong>Individual sales.</strong> Rows already imported are skipped; a row with an
+                  order ID that changed is corrected. Rows without an order ID can only be matched if
+                  they are identical.
+                </span>
+              </label>
+              <label className="flex items-start gap-2">
+                <input type="radio" name="identity" checked={identity === "period"}
+                  onChange={() => setIdentity("period")} />
+                <span>
+                  <strong>Daily or weekly totals</strong> (one row per SKU, location and date). A
+                  corrected export replaces the earlier total. Zero-sales rows are kept as real zeros.
+                </span>
+              </label>
+              <label className="flex items-center gap-2 pt-1">
+                <span className="text-content-muted">Currency of prices in this file</span>
+                <select value={currency} onChange={(e) => setCurrency(e.target.value)}
+                  className="rounded-lg border border-line bg-surface-2 px-2 py-1">
+                  <option value="">Workspace default</option>
+                  <option value="INR">INR</option>
+                  <option value="USD">USD</option>
+                </select>
+              </label>
+            </fieldset>
+          )}
 
           {validationError && (
             <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50/70 border border-amber-200 text-amber-800 dark:bg-amber-900/10 dark:border-amber-900/30 dark:text-amber-400 text-xs">
