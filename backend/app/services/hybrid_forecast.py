@@ -181,7 +181,7 @@ async def compute_hybrid_forecast(
         )
         if body.sku_ids:
             sku_q = sku_q.where(Sku.id.in_(body.sku_ids))
-        sku_q = sku_q.limit(50)
+        sku_q = sku_q.limit(get_settings().forecast_max_skus)
         rows = await session.execute(sku_q)
         sku_list = list(rows.scalars().all()) if hasattr(rows, "scalars") else list(rows or [])
 

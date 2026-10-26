@@ -17,6 +17,7 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 
+from app.config import get_settings
 from app.core.exceptions import AuthenticationError
 from app.models.enums import IndustryCode
 from app.models.inventory import InventoryLevel
@@ -25,7 +26,6 @@ from app.models.tenant import Tenant
 from app.routers.industry_router import ActiveIndustry, TenantId
 from app.services import scenario as sim
 from app.services.decision_builder import (
-    MAX_SKUS,
     latest_completed_run,
     load_policy,
 )
@@ -142,7 +142,7 @@ async def simulate(
                 ),
             )
 
-        ids = list(bands)[:MAX_SKUS]
+        ids = list(bands)[: get_settings().forecast_max_skus]
         sku_rows = (
             await session.execute(
                 select(Sku).where(

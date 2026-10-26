@@ -93,7 +93,7 @@ Every task's requirements implicitly include this section.
 **Interfaces:**
 - Produces: `Settings.forecast_max_skus: int` (default `30000`).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 """A forecast run is not silently truncated to 50 SKUs (spec §2, Phase 0)."""
@@ -149,14 +149,14 @@ async def test_run_keeps_more_than_fifty_skus(db_session, app_role_db, make_tena
     assert len(result.out.series) == 60
 ```
 
-- [ ] **Step 2: Run it and confirm it fails**
+- [x] **Step 2: Run it and confirm it fails**
 
 Run: `cd backend && uv run pytest tests/test_forecast_sku_cap.py -v`
 Expected: FAIL with `assert 50 == 60`.
 
 If it fails for a different reason, read the traceback. For example, signal fusion may need a fixture the test lacks. Fix the *test setup* only, not production code, until the failure is the 50-vs-60 assertion.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `app/config.py` `class Settings`:
 
@@ -178,12 +178,12 @@ In `decision_builder.py`:
 - Replace `ids = list(bands)[:MAX_SKUS]` with `ids = list(bands)[: get_settings().forecast_max_skus]`.
 - Run `grep -rn "MAX_SKUS" backend/app backend/tests` and update any other reference the same way.
 
-- [ ] **Step 4: Run the tests and confirm they pass**
+- [x] **Step 4: Run the tests and confirm they pass**
 
 Run: `cd backend && uv run pytest tests/test_forecast_sku_cap.py tests/test_decision_engine.py tests/test_decision_readiness.py -v`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/app/config.py backend/app/services/hybrid_forecast.py backend/app/services/decision_builder.py backend/tests/test_forecast_sku_cap.py

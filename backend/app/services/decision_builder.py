@@ -21,6 +21,7 @@ import structlog
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.core.calendar import week_bucket
 from app.models.alert import ShortageAlert
 from app.models.enums import AlertStatus, DecisionStatus, IndustryCode
@@ -54,9 +55,6 @@ from app.services.planning_inputs import (
 log = structlog.get_logger(__name__)
 
 HISTORY_WEEKS = 104
-#: Hard ceiling on SKUs scored per run. Planners act on a queue, not a catalog,
-#: and the whole point is to hand them the few decisions that matter.
-MAX_SKUS = 500
 
 
 @dataclass(frozen=True, slots=True)
@@ -326,7 +324,7 @@ async def build_decisions(
             ),
         )
 
-    ids = list(bands)[:MAX_SKUS]
+    ids = list(bands)[: get_settings().forecast_max_skus]
     sku_rows = (
         await session.execute(
             select(Sku).where(

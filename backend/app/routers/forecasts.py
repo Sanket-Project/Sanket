@@ -200,7 +200,6 @@ async def forecast_confidence(
     from app.models.enums import IndustryCode
     from app.models.product import Sku
     from app.services.decision_builder import (
-        MAX_SKUS,
         confidence_for,
         forecast_bands,
         latest_completed_run,
@@ -222,7 +221,7 @@ async def forecast_confidence(
             }
 
         bands = await forecast_bands(session, tenant_id, run.id)
-        ids = list(bands)[:MAX_SKUS]
+        ids = list(bands)[: get_settings().forecast_max_skus]
         if not ids:
             return {
                 "industry": industry.code,

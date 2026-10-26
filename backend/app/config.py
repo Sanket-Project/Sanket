@@ -302,6 +302,8 @@ class Settings(BaseSettings):
     # comfortably above observed latency so the real ML baseline actually
     # completes instead of timing out and silently falling back to synthetic.
     ml_api_timeout_s: float = 120.0
+    #: Guard on SKUs per forecast run / decision refresh; fits a 25k-SKU tenant.
+    forecast_max_skus: int = 30000
 
     @field_validator("allowed_origins", mode="before")
     @classmethod
