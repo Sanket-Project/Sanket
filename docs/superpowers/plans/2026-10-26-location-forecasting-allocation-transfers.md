@@ -2446,17 +2446,17 @@ Before Task 16, read `frontend/src/api/decisions.ts`, `frontend/src/pages/Settin
   - `locationsApi.update(id: string, patch: LocationPatch): Promise<{location: Location; network: Network}>`
   - Types `Location`, `Network`, `LocationPatch`, `LocationsResponse` mirroring the backend JSON exactly (snake_case keys).
 
-- [ ] **Step 1: Write the failing component test.** Mock `locationsApi`, then assert that:
+- [x] **Step 1: Write the failing component test.** Mock `locationsApi`, then assert that:
   - **(a)** the table lists each location with a kind select, a parent select (warehouses only) and a lead-time input;
   - **(b)** every `network.missing` message is rendered as a checklist item;
   - **(c)** changing a kind calls `locationsApi.update(id, {kind: "warehouse"})` and refetches;
   - **(d)** with `network.allocation_ready`, the card shows "Allocation ready".
 
-- [ ] **Step 2: Run it and confirm it fails.**
+- [x] **Step 2: Run it and confirm it fails.**
 
 Run: `cd frontend && npx vitest run src/components/settings/NetworkCard.test.tsx`
 
-- [ ] **Step 3: Implement `locations.ts`**
+- [x] **Step 3: Implement `locations.ts`**
 
 ```ts
 import { apiClient } from "./client";
@@ -2506,12 +2506,12 @@ Then implement `NetworkCard.tsx`:
 - Show empty state copy: "No locations yet. Import sales or stock with a location (store/branch) column."
 - Use icons only from `@/components/ui/icons`.
 
-- [ ] **Step 4: Run the test and typecheck, and confirm they pass**
+- [x] **Step 4: Run the test and typecheck, and confirm they pass**
 
 Run: `cd frontend && npx vitest run src/components/settings/NetworkCard.test.tsx && npm run typecheck`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/api/locations.ts frontend/src/components/settings/NetworkCard.tsx frontend/src/components/settings/NetworkCard.test.tsx frontend/src/pages/Settings.tsx

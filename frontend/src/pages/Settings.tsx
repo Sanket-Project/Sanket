@@ -20,15 +20,17 @@ import { useAuthStore } from "@/stores/auth";
 import { useIndustryContext } from "@/hooks/useIndustryContext";
 import { industryDisplay } from "@/utils/colors";
 import { FocusProfileCard } from "@/components/settings/FocusProfileCard";
+import { NetworkCard } from "@/components/settings/NetworkCard";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-type Tab = "profile" | "workspace" | "industry" | "notifications";
+type Tab = "profile" | "workspace" | "industry" | "network" | "notifications";
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "profile", label: "Profile", icon: <User size={15} /> },
   { id: "workspace", label: "Workspace", icon: <Building2 size={15} /> },
   { id: "industry", label: "Industry", icon: <Globe size={15} /> },
+  { id: "network", label: "Network", icon: <Building2 size={15} /> },
   { id: "notifications", label: "Notifications", icon: <Bell size={15} /> },
 ];
 
@@ -503,6 +505,7 @@ export const SettingsPage = () => {
         {activeTab === "profile" && <ProfileTab />}
         {activeTab === "workspace" && <WorkspaceTab />}
         {activeTab === "industry" && <IndustryTab />}
+        {activeTab === "network" && <NetworkCard />}
         {activeTab === "notifications" && <NotificationsTab />}
       </div>
     </div>
