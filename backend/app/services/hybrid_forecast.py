@@ -553,6 +553,17 @@ async def _persist_accuracy_snapshot(
                             model_name="hybrid-trend-fused",
                         )
                     )
+            await session.flush()
+            try:
+                async with session.begin_nested():
+                    from app.services.location_forecast import split_run_by_location
+
+                    await split_run_by_location(
+                        session, tenant_id=tenant_id, industry=industry_code,
+                        run_id=run_row_id, now=datetime.now(UTC),
+                    )
+            except Exception as exc:  # pragma: no cover - never lose the SKU snapshot
+                log.warning("hybrid.run.location_split_failed", error=str(exc))
             await session.commit()
         log.info(
             "hybrid.run.accuracy_snapshot_saved",

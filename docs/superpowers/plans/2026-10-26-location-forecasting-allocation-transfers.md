@@ -1325,7 +1325,7 @@ git commit -m "feat(forecast): partitioned location_forecast_results table"
   - `async location_bands(session, tenant_id, run_id, now) -> dict[tuple[uuid.UUID, uuid.UUID], DemandBand]` — keyed `(sku_id, location_id)`, weeks from the current week forward.
   - Run `metrics` gain keys `location_series`, `location_excluded` (count), `unassigned_share`, `location_degraded`.
 
-- [ ] **Step 1: Write the failing test.** Reuse the helpers from `tests/test_inventory_coverage.py`: copy `_sku`, `_weekly_sales` and `_forecast` into the new test file. Do not import them across test modules. Use `NOW = datetime(2026, 10, 26, 9, 0, tzinfo=UTC)` and weekly sales on the 12 Mondays before 26 Oct 2026.
+- [x] **Step 1: Write the failing test.** Reuse the helpers from `tests/test_inventory_coverage.py`: copy `_sku`, `_weekly_sales` and `_forecast` into the new test file. Do not import them across test modules. Use `NOW = datetime(2026, 10, 26, 9, 0, tzinfo=UTC)` and weekly sales on the 12 Mondays before 26 Oct 2026.
 
 ```python
 async def test_split_two_stores_reconciles_to_sku(db_session, app_role_db, make_tenant):
@@ -1387,9 +1387,9 @@ async def test_split_is_idempotent(db_session, app_role_db, make_tenant):
 
 Imports for this file: `from collections import defaultdict`, `import pytest`, `from sqlalchemy import text`, `from app.models.forecast import ForecastRun`, `from app.services.location_forecast import ensure_location_split, split_run_by_location`. Define `WINDOW = [date(2026, 10, 19) - timedelta(weeks=i) for i in range(12)]`. The `_forecast` helper copied from `test_inventory_coverage.py` writes 8 weekly rows, hence `== 8`.
 
-- [ ] **Step 2: Run them and confirm they fail** (`ModuleNotFoundError`).
+- [x] **Step 2: Run them and confirm they fail** (`ModuleNotFoundError`).
 
-- [ ] **Step 3: Implement `app/services/location_forecast.py`**
+- [x] **Step 3: Implement `app/services/location_forecast.py`**
 
 ```python
 """Split a completed SKU forecast run across locations (location spec §4).
@@ -1566,7 +1566,7 @@ async def location_bands(
 
 Replace `__import__("json")` with a normal `import json` at the top; the inline form only keeps the excerpt short. Check `week_bucket` returns a timestamp: `coverage.py` calls `r.week.date()`, so handle both shapes as shown.
 
-- [ ] **Step 4: Hook it into the snapshot.** In `hybrid_forecast._persist_accuracy_snapshot`, after the `for s in out.series:` loop and before `await session.commit()`:
+- [x] **Step 4: Hook it into the snapshot.** In `hybrid_forecast._persist_accuracy_snapshot`, after the `for s in out.series:` loop and before `await session.commit()`:
 
 ```python
             await session.flush()
@@ -1582,12 +1582,12 @@ Replace `__import__("json")` with a normal `import json` at the top; the inline 
                 log.warning("hybrid.run.location_split_failed", error=str(exc))
 ```
 
-- [ ] **Step 5: Run the tests and confirm they pass**
+- [x] **Step 5: Run the tests and confirm they pass**
 
 Run: `cd backend && uv run pytest tests/test_location_forecast_split.py tests/test_location_shares.py -v`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/app/services/location_forecast.py backend/app/services/hybrid_forecast.py backend/tests/test_location_forecast_split.py
