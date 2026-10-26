@@ -79,7 +79,6 @@ export const Modal = ({
     <div
       className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[10vh] overflow-y-auto bg-slate-950/40 backdrop-blur-md animate-fade-in"
       onClick={onClose}
-      aria-hidden="true"
     >
       <div
         ref={dialogRef}
@@ -92,7 +91,6 @@ export const Modal = ({
           sz,
         )}
         onClick={(e) => e.stopPropagation()}
-        aria-hidden={false}
       >
         <div className="flex items-center justify-between mb-5">
           <h2
