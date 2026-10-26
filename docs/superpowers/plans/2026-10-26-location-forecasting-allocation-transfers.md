@@ -2383,16 +2383,16 @@ git commit -m "feat(planning): store-to-store transfer matching"
 - Consumes: Task 14 (`TransferSite`, `match_transfers`); `PolicyConfig.transfer_lead_time_days`, `min_transfer_units` and `transfer_cost_per_unit` (Task 12).
 - Produces: `Decision(kind=DecisionKind.transfer, source_location_id=<donor>, location_id=<receiver>)`. Coverage location entries gain `"open_transfer": {"units": int, "destination": code} | None`.
 
-- [ ] **Step 1: Write the failing tests.** Use the Task 13 fixture with DC available = 0, store A at 0 units and p50 14/week, store F at 80 units and p50 7/week, and lead time 5 days.
+- [x] **Step 1: Write the failing tests.** Use the Task 13 fixture with DC available = 0, store A at 0 units and p50 14/week, store F at 80 units and p50 7/week, and lead time 5 days.
   1. **Transfer suggested:** there is one `transfer` F → A with units = `floor(min(deficit_A, excess_F))`.
   2. **Unknown cost:** with `transfer_cost_per_unit` unset, the transfer is still suggested, `economics["net_value"] is None`, and one reason reads `"Transfer cost not known"`.
   3. **Unprofitable:** with cost 1000 per unit (more than the margin of 560), no transfer is suggested.
   4. **Not ready:** with fewer than 2 confirmed stores, there are no transfers.
   5. **Coverage hint:** after `refresh`, the coverage entry for F has `open_transfer == {"units": n, "destination": "a"}`.
 
-- [ ] **Step 2: Run them and confirm they fail.**
+- [x] **Step 2: Run them and confirm they fail.**
 
-- [ ] **Step 3: Implement.** In `build_network_decisions`, per SKU, after allocation and when `include_transfers and ready.transfers_ready`:
+- [x] **Step 3: Implement.** In `build_network_decisions`, per SKU, after allocation and when `include_transfers and ready.transfers_ready`:
   - Build a `TransferSite` for every active store with a location band. Use:
     - `window = lead_time_days_from_parent + review_period_days` (if the lead time is `None`, use `review_period_days` and pass `lead_from_parent=None`, which makes the store a donor only);
     - `window_p50 = _window_sum(band.p50, window)`, `window_p90 = _window_sum(band.p90, window)`;
@@ -2413,12 +2413,12 @@ git commit -m "feat(planning): store-to-store transfer matching"
       - `location_id = receiver id`, `source_location_id = donor id`.
   - In `coverage.py`: when building location entries, query open `transfer` recommendations for the tenant with `source_location_id` set. Join `locations` for codes and attach `open_transfer` to the donor's entry, otherwise `None`. `EXCESS_ACTION` stays as the generic text; `open_transfer` is the backed suggestion.
 
-- [ ] **Step 4: Run the tests and confirm they pass**
+- [x] **Step 4: Run the tests and confirm they pass**
 
 Run: `cd backend && uv run pytest tests/test_network_decisions_transfers.py tests/test_network_decisions_allocation.py tests/test_inventory_coverage.py -v`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/app/services/network_decisions.py backend/app/services/coverage.py backend/tests/test_network_decisions_transfers.py

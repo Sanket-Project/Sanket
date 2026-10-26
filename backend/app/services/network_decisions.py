@@ -28,6 +28,7 @@ from app.services.decision_engine import (
 from app.services.location_forecast import location_bands
 from app.services.locations import load_locations, network_readiness
 from app.services.planning_inputs import stock_is_stale
+from app.services.transfers import TransferSite, match_transfers
 
 
 @dataclass
@@ -93,6 +94,7 @@ async def build_network_decisions(
             if code in by_code:
                 rows_by_code.setdefault(code, []).append(lvl)
         conf, band_label = confidence.get(sku_id, (0, "insufficient"))
+        allocated: dict[str, int] = {}
 
         if ready.allocation_ready:
             for dc in (l for l in locs if l.kind == LocationKind.warehouse):
@@ -128,6 +130,7 @@ async def build_network_decisions(
 
                 alloc = allocate(needs, supply, moq=int(sku.moq or 1),
                                  min_units=policy.min_allocation_units)
+                allocated.update(alloc)
                 level = cover_level(needs, supply)
                 baseline_total = sum(baseline.get((sku_id, st.code), 0.0) for st in locs
                                      if st.kind == LocationKind.store and st.parent_location_id == dc.id)
@@ -158,4 +161,58 @@ async def build_network_decisions(
                                 "unit_price": float(sku.unit_price) if sku.unit_price is not None else None},
                         location_id=str(st.id), source_location_id=str(dc.id),
                     ))
+        if include_transfers and ready.transfers_ready:
+            sites: list[TransferSite] = []
+            for store in (l for l in locs if l.kind == LocationKind.store):
+                band = bands.get((sku_id, store.id))
+                rows = rows_by_code.get(store.code, [])
+                if band is None:
+                    continue
+                days = float((store.lead_time_days_from_parent or 0) + policy.review_period_days)
+                p50 = _window_sum(band.p50, days)
+                sites.append(TransferSite(
+                    store.code, _position(rows), p50, _window_sum(band.p90, days),
+                    p50 / days if days > 0 else 0.0, store.lead_time_days_from_parent,
+                    bool(rows) and not any(stock_is_stale(r.as_of, now) for r in rows),
+                    allocated.get(store.code, 0),
+                ))
+            by_site = {s.location: s for s in sites}
+            for transfer in match_transfers(sites, transfer_lead_days=policy.transfer_lead_time_days,
+                                           moq=int(sku.moq or 1), min_units=policy.min_transfer_units):
+                src, dest = by_code[transfer.source], by_code[transfer.destination]
+                receiver = by_site[dest.code]
+                donor = by_site[src.code]
+                units = transfer.units
+                margin_known = sku.unit_cost is not None and sku.unit_price is not None
+                cost = policy.transfer_cost_per_unit
+                net = (units * (float(sku.unit_price) - float(sku.unit_cost)) - units * cost
+                       if margin_known and cost is not None else None)
+                if net is not None and net <= 0:
+                    out.skipped.append({"sku_code": sku.sku_code,
+                        "reason": f"Transfer of {sku.sku_code} to {dest.code} not worth its cost"})
+                    continue
+                cover = (receiver.position + receiver.allocated) / receiver.daily_rate
+                reasons = [Reason("receiver_runs_out",
+                    f"{dest.code} runs out in {cover:.1f} days; the next warehouse delivery "
+                    f"takes {receiver.lead_from_parent} days.", transfer.deficit)]
+                if cost is None:
+                    reasons.append(Reason("transfer_cost_unknown", "Transfer cost not known", None))
+                if not margin_known:
+                    reasons.append(Reason("transfer_margin_unknown", "Transfer margin not known", None))
+                out.decisions.append(Decision(
+                    kind=DecisionKind.transfer, sku_id=str(sku_id), sku_code=sku.sku_code,
+                    headline=f"Move {units} × {sku.sku_code} from {src.code} to {dest.code}",
+                    recommended_units=units, baseline_units=0, urgency="high",
+                    confidence=conf, confidence_band=band_label, reasons=reasons,
+                    economics={"currency": sku.currency or "INR", "net_value": net},
+                    inputs={"deficit": transfer.deficit, "excess": transfer.excess,
+                        "receiver_window_p50": receiver.window_p50, "donor_window_p90": donor.window_p90,
+                        "receiver_position": receiver.position, "donor_position": donor.position,
+                        "receiver_cover_days": cover, "receiver_allocated": receiver.allocated,
+                        "transfer_lead_time_days": policy.transfer_lead_time_days,
+                        "min_transfer_units": policy.min_transfer_units, "transfer_cost_per_unit": cost,
+                        "unit_cost": float(sku.unit_cost) if sku.unit_cost is not None else None,
+                        "unit_price": float(sku.unit_price) if sku.unit_price is not None else None},
+                    location_id=str(dest.id), source_location_id=str(src.id),
+                ))
     return out

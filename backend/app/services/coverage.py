@@ -113,6 +113,17 @@ async def coverage(
     if not stock_rows:
         return _envelope(now, [], review_days)
     sku_ids = list({lvl.sku_id for lvl, _, _ in stock_rows})
+    transfer_rows = (await session.execute(text(
+        "SELECT r.sku_id, src.code, dest.code AS destination, r.recommended_units AS units "
+        "FROM recommendations r JOIN locations src ON src.id = r.source_location_id "
+        "JOIN locations dest ON dest.id = r.location_id "
+        "WHERE r.tenant_id = :t AND r.kind = 'transfer' AND r.status = 'open' "
+        "AND (r.expires_at IS NULL OR r.expires_at > :now) "
+        "ORDER BY r.recommended_units DESC, dest.code"
+    ), {"t": str(tenant_id), "now": now})).all()
+    open_transfers: dict[tuple[uuid.UUID, str], dict] = {}
+    for row in transfer_rows:
+        open_transfers.setdefault((row.sku_id, row.code), {"units": row.units, "destination": row.destination})
 
     # Forecast basis: the latest real (non-backtest) run, if recent enough.
     forecast_weekly: dict[uuid.UUID, float] = {}
@@ -256,6 +267,7 @@ async def coverage(
                     "as_of": lvl.as_of.isoformat() if lvl.as_of else None,
                     "stock_stale": loc_stale,
                     "demand_basis": demand_basis,
+                    "open_transfer": open_transfers.get(key),
                     "location_demand": {
                         "weekly_units": loc_weekly,
                         "weeks_observed": loc_observed,
