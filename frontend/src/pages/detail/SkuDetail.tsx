@@ -463,7 +463,7 @@ export const SkuDetailPage = () => {
             <div>
               <h2 className="text-base font-bold text-slate-900 dark:text-white">Demand Forecast for this SKU</h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Probabilistic projection using the active industry ensemble. Shows P10 (conservative), P50 (expected), and P90 (optimistic).
+                Probabilistic forecast from the latest forecast run (the Forecasts page names the model used). Shows P10 (conservative), P50 (expected), and P90 (optimistic).
               </p>
             </div>
 

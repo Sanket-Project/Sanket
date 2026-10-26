@@ -43,10 +43,11 @@ import { skusApi } from "@/api/skus";
 import { Button } from "@/components/ui/Button";
 import { ForecastConfidencePanel } from "@/components/charts/ForecastConfidencePanel";
 import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
+import { getErrorMessage } from "@/utils/errors";
+import { SKUS_PER_PAGE, buildIndicativePlan, describeSource, omissionReason } from "@/utils/forecastPresentation";
 import { industryAccent, industryDisplay, industryGradient } from "@/utils/colors";
 import { fmtCompact, fmtNumber } from "@/utils/format";
 import type { ForecastResponse, ForecastRow, IndustryCode } from "@/types/api";
-import type { Decision } from "@/api/decisions";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Industry config
@@ -59,34 +60,6 @@ const INDUSTRY_ICONS: Record<IndustryCode, React.ReactNode> = {
   hardware: <Wrench size={18} />,
 };
 
-const INDUSTRY_MODELS: Record<IndustryCode, { name: string; desc: string }[]> = {
-  agrocenter: [
-    { name: "TFT", desc: "Temporal Fusion Transformer — seasonal pattern capture" },
-    { name: "Prophet+", desc: "Weather-adjusted Prophet with custom seasonality" },
-    { name: "ARIMA-X", desc: "ARIMA with exogenous weather regressors" },
-  ],
-  electronics: [
-    { name: "TFT", desc: "Temporal Fusion Transformer — long-range component signals" },
-    { name: "LightGBM", desc: "Gradient boosting with supplier lead-time features" },
-    { name: "N-BEATS", desc: "Neural basis expansion for trend decomposition" },
-  ],
-  fashion: [
-    { name: "TFT", desc: "Temporal Fusion Transformer — trend-adjusted baseline" },
-    { name: "DeepAR", desc: "Probabilistic RNN with social signal covariates" },
-    { name: "Prophet+", desc: "Seasonality-aware with runway cycle calendar" },
-  ],
-  pharma: [
-    { name: "Croston", desc: "Intermittent demand specialist for sparse SKUs" },
-    { name: "TFT", desc: "Temporal Fusion Transformer — long-horizon GxP mode" },
-    { name: "ETS", desc: "Exponential smoothing with regulatory event flags" },
-  ],
-  hardware: [
-    { name: "TFT", desc: "Temporal Fusion Transformer — supplier lead-time aware" },
-    { name: "LightGBM", desc: "Gradient boosting with commodity-price features" },
-    { name: "N-HiTS", desc: "Neural hierarchical interpolation for steady demand" },
-  ],
-};
-
 const INDUSTRY_HORIZON_HINT: Record<IndustryCode, string> = {
   agrocenter: "26w recommended — captures full planting-to-harvest cycle",
   electronics: "12–26w — aligns with component lead-time windows",
@@ -94,16 +67,6 @@ const INDUSTRY_HORIZON_HINT: Record<IndustryCode, string> = {
   pharma: "52w — GxP-compliant annual batch planning horizon",
   hardware: "16w recommended — covers supplier lead-time + project season",
 };
-
-const INDUSTRY_INSIGHT: Record<IndustryCode, (horizon: number) => { text: string; tone: "up" | "down" | "flat" }> = {
-  agrocenter: (h) => ({ text: `Seasonal uplift expected in weeks 5–10 driven by pre-planting demand. ${h >= 26 ? "Full planting cycle captured." : "Consider extending to 26w for full cycle coverage."}`, tone: "up" }),
-  electronics: (h) => ({ text: `Component lead-time risk elevated. Forecast band is wider than usual. ${h >= 16 ? "Supply chain window fully covered." : "Extend to 16w+ to cover full supply chain lag."}`, tone: "down" }),
-  fashion: (h) => ({ text: `Trend momentum is strong — Q3 sell-through projected 12% above prior season. ${h >= 12 ? "Full season captured." : "12w horizon recommended for seasonal planning."}`, tone: "up" }),
-  pharma: (h) => ({ text: `Demand stable with low volatility (P10–P90 band <8%). GxP batch planning horizon ${h >= 52 ? "is fully covered." : "should be extended to 52w for annual compliance."}`, tone: "flat" }),
-  hardware: (h) => ({ text: `Commodity-cost pressure on steel & copper is widening the forecast band. ${h >= 16 ? "Supplier lead-time window fully covered." : "Extend to 16w+ to cover full supplier lead time."}`, tone: "up" }),
-};
-
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Horizon presets
@@ -206,45 +169,6 @@ function QuantileGuide({ accent }: { accent: string }) {
       ))}
     </div>
   );
-}
-
-function buildIndicativeForecast(decisions: Decision[], horizon: number): ForecastResponse | null {
-  const eligible = decisions
-    .filter((decision) => decision.inputs.demand_p50_over_window > 0)
-    .slice(0, 4);
-
-  if (!eligible.length) return null;
-
-  const start = new Date();
-  const rows = eligible.flatMap((decision, skuIndex) => {
-    const protectionWeeks = Math.max(1, decision.inputs.protection_days / 7);
-    const weeklyBaseline = decision.inputs.demand_p50_over_window / protectionWeeks;
-
-    return Array.from({ length: horizon }, (_, index) => {
-      const date = new Date(start);
-      date.setDate(start.getDate() + (index + 1) * 7);
-      const progress = horizon <= 1 ? 0 : index / (horizon - 1);
-      const direction = skuIndex % 3 === 1 ? -0.025 : skuIndex % 3 === 2 ? 0.03 : 0.08;
-      const seasonalMovement = Math.sin((index + skuIndex) / 2.8) * 0.018;
-      const expected = Math.max(0, weeklyBaseline * (1 + direction * progress + seasonalMovement));
-
-      return {
-        sku_id: decision.sku_id,
-        forecast_date: date.toISOString().slice(0, 10),
-        p10: Math.round(expected * 0.9),
-        p50: Math.round(expected),
-        p90: Math.round(expected * 1.1),
-      };
-    });
-  });
-
-  return {
-    run_id: "indicative-decision-plan",
-    n_predictions: rows.length,
-    rows,
-    source: "indicative",
-    context_source: "current decision inputs",
-  };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -521,12 +445,12 @@ export const ForecastsPage = () => {
   const gradient = industryGradient[industry];
   const displayName = industryDisplay[industry];
   const icon = INDUSTRY_ICONS[industry];
-  const models = INDUSTRY_MODELS[industry];
   const presets = HORIZON_PRESETS[industry];
   const defaultHorizon = presets.find((p) => p.recommended)?.weeks ?? presets[1].weeks;
 
   const [horizon, setHorizon] = useState(defaultHorizon);
   const [result, setResult] = useState<ForecastResponse | null>(null);
+  const [page, setPage] = useState(0);
 
   // Fetch SKUs for mapping ID to code and name/description
   const { data: skus = [] } = useQuery({
@@ -556,9 +480,11 @@ export const ForecastsPage = () => {
       forecastsApi.generate({ horizon, force_zero_shot: true }),
     onSuccess: (r) => {
       setResult(r);
+      setPage(0);
     },
     onError: () => {
       setResult(null);
+      setPage(0);
     },
   });
 
@@ -567,14 +493,16 @@ export const ForecastsPage = () => {
     run.mutate();
   }, [industry, horizon]);
 
+  // Only when the live service failed: a flat, labelled plan from decision inputs.
   const indicativeResult = useMemo(
-    () => buildIndicativeForecast(decisionData?.decisions ?? [], horizon),
-    [decisionData?.decisions, horizon],
+    () => (run.isError ? buildIndicativePlan(decisionData?.decisions ?? [], horizon) : null),
+    [run.isError, decisionData?.decisions, horizon],
   );
   const currentResult = result?.rows.length ? result : indicativeResult;
   const isIndicative = currentResult?.source === "indicative";
-  const insight = INDUSTRY_INSIGHT[industry](horizon);
-  const DirIcon = insight.tone === "up" ? TrendingUp : insight.tone === "down" ? TrendingDown : Minus;
+  const source = describeSource(currentResult?.source);
+  const runError = run.isError ? getErrorMessage(run.error, "The forecast could not be generated.") : null;
+  const omitted = result?.omitted ?? [];
 
   // Group rows by sku_id
   const grouped = useMemo(() => {
@@ -585,8 +513,16 @@ export const ForecastsPage = () => {
       list.push(r);
       map.set(r.sku_id, list);
     });
-    return Array.from(map.entries()).slice(0, 4);
-  }, [currentResult]);
+    // Every SKU in the response, in a stable order; the page shows them in pages.
+    return Array.from(map.entries()).sort(([a], [b]) => {
+      const ca = skuLookup.get(a)?.code ?? a;
+      const cb = skuLookup.get(b)?.code ?? b;
+      return ca.localeCompare(cb, undefined, { numeric: true });
+    });
+  }, [currentResult, skuLookup]);
+  const pageCount = Math.max(1, Math.ceil(grouped.length / SKUS_PER_PAGE));
+  const pageStart = page * SKUS_PER_PAGE;
+  const visible = grouped.slice(pageStart, pageStart + SKUS_PER_PAGE);
 
   const handleHorizonChange = (w: number) => {
     setHorizon(w);
@@ -633,42 +569,46 @@ export const ForecastsPage = () => {
         )}
       </div>
 
-      {/* ── Insight Banner ── */}
+      {/* ── Error: say what the service said, never a blank page ── */}
+      {runError && (
+        <div role="alert" className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50/70 p-4 text-sm text-rose-800 dark:border-rose-800/50 dark:bg-rose-900/15 dark:text-rose-200">
+          <AlertCircle size={18} className="mt-0.5 shrink-0" />
+          <div>
+            <p className="font-semibold">No forecast was produced</p>
+            <p className="mt-0.5">{runError}</p>
+          </div>
+        </div>
+      )}
+
+      {/* ── What produced this result (from the response, never assumed) ── */}
       {currentResult && (
-        <div
-          className={clsx(
-            "flex items-center gap-4 p-4 rounded-2xl border",
-            insight.tone === "up"
-              ? "bg-emerald-50/60 border-emerald-200/80 dark:bg-emerald-900/15 dark:border-emerald-800/40"
-              : insight.tone === "down"
-              ? "bg-rose-50/60 border-rose-200/80 dark:bg-rose-900/15 dark:border-rose-800/40"
-              : "bg-slate-50/80 border-slate-200/60 dark:bg-slate-800/30 dark:border-slate-700/40"
-          )}
-        >
-          <div
-            className={clsx(
-              "h-10 w-10 rounded-xl flex items-center justify-center shrink-0",
-              insight.tone === "up" ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400" :
-              insight.tone === "down" ? "bg-rose-100 dark:bg-rose-900/40 text-rose-500 dark:text-rose-400" :
-              "bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400"
-            )}
-          >
-            <DirIcon size={18} />
+        <div className={clsx(
+          "flex items-start gap-4 p-4 rounded-2xl border",
+          isIndicative
+            ? "bg-amber-50/70 border-amber-200 dark:bg-amber-900/15 dark:border-amber-800/50"
+            : "bg-slate-50/80 border-slate-200/60 dark:bg-slate-800/30 dark:border-slate-700/40",
+        )}>
+          <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0 bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400">
+            <Info size={18} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug">{insight.text}</p>
+            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug">
+              {source.short} · {horizon} weeks · {displayName}
+            </p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{source.detail}</p>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-              {isIndicative ? "Indicative plan from current decision inputs" : `Live ensemble · ${models.map((m) => m.name).join(", ")}`} · <strong className="text-slate-700 dark:text-slate-200">{horizon} weeks</strong> · <strong className="text-slate-700 dark:text-slate-200">{displayName}</strong>
+              No external signals applied to this forecast — trend and signal adjustment happen only in Hybrid forecasts.
+              {result?.history_end ? ` History used: complete weeks before ${result.history_end} (weeks start Monday, UTC).` : ""}
             </p>
           </div>
-          {isIndicative && <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-700 dark:border-amber-800/60 dark:bg-amber-900/20 dark:text-amber-300">Live engine unavailable</span>}
+          {isIndicative && <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-700 dark:border-amber-800/60 dark:bg-amber-900/20 dark:text-amber-300">Not a model forecast</span>}
         </div>
       )}
 
       {/* ── Configure Run ── */}
       <details className="group rounded-2xl border border-line bg-surface px-5 py-4">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
-          <span><span className="flex items-center gap-2 text-sm font-semibold text-content"><BarChart2 size={15} className="text-[var(--accent)]" />Forecast settings</span><span className="mt-1 block text-xs text-content-muted">{horizon} weeks · {models.map((model) => model.name).join(", ")}</span></span>
+          <span><span className="flex items-center gap-2 text-sm font-semibold text-content"><BarChart2 size={15} className="text-[var(--accent)]" />Forecast settings</span><span className="mt-1 block text-xs text-content-muted">{horizon} weeks · {result ? source.short : "Chronos zero-shot (pretrained model)"}</span></span>
           <ChevronDown size={16} className="text-content-subtle transition group-open:rotate-180" />
         </summary>
         <div className="mt-5 space-y-5 border-t border-line pt-4">
@@ -706,23 +646,14 @@ export const ForecastsPage = () => {
             </div>
           </div>
 
-          {/* Active models */}
+          {/* The model this page runs, stated plainly */}
           <div>
             <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 block mb-2">
-              Active Model Ensemble
+              Model
             </label>
-            <div className="flex gap-2 flex-wrap">
-              {models.map(({ name, desc }) => (
-                <div
-                  key={name}
-                  title={desc}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 text-xs font-semibold text-slate-700 dark:text-slate-200"
-                >
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  {name}
-                </div>
-              ))}
-            </div>
+            <p className="text-xs text-content-muted max-w-xl">
+              {describeSource(result?.source ?? "chronos_zero_shot").detail}
+            </p>
           </div>
 
           {/* Generate button */}
@@ -754,23 +685,23 @@ export const ForecastsPage = () => {
         <div className="glass rounded-2xl p-16 text-center">
           <BarChart2 size={32} className="mx-auto text-slate-300 dark:text-slate-600 mb-3 animate-pulse" />
           <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">No Forecast Run Executed Yet</p>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Configure your horizon above and click "Generate Live Forecast" to run the ensemble models.</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Choose a horizon above and click "Generate Live Forecast".</p>
         </div>
       ) : (
         <div className="space-y-5">
           {/* Summary KPIs */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <SummaryCard
-              label="SKUs Forecasted"
-              value={fmtCompact(grouped.length)}
-              sub="Active products in scope"
+              label="SKUs forecast"
+              value={`${fmtCompact(grouped.length)} SKUs forecast`}
+              sub={isIndicative ? "Indicative only" : "Every SKU in the response"}
               icon={<Layers size={16} />}
             />
             <SummaryCard
-              label="Forecast Rows"
-              value={fmtCompact(currentResult.n_predictions)}
-              sub="Total quantile data points"
-              icon={<BarChart2 size={16} />}
+              label="Not forecast"
+              value={fmtCompact(omitted.length)}
+              sub={omitted.length ? "See the list below for why" : "Every active SKU was forecast"}
+              icon={<AlertCircle size={16} />}
             />
             <SummaryCard
               label="Horizon"
@@ -779,11 +710,10 @@ export const ForecastsPage = () => {
               icon={<Clock size={16} />}
             />
             <SummaryCard
-              label="Trend Signal"
-              value={insight.tone === "up" ? "↑ Positive" : insight.tone === "down" ? "↓ Caution" : "→ Stable"}
-              sub="Overall demand direction"
-              icon={<DirIcon size={16} />}
-              tone={insight.tone === "up" ? "up" : insight.tone === "down" ? "down" : "default"}
+              label="Model"
+              value={source.short}
+              sub={source.isModel ? "As reported by the forecast service" : "Not a model forecast"}
+              icon={<BarChart2 size={16} />}
             />
           </div>
 
@@ -796,8 +726,24 @@ export const ForecastsPage = () => {
               </span>
               <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800/60" />
             </div>
+            <div className="mb-3 flex items-center justify-between text-xs text-content-muted">
+              <span>
+                Showing {grouped.length ? pageStart + 1 : 0}–{Math.min(pageStart + SKUS_PER_PAGE, grouped.length)} of {grouped.length} SKUs
+              </span>
+              {pageCount > 1 && (
+                <span className="flex items-center gap-2">
+                  <button type="button" aria-label="Previous page" disabled={page === 0}
+                    onClick={() => setPage((p) => Math.max(0, p - 1))}
+                    className="rounded-lg border border-line px-2 py-1 disabled:opacity-40">Previous</button>
+                  <span>Page {page + 1} of {pageCount}</span>
+                  <button type="button" aria-label="Next page" disabled={page >= pageCount - 1}
+                    onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+                    className="rounded-lg border border-line px-2 py-1 disabled:opacity-40">Next</button>
+                </span>
+              )}
+            </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-              {grouped.map(([skuId, rows]) => {
+              {visible.map(([skuId, rows]) => {
                 const skuInfo = skuLookup.get(skuId);
                 const codeToShow = skuInfo?.code || skuId;
                 const labelToShow = skuInfo?.name || SKU_LABELS[codeToShow] || codeToShow;
@@ -814,6 +760,22 @@ export const ForecastsPage = () => {
               })}
             </div>
           </div>
+
+          {omitted.length > 0 && (
+            <div className="rounded-2xl border border-line bg-surface p-4">
+              <p className="text-sm font-semibold text-content">
+                {omitted.length} SKU{omitted.length === 1 ? "" : "s"} not forecast
+              </p>
+              <ul className="mt-2 divide-y divide-line text-xs">
+                {omitted.map((o) => (
+                  <li key={o.sku_id} className="flex justify-between gap-4 py-1.5">
+                    <span className="font-mono">{skuLookup.get(o.sku_id)?.code ?? o.sku_id}</span>
+                    <span className="text-content-muted text-right">{omissionReason(o)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* The confidence drill-down follows the forecast itself, so the
               planner sees the answer before the model diagnostics. */}

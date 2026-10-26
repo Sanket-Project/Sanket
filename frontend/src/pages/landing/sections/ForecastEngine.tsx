@@ -1,15 +1,15 @@
 const POINTS = [
   {
-    title: "A model per SKU, not one model for everything",
-    body: "Fast movers and long-tail lines do not behave alike, so they are not forecast alike. Each SKU is routed to the approach that fits its history, and the routing is visible rather than buried.",
+    title: "Forecasts from your first eight weeks of sales",
+    body: "Until a model is trained on your data, each SKU is forecast by a pretrained foundation model (Chronos) applied to that SKU's own sales history. It needs at least eight weeks of it; a SKU with less is listed as not forecast, with the reason.",
   },
   {
-    title: "New products forecast without history",
-    body: "A zero-shot foundation model produces a usable curve for a SKU that has never been sold, which is exactly the case a purely statistical stack cannot serve.",
+    title: "New products are not guessed",
+    body: "A SKU that has never sold gets no forecast curve: there is no history to extend, and another product's demand is not quietly substituted. It is shown as not forecast until it has sales.",
   },
   {
     title: "Accuracy is measured, not asserted",
-    body: "Forecasts are backtested and scored per SKU against a naive baseline. Where the engine does not beat the baseline, it says so — that number is in the product, not just in a benchmark deck.",
+    body: "Each forecast week is scored against what actually sold that week, using only forecasts made before the week began; historical backtests are labelled separately. Where a simple baseline does better, the evaluation says so.",
   },
 ];
 

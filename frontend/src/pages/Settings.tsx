@@ -342,9 +342,13 @@ const IndustryTab = () => {
             />
             <div className="sm:col-span-2">
               <Row
-                label="Forecast Models"
+                label="Forecasting approaches in the catalogue"
                 value={
                   <div className="flex flex-wrap gap-1.5 mt-1">
+                    <p className="w-full text-xs text-content-muted">
+                      Not a list of what is running: forecasts come from Chronos zero-shot until a
+                      model is trained on this workspace&apos;s data. Each forecast states the model used.
+                    </p>
                     {ctx.forecast_models.map((m) => (
                       <Badge key={m} variant="info">
                         {m}
@@ -356,7 +360,7 @@ const IndustryTab = () => {
             </div>
             <div className="sm:col-span-2">
               <Row
-                label="Optimization Models"
+                label="Optimisation approaches in the catalogue"
                 value={
                   <div className="flex flex-wrap gap-1.5 mt-1">
                     {ctx.optimization_models.map((m) => (

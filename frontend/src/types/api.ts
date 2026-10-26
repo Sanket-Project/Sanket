@@ -257,12 +257,26 @@ export interface ForecastRow {
   p90: number;
 }
 
+/** An active SKU the service did not forecast, and why. */
+export interface ForecastOmission {
+  sku_id: string;
+  reason: "no_sales_history" | "insufficient_history" | "series_cap" | "not_in_model" | string;
+  observations: number;
+}
+
 export interface ForecastResponse {
   run_id: string;
   n_predictions: number;
   rows: ForecastRow[];
   source?: string;
   context_source?: string;
+  n_series?: number | null;
+  /** Weekly calendar of forecast_date; "W-MON-UTC" means each date is a Monday week start. */
+  calendar?: string | null;
+  /** Exclusive end of the history the model saw. */
+  history_end?: string | null;
+  first_forecast_week?: string | null;
+  omitted?: ForecastOmission[];
 }
 
 export interface PharmaBatchExpiring {
