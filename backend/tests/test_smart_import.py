@@ -186,3 +186,20 @@ async def test_each_file_is_parsed_once_per_request(app_role_db, monkeypatch):
     assert calls == ["gp.xlsx"]
     await confirm_plan(app_role_db, ctx, SECRET, "gp.xlsx", content, plan["plan_token"], plan["decision"])
     assert calls == ["gp.xlsx", "gp.xlsx"]
+
+
+async def test_files_without_a_style_column_group_to_the_same_skus(app_role_db):
+    from app.services.integrations.smart_import import confirm_plan, plan_files
+    ctx = await seed(app_role_db)
+    content = workbook({"Sheet1": [
+        [LETTERHEAD] * 4,
+        ["Company Name", "Stock No", "Item Description", "Brand", "Sales Qty"],
+        ["ALWAL", "S49159WL58646", "WESTREN - Straight Pant - SUKANYA - 49159 - WHITE - L", "SUKANYA", 2],
+        ["ALWAL", "S49159WL58648", "WESTREN - Straight Pant - SUKANYA - 49159 - WHITE - L", "SUKANYA", 3],
+    ]})
+    plan = (await plan_files(app_role_db, None, ctx, SECRET, [("gp.xlsx", content)]))["files"][0]
+    assert plan["decision"]["transforms"] == {"parse_variant": True, "group_pieces": True}
+    assert plan["preview"]["conflicts"] == 0
+    await confirm_plan(app_role_db, ctx, SECRET, "gp.xlsx", content, plan["plan_token"], plan["decision"])
+    assert await scalar(app_role_db, ctx, """SELECT p.units FROM sku_period_sales p JOIN skus s ON s.id=p.sku_id
+        WHERE p.tenant_id=:t AND s.sku_code='SUKANYA-49159-WHITE-L'""") == 5

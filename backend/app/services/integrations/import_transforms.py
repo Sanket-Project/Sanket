@@ -33,16 +33,27 @@ def is_summary_row(record: dict, identity_ids: list[str]) -> bool:
     return any(isinstance(v, str) and _norm(v) in _SUMMARY for v in record.values())
 
 
+def _parts(description: str | None) -> list[str]:
+    """Description parts by position; a blank part (``49159 -  - M``) keeps its place."""
+    text = str(description or "").strip()
+    if not text:
+        return []
+    return [p.strip() for p in (text.split(" - ") if " - " in text else text.split("-"))]
+
+
 def parse_variant(description: str | None) -> tuple[str | None, str | None]:
     """(colour, size code) from a POS description's last two parts. ``NA`` means no colour."""
-    text = str(description or "").strip()
-    parts = [p.strip() for p in (text.split(" - ") if " - " in text else text.split("-"))]
-    parts = [p for p in parts if p]
+    parts = _parts(description)
     if len(parts) < 2:
         return None, None
-    size = parts[-1].upper()
-    colour = parts[-2].upper()
-    return (None if colour == "NA" else colour), size
+    colour, size = parts[-2].upper(), parts[-1].upper()
+    return (None if colour in ("", "NA") else colour), (size or None)
+
+
+def parse_style(description: str | None) -> str | None:
+    """Style/design number: the part before colour and size."""
+    parts = _parts(description)
+    return (parts[-3].upper() or None) if len(parts) >= 3 else None
 
 
 def size_codes(codes: Iterable[str | None]) -> list[dict]:
@@ -71,11 +82,13 @@ def _plain(value: Decimal) -> int | float:
 
 
 def group_pieces(records: list[dict], *, brand: str | None, style: str, colour: str | None,
-                 size: str | None, location: str | None, sums: list[str]) -> tuple[list[dict], int]:
+                 size: str | None, location: str | None, sums: list[str],
+                 compare: list[str] | None = None) -> tuple[list[dict], int]:
     """Merge per-piece rows into one row per (brand-style-colour-size, location).
 
     ``sums`` columns are added; every other column takes its most common value.
-    Returns the rows (with ``x_sku``) and how many groups had disagreeing values.
+    Returns the rows (with ``x_sku``) and how many groups disagreed on a ``compare``
+    column (default: every non-summed column).
     """
     groups: dict[tuple[str, object], list[dict]] = {}
     for record in records:
@@ -93,7 +106,7 @@ def group_pieces(records: list[dict], *, brand: str | None, style: str, colour: 
                 continue
             values = Counter(r.get(column) for r in rows if not _blank(r.get(column)))
             merged[column] = values.most_common(1)[0][0] if values else rows[0].get(column)
-            conflicted |= len(values) > 1
+            conflicted |= len(values) > 1 and (compare is None or column in compare)
         merged["x_sku"] = sku
         conflicts += conflicted
         out.append(merged)

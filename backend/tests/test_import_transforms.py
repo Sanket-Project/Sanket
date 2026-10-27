@@ -56,3 +56,22 @@ def test_parse_period_from_letterhead():
     assert t.parse_period(lines) == (date(2026, 1, 1), date(2026, 10, 25))
     assert t.parse_period(["no range here"]) is None
     assert t.parse_period(["Date Range : 25-10-2026 - 01-01-2026"]) is None
+
+
+def test_parse_variant_keeps_blank_parts_in_place():
+    assert t.parse_variant("WESTREN - Straight Pant - SUKANYA - 49159 -  - M") == (None, "M")
+
+
+def test_parse_style_is_third_from_last():
+    assert t.parse_style("WESTREN - Straight Pant - SUKANYA - 49159 - STEEL GREY - L") == "49159"
+    assert t.parse_style("WESTREN - Straight Pant - SUKANYA - 49159 -  - M") == "49159"
+    assert t.parse_style("mix-KINZA-2917-ASST-S TO XXL") == "2917"
+    assert t.parse_style("PLAZO SETS - PLAZO SETS - 7SHADES - 7SHAD - NA - 0L") == "7SHAD"
+    assert t.parse_style("A - B") is None
+
+
+def test_group_conflicts_count_only_compared_columns():
+    rows = [{"st": "1", "id": "P1", "p": 699, "q": 1}, {"st": "1", "id": "P2", "p": 699, "q": 1}]
+    _, conflicts = t.group_pieces(rows, brand=None, style="st", colour=None, size=None, location=None,
+                                  sums=["q"], compare=["p"])
+    assert conflicts == 0

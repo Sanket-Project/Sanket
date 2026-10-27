@@ -54,7 +54,7 @@ it("plans several files and shows one card per file", async () => {
   expect(screen.getByRole("region", { name: "sales.xlsx" })).toHaveTextContent(/No column identifies an item/);
   expect(screen.getByRole("region", { name: "bad.xlsx" })).toHaveTextContent("Invalid Excel workbook");
   const card = screen.getByRole("region", { name: "stock.csv" });
-  expect(card).toHaveTextContent(/3 rows → 2 items/);
+  expect(card).toHaveTextContent(/3 rows → 2 SKUs in 2 rows across 2 locations/);
   expect(within(card).getByText("0L")).toBeInTheDocument();
 });
 

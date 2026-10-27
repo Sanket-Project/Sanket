@@ -45,6 +45,8 @@ _DERIVED_LABELS = {"x_sku": "Variant SKU (brand-style-colour-size)", "x_colour":
                    "x_size": "Size (from description)"}
 _SUMMED = ("available", "reserved", "inbound", "quantity", "revenue", "cogs", "returns")
 _ORDER = ("products", "inventory", "sales", "period_sales")
+#: Values that should agree across the pieces merged into one SKU.
+_CATALOGUE = ("brand", "category", "price", "description", "name", "gtin")
 _PREVIEW_ROWS = 5
 _LISTED_EXCLUSIONS = 100
 
@@ -101,8 +103,8 @@ def _decision(raw, column_ids: set[str]) -> dict:
         if column in DERIVED and not transforms[DERIVED[column]]:
             raise ValueError(f"Turn on {DERIVED[column].replace('_', ' ')} to use {_DERIVED_LABELS[column]}")
     if transforms["group_pieces"]:
-        if "style" not in mapping:
-            raise ValueError("Grouping pieces needs a style column")
+        if "style" not in mapping and not (transforms["parse_variant"] and "description" in mapping):
+            raise ValueError("Grouping pieces needs a style column or style read from the description")
         if "sales" in destinations:
             raise ValueError("Grouping pieces would merge dated sales lines; turn it off for sales")
     size_map = raw.get("size_map") or {}
@@ -150,16 +152,23 @@ def _apply(table, decision: dict, rules_identity: list[str]):
             colour, code = tx.parse_variant(record.get(mapping["description"]))
             codes.append(code)
             record["x_colour"], record["x_size_code"] = colour, code
+            # Style from the description first, so files with and without a style
+            # column build the same SKU; the style column fills descriptions too short.
+            record["x_style"] = tx.parse_style(record.get(mapping["description"])) or (
+                record.get(mapping["style"]) if "style" in mapping else None)
             chosen = decision["size_map"].get(code) if code else None
             record["x_size"] = (chosen or None) if code in decision["size_map"] else normalize_size(code)
     conflicts, item_rows = 0, len(records)
     if transforms["group_pieces"]:
-        colour = "x_colour" if transforms["parse_variant"] else mapping.get("color")
-        size = "x_size_code" if transforms["parse_variant"] else mapping.get("size")
+        parsed = transforms["parse_variant"] and "description" in mapping
+        colour = "x_colour" if parsed else mapping.get("color")
+        size = "x_size_code" if parsed else mapping.get("size")
+        style = "x_style" if parsed else mapping["style"]
         sums = [mapping[f] for f in _SUMMED if f in mapping and mapping[f] not in DERIVED]
         location = mapping.get("warehouse") if mapping.get("warehouse") not in DERIVED else None
-        records, conflicts = tx.group_pieces(records, brand=mapping.get("brand"), style=mapping["style"],
-                                             colour=colour, size=size, location=location, sums=sums)
+        compare = [mapping[f] for f in _CATALOGUE if f in mapping and mapping[f] not in DERIVED]
+        records, conflicts = tx.group_pieces(records, brand=mapping.get("brand"), style=style, colour=colour,
+                                             size=size, location=location, sums=sums, compare=compare)
     return records, item_rows, exclusions, conflicts, tx.size_codes(codes)
 
 
@@ -219,7 +228,7 @@ async def _plan_one(ai, ctx: AIContext, secret: str, filename: str, content: byt
         reason = None if destinations else (suggestion.get("reason") or reason)
     fashion = ctx.industry == IndustryCode.fashion
     parse = bool(fashion and "description" in mapping and "size" not in mapping)
-    group = bool(parse and "style" in mapping and "sales" not in destinations)
+    group = bool(parse and "sales" not in destinations)
     if parse:
         mapping.setdefault("size", "x_size")
         mapping.setdefault("color", "x_colour")

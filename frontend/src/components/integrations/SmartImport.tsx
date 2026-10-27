@@ -33,7 +33,7 @@ const FIELDS: Record<PlanDestination, string[]> = {
 const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL", "6XL", "FREE"];
 const UNUSABLE: Record<string, string> = {
   no_item_column: "No column identifies an item (no SKU or item code). This looks like a summary report — "
-    + "ask for an item-wise export, e.g. an item-wise sales register with bill date, item code and quantity.",
+    + "ask for the item-wise version of this report: one row per item with its date, item code and quantity.",
   no_quantity_or_catalogue: "No stock, sales quantity or catalogue column was found.",
   summary_only: "Only totals were found, no item rows.",
 };
@@ -232,9 +232,9 @@ function PlanCard({ card, canImport, onEdit, onRefresh, onConfirm }: {
       </details>}
 
       <p className={clsx("text-xs", card.stale && "text-content-subtle")}>
-        {preview.source_rows} rows → {preview.output_rows} {decision.transforms.group_pieces ? "items" : "rows"}
+        {preview.source_rows} rows → {preview.items} SKUs in {preview.output_rows} rows
         {preview.locations ? ` across ${preview.locations} locations` : ""} · {preview.excluded_rows} excluded
-        {preview.conflicts ? ` · ${preview.conflicts} grouped items had differing values (most common kept)` : ""}
+        {preview.conflicts ? ` · ${preview.conflicts} SKUs had pieces with differing price or details (most common kept)` : ""}
         {card.stale ? " · preview out of date" : ""}
       </p>
       {preview.after.length > 0 && <div className="overflow-x-auto"><table className="w-full text-left text-xs">
