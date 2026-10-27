@@ -40,7 +40,7 @@ describe("integrations", () => {
     const user = userEvent.setup();
     await user.upload(container.querySelector('input[type="file"]') as HTMLInputElement, new File(["sku,qty,date"], "sales.csv"));
     await user.click(await screen.findByLabelText(/Daily or weekly totals/));
-    await user.click(screen.getByRole("button", { name: /import/i }));
+    await user.click(screen.getByRole("button", { name: /^import$/i }));
     await waitFor(() => expect(done).toHaveBeenCalled());
     expect(api.upload).toHaveBeenCalledWith(expect.any(File), "sales", expect.any(Object), { identity: "period", currency: undefined });
     expect(api.success).toHaveBeenCalledWith("0 new · 459 already imported · 0 corrected");
