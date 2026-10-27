@@ -137,7 +137,9 @@ def _apply(table, decision: dict, rules_identity: list[str]):
     """Run exclusions and transforms. Returns (records, item rows before grouping, exclusions, conflicts, size codes)."""
     mapping, transforms = decision["mapping"], decision["transforms"]
     exclusions = [{"row": e["row"], "reason": e["reason"]} for e in table.exclusions]
-    identity = _identity(mapping) or rules_identity
+    # Any source column that names the item counts — e.g. Stock No still
+    # identifies a row whose SKU is derived and whose style is blank.
+    identity = list(dict.fromkeys(_identity(mapping) + rules_identity))
     records = []
     for number, record in zip(table.row_numbers, table.records, strict=True):
         if tx.is_summary_row(record, rules_identity or identity):

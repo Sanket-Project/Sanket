@@ -27,7 +27,8 @@ from decimal import Decimal, InvalidOperation
 from typing import Any
 
 import structlog
-from sqlalchemy import select, text
+from sqlalchemy import cast, func, select, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from app.models.enums import IndustryCode, ProductStatus
@@ -1035,8 +1036,13 @@ async def import_rows(
                 # Shopify sync makes for the barcode field.
                 attrs = {"source": SOURCE, "brand": m["brand"], "gtin": m["gtin"], **variant}
                 new_sku_currency = m["currency"] or default_currency
+                # A file that does not supply a value keeps the known one: blank
+                # means "not in this file", not "clear it" (a gross-margin export
+                # with no price column must not wipe prices set by a stock file).
+                supplied = {k: v for k, v in attrs.items() if v is not None}
+                insert = pg_insert(Sku)
                 stmt = (
-                    pg_insert(Sku)
+                    insert
                     .values(
                         tenant_id=tenant_id,
                         product_id=import_product_id,
@@ -1051,9 +1057,9 @@ async def import_rows(
                     .on_conflict_do_update(
                         index_elements=[Sku.tenant_id, Sku.sku_code],
                         set_={
-                            "description": m["description"],
-                            "unit_price": m["unit_price"],
-                            "attributes": attrs,
+                            "description": func.coalesce(insert.excluded.description, Sku.description),
+                            "unit_price": func.coalesce(insert.excluded.unit_price, Sku.unit_price),
+                            "attributes": Sku.attributes.op("||")(cast(supplied, JSONB)),
                             "is_active": True,
                             # Only an explicit currency column re-prices an existing SKU.
                             **({"currency": m["currency"]} if m["currency"] else {}),

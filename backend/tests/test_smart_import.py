@@ -233,3 +233,32 @@ async def test_period_errors_name_the_sku(app_role_db):
     assert any("BHAKTI-1-L" in problem for problem in plan["problems"])
     with pytest.raises(ValueError, match="BHAKTI-1-L"):
         await confirm_plan(app_role_db, ctx, SECRET, "gp.xlsx", content, plan["plan_token"], plan["decision"])
+
+
+async def test_a_file_without_prices_does_not_clear_known_prices(app_role_db):
+    from app.services.integrations.smart_import import confirm_plan, plan_files
+    ctx = await seed(app_role_db)
+    plan = (await plan_files(app_role_db, None, ctx, SECRET, [("stock.csv", STOCK)]))["files"][0]
+    await confirm_plan(app_role_db, ctx, SECRET, "stock.csv", STOCK, plan["plan_token"], plan["decision"])
+    content = workbook({"Sheet1": [
+        [LETTERHEAD] * 4,
+        ["Company Name", "Stock No", "Item Description", "Brand", "Sales Qty"],
+        ["ALWAL", "S49159WL58646", "WESTREN - Straight Pant - SUKANYA - 49159 - WHITE - L", "SUKANYA", 2],
+    ]})
+    plan = (await plan_files(app_role_db, None, ctx, SECRET, [("gp.xlsx", content)]))["files"][0]
+    await confirm_plan(app_role_db, ctx, SECRET, "gp.xlsx", content, plan["plan_token"], plan["decision"])
+    assert await scalar(app_role_db, ctx, """SELECT unit_price FROM skus
+        WHERE tenant_id=:t AND sku_code='SUKANYA-49159-WHITE-L'""") == 699
+    assert await scalar(app_role_db, ctx, """SELECT attributes->>'size' FROM skus
+        WHERE tenant_id=:t AND sku_code='SUKANYA-49159-WHITE-L'""") == "L"
+
+
+async def test_rows_with_an_item_code_but_no_style_are_kept(app_role_db):
+    from app.services.integrations.smart_import import plan_files
+    ctx = await seed(app_role_db)
+    content = STOCK.replace(b'"Grand Total : "', b'"x"') + (
+        b'"NGO","FI3443753","INTIMATES - BRA - FLORET -  - NA - 34","INTIMATES","FLORET","","BRA",'
+        b'"100","199","1.0000","100"\n')
+    plan = (await plan_files(app_role_db, None, ctx, SECRET, [("stock.csv", content)]))["files"][0]
+    assert [(e["row"], e["reason"]) for e in plan["exclusions"]] == [(5, "no_item")]
+    assert plan["preview"]["source_rows"] == 4
