@@ -43,6 +43,7 @@ import { fmtRelative } from "@/utils/format";
 import { getErrorMessage } from "@/utils/errors";
 import { connectionGroups } from "@/utils/integrationGroups";
 import { ImportUploader } from "@/components/integrations/ImportUploader";
+import { SmartImport } from "@/components/integrations/SmartImport";
 
 const ICONS: Record<string, AppIcon> = {
   "file-text": FileText,
@@ -172,20 +173,23 @@ const UPLOAD_KINDS = [
   { key: "sales", label: "Sales history", cols: "SKU, Quantity, Selling Price, Timestamp" },
   { key: "inventory", label: "Inventory levels", cols: "SKU, Available Stock, Warehouse" },
   { key: "products", label: "Product catalog", cols: "SKU, Name, Category, Price" },
+  { key: "smart", label: "Smart import (AI, multiple files)", cols: "Any report exports — planned per file" },
 ] as const;
 
 export function UploadPanel({ onDone }: { onDone: () => void }) {
   const queryClient = useQueryClient();
-  const [kind, setKind] = useState<"sales" | "inventory" | "products">("sales");
+  const [kind, setKind] = useState<(typeof UPLOAD_KINDS)[number]["key"]>("sales");
   return <div className="space-y-4">
     <fieldset className="flex flex-wrap gap-2"><legend className="label">What are you importing?</legend>
       {UPLOAD_KINDS.map((item) => <button key={item.key} type="button" aria-pressed={kind === item.key}
         className="rounded-xl border border-line px-3 py-2 text-sm" onClick={() => setKind(item.key)}>{item.label}</button>)}
     </fieldset>
-    <ImportUploader key={kind} kind={kind} mode="integrations" onImported={() => {
-      void queryClient.invalidateQueries();
-      onDone();
-    }} />
+    {kind === "smart"
+      ? <SmartImport onImported={() => void queryClient.invalidateQueries()} />
+      : <ImportUploader key={kind} kind={kind} mode="integrations" onImported={() => {
+        void queryClient.invalidateQueries();
+        onDone();
+      }} />}
   </div>;
 }
 

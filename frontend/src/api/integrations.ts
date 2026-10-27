@@ -169,6 +169,48 @@ export interface ImportAnalysis {
   fields?: string[];
 }
 
+export type PlanDestination = "products" | "inventory" | "sales" | "period_sales";
+
+export interface PlanDecision {
+  destinations: PlanDestination[];
+  mapping: Record<string, string>;
+  transforms: { parse_variant: boolean; group_pieces: boolean };
+  size_map: Record<string, string>;
+  period: { start: string; end: string } | null;
+  currency: string | null;
+}
+
+export interface PlanEvaluation {
+  preview: {
+    source_rows: number; excluded_rows: number; output_rows: number; items: number; locations: number;
+    conflicts: number; before: Record<string, unknown>[]; after: Record<string, unknown>[];
+  };
+  exclusions: { row: number; reason: string }[];
+  size_codes: { code: string; count: number; suggestion: string | null }[];
+  missing: Partial<Record<PlanDestination, string[]>>;
+}
+
+export interface FilePlan extends PlanEvaluation {
+  file_index: number;
+  filename: string;
+  plan_token: string;
+  plan_source: "rules" | "ai";
+  ai_state: string;
+  table: { sheet: string; header_start: number; header_end: number; rows_total: number };
+  columns: { id: string; label: string; kind: string; derived: boolean }[];
+  provenance: Record<string, string>;
+  decision: PlanDecision;
+  unusable_reason: string | null;
+  warnings: string[];
+}
+
+export type FilePlanSlot = FilePlan | { file_index: number; filename: string; error: string };
+
+export interface PlanConfirmResult {
+  destinations: Partial<Record<PlanDestination, Record<string, unknown>>>;
+  rows_excluded: number;
+}
+
 export const integrationsApi = {
   // Hub catalog
   catalog: () => apiClient.get<Catalog>("/integrations/catalog").then((r) => r.data),
@@ -214,6 +256,39 @@ export const integrationsApi = {
     if (suggestTable) form.append("suggest_table", suggestTable);
     return apiClient
       .post<ImportAnalysis>("/integrations/upload/analyze", form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      .then((r) => r.data);
+  },
+
+  /** Smart import: one editable plan per file (up to 10). Writes nothing. */
+  planImport: (files: File[]) => {
+    const form = new FormData();
+    files.forEach((file) => form.append("files", file));
+    return apiClient
+      .post<{ files: FilePlanSlot[] }>("/integrations/import/plan", form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      .then((r) => r.data);
+  },
+  previewPlan: (file: File, token: string, decision: PlanDecision) => {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("plan_token", token);
+    form.append("decision", JSON.stringify(decision));
+    return apiClient
+      .post<PlanEvaluation & { decision: PlanDecision }>("/integrations/import/plan/preview", form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      .then((r) => r.data);
+  },
+  confirmPlan: (file: File, token: string, decision: PlanDecision) => {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("plan_token", token);
+    form.append("decision", JSON.stringify(decision));
+    return apiClient
+      .post<PlanConfirmResult>("/integrations/import/plan/confirm", form, {
         headers: { "Content-Type": "multipart/form-data" },
       })
       .then((r) => r.data);
