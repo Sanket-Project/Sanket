@@ -14,10 +14,12 @@ from datetime import date
 from decimal import Decimal
 
 from sqlalchemy import text
+from starlette.concurrency import run_in_threadpool
 
 from app.models.enums import IndustryCode
 from app.services import audit
 from app.services.fashion_sizes import CANONICAL_SIZES, normalize_size
+from app.services.integrations import import_layout
 from app.services.integrations import import_plan as planner
 from app.services.integrations import import_transforms as tx
 from app.services.integrations.file_import import (
@@ -28,7 +30,6 @@ from app.services.integrations.file_import import (
     _workspace_currency,
     import_rows,
 )
-from app.services.integrations.import_layout import _read, discover_tables
 from app.services.integrations.import_profiles import issue_analysis, verify_analysis
 from app.services.integrations.import_review import _BoundDB, _member
 from app.services.llm.contracts import Column
@@ -50,18 +51,23 @@ _LISTED_EXCLUSIONS = 100
 
 # ── Table discovery ──────────────────────────────────────────────────────────
 def _discover(filename: str, content: bytes, kind: str | None = None, overrides: dict | None = None):
-    """Best table across import kinds (or the token's kind), plus letterhead text above it."""
+    """Best table across import kinds (or the token's kind), plus letterhead text above it.
+
+    The file is parsed once: large workbooks take seconds per openpyxl load.
+    """
+    sheets = import_layout._read(filename, content)
     best, best_kind = None, None
     for candidate in ([kind] if kind else _KINDS):
         try:
-            table = discover_tables(filename, content, candidate, header_overrides=overrides)[0]
+            table = import_layout.discover_tables(filename, content, candidate, header_overrides=overrides,
+                                                  sheets=sheets)[0]
         except ValueError:
             continue
         if best is None or table.score > best.score:
             best, best_kind = table, candidate
     if best is None:
         raise ValueError("No data table found in this file")
-    sheet_rows = next(rows for name, rows, _, _ in _read(filename, content) if name == best.sheet)
+    sheet_rows = next(rows for name, rows, _, _ in sheets if name == best.sheet)
     lines = list(dict.fromkeys(str(v) for row in sheet_rows[:best.header_start - 1] for v in row if v))
     return best, best_kind, lines
 
@@ -200,7 +206,7 @@ async def _ai_suggestion(ai, ctx: AIContext, table):
 
 
 async def _plan_one(ai, ctx: AIContext, secret: str, filename: str, content: bytes) -> dict:
-    table, kind, lines = _discover(filename, content)
+    table, kind, lines = await run_in_threadpool(_discover, filename, content)
     mapping = planner.rules_mapping(table.columns)
     destinations, reason = planner.rules_destinations(mapping, table.columns)
     provenance = dict.fromkeys(mapping.values(), "alias")
@@ -268,7 +274,7 @@ def _verified(ctx: AIContext, secret: str, filename: str, content: bytes, token:
 async def preview_plan(db, ctx: AIContext, secret, filename, content, token, raw_decision) -> dict:
     async with db.session(str(ctx.tenant_id)) as session:
         await _member(session, ctx)
-    table, decision = _verified(ctx, secret, filename, content, token, raw_decision)
+    table, decision = await run_in_threadpool(_verified, ctx, secret, filename, content, token, raw_decision)
     return {"decision": decision, **_evaluate(table, decision, _rules_identity(table))}
 
 
@@ -307,7 +313,7 @@ async def _write_period(session, ctx: AIContext, records, mapping, period, curre
 
 
 async def confirm_plan(db, ctx: AIContext, secret, filename, content, token, raw_decision) -> dict:
-    table, decision = _verified(ctx, secret, filename, content, token, raw_decision)
+    table, decision = await run_in_threadpool(_verified, ctx, secret, filename, content, token, raw_decision)
     if not decision["destinations"]:
         raise ValueError("Choose at least one destination for this file")
     missing = {d: m for d, m in _missing(decision).items() if m}

@@ -235,9 +235,11 @@ def _candidate(sheet, rows, merges, missing, start, end, kind, *, preview_only=F
                        score, exclusions, reviews, warnings)
 
 
-def discover_tables(filename: str, content: bytes, kind: str, *, header_overrides: dict | None = None) -> list[ImportTable]:
+def discover_tables(filename: str, content: bytes, kind: str, *, header_overrides: dict | None = None,
+                    sheets: list | None = None) -> list[ImportTable]:
+    """``sheets`` is a prior ``_read`` result, so callers trying several kinds parse a workbook once."""
     fields_for(kind)
-    sheets = _read(filename, content)
+    sheets = sheets if sheets is not None else _read(filename, content)
     overrides = header_overrides or {}
     if not set(overrides) <= {s[0] for s in sheets}:
         raise ValueError("Unknown sheet for header selection")

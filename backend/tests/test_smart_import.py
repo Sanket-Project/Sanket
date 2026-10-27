@@ -172,3 +172,17 @@ async def test_preview_reflects_edits_without_writing(app_role_db):
     preview = await preview_plan(app_role_db, ctx, SECRET, "stock.csv", STOCK, plan["plan_token"], decision)
     assert preview["preview"]["output_rows"] == 3
     assert await scalar(app_role_db, ctx, "SELECT count(*) FROM skus WHERE tenant_id=:t") == 0
+
+
+async def test_each_file_is_parsed_once_per_request(app_role_db, monkeypatch):
+    from app.services.integrations import import_layout
+    from app.services.integrations.smart_import import confirm_plan, plan_files
+    ctx = await seed(app_role_db)
+    content = gross()
+    calls = []
+    real = import_layout._read
+    monkeypatch.setattr(import_layout, "_read", lambda *a, **k: calls.append(a[0]) or real(*a, **k))
+    plan = (await plan_files(app_role_db, None, ctx, SECRET, [("gp.xlsx", content)]))["files"][0]
+    assert calls == ["gp.xlsx"]
+    await confirm_plan(app_role_db, ctx, SECRET, "gp.xlsx", content, plan["plan_token"], plan["decision"])
+    assert calls == ["gp.xlsx", "gp.xlsx"]
