@@ -49,6 +49,7 @@ from app.services import audit
 from app.services.integrations import sql_source
 from app.services.integrations.file_import import import_rows, parse_table
 from app.services.integrations.import_review import analyze_import, confirm_import
+from app.services.integrations.smart_import import MAX_FILES, confirm_plan, plan_files, preview_plan
 from app.services.llm.policy import AIContext
 from app.services.integrations.woocommerce_client import WooCommerceClient, WooCommerceError
 from app.services.integrations.woocommerce_sync import run_woocommerce_sync
@@ -484,6 +485,81 @@ async def analyze_file(
         return await analyze_import(request.app.state.db, getattr(request.app.state, "ai", None),
                                     AIContext(tenant_id, user_id, tenant_industry), get_settings().jwt_secret,
                                     file.filename or "", content, kind, header_overrides=overrides, suggest_table=suggest_table)
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+async def _read_upload(file: UploadFile) -> bytes:
+    content = await file.read(_MAX_UPLOAD_BYTES + 1)
+    if not content:
+        raise HTTPException(status_code=400, detail=f"{file.filename or 'Uploaded file'} is empty")
+    if len(content) > _MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail=f"{file.filename or 'File'} exceeds the 10 MB limit")
+    return content
+
+
+def _decision_json(raw: str) -> Any:
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=400, detail="decision must be JSON") from exc
+
+
+@router.post("/import/plan")
+async def plan_import(
+    request: Request,
+    tenant_id: TenantId,
+    user_id: UserId,
+    tenant_industry: TenantIndustry,
+    files: Annotated[list[UploadFile], File()],
+) -> dict[str, Any]:
+    """Smart import, step 1: propose an editable plan for each of up to 10 files. Writes nothing."""
+    if not 1 <= len(files) <= MAX_FILES:
+        raise HTTPException(status_code=400, detail=f"Upload between 1 and {MAX_FILES} files at once")
+    contents = [(f.filename or f"file-{i + 1}", await _read_upload(f)) for i, f in enumerate(files)]
+    try:
+        return await plan_files(request.app.state.db, getattr(request.app.state, "ai", None),
+                                AIContext(tenant_id, user_id, tenant_industry), get_settings().jwt_secret, contents)
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/import/plan/preview")
+async def preview_import_plan(
+    request: Request,
+    tenant_id: TenantId,
+    user_id: UserId,
+    tenant_industry: TenantIndustry,
+    file: Annotated[UploadFile, File()],
+    plan_token: Annotated[str, Form(max_length=16000)],
+    decision: Annotated[str, Form(max_length=64000)],
+) -> dict[str, Any]:
+    """Smart import: re-run one file's plan with the user's edits. Writes nothing."""
+    content = await _read_upload(file)
+    try:
+        return await preview_plan(request.app.state.db, AIContext(tenant_id, user_id, tenant_industry),
+                                  get_settings().jwt_secret, file.filename or "", content, plan_token,
+                                  _decision_json(decision))
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/import/plan/confirm")
+async def confirm_import_plan(
+    request: Request,
+    tenant_id: TenantId,
+    user_id: UserId,
+    tenant_industry: TenantIndustry,
+    file: Annotated[UploadFile, File()],
+    plan_token: Annotated[str, Form(max_length=16000)],
+    decision: Annotated[str, Form(max_length=64000)],
+) -> dict[str, Any]:
+    """Smart import, step 2: import one file as confirmed, in a single transaction."""
+    content = await _read_upload(file)
+    try:
+        return await confirm_plan(request.app.state.db, AIContext(tenant_id, user_id, tenant_industry),
+                                  get_settings().jwt_secret, file.filename or "", content, plan_token,
+                                  _decision_json(decision))
     except (ValueError, TypeError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
