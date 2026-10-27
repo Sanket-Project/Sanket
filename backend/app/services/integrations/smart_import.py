@@ -193,10 +193,16 @@ def _missing(decision) -> dict:
 
 
 def _evaluate(table, decision, rules_identity) -> dict:
-    records, item_rows, exclusions, conflicts, codes = _apply(table, decision, rules_identity)
+    """Preview a decision. Bad values are reported as problems here; confirm refuses them."""
+    try:
+        records, item_rows, exclusions, conflicts, codes = _apply(table, decision, rules_identity)
+        problems = []
+    except ValueError as exc:
+        records, item_rows, exclusions, conflicts, codes = [], 0, [], 0, []
+        problems = [str(exc)]
     preview = _preview(table, records, item_rows, decision, exclusions, conflicts)
     return {"preview": preview, "exclusions": exclusions[:_LISTED_EXCLUSIONS], "size_codes": codes,
-            "missing": _missing(decision)}
+            "missing": _missing(decision), "problems": problems}
 
 
 # ── Planning ─────────────────────────────────────────────────────────────────
@@ -290,11 +296,11 @@ async def preview_plan(db, ctx: AIContext, secret, filename, content, token, raw
 async def _write_period(session, ctx: AIContext, records, mapping, period, currency) -> dict:
     totals: dict[tuple[str, str], list[Decimal]] = defaultdict(lambda: [Decimal("0"), Decimal("0"), Decimal("0")])
     errors = []
-    for number, record in enumerate(records, start=1):
+    for record in records:
         sku = str(record.get(mapping["sku"]) or "").strip()
         units = _to_decimal(record.get(mapping["quantity"]))
-        if not sku or units is None or units < 0:
-            errors.append(f"Item {number}: missing SKU or a non-negative quantity")
+        if not sku or units is None:
+            errors.append(f"SKU {sku or '(blank)'}: quantity is missing or not a number")
             continue
         location = str(record.get(mapping.get("warehouse", "")) or "default").strip() or "default"
         bucket = totals[(sku, location)]
@@ -338,12 +344,17 @@ async def confirm_plan(db, ctx: AIContext, secret, filename, content, token, raw
         for destination in decision["destinations"]:
             fields = planner.DESTINATION_FIELDS[destination]
             mapping = {f: c for f, c in decision["mapping"].items() if f in fields}
+            rows = records
+            if destination == "products":
+                # Grouped rows repeat a SKU per location; its catalogue entry is written once.
+                key = mapping.get("sku") or mapping.get("name")
+                rows = list({str(r.get(key) or ""): r for r in reversed(records)}.values())[::-1]
             if destination == "period_sales":
                 results[destination] = await _write_period(session, ctx, records, mapping, decision["period"],
                                                             decision["currency"])
                 continue
             stats = await import_rows(db=_BoundDB(session), tenant_id=ctx.tenant_id, industry=ctx.industry,
-                                      kind=destination, headers=headers, records=records, column_mapping=mapping,
+                                      kind=destination, headers=headers, records=rows, column_mapping=mapping,
                                       currency=decision["currency"])
             if stats["rows_skipped"]:
                 raise ValueError(f"{destination}: {stats['rows_skipped']} rows did not validate — "

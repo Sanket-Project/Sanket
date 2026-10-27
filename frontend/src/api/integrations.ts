@@ -188,6 +188,8 @@ export interface PlanEvaluation {
   exclusions: { row: number; reason: string }[];
   size_codes: { code: string; count: number; suggestion: string | null }[];
   missing: Partial<Record<PlanDestination, string[]>>;
+  /** Values that block an import, e.g. a non-numeric quantity; named by SKU. */
+  problems?: string[];
 }
 
 export interface FilePlan extends PlanEvaluation {
@@ -210,6 +212,9 @@ export interface PlanConfirmResult {
   destinations: Partial<Record<PlanDestination, Record<string, unknown>>>;
   rows_excluded: number;
 }
+
+// Planning and importing a large report can pass the client's default 60 s.
+const LONG_IMPORT_MS = 300_000;
 
 export const integrationsApi = {
   // Hub catalog
@@ -267,7 +272,7 @@ export const integrationsApi = {
     files.forEach((file) => form.append("files", file));
     return apiClient
       .post<{ files: FilePlanSlot[] }>("/integrations/import/plan", form, {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: { "Content-Type": "multipart/form-data" }, timeout: LONG_IMPORT_MS,
       })
       .then((r) => r.data);
   },
@@ -278,7 +283,7 @@ export const integrationsApi = {
     form.append("decision", JSON.stringify(decision));
     return apiClient
       .post<PlanEvaluation & { decision: PlanDecision }>("/integrations/import/plan/preview", form, {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: { "Content-Type": "multipart/form-data" }, timeout: LONG_IMPORT_MS,
       })
       .then((r) => r.data);
   },
@@ -289,7 +294,7 @@ export const integrationsApi = {
     form.append("decision", JSON.stringify(decision));
     return apiClient
       .post<PlanConfirmResult>("/integrations/import/plan/confirm", form, {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: { "Content-Type": "multipart/form-data" }, timeout: LONG_IMPORT_MS,
       })
       .then((r) => r.data);
   },

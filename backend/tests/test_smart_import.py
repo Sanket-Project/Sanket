@@ -203,3 +203,33 @@ async def test_files_without_a_style_column_group_to_the_same_skus(app_role_db):
     await confirm_plan(app_role_db, ctx, SECRET, "gp.xlsx", content, plan["plan_token"], plan["decision"])
     assert await scalar(app_role_db, ctx, """SELECT p.units FROM sku_period_sales p JOIN skus s ON s.id=p.sku_id
         WHERE p.tenant_id=:t AND s.sku_code='SUKANYA-49159-WHITE-L'""") == 5
+
+
+async def test_net_returns_are_stored_and_catalogue_is_written_once_per_sku(app_role_db):
+    from app.services.integrations.smart_import import confirm_plan, plan_files
+    ctx = await seed(app_role_db)
+    content = workbook({"Sheet1": [
+        [LETTERHEAD] * 4,
+        ["Company Name", "Stock No", "Item Description", "Brand", "Sales Qty"],
+        ["ALWAL", "B79300P1X48269", "KURTHIS - KURTHIS - BHAKTI - 79300 - NA - 1X", "BHAKTI", -1],
+        ["WH", "B79300P1X48270", "KURTHIS - KURTHIS - BHAKTI - 79300 - NA - 1X", "BHAKTI", 4],
+    ]})
+    plan = (await plan_files(app_role_db, None, ctx, SECRET, [("gp.xlsx", content)]))["files"][0]
+    result = await confirm_plan(app_role_db, ctx, SECRET, "gp.xlsx", content, plan["plan_token"], plan["decision"])
+    assert result["destinations"]["products"]["rows_imported"] == 1
+    assert result["destinations"]["period_sales"]["period_rows"] == 2
+    assert await scalar(app_role_db, ctx, "SELECT min(units) FROM sku_period_sales WHERE tenant_id=:t") == -1
+
+
+async def test_period_errors_name_the_sku(app_role_db):
+    from app.services.integrations.smart_import import confirm_plan, plan_files
+    ctx = await seed(app_role_db)
+    content = workbook({"Sheet1": [
+        [LETTERHEAD] * 4,
+        ["Company Name", "Stock No", "Item Description", "Brand", "Sales Qty"],
+        ["ALWAL", "B1", "KURTHIS - KURTHIS - BHAKTI - 1 - NA - L", "BHAKTI", "n/a"],
+    ]})
+    plan = (await plan_files(app_role_db, None, ctx, SECRET, [("gp.xlsx", content)]))["files"][0]
+    assert any("BHAKTI-1-L" in problem for problem in plan["problems"])
+    with pytest.raises(ValueError, match="BHAKTI-1-L"):
+        await confirm_plan(app_role_db, ctx, SECRET, "gp.xlsx", content, plan["plan_token"], plan["decision"])

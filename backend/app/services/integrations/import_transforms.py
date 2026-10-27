@@ -70,11 +70,11 @@ def variant_sku(*parts: object) -> str:
     return "-".join(p for p in (_part(v) for v in parts) if p and p != "NA")
 
 
-def _number(value: object) -> Decimal:
+def _number(value: object, sku: str) -> Decimal:
     try:
-        return Decimal(str(value).replace(",", "").strip()) if not _blank(value) else Decimal("0")
+        return Decimal(str(value).replace(",", "").strip())
     except InvalidOperation:
-        return Decimal("0")
+        raise ValueError(f"SKU {sku}: {value!r} is not a number") from None
 
 
 def _plain(value: Decimal) -> int | float:
@@ -102,7 +102,9 @@ def group_pieces(records: list[dict], *, brand: str | None, style: str, colour: 
         conflicted = False
         for column in dict.fromkeys(k for row in rows for k in row):
             if column in sums:
-                merged[column] = _plain(sum((_number(r.get(column)) for r in rows), Decimal("0")))
+                # Blanks add nothing; a column blank on every piece stays blank (missing, not zero).
+                present = [_number(r.get(column), sku) for r in rows if not _blank(r.get(column))]
+                merged[column] = _plain(sum(present, Decimal("0"))) if present else None
                 continue
             values = Counter(r.get(column) for r in rows if not _blank(r.get(column)))
             merged[column] = values.most_common(1)[0][0] if values else rows[0].get(column)

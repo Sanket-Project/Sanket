@@ -86,3 +86,12 @@ it("does not offer import on unusable files or to viewers", async () => {
   expect(within(screen.getByRole("region", { name: "sales.xlsx" })).queryByRole("button", { name: "Import this file" })).toBeNull();
   expect(within(screen.getByRole("region", { name: "stock.csv" })).getByRole("button", { name: "Import this file" })).toBeDisabled();
 });
+
+it("shows value problems and blocks the import", async () => {
+  api.planImport.mockResolvedValue({ files: [{ ...stock, problems: ["SKU BHAKTI-1-L: 'n/a' is not a number"] }] });
+  const { container } = render(<SmartImport />);
+  await userEvent.upload(container.querySelector('input[type="file"]')!, [new File(["a"], "stock.csv")]);
+  const card = await screen.findByRole("region", { name: "stock.csv" });
+  expect(card).toHaveTextContent("SKU BHAKTI-1-L: 'n/a' is not a number");
+  expect(within(card).getByRole("button", { name: "Import this file" })).toBeDisabled();
+});

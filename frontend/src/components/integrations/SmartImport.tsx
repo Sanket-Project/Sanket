@@ -58,7 +58,7 @@ function fieldsFor(destinations: PlanDestination[]): string[] {
 }
 
 function ready(card: Card) {
-  return card.decision.destinations.length > 0 && !card.result
+  return card.decision.destinations.length > 0 && !card.result && !card.evaluation.problems?.length
     && Object.values(card.evaluation.missing).every((m) => !m?.length);
 }
 
@@ -247,6 +247,7 @@ function PlanCard({ card, canImport, onEdit, onRefresh, onConfirm }: {
         <ul>{evaluation.exclusions.map((e) => <li key={e.row}>Row {e.row}: {EXCLUSION[e.reason] ?? e.reason}</li>)}</ul></details>}
       {missing.length > 0 && <p role="alert" className="text-xs">Map required fields: {missing.map(([d, m]) =>
         `${d.replace("_", " ")} needs ${m!.map((f) => (f === "period" ? "a period" : f)).join(", ")}`).join("; ")}</p>}
+      {card.evaluation.problems?.map((problem) => <p key={problem} role="alert" className="text-xs">{problem}</p>)}
       {card.error && <p role="alert" className="rounded-lg border border-line p-2 text-xs">{card.error}</p>}
       {card.result ? <p role="status" className="flex items-center gap-1 text-xs"><CheckCircle size={14} aria-hidden="true" />{summary(card.result)}</p>
         : <div className="flex flex-wrap gap-2">

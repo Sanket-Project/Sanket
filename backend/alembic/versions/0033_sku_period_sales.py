@@ -15,7 +15,8 @@ def upgrade():
         location text NOT NULL DEFAULT 'default',
         period_start date NOT NULL,
         period_end date NOT NULL,
-        units numeric(18,4) NOT NULL CHECK (units >= 0),
+        -- Net of returns: negative when a period's returns exceed its sales.
+        units numeric(18,4) NOT NULL,
         net_value numeric(18,4),
         cost_value numeric(18,4),
         source text NOT NULL,

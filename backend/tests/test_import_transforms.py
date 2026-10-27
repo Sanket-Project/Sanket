@@ -75,3 +75,16 @@ def test_group_conflicts_count_only_compared_columns():
     _, conflicts = t.group_pieces(rows, brand=None, style="st", colour=None, size=None, location=None,
                                   sums=["q"], compare=["p"])
     assert conflicts == 0
+
+
+def test_group_rejects_non_numeric_quantities_instead_of_zeroing():
+    import pytest
+    rows = [{"st": "1", "q": "n/a"}, {"st": "1", "q": 2}]
+    with pytest.raises(ValueError, match="1.*n/a"):
+        t.group_pieces(rows, brand=None, style="st", colour=None, size=None, location=None, sums=["q"])
+    out, _ = t.group_pieces([{"st": "1", "q": ""}, {"st": "1", "q": 2}], brand=None, style="st", colour=None,
+                            size=None, location=None, sums=["q"])
+    assert out[0]["q"] == 2
+    out, _ = t.group_pieces([{"st": "1", "q": None}], brand=None, style="st", colour=None, size=None,
+                            location=None, sums=["q"])
+    assert out[0]["q"] is None
