@@ -2,7 +2,7 @@
 
 Polls relevant subreddits' new posts and runs a lightweight lexicon
 sentiment score per industry. Uses PRAW if `REDDIT_CLIENT_ID` and
-`REDDIT_CLIENT_SECRET` are configured; otherwise emits synthetic samples.
+`REDDIT_CLIENT_SECRET` are configured; otherwise returns no samples.
 
 This deliberately uses a dictionary-based scoring (not a heavy NLP model)
 because we want every connector to run in <2s and stay free of GPU.
@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import asyncio
 import os
-import random
 import re
 from datetime import UTC, datetime
 
@@ -165,7 +164,7 @@ class RedditConnector(SignalConnector):
         try:
             import praw  # type: ignore
         except ImportError:
-            log.info("reddit.praw.missing — emitting synthetic")
+            log.info("reddit.praw.missing — no samples")
             return []
 
         reddit = praw.Reddit(
@@ -228,31 +227,4 @@ class RedditConnector(SignalConnector):
             )
         if not out:
             return []
-        return out
-
-    def _synthetic(
-        self,
-        industry: str,
-        subs: list[tuple[str, list[str]]],
-    ) -> list[SignalSample]:
-        now = datetime.now(UTC)
-        rng = random.Random(hash((industry, now.date().isoformat(), "reddit")) & 0xFFFFFFFF)
-        out: list[SignalSample] = []
-        for sub_name, tags in subs:
-            score = clip(rng.gauss(0, 0.4))
-            out.append(
-                SignalSample(
-                    source="reddit",
-                    kind="social_buzz",
-                    series_key=f"reddit:r/{sub_name}",
-                    industry=industry,
-                    captured_at=now,
-                    raw_value=None,
-                    normalized_score=score,
-                    confidence=0.35,
-                    category_tags=tags,
-                    region="WW",
-                    payload={"synthetic": True, "subreddit": sub_name},
-                )
-            )
         return out

@@ -295,8 +295,7 @@ export type TrendSignalSource =
   | "google_trends"
   | "reddit"
   | "twitter"
-  | "news_api"
-  | "synthetic";
+  | "news_api";
 
 export type TrendSignalKind =
   | "economic_indicator"
@@ -406,7 +405,7 @@ export interface HybridForecast {
   scenarios: Record<string, Scenario>;
   series: HybridForecastSeries[];
   alerts_generated: number;
-  /** Source of the baseline: 'trained' | 'zero_shot' | 'synthetic' */
+  /** Source of the baseline: 'trained' | 'zero_shot' */
   data_source: string;
 }
 

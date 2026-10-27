@@ -109,6 +109,27 @@ async def test_logistics_connector_blended_lanes():
 
 
 @pytest.mark.asyncio
+async def test_logistics_connector_reports_osrm_transit_time_unaltered():
+    """The transit time is OSRM's routed duration — no simulated congestion on top."""
+    connector = LogisticsConnector()
+
+    with patch("httpx.AsyncClient") as mock_client_cls:
+        mock_client = AsyncMock()
+        mock_client_cls.return_value.__aenter__.return_value = mock_client
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"routes": [{"duration": 3600.0, "distance": 50000.0}]}
+        mock_client.get.return_value = mock_resp
+
+        samples = await connector.fetch("fashion")
+
+    for sample in samples:
+        assert sample.raw_value == 1.0
+        assert sample.payload["actual_transit_hours"] == 1.0
+        assert not any("simulated" in key for key in sample.payload)
+
+
+@pytest.mark.asyncio
 async def test_regional_demand_connector_tier_classification():
     """Verify that RegionalDemandConnector classifies Indian cities and districts into correct tiers."""
     connector = RegionalDemandConnector()

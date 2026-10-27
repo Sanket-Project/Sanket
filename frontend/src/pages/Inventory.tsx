@@ -110,7 +110,6 @@ const SOURCE_LABELS: Record<string, string> = {
   manual: "Manual entry",
   api: "API push",
   webhook: "Webhook push",
-  seed: "Seed estimate",
   fallback: "Estimate (safety stock × 2)",
   synthetic: "Synthetic fixture",
   synthetic_test: "Synthetic fixture",

@@ -38,25 +38,3 @@ CREATE POLICY inventory_levels_isolation ON inventory_levels
     USING (bypass_rls() OR tenant_id = current_tenant_id());
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON inventory_levels TO sanket_app;
-
--- ── Seed initial stock for existing SKUs ────────────────────────────────────
--- Deterministic spread (≈0.4×–3.0× of reorder_point+safety_stock) so demo data
--- contains a realistic mix of healthy, low, and at-risk coverage levels rather
--- than a flat uniform number.
-INSERT INTO inventory_levels (tenant_id, sku_id, industry, location, on_hand_units, inbound_units, source)
-SELECT
-    s.tenant_id,
-    s.id,
-    s.industry,
-    'default',
-    GREATEST(
-        0,
-        ROUND(
-            (COALESCE(s.reorder_point, 0) + COALESCE(s.safety_stock, 0))
-            * (0.4 + (abs(hashtext(s.id::text)) % 260) / 100.0)
-        )
-    ),
-    0,
-    'seed'
-FROM skus s
-ON CONFLICT (tenant_id, sku_id, location) DO NOTHING;

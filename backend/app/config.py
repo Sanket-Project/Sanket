@@ -305,7 +305,7 @@ class Settings(BaseSettings):
     # ── Phase 6: external signal ingestion ───────────────────────────────────
     signal_pipeline_enabled: bool = True
     signal_pipeline_interval_s: int = 900  # 15 min default
-    fred_api_key: str | None = None  # optional, falls back to synthetic
+    fred_api_key: str | None = None  # optional; without it FRED emits no samples
     reddit_client_id: str | None = None
     reddit_client_secret: str | None = None
     # RSS — no key required; connector uses feedparser with public feed URLs
@@ -328,7 +328,7 @@ class Settings(BaseSettings):
     ml_service_token: str | None = None
     # Chronos-t5-large zero-shot inference can take ~60s+ on CPU. Keep this
     # comfortably above observed latency so the real ML baseline actually
-    # completes instead of timing out and silently falling back to synthetic.
+    # completes instead of timing out and failing the run.
     ml_api_timeout_s: float = 120.0
     #: Guard on SKUs per forecast run / decision refresh; fits a 25k-SKU tenant.
     forecast_max_skus: int = 30000

@@ -2,13 +2,12 @@
 
 Uses `pytrends` (unofficial Google Trends client). No API key required, but
 the endpoint is rate-limited and unstable so we fail soft: any error returns
-synthetic samples and is logged.
+no samples and is logged.
 """
 
 from __future__ import annotations
 
 import asyncio
-import random
 from datetime import UTC, datetime
 
 import structlog
@@ -90,7 +89,7 @@ class GoogleTrendsConnector(SignalConnector):
         try:
             from pytrends.request import TrendReq
         except ImportError:
-            log.info("google_trends.pytrends.missing — emitting synthetic")
+            log.info("google_trends.pytrends.missing — no samples")
             return []
 
         parked = cooldown.seconds_remaining()
@@ -161,31 +160,4 @@ class GoogleTrendsConnector(SignalConnector):
         if not out:
             return []
         cooldown.record_success()
-        return out
-
-    def _synthetic(
-        self,
-        industry: str,
-        keywords: list[tuple[str, list[str]]],
-    ) -> list[SignalSample]:
-        now = datetime.now(UTC)
-        rng = random.Random(hash((industry, now.date().isoformat())) & 0xFFFFFFFF)
-        out: list[SignalSample] = []
-        for kw, tags in keywords:
-            z = rng.gauss(0, 1.1)
-            out.append(
-                SignalSample(
-                    source="google_trends",
-                    kind="search_interest",
-                    series_key=f"google:{kw.replace(' ', '_')}",
-                    industry=industry,
-                    captured_at=now,
-                    raw_value=None,
-                    normalized_score=z_to_score(z, scale=2.0),
-                    confidence=0.35,
-                    category_tags=tags,
-                    region="WW",
-                    payload={"synthetic": True, "keyword": kw, "z_score": round(z, 4)},
-                )
-            )
         return out

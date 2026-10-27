@@ -6,8 +6,8 @@ Periodically:
   3. emits a `signals.updated` realtime event for live UI refresh
 
 The scheduler loop runs on the backend lifespan (see app/main.py wiring).
-Connectors are designed to never raise on network failure — they emit
-synthetic samples instead so the platform stays demoable offline.
+Connectors are designed to never raise on network failure — they return
+no samples instead, so an unavailable source shows as missing, not invented.
 """
 
 from __future__ import annotations

@@ -5,7 +5,7 @@ press (The Verge, TechCrunch, Ars Technica), and pharma news (FiercePharma, STAT
 Also surfaces regional news sources like Daily Hunt by accepting operator-configured
 extra feed URLs via RSS_EXTRA_FEEDS_{INDUSTRY} env vars (JSON-encoded URL lists).
 
-Requires: feedparser (optional — connector emits synthetic samples if not installed).
+Requires: feedparser (optional — connector returns no samples if not installed).
 No API key required for the default feed list; most feeds are publicly accessible.
 
 Sentiment is scored with an expanded lexicon covering editorial framing typical of
@@ -17,7 +17,6 @@ from __future__ import annotations
 import asyncio
 import json
 import os
-import random
 import re
 import time
 from datetime import UTC, datetime
@@ -337,7 +336,7 @@ class RssConnector(SignalConnector):
         try:
             import feedparser  # type: ignore
         except ImportError:
-            log.info("rss.feedparser.missing — emitting synthetic")
+            log.info("rss.feedparser.missing — no samples")
             return []
 
         now = datetime.now(UTC)
@@ -409,27 +408,3 @@ class RssConnector(SignalConnector):
         if not out:
             return []
         return out
-
-    def _synthetic(
-        self,
-        industry: str,
-        feeds: list[tuple[str, list[str], str]],
-    ) -> list[SignalSample]:
-        now = datetime.now(UTC)
-        rng = random.Random(hash((industry, now.date().isoformat(), "rss")) & 0xFFFFFFFF)
-        return [
-            SignalSample(
-                source="rss",
-                kind="news_sentiment",
-                series_key=f"rss:{url}",
-                industry=industry,
-                captured_at=now,
-                raw_value=None,
-                normalized_score=clip(rng.gauss(0, 0.3)),
-                confidence=0.30,
-                category_tags=tags,
-                region=region,
-                payload={"synthetic": True, "feed_url": url},
-            )
-            for url, tags, region in feeds
-        ]

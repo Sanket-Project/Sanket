@@ -7,7 +7,6 @@ relevant locations, normalising deviations from seasonal baseline into [-1, +1] 
 from __future__ import annotations
 
 import math
-import random
 from datetime import UTC, datetime
 from typing import Any
 
@@ -184,20 +183,4 @@ class WeatherConnector(SignalConnector):
                 "deviation_c": round(deviation, 2),
                 "total_precip_mm": round(total_precip, 1),
             },
-        )
-
-    def _synthetic(self, label: str, industry: str) -> SignalSample:
-        score = clip(random.gauss(0, 0.25))
-        return SignalSample(
-            source="weather",
-            kind="economic_indicator",
-            series_key=f"weather:{label.lower().replace(' ', '_')}:temp_deviation",
-            industry=industry,
-            captured_at=datetime.now(UTC),
-            raw_value=None,
-            normalized_score=round(score, 4),
-            confidence=0.40,
-            category_tags=["weather", "synthetic"],
-            region=label,
-            payload={"synthetic": True},
         )

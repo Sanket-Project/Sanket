@@ -9,14 +9,12 @@ Pulls monthly economic indicators relevant to each SANKET industry:
 
 API: https://api.stlouisfed.org/fred/series/observations
 Free tier: 120 req/min, requires API key (FRED_API_KEY env var).
-If no API key is configured we emit a synthetic random-walk so downstream
-fusion still has data in dev/demo.
+If no API key is configured the connector returns no samples.
 """
 
 from __future__ import annotations
 
 import os
-import random
 import statistics
 from datetime import UTC, datetime
 from typing import Any
@@ -147,32 +145,3 @@ class FredConnector(SignalConnector):
                 "history_n": len(values),
             },
         )
-
-    def _synthetic(
-        self,
-        industry: str,
-        series: list[tuple[str, float, list[str]]],
-    ) -> list[SignalSample]:
-        """When FRED_API_KEY is absent, fabricate plausible signals so the
-        platform stays demoable. Real deployments must set FRED_API_KEY."""
-        now = datetime.now(UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        rng = random.Random(hash((industry, now.isoformat())) & 0xFFFFFFFF)
-        out: list[SignalSample] = []
-        for series_id, weight, tags in series:
-            score = z_to_score(rng.gauss(0, 1) * weight)
-            out.append(
-                SignalSample(
-                    source="fred",
-                    kind="economic_indicator",
-                    series_key=series_id,
-                    industry=industry,
-                    captured_at=now,
-                    raw_value=None,
-                    normalized_score=score,
-                    confidence=0.4,
-                    category_tags=tags,
-                    region="US",
-                    payload={"synthetic": True, "weight": weight},
-                )
-            )
-        return out

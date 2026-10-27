@@ -59,7 +59,7 @@ dependencies = [
 
 [project.optional-dependencies]
 signals = [
-    # RSS/Atom feed parsing — RssConnector emits synthetic if not installed
+    # RSS/Atom feed parsing — RssConnector emits nothing if not installed
     "feedparser>=6.0.11",
     # Reddit social sentiment
     "praw>=7.7.0",

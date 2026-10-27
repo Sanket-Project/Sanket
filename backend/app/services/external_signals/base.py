@@ -16,7 +16,7 @@ class SignalSample:
     `normalized_score ∈ [-1, +1]` is the platform-unified momentum metric.
     """
 
-    source: str  # 'fred' | 'google_trends' | 'reddit' | 'synthetic'
+    source: str  # 'fred' | 'google_trends' | 'reddit' | ...
     kind: str  # 'economic_indicator' | 'social_buzz' | ...
     series_key: str  # stable identifier (e.g. 'CPIAUCSL', 'google:winter_jacket')
     industry: str  # 'fashion' | 'electronics' | 'pharma'

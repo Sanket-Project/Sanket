@@ -2,7 +2,7 @@
 
 In live mode (SERPAPI_KEY set): queries Google Shopping for category baskets
 per industry and computes a price index vs. baseline.
-In demo/offline mode: emits a seeded random walk so dashboards stay populated.
+Without a SerpAPI key the connector returns no samples.
 
 Score interpretation:
   +1 = competitors significantly cheaper than baseline (you are expensive)
@@ -11,9 +11,7 @@ Score interpretation:
 
 from __future__ import annotations
 
-import hashlib
 import math
-import random
 from datetime import UTC, datetime
 from typing import Any
 
@@ -57,7 +55,7 @@ SERPAPI_URL = "https://serpapi.com/search.json"
 
 
 class CompetitorPriceConnector(SignalConnector):
-    """Fetches competitor prices via SerpAPI (Google Shopping) or synthetic fallback."""
+    """Fetches competitor prices via SerpAPI (Google Shopping)."""
 
     name = "competitor_price"
 
@@ -149,39 +147,4 @@ class CompetitorPriceConnector(SignalConnector):
                 "pct_diff": round(pct_diff * 100, 1),
                 "n_results": len(prices),
             },
-        )
-
-    def _fetch_synthetic(
-        self,
-        industry: str,
-        basket: list[tuple[str, list[str], float]],
-    ) -> list[SignalSample]:
-        return [self._synthetic_item(t, tags, b, industry) for t, tags, b in basket]
-
-    def _synthetic_item(
-        self,
-        term: str,
-        tags: list[str],
-        baseline: float,
-        industry: str,
-    ) -> SignalSample:
-        # Seeded so the same term always starts from the same point (stable demo).
-        # MD5 here is a fast, stable hash used purely to derive a deterministic RNG
-        # seed for synthetic demo data — it is not used for any security or integrity
-        # purpose, so usedforsecurity=False is set explicitly (CWE-327 N/A).
-        digest = hashlib.md5(f"{industry}:{term}".encode(), usedforsecurity=False).hexdigest()
-        seed = int(digest, 16) % (2**32)
-        rng = random.Random(seed + int(datetime.now(UTC).timestamp() / 3600))
-        score = clip(rng.gauss(0, 0.3))
-        return SignalSample(
-            source="competitor_price",
-            kind="commodity_price",
-            series_key=f"competitor:{industry}:{term.replace(' ', '_')[:30]}",
-            industry=industry,
-            captured_at=datetime.now(UTC),
-            raw_value=None,
-            normalized_score=round(score, 4),
-            confidence=0.35,
-            category_tags=["competitor_price", "synthetic"] + tags,
-            payload={"synthetic": True, "search_term": term, "baseline_price": baseline},
         )

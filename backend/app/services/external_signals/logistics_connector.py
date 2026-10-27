@@ -7,7 +7,6 @@ Keeps all global corridors fully functional while adding comprehensive Indian tr
 from __future__ import annotations
 
 import math
-import random
 from datetime import UTC, datetime
 from typing import Any
 
@@ -119,20 +118,16 @@ class LogisticsConnector(SignalConnector):
         duration_hours = duration_seconds / 3600.0
         distance_km = distance_meters / 1000.0
 
-        # Seed random walk with current hour + day to keep the score stable across repeated calls in the same hour
-        seed_value = hash((lane_name, now.strftime("%Y-%m-%d-%H"))) & 0xFFFFFFFF
-        rng = random.Random(seed_value)
-
-        # Congestion factor varies between -5% and +35% (modelling standard, medium, and heavy delays)
-        congestion_factor = rng.uniform(-0.05, 0.35)
-        actual_duration_hours = duration_hours * (1.0 + congestion_factor)
+        # OSRM's routed duration is the only transit-time evidence we have; no
+        # live-traffic feed is wired, so nothing is layered on top of it.
+        actual_duration_hours = duration_hours
 
         # Deviation from ideal baseline duration
         deviation_ratio = (actual_duration_hours - baseline_hours) / baseline_hours
 
         # Map to unified score:
         # Neutral (0.0) is standard baseline.
-        # - Excess congestion (deviation_ratio > 0.1) drives score down towards -1.0.
+        # - Slower than baseline (deviation_ratio > 0.1) drives score down towards -1.0.
         # - Faster than average (deviation_ratio < 0) boosts score towards +0.5.
         score = -math.tanh(deviation_ratio * 2.0)
         normalized = clip(score)
@@ -153,42 +148,7 @@ class LogisticsConnector(SignalConnector):
                 "geocoding_route_found": True,
                 "distance_km": round(distance_km, 2),
                 "osrm_base_duration_hours": round(duration_hours, 2),
-                "simulated_congestion_percent": round(congestion_factor * 100.0, 1),
                 "actual_transit_hours": round(actual_duration_hours, 2),
                 "baseline_transit_hours": baseline_hours,
-            },
-        )
-
-    def _synthetic(
-        self,
-        industry: str,
-        lane_name: str,
-        baseline_hours: float,
-        region: str,
-        now: datetime,
-    ) -> SignalSample:
-        # High fidelity synthetic fallback
-        rng = random.Random(hash((lane_name, now.date().isoformat(), "logistics")) & 0xFFFFFFFF)
-        congestion = rng.uniform(0.02, 0.40)
-        actual_transit = baseline_hours * (1.0 + congestion)
-        score = -clip(congestion * 2.5)
-
-        return SignalSample(
-            source="logistics",
-            kind="economic_indicator",
-            series_key=f"logistics:{lane_name.lower()}:transit_efficiency",
-            industry=industry,
-            captured_at=now,
-            raw_value=round(actual_transit, 2),
-            normalized_score=round(score, 4),
-            confidence=0.45,
-            category_tags=["logistics", "synthetic"],
-            region=region,
-            payload={
-                "lane_name": lane_name.replace("_", " "),
-                "synthetic": True,
-                "actual_transit_hours": round(actual_transit, 2),
-                "baseline_transit_hours": baseline_hours,
-                "msg": "OSRM routing service offline. Emitting high-fidelity synthetic fallback.",
             },
         )

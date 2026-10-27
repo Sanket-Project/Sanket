@@ -7,7 +7,6 @@ categorised dynamically by City Tiers (Tier 1, Tier 2, Tier 3).
 
 from __future__ import annotations
 
-import random
 from datetime import UTC, datetime
 
 import structlog
@@ -164,7 +163,7 @@ class RegionalDemandConnector(SignalConnector):
 
                 # Fetch interest by city (resolution='CITY').
                 # Note: pytrends>=4.9 interest_by_region() has no `inc_no_data`
-                # arg — passing it raises TypeError and silently drops to synthetic.
+                # arg — passing it raises TypeError and silently returns no samples.
                 df = pytrend.interest_by_region(resolution="CITY", inc_low_vol=True)
                 if df is not None and not df.empty and kw in df.columns:
                     # Sort by interest to find top regional demand centers
@@ -228,103 +227,3 @@ class RegionalDemandConnector(SignalConnector):
             return "tier2"
         else:
             return "tier3"
-
-    def _synthetic(
-        self,
-        industry: str,
-        keywords: list[tuple[str, str]],
-    ) -> list[SignalSample]:
-        """High-fidelity Indian localized demand simulator.
-
-        Injects realistic localized demand patterns across Tier 1, 2, and 3 cities and districts,
-        perfectly matching real-world expectations (e.g. Bangalore sneakers, Hyderabad printed t-shirts,
-        Mumbai steel, Siddipet/Punjab pesticides).
-        """
-        out: list[SignalSample] = []
-        now = datetime.now(UTC)
-
-        # Seeding random walk based on keyword to generate stable demand distributions per day
-        for kw, cat in keywords:
-            seed_val = hash((kw, now.strftime("%Y-%m-%d"))) & 0xFFFFFFFF
-            rng = random.Random(seed_val)
-
-            # 1. Tier 1 Cities (Metro Hubs)
-            tier1_cities = [
-                ("Bangalore", 90 if kw == "sneakers" else rng.randint(65, 85)),
-                ("Hyderabad", 88 if kw == "printed t-shirts" else rng.randint(60, 82)),
-                ("Mumbai", 94 if kw == "steel" or kw == "smartphones" else rng.randint(70, 85)),
-                ("Delhi NCR", rng.randint(75, 95)),
-                ("Chennai", rng.randint(60, 80)),
-                ("Kolkata", rng.randint(55, 78)),
-                ("Pune", rng.randint(65, 84)),
-                ("Ahmedabad", rng.randint(60, 80)),
-            ]
-
-            # 2. Tier 2 Cities (Growth Hubs)
-            tier2_cities = [
-                ("Jaipur", rng.randint(45, 75)),
-                ("Lucknow", rng.randint(50, 72)),
-                ("Patna", rng.randint(40, 68)),
-                ("Bhopal", rng.randint(42, 70)),
-                ("Kochi", rng.randint(55, 78)),
-                ("Surat", rng.randint(50, 75)),
-                ("Nagpur", rng.randint(48, 70)),
-                ("Visakhapatnam", rng.randint(45, 72)),
-                ("Indore", rng.randint(48, 72)),
-            ]
-
-            # 3. Tier 3 Districts & Rural Centers
-            tier3_districts = [
-                (
-                    "Siddipet",
-                    86 if kw == "pesticides" or kw == "urea fertilizer" else rng.randint(20, 50),
-                ),
-                ("Amritsar", 92 if kw == "pesticides" or kw == "tractors" else rng.randint(30, 55)),
-                ("Karnal", rng.randint(30, 60)),
-                ("Udaipur", rng.randint(25, 55)),
-                ("Raipur", rng.randint(30, 58)),
-                ("Shimla", rng.randint(20, 52)),
-                ("Salem", rng.randint(28, 56)),
-                ("Thrissur", rng.randint(35, 60)),
-            ]
-
-            # Process all cities
-            for city_list, tier_name in [
-                (tier1_cities, "tier1"),
-                (tier2_cities, "tier2"),
-                (tier3_districts, "tier3"),
-            ]:
-                for city, val in city_list:
-                    # Normalized score: relative search volume centered around 50
-                    score = (val - 50.0) / 50.0
-                    city_lower = city.lower()
-
-                    out.append(
-                        SignalSample(
-                            source="google_trends",
-                            kind="search_interest",
-                            series_key=f"trends:regional_demand:{city_lower}:{kw.replace(' ', '_')}",
-                            industry=industry,
-                            captured_at=now,
-                            raw_value=float(val),
-                            normalized_score=round(score, 4),
-                            confidence=0.55,  # Indicates high-fidelity simulated fallback
-                            category_tags=[
-                                "regional_demand",
-                                tier_name,
-                                cat.lower().replace(" ", "_"),
-                            ],
-                            region=f"IN-{tier_name.capitalize()}-{city}",
-                            payload={
-                                "city": city,
-                                "state": CITY_STATE_MAP.get(city.lower(), "Unknown"),
-                                "tier": tier_name.upper(),
-                                "product": kw,
-                                "category": cat,
-                                "relative_search_interest": val,
-                                "synthetic": True,
-                                "msg": "Fetched from nationwide regional search interest distribution.",
-                            },
-                        )
-                    )
-        return out

@@ -2,14 +2,14 @@
 
 Pinterest — uses the Pinterest v5 REST API to measure search freshness for
 industry-relevant keywords. Requires a Pinterest business OAuth2 Bearer token
-(`PINTEREST_ACCESS_TOKEN`). Falls back to synthetic when unconfigured.
+(`PINTEREST_ACCESS_TOKEN`). Returns no samples when unconfigured.
 
-TikTok — synthetic only. The TikTok Research API requires formal academic or
+TikTok — not wired; returns no samples. The TikTok Research API requires formal academic or
 business-program approval from TikTok; there is no general-access endpoint for
 trending content. Wire in real data by overriding `_fetch_tiktok_real` once an
 approved token is obtained.
 
-Instagram — synthetic only. Meta's Graph API exposes per-account analytics but
+Instagram — not wired; returns no samples. Meta's Graph API exposes per-account analytics but
 not platform-wide trending topics. Requires a Business/Creator account with
 approved permissions; wire in via `_fetch_instagram_real` once available.
 
@@ -21,7 +21,6 @@ from __future__ import annotations
 
 import asyncio
 import os
-import random
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -67,7 +66,7 @@ PINTEREST_KEYWORDS: dict[str, list[tuple[str, list[str]]]] = {
     ],
 }
 
-# TikTok trending hashtag seeds per industry (used for synthetic simulation)
+# TikTok hashtags per industry, queried once Research API access exists
 TIKTOK_HASHTAGS: dict[str, list[tuple[str, list[str]]]] = {
     "fashion": [
         ("#OOTD", ["editorial", "general"]),
@@ -96,7 +95,7 @@ TIKTOK_HASHTAGS: dict[str, list[tuple[str, list[str]]]] = {
     ],
 }
 
-# Instagram content keyword seeds per industry (used for synthetic simulation)
+# Instagram keywords per industry, queried once Graph API access exists
 INSTAGRAM_KEYWORDS: dict[str, list[tuple[str, list[str]]]] = {
     "fashion": [
         ("fashion week", ["luxury", "trade"]),
@@ -247,36 +246,12 @@ class PinterestConnector(SignalConnector):
             return []
         return out
 
-    def _synthetic(
-        self,
-        industry: str,
-        keywords: list[tuple[str, list[str]]],
-    ) -> list[SignalSample]:
-        now = datetime.now(UTC)
-        rng = random.Random(hash((industry, now.date().isoformat(), "pinterest")) & 0xFFFFFFFF)
-        return [
-            SignalSample(
-                source="pinterest",
-                kind="social_buzz",
-                series_key=f"pinterest:{kw.replace(' ', '_')}",
-                industry=industry,
-                captured_at=now,
-                raw_value=None,
-                normalized_score=clip(rng.gauss(0, 0.35)),
-                confidence=0.30,
-                category_tags=tags,
-                region="WW",
-                payload={"synthetic": True, "keyword": kw},
-            )
-            for kw, tags in keywords
-        ]
-
 
 # ── TikTok ────────────────────────────────────────────────────────────────────
 
 
 class TikTokConnector(SignalConnector):
-    """TikTok trend signals — currently synthetic.
+    """TikTok trend signals — not wired yet; returns no samples.
 
     The TikTok Research API (research.tiktok.com) requires formal academic or
     business-program approval; there is no open endpoint for trending hashtag
@@ -295,42 +270,15 @@ class TikTokConnector(SignalConnector):
         if not hashtags:
             return []
         # Real implementation would call _fetch_real when access_token is set.
-        # Until TikTok Research API access is granted, emit synthetic samples.
+        # Until TikTok Research API access is granted there is nothing to emit.
         return []
-
-    def _synthetic(
-        self,
-        industry: str,
-        hashtags: list[tuple[str, list[str]]],
-    ) -> list[SignalSample]:
-        now = datetime.now(UTC)
-        # Fashion and electronics trend higher on TikTok → bias synthetic upward
-        industry_bias = {"fashion": 0.15, "electronics": 0.10, "pharma": -0.05}
-        bias = industry_bias.get(industry, 0.0)
-        rng = random.Random(hash((industry, now.date().isoformat(), "tiktok")) & 0xFFFFFFFF)
-        return [
-            SignalSample(
-                source="tiktok",
-                kind="social_buzz",
-                series_key=f"tiktok:{tag.lstrip('#').lower()}",
-                industry=industry,
-                captured_at=now,
-                raw_value=None,
-                normalized_score=clip(rng.gauss(bias, 0.40)),
-                confidence=0.25,
-                category_tags=tags,
-                region="WW",
-                payload={"synthetic": True, "hashtag": tag},
-            )
-            for tag, tags in hashtags
-        ]
 
 
 # ── Instagram ─────────────────────────────────────────────────────────────────
 
 
 class InstagramConnector(SignalConnector):
-    """Instagram engagement signals — currently synthetic.
+    """Instagram engagement signals — not wired yet; returns no samples.
 
     Meta's Graph API exposes per-business-account analytics (impressions, reach,
     engagement) but not platform-wide trending topics or hashtag volumes. A
@@ -353,27 +301,3 @@ class InstagramConnector(SignalConnector):
         if not keywords:
             return []
         return []
-
-    def _synthetic(
-        self,
-        industry: str,
-        keywords: list[tuple[str, list[str]]],
-    ) -> list[SignalSample]:
-        now = datetime.now(UTC)
-        rng = random.Random(hash((industry, now.date().isoformat(), "instagram")) & 0xFFFFFFFF)
-        return [
-            SignalSample(
-                source="instagram",
-                kind="social_buzz",
-                series_key=f"instagram:{kw.replace(' ', '_')}",
-                industry=industry,
-                captured_at=now,
-                raw_value=None,
-                normalized_score=clip(rng.gauss(0, 0.30)),
-                confidence=0.25,
-                category_tags=tags,
-                region="WW",
-                payload={"synthetic": True, "keyword": kw},
-            )
-            for kw, tags in keywords
-        ]

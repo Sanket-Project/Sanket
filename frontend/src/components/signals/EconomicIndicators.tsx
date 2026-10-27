@@ -92,7 +92,6 @@ export const EconomicIndicators = ({ signals, loading }: Props) => {
                   </div>
                   <div className="text-[10px] text-slate-400 uppercase tracking-wider">
                     {s.series_key}
-                    {s.payload?.synthetic ? " · synthetic" : ""}
                   </div>
                 </div>
 
