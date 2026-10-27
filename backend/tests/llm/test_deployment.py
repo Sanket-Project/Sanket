@@ -22,3 +22,13 @@ def test_compose_passes_operator_ai_configuration(tmp_path):
     assert environment.get("LLM_MODEL") == "fixture-custom-flash"
     assert environment.get("LLM_BASE_URL") == "http://fixture-model:9000/v1"
     assert environment.get("DEEPSEEK_API_KEY") == "test-dummy-not-a-real-key"
+
+
+def test_kubernetes_backend_reads_the_model_key_from_a_secret():
+    import yaml
+    manifest = Path(__file__).resolve().parents[3] / "infra" / "kubernetes" / "base" / "backend.yaml"
+    docs = [d for d in yaml.safe_load_all(manifest.read_text(encoding="utf-8")) if d and d.get("kind") == "Deployment"]
+    env = {e["name"]: e for c in docs[0]["spec"]["template"]["spec"]["containers"] for e in c.get("env", [])}
+    ref = env["DEEPSEEK_API_KEY"]["valueFrom"]["secretKeyRef"]
+    # Optional: AI stays off (and the pod still boots) until an operator adds the key.
+    assert ref == {"name": "sanket-secrets", "key": "DEEPSEEK_API_KEY", "optional": True}

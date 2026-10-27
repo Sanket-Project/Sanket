@@ -43,6 +43,10 @@ spec:
               valueFrom: { secretKeyRef: { name: sanket-secrets, key: METRICS_TOKEN } }
             - name: INTEGRATION_ENCRYPTION_KEY
               valueFrom: { secretKeyRef: { name: sanket-secrets, key: INTEGRATION_ENCRYPTION_KEY } }
+            # LLM key (DeepSeek or an OpenAI-compatible endpoint). Optional: without it
+            # every AI feature reports "unavailable" and imports fall back to rules.
+            - name: DEEPSEEK_API_KEY
+              valueFrom: { secretKeyRef: { name: sanket-secrets, key: DEEPSEEK_API_KEY, optional: true } }
             # Firebase auth. Required in production (APP_ENV=production) or the
             # backend refuses to boot — see config.require_firebase_in_production.
             # optional:true so dev/staging (which blank these) stay on dev-login.
