@@ -226,25 +226,37 @@ async def lifespan(fastapi_app: FastAPI) -> AsyncIterator[None]:
         version=settings.app_version,
     )
 
-    yield
+    # Construction is inert: no model discovery, warmup, or outbound AI call.
+    from app.services.llm.client import ProviderClient
+    from app.services.llm.policy import PolicyStore
+    from app.services.llm.service import AIService
+    from app.services.llm.state import AIState
+    from app.services.llm.telemetry import Telemetry
 
-    if leader_task is not None:
-        leader_task.cancel()
-        import contextlib
+    ai_service = AIService(settings, PolicyStore(db), AIState(redis_client, settings),
+                           ProviderClient(settings), Telemetry(db, settings))
+    fastapi_app.state.ai = ai_service
+    try:
+        yield
+    finally:
+        await ai_service.aclose()
+        if leader_task is not None:
+            leader_task.cancel()
+            import contextlib
 
-        with contextlib.suppress(asyncio.CancelledError):
-            await leader_task
-    if arq_pool is not None:
-        await arq_pool.close()
-    # Defensive: ensure the singletons are stopped even if we never held the lease.
-    await signal_pipeline.stop()
-    await shopify_poller.stop()
-    await manager.shutdown()
-    await http_client.aclose()
-    if fastapi_app.state.redis is not None:
-        await fastapi_app.state.redis.aclose()
-    await db.close()
-    log.info("shutdown.complete")
+            with contextlib.suppress(asyncio.CancelledError):
+                await leader_task
+        if arq_pool is not None:
+            await arq_pool.close()
+        # Defensive: stop resources even when the lifespan body raises.
+        await signal_pipeline.stop()
+        await shopify_poller.stop()
+        await manager.shutdown()
+        await http_client.aclose()
+        if fastapi_app.state.redis is not None:
+            await fastapi_app.state.redis.aclose()
+        await db.close()
+        log.info("shutdown.complete")
 
 
 def create_app() -> FastAPI:
@@ -441,6 +453,9 @@ def create_app() -> FastAPI:
     # setup and import a catalogue, and see none of it.
     gated = [require_active_subscription()]
 
+    from app.routers.ai import settings_router as ai_settings_router, router as ai_business_router
+    app.include_router(ai_settings_router, prefix=api_prefix)
+    app.include_router(ai_business_router, prefix=api_prefix, dependencies=gated)
     app.include_router(auth_router, prefix=api_prefix)
     app.include_router(industry_router, prefix=api_prefix)
     app.include_router(onboarding_router, prefix=api_prefix)

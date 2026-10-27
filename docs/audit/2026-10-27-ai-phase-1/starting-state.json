@@ -1,0 +1,20 @@
+{
+  "branch": "codex/ai-foundation",
+  "head": "3343b992e52be47c2b8068ab0eec7fbdee41289e",
+  "file_hashes": {
+    "backend\\app\\services\\llm\\client.py": "3694a5ab70fbaaefa93768e6ac2f3fd7befa40e8fbd0da81f5d77639a5fc487d",
+    "backend\\app\\services\\llm\\contracts.py": "def283b80332f4687be8f73252ebfec214507d6fe63e7630cbdf38aeaef56c84",
+    "backend\\app\\services\\llm\\errors.py": "7f40dc9299f7b649488cf5c89d183c22434afc971e94b590cbd1810fd21db05b",
+    "backend\\app\\services\\llm\\policy.py": "beeca35b81f2effddbcc607cba9e985b87937629d87c087ec0ac425555a42715",
+    "backend\\app\\services\\llm\\service.py": "0bf0a56bf0f147310b703e95c937103ba9cbaa77e8d8323aaa458a1cacd2e4a2",
+    "backend\\app\\services\\llm\\state.py": "47ff5cfbe95f8f37d632e9b32dfc5d553ecfcccdd7483535a13ae6f03a4905f4",
+    "backend\\app\\services\\llm\\telemetry.py": "cab696c5604d7fe834410ee07d6e92727c656528c9af60a4ce66b68032c8e1cd",
+    "backend\\app\\services\\llm\\__init__.py": "ff82bb3bdbe450cf45bf802c4c81fac908312b55fdc25800bc2343663c6a2812",
+    "backend\\app\\services\\integrations\\file_import.py": "07ddcc5bffad522f1acc648b0cd480ab53493f181040b06ce873d80aa32f740e",
+    "backend\\app\\routers\\integrations_hub.py": "f0e0b0ab0428aac7d74d47e45ac70df9ca1b80254abeab80d1a0aaf7b6ecad57",
+    "backend\\app\\main.py": "f2da6be86e7a5f27e24967045cf57d90b0b855c671b77080f474ddde64a8a485",
+    "frontend\\src\\pages\\Integrations.tsx": "204815d18b6fa641d207d9a77ec5332ccd91ee4053fc956a53949718493761e4",
+    "frontend\\src\\pages\\onboarding\\StepData.tsx": "ab9799211b182700be7a1f268ad86e3a8420302115d76008ebf13989210ab960"
+  },
+  "note": "Existing modifications preserved. Build/addendum approved by user: proceed with the build."
+}

@@ -33,6 +33,7 @@ export interface FixResult {
   dry_run: boolean;
   rows_affected: number;
   applied: boolean;
+  preview_token?: string;
 }
 
 export const dataQualityApi = {
@@ -40,6 +41,6 @@ export const dataQualityApi = {
     apiClient.get("/data-quality/report").then((r) => r.data),
 
   /** `confirm: false` (the default) previews the row count without deleting. */
-  fix: (action: DataQualityFix, confirm = false): Promise<FixResult> =>
-    apiClient.post("/data-quality/fix", { action, confirm }).then((r) => r.data),
+  fix: (action: DataQualityFix, confirm = false, previewToken?: string): Promise<FixResult> =>
+    apiClient.post("/ai/data-quality/fix", { action, confirm, ...(previewToken ? { preview_token: previewToken } : {}) }).then((r) => r.data),
 };

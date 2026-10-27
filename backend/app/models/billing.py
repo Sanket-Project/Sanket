@@ -30,6 +30,8 @@ class MeterKind(enum.StrEnum):
     signal_ingest = "signal_ingest"
     active_sku = "active_sku"
     user_seat = "user_seat"
+    llm_input_token = "llm_input_token"
+    llm_output_token = "llm_output_token"
 
 
 class Plan(Base):

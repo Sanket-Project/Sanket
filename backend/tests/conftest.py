@@ -90,6 +90,9 @@ async def setup_schema(postgres_container) -> None:
     """
     env = dict(os.environ)
     env["DATABASE_URL"] = os.environ["DATABASE_URL"]
+    # Migration credentials must target this disposable container, not inherit
+    # an operator URL or persist into other tests' separate migration databases.
+    env["MIGRATION_DATABASE_URL"] = env["DATABASE_URL"]
     proc = subprocess.run(
         [sys.executable, "-m", "alembic", "upgrade", "head"],
         cwd=str(BACKEND_DIR),

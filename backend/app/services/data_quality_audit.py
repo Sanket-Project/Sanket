@@ -26,7 +26,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
 
 import structlog
-from sqlalchemy import and_, delete, func, select, text
+from sqlalchemy import and_, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.calendar import week_bucket
@@ -782,7 +782,8 @@ async def apply_fix(
         )
         affected = await _count(session, where)
         if not dry_run and affected:
-            await session.execute(delete(HistoricalSale).where(where))
+            affected = int(await session.scalar(text("SELECT sanket_repair_invalid_sales(CAST(:industry AS industry_code),:action)"),
+                                                {"industry": industry, "action": action}))
 
     elif action == "drop_negative_sales":
         where = and_(
@@ -792,7 +793,8 @@ async def apply_fix(
         )
         affected = await _count(session, where)
         if not dry_run and affected:
-            await session.execute(delete(HistoricalSale).where(where))
+            affected = int(await session.scalar(text("SELECT sanket_repair_invalid_sales(CAST(:industry AS industry_code),:action)"),
+                                                {"industry": industry, "action": action}))
 
     else:  # dedupe_sales
         detail = await _dedupe_sales(session, tenant_id, ind, dry_run=dry_run)

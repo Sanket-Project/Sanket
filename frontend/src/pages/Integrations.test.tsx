@@ -18,6 +18,15 @@ vi.mock("react-hot-toast", () => ({ default: { success: api.success, error: vi.f
 const source = readFileSync("src/pages/Integrations.tsx", "utf8");
 
 describe("integrations", () => {
+  it("uses the shared sheet and confidence review for enhanced analysis", async () => {
+    api.analyze.mockResolvedValue({ headers: ["SKU", "Qty", "Date"], suggested_mapping: {}, sample_rows: [],
+      analysis_token: "token", fields: ["sku", "quantity", "timestamp"], tables: [{ id: "t", sheet: "Sales", header_start: 2, header_end: 2,
+        rows_total: 1, columns: [], mapping: { sku: "c1", quantity: "c2", timestamp: "c3" }, mapping_source: "saved",
+        confidence: {}, provenance: {}, ai_state: "disabled", sample_rows: [], exclusions: [], review_rows: [], warnings: [], warning_count: 0 }] });
+    const { container } = render(<QueryClientProvider client={new QueryClient()}><UploadPanel onDone={vi.fn()} /></QueryClientProvider>);
+    await userEvent.upload(container.querySelector('input[type="file"]') as HTMLInputElement, new File(["data"], "sales.csv"));
+    expect(await screen.findByText(/Saved workspace format/)).toBeInTheDocument();
+  });
   it("sends period identity when totals are selected and reports unchanged rows", async () => {
     api.analyze.mockResolvedValue({ headers: ["sku", "qty", "date"], sample_rows: [],
       suggested_mapping: { sku: "sku", quantity: "qty", timestamp: "date" } });

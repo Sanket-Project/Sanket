@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from functools import lru_cache
 from typing import Annotated, Literal
+from urllib.parse import urlsplit
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 # Known-weak defaults that must never reach production
@@ -185,6 +186,33 @@ class Settings(BaseSettings):
 
     # ── Real-time / Redis ────────────────────────────────────────────────────
     redis_url: str | None = None  # e.g. redis://redis:6379/0; None = in-process only
+
+    # AI is gated separately by workspace flags and sharing policy. No startup calls.
+    llm_base_url: str = "https://api.deepseek.com"
+    llm_model: str = Field(default="deepseek-flash", min_length=1, max_length=128)
+    deepseek_api_key: SecretStr | None = None
+    llm_compatibility: Literal["deepseek", "openai_compatible"] = "deepseek"
+    llm_deadline_s: float = Field(default=15, gt=0, le=60)
+    llm_max_retries: int = Field(default=1, ge=0, le=1)
+    llm_cache_ttl_s: int = Field(default=86400, ge=1, le=86400)
+    llm_cache_generation: str = Field(default="flash-1017-v1", min_length=1, max_length=64)
+    llm_requests_per_minute: int = Field(default=10, ge=1, le=1000)
+    llm_requests_per_day: int = Field(default=100, ge=1, le=100000)
+    llm_daily_token_limit: int = Field(default=1000000, ge=1, le=100000000)
+    llm_max_input_bytes: int = Field(default=32768, ge=1, le=262144)
+    llm_max_output_tokens: int = Field(default=4096, ge=1, le=16384)
+    llm_max_response_bytes: int = Field(default=65536, ge=1, le=1048576)
+    llm_breaker_failures: int = Field(default=5, ge=1, le=100)
+    llm_breaker_cooldown_s: int = Field(default=60, ge=1, le=3600)
+
+    @field_validator("llm_base_url")
+    @classmethod
+    def validate_llm_base_url(cls, value: str) -> str:
+        parts = urlsplit(value)
+        if (parts.scheme not in {"http", "https"} or not parts.hostname
+                or parts.username or parts.password or parts.query or parts.fragment):
+            raise ValueError("LLM_BASE_URL must be an HTTP(S) base URL without credentials or query")
+        return value.rstrip("/")
 
     # ── API response cache ───────────────────────────────────────────────────
     # Read-heavy, tenant-scoped dashboard endpoints (sales analytics) recompute

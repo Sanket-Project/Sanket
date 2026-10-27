@@ -21,6 +21,7 @@ import { useIndustryContext } from "@/hooks/useIndustryContext";
 import { industryDisplay } from "@/utils/colors";
 import { FocusProfileCard } from "@/components/settings/FocusProfileCard";
 import { NetworkCard } from "@/components/settings/NetworkCard";
+import { AISettings } from "@/components/ai/AISettings";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -503,7 +504,7 @@ export const SettingsPage = () => {
         className="animate-fade-in"
       >
         {activeTab === "profile" && <ProfileTab />}
-        {activeTab === "workspace" && <WorkspaceTab />}
+        {activeTab === "workspace" && <div className="space-y-4"><WorkspaceTab /><AISettings /></div>}
         {activeTab === "industry" && <IndustryTab />}
         {activeTab === "network" && <NetworkCard />}
         {activeTab === "notifications" && <NotificationsTab />}

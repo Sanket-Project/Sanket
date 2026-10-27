@@ -24,15 +24,30 @@ async def record(
     quantity: float | Decimal,
     idempotency_key: str | None = None,
     metadata: dict[str, Any] | None = None,
+    strict: bool = False,
 ) -> None:
-    """Append-only usage event. Swallows errors so business logic never blocks."""
+    """Append usage idempotently; strict callers get recording errors.
+
+    Default callers retain the existing best-effort, logged failure behavior.
+    """
     try:
+        if idempotency_key is not None:
+            # ON CONFLICT is incompatible with this append-only table's UPDATE
+            # rules. Serialize by tenant/key, then check under the same RLS scope.
+            await session.execute(
+                text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"),
+                {"key": f"usage:{tenant_id}:{idempotency_key}"},
+            )
+            if await session.scalar(
+                text("SELECT 1 FROM usage_events WHERE tenant_id=:tid AND idempotency_key=:key LIMIT 1"),
+                {"tid": str(tenant_id), "key": idempotency_key},
+            ):
+                return
         await session.execute(
             text(
                 """
                 INSERT INTO usage_events (tenant_id, meter, quantity, idempotency_key, metadata)
-                VALUES (:tid, :meter::meter_kind, :qty, :key, :meta::jsonb)
-                ON CONFLICT DO NOTHING
+                VALUES (:tid, CAST(:meter AS meter_kind), :qty, :key, CAST(:meta AS jsonb))
                 """
             ),
             {
@@ -44,6 +59,8 @@ async def record(
             },
         )
     except Exception as exc:
+        if strict:
+            raise
         log.error("usage.record.failed", meter=meter.value, error=str(exc))
 
 

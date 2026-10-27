@@ -27,9 +27,12 @@ async def record(
     ip_address: str | None = None,
     user_agent: str | None = None,
     request_id: str | None = None,
+    strict: bool = False,
 ) -> None:
-    """Insert an immutable audit log entry. Errors are swallowed and logged
-    so that audit failures never break primary business logic."""
+    """Insert an immutable audit entry; strict callers get recording errors.
+
+    Default callers retain the existing best-effort, logged failure behavior.
+    """
     try:
         await session.execute(
             insert(AuditLog).values(
@@ -47,6 +50,8 @@ async def record(
             )
         )
     except Exception as exc:
+        if strict:
+            raise
         log.error(
             "audit.write.failed",
             action=action,

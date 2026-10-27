@@ -124,6 +124,49 @@ export interface UploadOptions {
   identity?: "transaction" | "period";
   /** ISO code of the prices in the file, for SKUs it creates. */
   currency?: string;
+  analysisToken?: string;
+  tableSelections?: TableSelection[];
+  rememberMapping?: boolean;
+}
+
+export interface ImportTable {
+  id: string;
+  sheet: string;
+  header_start: number;
+  header_end: number;
+  rows_total: number;
+  columns: { id: string; label: string; display_label: string; kind: string }[];
+  mapping: Record<string, string>;
+  mapping_source: string;
+  confidence: Record<string, string>;
+  provenance: Record<string, string>;
+  ai_state: string;
+  sample_rows: Record<string, unknown>[];
+  exclusions: { row: number; reason: string }[];
+  review_rows: number[];
+  warnings: string[];
+  warning_count: number;
+  profile_revision: number;
+  saved_options?: { identity?: "transaction" | "period"; currency?: string | null; date_order?: "dmy" | "mdy" | null };
+  date_reviews?: Record<string, { row: number; value: string; dmy: string; mdy: string }[]>;
+  date_review_counts?: Record<string, number>;
+}
+
+export interface TableSelection {
+  id: string;
+  mapping: Record<string, string>;
+  include_review_rows: number[];
+  exclude_rows: number[];
+  date_order?: "dmy" | "mdy";
+}
+
+export interface ImportAnalysis {
+  headers: string[];
+  suggested_mapping: Record<string, string>;
+  sample_rows?: Record<string, unknown>[];
+  analysis_token?: string;
+  tables?: ImportTable[];
+  fields?: string[];
 }
 
 export const integrationsApi = {
@@ -154,22 +197,23 @@ export const integrationsApi = {
     }
     if (kind === "sales" && options.identity) form.append("identity", options.identity);
     if (options.currency) form.append("currency", options.currency);
+    if (options.analysisToken) form.append("analysis_token", options.analysisToken);
+    if (options.tableSelections) form.append("table_selections", JSON.stringify(options.tableSelections));
+    if (options.rememberMapping !== undefined) form.append("remember_mapping", String(options.rememberMapping));
     return apiClient
       .post<UploadResult>("/integrations/upload", form, {
         headers: { "Content-Type": "multipart/form-data" },
       })
       .then((r) => r.data);
   },
-  analyze: (file: File, kind: string) => {
+  analyze: (file: File, kind: string, headerOverrides?: Record<string, [number, number]>, suggestTable?: string) => {
     const form = new FormData();
     form.append("file", file);
     form.append("kind", kind);
+    if (headerOverrides) form.append("header_overrides", JSON.stringify(headerOverrides));
+    if (suggestTable) form.append("suggest_table", suggestTable);
     return apiClient
-      .post<{
-        headers: string[];
-        suggested_mapping: Record<string, string>;
-        sample_rows: Record<string, unknown>[];
-      }>("/integrations/upload/analyze", form, {
+      .post<ImportAnalysis>("/integrations/upload/analyze", form, {
         headers: { "Content-Type": "multipart/form-data" },
       })
       .then((r) => r.data);

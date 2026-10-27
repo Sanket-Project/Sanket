@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import json
 import secrets
 import uuid
 from datetime import UTC, datetime
@@ -29,6 +30,7 @@ from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from sqlalchemy import select, update
 
 from app.connectors import ConnectorAvailability, get_spec, grouped_catalog
+from app.config import get_settings
 from app.core.crypto import decrypt_secret, encrypt_secret
 from app.core.industry_scope import TenantIndustry, assert_industry
 from app.models.enums import IndustryCode
@@ -46,6 +48,8 @@ from app.schemas.integrations import (
 from app.services import audit
 from app.services.integrations import sql_source
 from app.services.integrations.file_import import import_rows, parse_table
+from app.services.integrations.import_review import analyze_import, confirm_import
+from app.services.llm.policy import AIContext
 from app.services.integrations.woocommerce_client import WooCommerceClient, WooCommerceError
 from app.services.integrations.woocommerce_sync import run_woocommerce_sync
 
@@ -454,37 +458,34 @@ async def _run_sql_sync_task(db, tenant_id: uuid.UUID, provider: str) -> None:
 
 @router.post("/upload/analyze")
 async def analyze_file(
+    request: Request,
+    tenant_id: TenantId,
+    user_id: UserId,
+    tenant_industry: TenantIndustry,
     file: Annotated[UploadFile, File()],
     kind: Annotated[str, Form()],
+    header_overrides: Annotated[str | None, Form()] = None,
+    suggest_table: Annotated[str | None, Form(max_length=64)] = None,
 ) -> dict[str, Any]:
     """Parse an uploaded file and return headers, suggested column mapping, and sample rows."""
     if kind not in ("sales", "inventory", "products"):
         raise HTTPException(status_code=400, detail="kind must be sales, inventory, or products")
     
-    content = await file.read()
+    content = await file.read(_MAX_UPLOAD_BYTES + 1)
     if not content:
         raise HTTPException(status_code=400, detail="Uploaded file is empty")
     if len(content) > _MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=413, detail="File exceeds the 10 MB limit")
         
     try:
-        headers, records = parse_table(file.filename or "", content)
-    except ValueError as exc:
+        overrides = json.loads(header_overrides) if header_overrides else None
+        if overrides is not None and not isinstance(overrides, dict):
+            raise ValueError("Header selection must be an object")
+        return await analyze_import(request.app.state.db, getattr(request.app.state, "ai", None),
+                                    AIContext(tenant_id, user_id, tenant_industry), get_settings().jwt_secret,
+                                    file.filename or "", content, kind, header_overrides=overrides, suggest_table=suggest_table)
+    except (ValueError, TypeError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    if not records:
-        raise HTTPException(status_code=400, detail="No data rows found in the file")
-        
-    from app.services.integrations.file_import import _build_header_map
-    suggested = _build_header_map(headers)
-    
-    # Take first 3 rows as sample
-    sample_rows = records[:3]
-    
-    return {
-        "headers": headers,
-        "suggested_mapping": suggested,
-        "sample_rows": sample_rows,
-    }
 
 
 @router.post("/upload", response_model=UploadResult)
@@ -499,6 +500,9 @@ async def upload_file(
     column_mapping: Annotated[str | None, Form()] = None,
     identity: Annotated[Literal["transaction", "period"], Form()] = "transaction",
     currency: Annotated[str | None, Form(pattern=r"^[A-Z]{3}$")] = None,
+    analysis_token: Annotated[str | None, Form(max_length=16000)] = None,
+    table_selections: Annotated[str | None, Form(max_length=64000)] = None,
+    remember_mapping: Annotated[bool, Form()] = False,
 ) -> UploadResult:
     """Upload a CSV/Excel file of sales, inventory, or products and ingest it
     into the canonical schema.
@@ -518,11 +522,25 @@ async def upload_file(
         raise HTTPException(status_code=400, detail="kind must be sales, inventory, or products")
     industry = assert_industry(target_industry, tenant_industry)
 
-    content = await file.read()
+    content = await file.read(_MAX_UPLOAD_BYTES + 1)
     if not content:
         raise HTTPException(status_code=400, detail="Uploaded file is empty")
     if len(content) > _MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=413, detail="File exceeds the 10 MB limit")
+
+    if analysis_token or table_selections:
+        try:
+            if not analysis_token or not table_selections:
+                raise ValueError("Analyze the file and confirm the selected mapping before importing")
+            selections = json.loads(table_selections)
+            stats = await confirm_import(request.app.state.db, AIContext(tenant_id, user_id, tenant_industry),
+                                         get_settings().jwt_secret, file.filename or "", content, kind,
+                                         analysis_token, selections, remember=remember_mapping,
+                                         identity=identity, currency=currency)
+            provider = "excel_upload" if (file.filename or "").lower().endswith((".xlsx", ".xlsm")) else "csv_upload"
+            return UploadResult(provider=provider, kind=kind, **stats)
+        except (ValueError, TypeError) as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     try:
         headers, records = parse_table(file.filename or "", content)
@@ -534,7 +552,6 @@ async def upload_file(
     parsed_mapping = None
     if column_mapping:
         try:
-            import json
             parsed_mapping = json.loads(column_mapping)
             if not isinstance(parsed_mapping, dict):
                 raise ValueError("column_mapping must be a JSON object")

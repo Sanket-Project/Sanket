@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageLoader } from "@/components/ui/Spinner";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { AISummary } from "@/components/ai/AISummary";
 import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { getErrorMessage } from "@/utils/errors";
 import {
@@ -53,7 +54,7 @@ export const DataQualityPage = () => {
   const industry = useWorkspaceIndustry();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState<string | null>(null);
-  const [pendingFix, setPendingFix] = useState<{ action: DataQualityFix; rows: number; label: string } | null>(null);
+  const [pendingFix, setPendingFix] = useState<{ action: DataQualityFix; rows: number; label: string; token?: string } | null>(null);
 
   const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: ["data-quality", industry],
@@ -69,13 +70,13 @@ export const DataQualityPage = () => {
         refetch();
         return;
       }
-      setPendingFix({ action: res.action, rows: res.rows_affected, label: vars.label });
+      setPendingFix({ action: res.action, rows: res.rows_affected, label: vars.label, token: res.preview_token });
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   });
 
   const apply = useMutation({
-    mutationFn: (action: DataQualityFix) => dataQualityApi.fix(action, true),
+    mutationFn: (action: DataQualityFix) => dataQualityApi.fix(action, true, pendingFix?.token),
     onSuccess: (res) => {
       setPendingFix(null);
       queryClient.invalidateQueries({ queryKey: ["data-quality"] });
@@ -112,6 +113,7 @@ export const DataQualityPage = () => {
         </Button>
       </div>
 
+      <AISummary feature="data_quality" />
       <Card padding="none">
         <div className="grid divide-y divide-line sm:grid-cols-[minmax(210px,1.2fr)_repeat(3,minmax(110px,0.7fr))] sm:divide-x sm:divide-y-0">
           <div className="flex items-center gap-4 px-5 py-4">

@@ -29,6 +29,7 @@ import { productsApi, type ProductCreateBody } from "@/api/products";
 import { skusApi } from "@/api/skus";
 import { exportApi } from "@/api/export";
 import { Button } from "@/components/ui/Button";
+import { ProductCleanup } from "@/components/products/ProductCleanup";
 import { Input } from "@/components/ui/Input";
 import { ImportModal } from "@/components/ui/ImportModal";
 import { fmtRelative } from "@/utils/format";
@@ -317,6 +318,7 @@ export const ProductsPage = () => {
   const statuses: FilterStatus[] = ["all", "active", "seasonal", "pre_launch", "clearance", "discontinued"];
   return (
     <div className="space-y-4 animate-fade-in" data-industry={industry}>
+      <ProductCleanup skus={liveSkus || []} />
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>

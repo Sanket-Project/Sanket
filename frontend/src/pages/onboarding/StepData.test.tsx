@@ -2,6 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, expect, it, vi } from "vitest";
 import { StepData } from "./StepData";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const api = vi.hoisted(() => ({ analyze: vi.fn(), upload: vi.fn(), success: vi.fn() }));
 vi.mock("@/api/integrations", () => ({ integrationsApi: api }));
@@ -21,7 +22,7 @@ beforeEach(() => {
 });
 
 it("offers period totals during onboarding and reports a replay honestly", async () => {
-  render(<StepData thisStep="data" save={vi.fn()} />);
+  render(<QueryClientProvider client={new QueryClient()}><StepData thisStep="data" save={vi.fn()} /></QueryClientProvider>);
   const user = userEvent.setup();
   const sales = screen.getByText("Sales history").closest("div.rounded-2xl") as HTMLElement;
   await user.click(within(sales).getByText("Choose file"));
@@ -30,4 +31,15 @@ it("offers period totals during onboarding and reports a replay honestly", async
   expect(await screen.findByText("0 new · 459 already imported · 0 corrected")).toBeInTheDocument();
   expect(api.upload).toHaveBeenCalledWith(expect.any(File), "sales", expect.any(Object), { identity: "period" });
   expect(api.success).toHaveBeenCalledWith("0 new · 459 already imported · 0 corrected");
+});
+
+it("uses the shared workspace format review during onboarding", async () => {
+  api.analyze.mockResolvedValue({ headers: ["SKU", "Qty", "Date"], suggested_mapping: {}, sample_rows: [],
+    analysis_token: "token", fields: ["sku", "quantity", "timestamp"], tables: [{ id: "t", sheet: "Sales", header_start: 2, header_end: 2,
+      rows_total: 1, columns: [], mapping: { sku: "c1", quantity: "c2", timestamp: "c3" }, mapping_source: "saved",
+      confidence: {}, provenance: {}, ai_state: "disabled", sample_rows: [], exclusions: [], review_rows: [], warnings: [], warning_count: 0 }] });
+  render(<QueryClientProvider client={new QueryClient()}><StepData thisStep="data" save={vi.fn()} /></QueryClientProvider>);
+  const sales = screen.getByText("Sales history").closest("div.rounded-2xl") as HTMLElement;
+  await userEvent.click(within(sales).getByText("Choose file"));
+  expect(await within(sales).findByText(/Saved workspace format/)).toBeInTheDocument();
 });
