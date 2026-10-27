@@ -33,7 +33,7 @@ class Ledger:
                               facts=[Fact(**row, snapshot=snapshot) for row in self.rows])
 
 
-async def build_context(db, ctx: AIContext, *, entity_id=None, connector=None, language="en") -> NarrativeInput:
+async def build_context(db, ctx: AIContext, *, entity_id=None, connector=None, language="en", run_id=None) -> NarrativeInput:
     ledger = Ledger()
     async with db.session(str(ctx.tenant_id)) as session:
         await PolicyStore(db)._rows(session, ctx)
@@ -73,11 +73,12 @@ async def build_context(db, ctx: AIContext, *, entity_id=None, connector=None, l
                 ledger.note(f"reason_{index}", finding["why_it_matters"], "/data-quality")
                 ledger.note(f"fix_{index}", finding["how_to_fix"], "/data-quality")
         else:
-            raise AIError("invalid_input")
+            from app.services.llm.explanations import project_context
+            await project_context(ledger, session, db, ctx, entity_id, connector=connector, run_id=run_id)
     return ledger.finish(language)
 
 
-async def generate_summary(db, ai, ctx: AIContext, *, entity_id=None, connector=None, language="en") -> dict:
+async def generate_summary(db, ai, ctx: AIContext, *, entity_id=None, connector=None, language="en", run_id=None) -> dict:
     policy = await PolicyStore(db).load(ctx)
     if not policy.enabled or not policy.task_enabled:
         return {"state": "disabled", "reason": "feature_disabled", "blocks": []}
@@ -85,7 +86,7 @@ async def generate_summary(db, ai, ctx: AIContext, *, entity_id=None, connector=
         return {"state": "policy_blocked", "reason": "sharing_disabled", "blocks": []}
     if ai is None:
         return {"state": "unavailable", "reason": "configuration_missing", "blocks": []}
-    data = await build_context(db, ctx, entity_id=entity_id, connector=connector, language=language)
+    data = await build_context(db, ctx, entity_id=entity_id, connector=connector, language=language, run_id=run_id)
     result = await ai.run(ctx, request_for(ctx.task_name, data.model_dump(mode="json")))
     return {"state": result.state, "reason": result.reason, "snapshot": data.snapshot,
             "blocks": render_narrative(data, result.value) if result.state == "success" else []}

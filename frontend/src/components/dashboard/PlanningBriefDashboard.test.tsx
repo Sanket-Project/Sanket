@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { weeklyHistory } from "@/components/dashboard/dashboardData";
@@ -156,4 +156,29 @@ describe("PlanningBriefDashboard", () => {
       expect(api.catalog.mock.calls.length).toBeGreaterThan(before.catalog);
     });
   });
+});
+
+it("offers an optional grounded summary above the existing planning metrics", async () => {
+  happyPath();
+  renderDashboard();
+  expect(await screen.findByRole("complementary", { name: "AI summary" })).toBeInTheDocument();
+  expect(screen.getByText("Orders due")).toBeInTheDocument();
+});
+
+it("retains a generated summary when unchanged source data is polled again", async () => {
+  const { aiApi } = await import("@/api/ai");
+  const summary = vi.spyOn(aiApi, "summary").mockResolvedValue({ state: "success", blocks: [{ text: "Stable summary", kind: "fact", sources: [] }] });
+  happyPath();
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(<QueryClientProvider client={client}><MemoryRouter><PlanningBriefDashboard /></MemoryRouter></QueryClientProvider>);
+  await screen.findByText(/4 low-confidence SKUs/i);
+  fireEvent.click(screen.getByRole("button", { name: "Generate AI summary" }));
+  await screen.findByText("Stable summary");
+  await act(async () => {
+    await client.invalidateQueries({ queryKey: ["data-quality"] });
+    // React Query batches observer notifications on the next timer turn.
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  });
+  expect(screen.getByText("Stable summary")).toBeInTheDocument();
+  summary.mockRestore();
 });

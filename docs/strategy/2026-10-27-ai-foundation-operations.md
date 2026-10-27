@@ -1,5 +1,7 @@
 # AI foundation operations
 
+This is the historical Phase 0 runbook. For the current Phase 1/2 UI and local runtime, see [the demo checkpoint](2026-10-27-ai-demo-checkpoint.md) and [Claude handoff](2026-10-27-claude-ai-handoff.md).
+
 Phase 0 adds backend infrastructure only. It adds no customer-facing AI endpoint or import UI. The existing uploader continues to use its current deterministic/manual mapping flow. The next approved feature plan will connect the foundation to layout detection and mapping confirmation, including Redwine acceptance tests.
 
 ## Current model

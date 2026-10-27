@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { AISummary } from "@/components/ai/AISummary";
 import { WhatsAppStatus } from "@/components/dashboard/WhatsAppStatus";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
@@ -187,6 +188,7 @@ export const PlanningBriefDashboard = () => {
 
   return (
     <div className="animate-fade-in space-y-3">
+      <AISummary feature="planning_brief" runId={forecast.data?.run_id} contextKey={JSON.stringify([industry, decisions.data, forecast.data?.run_id, quality.data, coverage.data])} />
       <header className="flex flex-col gap-3 rounded-2xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-heading text-xl font-semibold tracking-tight text-content">

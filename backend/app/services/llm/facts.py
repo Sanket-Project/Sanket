@@ -100,7 +100,7 @@ def render_narrative(task: NarrativeInput, output: NarrativeOutput) -> list[dict
         pieces = []
         for fact in selected:
             if block.proposition == "fact":
-                pieces.append(f"{fact.label}: {fact.value}{' ' + fact.unit if fact.unit else ''}.")
+                pieces.append(f"{fact.label}: {fact.value}{' ' + fact.unit if fact.unit else ''}{' (' + fact.period + ')' if fact.period else ''}.")
             else:
                 pieces.append(f"{_WORDS[task.language][block.proposition]}: {fact.label}.")
         result.append({"text": " ".join(pieces), "kind": block.proposition,

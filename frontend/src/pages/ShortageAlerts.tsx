@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AISummary } from "@/components/ai/AISummary";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { AlertOctagon, AlertTriangle, CheckCircle2, Info, Settings, Calendar, RefreshCw, FileSpreadsheet } from "@/components/ui/icons";
@@ -408,6 +409,7 @@ const AlertRow = ({ alert, onAck, onResolve }: RowProps) => {
           </div>
           <div className="font-bold text-slate-800 dark:text-white text-sm tracking-tight">{alert.title}</div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">{alert.message}</p>
+          <AISummary feature="alert_explanation" entityId={alert.id} contextKey={JSON.stringify(alert)} />
           <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-400 mt-3.5">
             <Calendar size={11} />
             Fired on {fmtDateTime(alert.fired_at)}

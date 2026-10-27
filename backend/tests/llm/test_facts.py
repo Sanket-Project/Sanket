@@ -69,3 +69,12 @@ def test_missing_facts_remain_explicit_and_cannot_be_rendered_as_known():
         task.validate('{"blocks":[{"proposition":"fact","fact_ids":["cost"]}]}')
     output = task.validate('{"blocks":[{"proposition":"missing","fact_ids":["cost"]}]}')
     assert "unavailable" in render_narrative(data, output)[0]["text"]
+
+
+def test_rendered_facts_include_the_recorded_source_period():
+    from app.services.llm.facts import render_narrative
+    from app.services.llm.tasks import request_for
+    data = ledger()
+    data = data.model_copy(update={"facts": [data.facts[0].model_copy(update={"period": "2026-10-19"})]})
+    output = request_for("decision_explanation", data.model_dump()).validate('{"blocks":[{"proposition":"fact","fact_ids":["cover"]}]}')
+    assert "2026-10-19" in render_narrative(data, output)[0]["text"]

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AISummary } from "@/components/ai/AISummary";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { BarChart3, CheckCircle2, Circle, Loader2 } from "@/components/ui/icons";
@@ -281,6 +282,7 @@ export const ForecastAccuracyPage = () => {
                 <div>
                   <p className="text-sm font-mono text-slate-700">{sku.sku_id.slice(0, 8)}…</p>
                   <p className="text-xs text-slate-400">{sku.anomaly_count} anomalous weeks · last {sku.latest_anomaly_date}</p>
+                  <AISummary feature="alert_explanation" entityId={sku.sku_id} connector="anomaly" contextKey={JSON.stringify(sku)} />
                 </div>
                 <div className="flex gap-2">
                   {sku.anomaly_rows.slice(0, 3).map((r) => (

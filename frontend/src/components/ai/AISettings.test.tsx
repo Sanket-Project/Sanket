@@ -27,3 +27,10 @@ it("does not expose controls for features that are not built yet", async () => {
   await screen.findByLabelText("Enable AI in this workspace");
   expect(screen.queryByLabelText("data qa plan")).not.toBeInTheDocument();
 });
+
+it("exposes the implemented explanation controls with readable labels", async () => {
+  api.settings.mockResolvedValue({ enabled: false, sharing: "headers_only", tasks: { decision_explanation: false, alert_explanation: false, planning_brief: false, industry_advice: false }, aggregate_context: false, product_names: false, can_manage: true });
+  render(<QueryClientProvider client={new QueryClient()}><AISettings /></QueryClientProvider>);
+  expect(await screen.findByLabelText("Decision explanations")).not.toBeChecked();
+  expect(screen.getByLabelText("Alert and anomaly explanations")).not.toBeChecked();
+});

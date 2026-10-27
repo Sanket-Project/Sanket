@@ -16,6 +16,7 @@ router = APIRouter(prefix="/ai", tags=["ai"])
 class SummaryBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
     entity_id: UUID | None = None
+    run_id: UUID | None = None
     connector: str | None = Field(default=None, max_length=80)
     language: Literal["en", "hi", "te", "ta"] = "en"
 
@@ -96,7 +97,7 @@ async def _summary(feature, body, request, tenant_id, user_id, industry):
     ctx = AIContext(tenant_id, user_id, IndustryCode(industry.code), task_name=feature)
     try:
         return await generate_summary(request.app.state.db, getattr(request.app.state, "ai", None), ctx,
-                                      entity_id=body.entity_id, connector=body.connector, language=body.language)
+                                      entity_id=body.entity_id, connector=body.connector, language=body.language, run_id=body.run_id)
     except AIError as exc:
         raise error_response(exc) from None
     except ValueError:
@@ -109,7 +110,7 @@ async def onboarding_summary(body: SummaryBody, request: Request, tenant_id: Ten
 
 
 @router.post("/summary/{feature}")
-async def business_summary(feature: Literal["data_quality"], body: SummaryBody, request: Request,
+async def business_summary(feature: Literal["data_quality", "decision_explanation", "alert_explanation", "planning_brief", "industry_advice"], body: SummaryBody, request: Request,
                            tenant_id: TenantId, user_id: UserId, industry: ActiveIndustry):
     return await _summary(feature, body, request, tenant_id, user_id, industry)
 

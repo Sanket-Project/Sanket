@@ -48,6 +48,18 @@ const renderPage = () =>
     </QueryClientProvider>,
   );
 
+it("offers a scoped AI explanation inside the saved decision details", async () => {
+  api.list.mockResolvedValue(listOf([decision()]));
+  renderPage();
+  const working = await screen.findByRole("button", { name: /show working/i });
+  expect(working).not.toHaveClass("hidden");
+  fireEvent.click(working);
+  expect(screen.getByRole("button", { name: "Explain this decision" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Get industry advice" })).toBeInTheDocument();
+  expect(screen.getAllByRole("complementary", { name: "AI summary" })).toHaveLength(2);
+  expect(api.accept).not.toHaveBeenCalled();
+});
+
 it("groups allocation and transfer lines by route and expands frozen network inputs", async () => {
   api.list.mockResolvedValue(listOf([
     decision({ id: "a1", kind: "allocation", source_location_code: "dc", location_code: "alwal", recommended_units: 10 }),

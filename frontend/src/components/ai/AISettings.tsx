@@ -8,6 +8,8 @@ import { ImportFormats } from "./ImportFormats";
 const FEATURE_LABELS: Record<string, string> = {
   import_mapping: "Import column mapping", onboarding: "Onboarding and connector help",
   data_quality: "Data-quality explanations", product_cleanup: "Product cleanup suggestions",
+  decision_explanation: "Decision explanations", alert_explanation: "Alert and anomaly explanations",
+  planning_brief: "Planning brief summary", industry_advice: "Industry advice",
 };
 
 export function AISettings() {

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { AISummary } from "@/components/ai/AISummary";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -385,7 +386,7 @@ function DecisionRow({
         )}
         <button
           onClick={onToggle}
-          className="mt-0.5 hidden shrink-0 text-content-subtle transition-colors hover:text-content lg:block"
+            className="mt-0.5 shrink-0 text-content-subtle transition-colors hover:text-content"
           aria-label={expanded ? "Hide working" : "Show working"}
         >
           {expanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
@@ -513,7 +514,7 @@ function DecisionRow({
         </div>
       </div>
 
-      {expanded && <Working decision={d} />}
+      {expanded && <div className="space-y-3 p-3"><AISummary feature="decision_explanation" label="Explain this decision" entityId={d.id} contextKey={JSON.stringify(d)} /><AISummary feature="industry_advice" label="Get industry advice" entityId={d.id} contextKey={JSON.stringify(d)} /><Working decision={d} /></div>}
     </Card>
   );
 }

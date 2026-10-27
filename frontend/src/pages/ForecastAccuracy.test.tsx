@@ -57,6 +57,15 @@ describe("Forecast accuracy (audit F02)", () => {
     expect(screen.queryByText("Complete the accuracy prerequisites")).not.toBeInTheDocument();
   });
 
+  it("offers an explanation for a flagged SKU without running a backtest", async () => {
+    api.list.mockResolvedValue(response({ rows: [{ sku_id: "sku-1", sku_code: "S1", model_name: "chronos_zero_shot", mape: 25, wape: 25, bias_pct: 25, coverage_p10_p90: 100, n_obs: 1, computed_at: null, weeks: [] }] }));
+    api.anomalies.mockResolvedValue({ industry: "fashion", window_days: 90, sku_count: 1,
+      anomalous_skus: [{ sku_id: "sku-1", anomaly_count: 1, latest_anomaly_date: "2026-10-19", anomaly_rows: [{ ds: "2026-10-19", y: 7, score: 0.9 }] }] });
+    renderPage();
+    expect(await screen.findByRole("complementary", { name: "AI summary" })).toBeInTheDocument();
+    expect(api.backtest).not.toHaveBeenCalled();
+  });
+
   it("rejects invalid calendar dates and current or future weeks", () => {
     const today = new Date("2026-10-26T12:00:00Z");
     expect(backtestCutoffError("2026-02-30", today)).toBe("Enter a valid date.");
