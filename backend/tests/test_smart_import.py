@@ -84,12 +84,13 @@ async def test_unknown_size_stays_blank_without_user_choice(app_role_db):
 async def test_gross_profit_becomes_period_sales_and_reimport_replaces(app_role_db):
     from app.services.integrations.smart_import import confirm_plan, plan_files
     ctx = await seed(app_role_db)
-    plan = (await plan_files(app_role_db, None, ctx, SECRET, [("gp.xlsx", gross())]))["files"][0]
+    first, second = gross(), gross(30)
+    plan = (await plan_files(app_role_db, None, ctx, SECRET, [("gp.xlsx", first)]))["files"][0]
     assert plan["decision"]["destinations"] == ["products", "period_sales"]
     assert plan["decision"]["period"] == {"start": "2026-01-01", "end": "2026-10-25"}
-    await confirm_plan(app_role_db, ctx, SECRET, "gp.xlsx", gross(), plan["plan_token"], plan["decision"])
-    again = (await plan_files(app_role_db, None, ctx, SECRET, [("gp.xlsx", gross(30))]))["files"][0]
-    result = await confirm_plan(app_role_db, ctx, SECRET, "gp.xlsx", gross(30), again["plan_token"], again["decision"])
+    await confirm_plan(app_role_db, ctx, SECRET, "gp.xlsx", first, plan["plan_token"], plan["decision"])
+    again = (await plan_files(app_role_db, None, ctx, SECRET, [("gp.xlsx", second)]))["files"][0]
+    result = await confirm_plan(app_role_db, ctx, SECRET, "gp.xlsx", second, again["plan_token"], again["decision"])
     assert result["destinations"]["period_sales"]["period_rows"] == 1
     assert await scalar(app_role_db, ctx, "SELECT count(*) FROM sku_period_sales WHERE tenant_id=:t") == 1
     assert await scalar(app_role_db, ctx, "SELECT units FROM sku_period_sales WHERE tenant_id=:t") == 30
@@ -99,20 +100,22 @@ async def test_gross_profit_becomes_period_sales_and_reimport_replaces(app_role_
 async def test_period_sales_requires_a_period(app_role_db):
     from app.services.integrations.smart_import import confirm_plan, plan_files
     ctx = await seed(app_role_db)
-    plan = (await plan_files(app_role_db, None, ctx, SECRET, [("gp.xlsx", gross())]))["files"][0]
+    content = gross()
+    plan = (await plan_files(app_role_db, None, ctx, SECRET, [("gp.xlsx", content)]))["files"][0]
     decision = {**plan["decision"], "period": None}
     with pytest.raises(ValueError, match="period"):
-        await confirm_plan(app_role_db, ctx, SECRET, "gp.xlsx", gross(), plan["plan_token"], decision)
+        await confirm_plan(app_role_db, ctx, SECRET, "gp.xlsx", content, plan["plan_token"], decision)
 
 
 async def test_store_day_totals_are_unusable_and_cannot_be_confirmed(app_role_db):
     from app.services.integrations.smart_import import confirm_plan, plan_files
     ctx = await seed(app_role_db)
-    plan = (await plan_files(app_role_db, None, ctx, SECRET, [("dsr.xlsx", dsr())]))["files"][0]
+    content = dsr()
+    plan = (await plan_files(app_role_db, None, ctx, SECRET, [("dsr.xlsx", content)]))["files"][0]
     assert plan["decision"]["destinations"] == []
     assert plan["unusable_reason"] == "no_item_column"
     with pytest.raises(ValueError, match="destination"):
-        await confirm_plan(app_role_db, ctx, SECRET, "dsr.xlsx", dsr(), plan["plan_token"], plan["decision"])
+        await confirm_plan(app_role_db, ctx, SECRET, "dsr.xlsx", content, plan["plan_token"], plan["decision"])
 
 
 async def test_one_bad_file_does_not_block_the_batch(app_role_db):
