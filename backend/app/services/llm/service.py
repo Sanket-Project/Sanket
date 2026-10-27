@@ -74,7 +74,7 @@ class AIService:
             return _failure("sharing_disabled")
         if task.spec.permission == "product_names" and not policy.product_names:
             return _failure("sharing_disabled")
-        payload = (project_input(task.input, policy, rows) if task.name == "import_mapping"
+        payload = (project_input(task.input, policy, rows) if task.name in {"import_mapping", "import_plan"}
                    else task.input.model_dump(mode="json"))
         tenant = str(ctx.tenant_id)
         key = cache_key(tenant=tenant, policy=policy.sharing, payload=payload, config=self.settings,

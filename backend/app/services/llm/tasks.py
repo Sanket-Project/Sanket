@@ -12,7 +12,7 @@ TASK_NAMES = frozenset({
     "import_mapping", "onboarding", "data_quality", "product_cleanup",
     "decision_explanation", "alert_explanation", "planning_brief", "industry_advice",
     "weekly_summary", "roi_report", "supplier_draft", "scenario_interpretation",
-    "scenario_explanation", "data_qa_plan", "data_qa_answer",
+    "scenario_explanation", "data_qa_plan", "data_qa_answer", "import_plan",
 })
 
 MAPPING_SYSTEM = """Return only json selecting from supplied column IDs and allowed fields.
@@ -68,6 +68,9 @@ _TASKS = {
 
 
 def get_task(name: str) -> TaskSpec:
+    if name == "import_plan":
+        from app.services.llm.import_plan_task import PLAN_SYSTEM, PlanInput, PlanOutput, validate_plan
+        return TaskSpec(name, PlanInput, PlanOutput, validate_plan, PLAN_SYSTEM)
     if name == "product_cleanup":
         from app.services.llm.cleanup import CLEANUP_SYSTEM, CleanupInput, CleanupOutput, validate_cleanup
         return TaskSpec(name, CleanupInput, CleanupOutput, validate_cleanup, CLEANUP_SYSTEM, "product_names")

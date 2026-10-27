@@ -165,6 +165,8 @@ def project_input(task: TaskInput, policy: Policy, rows: list[dict] | None = Non
     columns = [{"id": c.id, "label": _CONTACT.sub("[redacted]", c.label), "kind": c.kind}
                for c in task.columns]
     result = {"columns": columns, "allowed_fields": list(task.allowed_fields)}
+    if hasattr(task, "row_count"):
+        result["row_count"] = task.row_count
     if policy.sharing == "redacted_samples" and rows:
         # Repeated text values get local opaque tokens. Unknown text is never copied.
         tokens: dict[str, str] = {}
