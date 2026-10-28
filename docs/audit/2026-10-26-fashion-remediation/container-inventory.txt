@@ -1,0 +1,4 @@
+NAMES                      PORTS
+sanket-remediation-redis   0.0.0.0:56380->6379/tcp, [::]:56380->6379/tcp
+sanket-remediation-db      0.0.0.0:55433->5432/tcp, [::]:55433->5432/tcp
+prisma-postgres-1          0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp

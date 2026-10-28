@@ -1,0 +1,20 @@
+const {chromium}=require('../frontend/node_modules/@playwright/test');
+(async()=>{
+const browser=await chromium.launch({headless:true});
+const page=await browser.newPage({viewport:{width:375,height:900}});
+await page.goto('http://127.0.0.1:5173/review/size-recognition-preview.html');
+await page.locator('input[type=file]').setInputFiles({name:'fixture.csv',mimeType:'text/csv',buffer:Buffer.from('fixture')});
+await page.getByLabel('Size for code 2X').scrollIntoViewIfNeeded();
+await page.screenshot({path:'tmp/size-recognition-mobile-cards.png'});
+await page.setViewportSize({width:1920,height:1080});
+await page.evaluate(()=>document.documentElement.classList.add('dark'));
+await page.getByRole('searchbox').fill('32');
+await page.screenshot({path:'tmp/size-recognition-dark.png'});
+console.log('Search numeric meaning:',await page.getByText('Numeric clothing size: 32').isVisible());
+await page.getByRole('searchbox').fill('2X');
+await page.getByLabel('Size for code 2X',{exact:true}).selectOption('');
+console.log('Cleared automatic suggestion:',await page.getByText('Reviewed · left blank').isVisible());
+await page.getByRole('button',{name:'Reset',exact:true}).click();
+console.log('Restored suggestion:',await page.getByLabel('Size for code 2X',{exact:true}).inputValue());
+await browser.close();
+})().catch(e=>{console.error(e);process.exit(1)});

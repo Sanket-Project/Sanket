@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import toast from "react-hot-toast";
-import { integrationsApi, type ImportAnalysis, type TableSelection, type UploadOptions, type UploadResult } from "@/api/integrations";
+import { integrationsApi, type ImportAnalysis, type TableSelection, type UploadOptions, type UploadResult, type V2Preview } from "@/api/integrations";
 import { Button } from "@/components/ui/Button";
 import { FileDropzone } from "@/components/ui/FileDropzone";
 import { useAuthStore } from "@/stores/auth";
@@ -38,6 +38,8 @@ export function ImportUploader({ kind, onImported, mode = "onboarding" }: {
   const sending = useRef(false);
   const [file, setFile] = useState<File | null>(null);
   const [analysis, setAnalysis] = useState<ImportAnalysis | null>(null);
+  const [v2Preview, setV2Preview] = useState<V2Preview | null>(null);
+  const [v2Result, setV2Result] = useState<Record<string, unknown> | null>(null);
   const [selections, setSelections] = useState<TableSelection[]>([]);
   const [legacyMapping, setLegacyMapping] = useState<Record<string, string>>({});
   const [identity, setIdentity] = useState<"transaction" | "period">("transaction");
@@ -53,7 +55,7 @@ export function ImportUploader({ kind, onImported, mode = "onboarding" }: {
 
   useEffect(() => {
     version.current += 1;
-    setFile(null); setAnalysis(null); setSelections([]); setError(null); setResult(null); setPending(false);
+    setFile(null); setAnalysis(null); setV2Preview(null); setV2Result(null); setSelections([]); setError(null); setResult(null); setPending(false);
     setIdentity("transaction"); setCurrency(""); setRemember(false); setLegacyMapping({});
     setManualSheet("CSV"); setHeaderStart(1); setHeaderEnd(1); headerOverrides.current = undefined;
     return () => { version.current += 1; };
@@ -63,9 +65,19 @@ export function ImportUploader({ kind, onImported, mode = "onboarding" }: {
     const revision = ++version.current;
     const effectiveOverrides = overrides || (targetTable ? headerOverrides.current : undefined);
     if (!targetTable) headerOverrides.current = overrides;
-    setFile(selected); setAnalysis(null); setSelections([]); setError(null); setResult(null); setPending(!!selected);
+    setFile(selected); setAnalysis(null); setV2Preview(null); setV2Result(null); setSelections([]); setError(null); setResult(null); setPending(!!selected);
     if (!selected) return;
     try {
+      if (/\.(csv|tsv)$/i.test(selected.name)) {
+        const probe = selected.slice(0, 512);
+        const prefix = typeof probe.text === "function" ? await probe.text() : "";
+        if (prefix.includes("retail_v2.0.") && typeof integrationsApi.v2Preview === "function") {
+          const preview = await integrationsApi.v2Preview(selected);
+          if (revision !== version.current || activeScope.current !== scope || activeKind.current !== kind) return;
+          setV2Preview(preview);
+          return;
+        }
+      }
       const data = await integrationsApi.analyze(selected, kind, effectiveOverrides, targetTable);
       if (revision !== version.current || activeScope.current !== scope || activeKind.current !== kind) return;
       setAnalysis(data);
@@ -97,7 +109,7 @@ export function ImportUploader({ kind, onImported, mode = "onboarding" }: {
         || (table.review_rows.some((n) => !selection.include_review_rows.includes(n) && !selection.exclude_rows.includes(n)) ? "Review ambiguous rows before importing." : null);
     }).find(Boolean)
     : analysis ? mappingError(kind, legacyMapping) : null;
-  const problem = error || validation;
+  const problem = error || validation || (v2Preview && !v2Preview.can_confirm ? "Resolve all V2 preview errors before confirming." : null);
 
   function update(id: string, patch: Partial<TableSelection>) {
     setSelections((previous) => previous.map((s) => s.id === id ? { ...s, ...patch } : s));
@@ -105,9 +117,36 @@ export function ImportUploader({ kind, onImported, mode = "onboarding" }: {
   }
 
   async function run() {
-    if (!file || !analysis || problem || pending || sending.current || role === "viewer") return;
+    if (!file || (!analysis && !v2Preview) || problem || pending || sending.current || role === "viewer") return;
     sending.current = true; setBusy(true); setError(null);
     const revision = version.current;
+    if (v2Preview) {
+      try {
+        const confirmed = await integrationsApi.v2Confirm(file, v2Preview.preview_token);
+        if (revision !== version.current || activeScope.current !== scope || activeKind.current !== kind) return;
+        setV2Result(confirmed);
+        toast.success("V2 import confirmed");
+        const inserted = Number(confirmed.inserted ?? 0);
+        const skipped = Number(confirmed.skipped ?? 0);
+        onImported?.({
+          provider: "retail_v2", kind: v2Preview.schema.split(".").at(-1) || kind,
+          rows_total: Number(confirmed.rows ?? v2Preview.row_count),
+          rows_imported: inserted, rows_skipped: skipped,
+          products_created: 0, skus_created: 0,
+          inventory_rows: v2Preview.schema.endsWith(".inventory") ? inserted : 0,
+          sales_rows: v2Preview.schema.endsWith(".sales") ? inserted + skipped : 0,
+          rows_inserted: inserted, rows_unchanged: skipped, rows_updated: 0,
+          identity_mode: "transaction", warnings: [], errors: [],
+        });
+        return;
+      } catch (e) {
+        if (revision === version.current) setError(getErrorMessage(e, "V2 import failed. No records were posted."));
+        return;
+      } finally {
+        sending.current = false; setBusy(false);
+      }
+    }
+    if (!analysis) { sending.current = false; setBusy(false); return; }
     const options: UploadOptions = kind === "sales" ? { identity } : {};
     if (mode === "integrations" || currency) options.currency = currency || undefined;
     if (analysis.analysis_token) Object.assign(options, { analysisToken: analysis.analysis_token, tableSelections: selections, rememberMapping: remember });
@@ -128,6 +167,12 @@ export function ImportUploader({ kind, onImported, mode = "onboarding" }: {
   return <div className="space-y-3 text-sm">
     <FileDropzone file={file} onFile={(selected) => void analyze(selected)} accept=".csv,.tsv,.xlsx,.xlsm" hint="CSV or Excel · up to 10 MB" disabled={busy} />
     {pending && <p role="status">Analyzing file layout…</p>}
+    {v2Preview && <section className="space-y-2 rounded-xl border border-line bg-surface-2 p-3" aria-label="V2 preview">
+      <p className="font-medium">{v2Preview.schema} · {v2Preview.row_count} rows</p>
+      {v2Preview.errors.length > 0
+        ? <ul role="alert" className="space-y-1 text-xs">{v2Preview.errors.map((item) => <li key={`${item.row}-${item.code}`}>Row {item.row}: {item.message}</li>)}</ul>
+        : <p className="text-xs">Tenant references and financial controls passed preview.</p>}
+    </section>}
     {file && !pending && <details className="rounded-xl border border-line p-3 text-xs">
       <summary>Choose sheet and header rows manually</summary>
       <div className="mt-2 grid gap-2 sm:grid-cols-3">
@@ -173,6 +218,7 @@ export function ImportUploader({ kind, onImported, mode = "onboarding" }: {
     {analysis?.analysis_token && <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />Remember confirmed format in this workspace after a successful import</label>}
     {problem && <p role="alert" className="rounded-xl border border-line p-3 text-sm">{problem}</p>}
     {result && <p role="status">{describeUploadResult(result)}</p>}
-    <Button size="sm" variant="secondary" onClick={() => void run()} loading={busy} disabled={!analysis || !file || pending || busy || !!problem || role === "viewer"}>{result ? "Re-import" : "Import"}</Button>
+    {v2Result && <p role="status">V2 import complete: {String(v2Result.rows ?? 0)} rows, {String(v2Result.inserted ?? 0)} inserted, {String(v2Result.skipped ?? 0)} skipped.</p>}
+    <Button size="sm" variant="secondary" onClick={() => void run()} loading={busy} disabled={(!analysis && !v2Preview) || !file || pending || busy || !!problem || role === "viewer"}>{result || v2Result ? "Re-import" : "Import"}</Button>
   </div>;
 }

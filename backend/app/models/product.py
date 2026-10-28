@@ -34,7 +34,9 @@ class Product(UUIDPrimaryKey, TimestampMixin, Base):
     )
     attributes: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
 
-    skus: Mapped[list[Sku]] = relationship("Sku", back_populates="product", lazy="raise")
+    skus: Mapped[list[Sku]] = relationship(
+        "Sku", back_populates="product", lazy="raise", cascade="all, delete", passive_deletes=True
+    )
 
 
 class Sku(UUIDPrimaryKey, TimestampMixin, Base):
@@ -65,7 +67,11 @@ class Sku(UUIDPrimaryKey, TimestampMixin, Base):
 
     product: Mapped[Product] = relationship("Product", back_populates="skus", lazy="raise")
     pharma_batches: Mapped[list[PharmaBatch]] = relationship(  # type: ignore[name-defined]
-        "PharmaBatch", back_populates="sku", lazy="raise"
+        "PharmaBatch",
+        back_populates="sku",
+        lazy="raise",
+        cascade="all, delete",
+        passive_deletes=True,
     )
 
 from app.models.pharma import PharmaBatch  # noqa: E402

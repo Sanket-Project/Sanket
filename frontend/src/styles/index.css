@@ -96,6 +96,69 @@ body {
   font-feature-settings: "cv05" 1, "ss01" 1;
 }
 
+/* Single-selects share the same inset arrow and themed popup across the app.
+   Unsupported browsers retain their accessible native popup and a themed field. */
+select:not([multiple]):not([size]) {
+  appearance: none;
+  padding-inline-end: 2.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235E7B80' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-position: right 0.875rem center;
+  background-size: 1rem;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+select:not([multiple]):not([size]):disabled { cursor: not-allowed; }
+select option { background: var(--surface); color: var(--text); }
+
+@supports (appearance: base-select) {
+  select:not([multiple]):not([size]),
+  select:not([multiple]):not([size])::picker(select) { appearance: base-select; }
+  select:not([multiple]):not([size]) { position: relative; background-image: none; }
+  select:not([multiple]):not([size])::picker-icon {
+    position: absolute;
+    inset-inline-end: 0.875rem;
+    top: 50%;
+    translate: 0 -50%;
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    border-inline-end: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    rotate: 45deg;
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+  select:not([multiple]):not([size]):open::picker-icon { rotate: 225deg; }
+  select:not([multiple]):not([size])::picker(select) {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    padding: 6px;
+    margin-block: 6px;
+    max-block-size: min(320px, 60dvh);
+    min-inline-size: anchor-size(self-inline);
+    max-inline-size: calc(100dvw - 24px);
+    overflow: auto;
+    overscroll-behavior: contain;
+    font-family: inherit;
+    font-size: 0.875rem;
+  }
+  select:not([multiple]):not([size]) option {
+    border-radius: 8px;
+    padding: 10px 12px;
+    min-block-size: 40px;
+    gap: 10px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  select:not([multiple]):not([size]) option:hover,
+  select:not([multiple]):not([size]) option:focus-visible { background: var(--surface-3); outline: none; }
+  select:not([multiple]):not([size]) option:checked { background: var(--accent-soft); color: var(--text); font-weight: 600; }
+  select:not([multiple]):not([size]) option::checkmark { color: var(--text-muted); }
+}
+
 /* Display / headings */
 h1, h2, h3, h4, h5, .font-heading, .font-display {
   font-family: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
@@ -382,3 +445,24 @@ h1, h2, h3, h4, h5, .font-heading, .font-display {
   border-color: var(--border-strong) !important;
   color: var(--text) !important;
 }
+
+/* Sales overview: a clear total, paired analysis, and progressively disclosed detail. */
+.sales-overview > header h1 { font-size: clamp(1.75rem, 3vw, 2.25rem); }
+.sales-overview > .rounded-\[20px\] { box-shadow: none; }
+.sales-analysis-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 1.25rem; align-items: start; }
+.sales-analysis-grid > * { min-width: 0; }
+.sales-analysis-grid ol { max-height: 440px; overflow-y: auto; }
+.sales-overview > button { float: right; }
+.sales-imported { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 1.25rem; }
+.sales-imported > * { margin-top: 0 !important; min-width: 0; }
+.sales-imported > header, .sales-imported > div:nth-child(2), .sales-imported > div:nth-child(4), .sales-imported > div:nth-child(5) { grid-column: 1 / -1; }
+.sales-imported > section { align-self: start; }
+@media (max-width: 1023px) { .sales-analysis-grid, .sales-imported { grid-template-columns: minmax(0, 1fr); } }
+
+.sales-summary-grid { display:grid; grid-template-columns:minmax(0,1.4fr) repeat(2,minmax(0,1fr)); gap:1rem; }
+.sales-summary-grid > div { border-radius:16px; padding:24px; min-width:0; }
+.sales-summary-primary { background:var(--accent); color:var(--accent-fg); }
+.sales-summary-secondary { background:var(--surface); color:var(--text); border:1px solid var(--border); }
+.sales-summary-primary > p:nth-child(2) { font-family:"IBM Plex Mono",monospace; font-size:clamp(1.5rem,2.5vw,2.5rem); }
+@media(max-width:1100px){.sales-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sales-summary-primary{grid-column:1/-1}}
+@media(max-width:480px){.sales-summary-grid{grid-template-columns:minmax(0,1fr)}.sales-summary-grid > div{padding:20px}}

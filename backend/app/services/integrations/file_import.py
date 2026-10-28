@@ -664,13 +664,23 @@ async def _load_sku_map(session, tenant_id: uuid.UUID) -> dict[str, uuid.UUID]:
     return dict(rows.all())
 
 
+# asyncpg allows at most 32,767 bind parameters per statement; stay well under it.
+_IN_CHUNK = 10_000
+
+
 async def _sku_currencies(session, tenant_id: uuid.UUID, ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
-    if not ids:
-        return {}
-    rows = await session.execute(
-        select(Sku.id, Sku.currency).where(Sku.tenant_id == tenant_id, Sku.id.in_(ids))
-    )
-    return dict(rows.all())
+    # ``ids`` has one entry per row; a two-year multi-store export repeats each SKU
+    # thousands of times, so look each SKU up once and in bounded batches.
+    unique = list(dict.fromkeys(ids))
+    found: dict[uuid.UUID, str] = {}
+    for i in range(0, len(unique), _IN_CHUNK):
+        rows = await session.execute(
+            select(Sku.id, Sku.currency).where(
+                Sku.tenant_id == tenant_id, Sku.id.in_(unique[i : i + _IN_CHUNK])
+            )
+        )
+        found.update(rows.all())
+    return found
 
 
 async def _workspace_currency(session, tenant_id: uuid.UUID) -> str | None:

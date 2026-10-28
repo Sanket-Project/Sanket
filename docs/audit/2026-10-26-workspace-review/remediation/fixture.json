@@ -1,0 +1,35 @@
+{
+  "synthetic": true,
+  "database": "sanket_review_fixture",
+  "generated_at": "2026-10-26T11:29:11.337106+00:00",
+  "workspaces": {
+    "A": {
+      "tenant_id": "aa472dce-25ed-48d6-8957-ee7a53b3ac53",
+      "slug": "synthetic-review-a",
+      "email": "synthetic-review-planner-a@example.com",
+      "password": "Synthetic-jJeSG-o-57x3",
+      "skus": {
+        "SYN-A-KURTI": "b3ef9f0b-420d-4e9c-9e8f-b3614d5f5673",
+        "SYN-A-JEANS": "314009f7-5b21-4422-a31a-f86602aa6462",
+        "SYN-A-SCARF": "f38221ee-d63f-4f86-a5fb-4b9a6626961d",
+        "SYN-A-SHAWL": "0a9f577c-4335-4592-8786-d01409213485"
+      },
+      "recommendations": {
+        "expired": "3f35229d-4127-40c7-bb81-0bd9edcafd28",
+        "live": "53659392-59ef-460e-906a-6b2888b12d6c"
+      }
+    },
+    "B": {
+      "tenant_id": "1156435c-4739-4c15-a48d-336866d501ba",
+      "slug": "synthetic-review-b",
+      "email": "synthetic-review-planner-b@example.com",
+      "password": "Synthetic-BhrDz7tvWwth",
+      "skus": {
+        "SYN-B-SAREE": "715fbdc0-9e3b-4f1e-be44-4b4def5012dd"
+      },
+      "recommendations": {
+        "live": "790f6474-6ec9-4507-84f2-e39c69a1cfc4"
+      }
+    }
+  }
+}

@@ -1,0 +1,1809 @@
+{
+  "synthetic_only": true,
+  "calendar": "W-MON-UTC",
+  "seed": 25102026,
+  "validation_cutoffs": [
+    "2026-04-13",
+    "2026-05-11",
+    "2026-06-08",
+    "2026-07-06"
+  ],
+  "test_cutoff": "2026-08-31",
+  "horizon": 8,
+  "models": {
+    "chronos": {
+      "validation": {
+        "points": 160,
+        "wape": 20.959962081349325,
+        "bias_pct": -5.711195749266391,
+        "coverage_p10_p90": 67.5,
+        "skus": 5,
+        "omitted": {},
+        "per_sku": {
+          "GOWN-M": {
+            "points": 32,
+            "wape": 14.212793830438708,
+            "bias_pct": 10.42762022491888,
+            "coverage_p10_p90": 81.25
+          },
+          "GOWN-XL": {
+            "points": 32,
+            "wape": 96.62454796227453,
+            "bias_pct": -96.62454796227453,
+            "coverage_p10_p90": 62.5
+          },
+          "KURTI-M": {
+            "points": 32,
+            "wape": 6.255456374096776,
+            "bias_pct": -0.36324813903084857,
+            "coverage_p10_p90": 78.125
+          },
+          "KURTI-XL": {
+            "points": 32,
+            "wape": 7.842038736063742,
+            "bias_pct": -7.808196315630382,
+            "coverage_p10_p90": 46.875
+          },
+          "LEGGING-M": {
+            "points": 32,
+            "wape": 27.536977424170296,
+            "bias_pct": 20.237444835814156,
+            "coverage_p10_p90": 68.75
+          }
+        }
+      },
+      "folds": [
+        {
+          "cutoff": "2026-04-13",
+          "points": 40,
+          "wape": 11.66218075856577,
+          "bias_pct": -9.82841284407977,
+          "coverage_p10_p90": 62.5,
+          "skus": 5,
+          "omitted": {
+            "PALAZZO-XL": "insufficient_history"
+          },
+          "per_sku": {
+            "GOWN-M": {
+              "points": 8,
+              "wape": 6.044261272136982,
+              "bias_pct": -2.036479803232046,
+              "coverage_p10_p90": 87.5
+            },
+            "GOWN-XL": {
+              "points": 8,
+              "wape": 100.0,
+              "bias_pct": -100.0,
+              "coverage_p10_p90": 62.5
+            },
+            "KURTI-M": {
+              "points": 8,
+              "wape": 5.396127252369466,
+              "bias_pct": -2.067256198034017,
+              "coverage_p10_p90": 75.0
+            },
+            "KURTI-XL": {
+              "points": 8,
+              "wape": 10.405095682104594,
+              "bias_pct": -10.405095682104594,
+              "coverage_p10_p90": 12.5
+            },
+            "LEGGING-M": {
+              "points": 8,
+              "wape": 5.315509572759405,
+              "bias_pct": -2.7935951679676503,
+              "coverage_p10_p90": 75.0
+            }
+          }
+        },
+        {
+          "cutoff": "2026-05-11",
+          "points": 40,
+          "wape": 13.305092621646553,
+          "bias_pct": -10.903684574913514,
+          "coverage_p10_p90": 80.0,
+          "skus": 5,
+          "omitted": {
+            "PALAZZO-XL": "insufficient_history"
+          },
+          "per_sku": {
+            "GOWN-M": {
+              "points": 8,
+              "wape": 7.765360953102649,
+              "bias_pct": 4.656261793324646,
+              "coverage_p10_p90": 100.0
+            },
+            "GOWN-XL": {
+              "points": 8,
+              "wape": 100.0,
+              "bias_pct": -100.0,
+              "coverage_p10_p90": 62.5
+            },
+            "KURTI-M": {
+              "points": 8,
+              "wape": 6.377640718258686,
+              "bias_pct": -2.6514467985733696,
+              "coverage_p10_p90": 75.0
+            },
+            "KURTI-XL": {
+              "points": 8,
+              "wape": 5.440127211833687,
+              "bias_pct": -5.440127211833687,
+              "coverage_p10_p90": 75.0
+            },
+            "LEGGING-M": {
+              "points": 8,
+              "wape": 4.250046317582818,
+              "bias_pct": -1.122695521304482,
+              "coverage_p10_p90": 87.5
+            }
+          }
+        },
+        {
+          "cutoff": "2026-06-08",
+          "points": 40,
+          "wape": 25.263312389684277,
+          "bias_pct": -5.801955350609713,
+          "coverage_p10_p90": 67.5,
+          "skus": 5,
+          "omitted": {
+            "PALAZZO-XL": "insufficient_history"
+          },
+          "per_sku": {
+            "GOWN-M": {
+              "points": 8,
+              "wape": 27.228443439190205,
+              "bias_pct": 27.228443439190205,
+              "coverage_p10_p90": 50.0
+            },
+            "GOWN-XL": {
+              "points": 8,
+              "wape": 91.12582770727013,
+              "bias_pct": -91.12582770727013,
+              "coverage_p10_p90": 50.0
+            },
+            "KURTI-M": {
+              "points": 8,
+              "wape": 6.346917152404785,
+              "bias_pct": -1.9730496406555176,
+              "coverage_p10_p90": 75.0
+            },
+            "KURTI-XL": {
+              "points": 8,
+              "wape": 5.101346194259519,
+              "bias_pct": -4.965288658452228,
+              "coverage_p10_p90": 87.5
+            },
+            "LEGGING-M": {
+              "points": 8,
+              "wape": 36.36858594929514,
+              "bias_pct": 32.58997618786396,
+              "coverage_p10_p90": 75.0
+            }
+          }
+        },
+        {
+          "cutoff": "2026-07-06",
+          "points": 40,
+          "wape": 35.891172109376,
+          "bias_pct": 5.267033210167519,
+          "coverage_p10_p90": 60.0,
+          "skus": 5,
+          "omitted": {
+            "PALAZZO-XL": "insufficient_history"
+          },
+          "per_sku": {
+            "GOWN-M": {
+              "points": 8,
+              "wape": 25.676090934059836,
+              "bias_pct": 25.56198466907848,
+              "coverage_p10_p90": 87.5
+            },
+            "GOWN-XL": {
+              "points": 8,
+              "wape": 100.0,
+              "bias_pct": -100.0,
+              "coverage_p10_p90": 75.0
+            },
+            "KURTI-M": {
+              "points": 8,
+              "wape": 6.931493156834652,
+              "bias_pct": 5.543051267925062,
+              "coverage_p10_p90": 87.5
+            },
+            "KURTI-XL": {
+              "points": 8,
+              "wape": 10.313769012804658,
+              "bias_pct": -10.313769012804658,
+              "coverage_p10_p90": 12.5
+            },
+            "LEGGING-M": {
+              "points": 8,
+              "wape": 102.16139586075492,
+              "bias_pct": 87.77326169221298,
+              "coverage_p10_p90": 37.5
+            }
+          }
+        }
+      ],
+      "test": {
+        "points": 48,
+        "wape": 7.4548518554536605,
+        "bias_pct": -2.790908554133732,
+        "coverage_p10_p90": 75.0,
+        "skus": 6,
+        "omitted": {},
+        "per_sku": {
+          "GOWN-M": {
+            "points": 8,
+            "wape": 7.7338086880319485,
+            "bias_pct": -5.990775813901327,
+            "coverage_p10_p90": 100.0
+          },
+          "GOWN-XL": {
+            "points": 8,
+            "wape": 100.0,
+            "bias_pct": -100.0,
+            "coverage_p10_p90": 100.0
+          },
+          "KURTI-M": {
+            "points": 8,
+            "wape": 7.202518277051972,
+            "bias_pct": -4.956531524658203,
+            "coverage_p10_p90": 62.5
+          },
+          "KURTI-XL": {
+            "points": 8,
+            "wape": 3.124761852865201,
+            "bias_pct": -1.5513722312970677,
+            "coverage_p10_p90": 87.5
+          },
+          "LEGGING-M": {
+            "points": 8,
+            "wape": 7.259674245267768,
+            "bias_pct": 2.14779998710096,
+            "coverage_p10_p90": 62.5
+          },
+          "PALAZZO-XL": {
+            "points": 8,
+            "wape": 11.11111111111111,
+            "bias_pct": -2.1260494656032987,
+            "coverage_p10_p90": 37.5
+          }
+        },
+        "per_cohort": {
+          "intermittent": {
+            "points": 8,
+            "wape": 100.0,
+            "bias_pct": -100.0,
+            "coverage_p10_p90": 100.0
+          },
+          "new_since_validation": {
+            "points": 8,
+            "wape": 11.11111111111111,
+            "bias_pct": -2.1260494656032987,
+            "coverage_p10_p90": 37.5
+          },
+          "regular": {
+            "points": 32,
+            "wape": 5.751902961327712,
+            "bias_pct": -1.5736442119660219,
+            "coverage_p10_p90": 78.125
+          }
+        }
+      },
+      "validation_spread": {
+        "min_wape": 11.66218075856577,
+        "max_wape": 35.891172109376
+      }
+    },
+    "last_value": {
+      "validation": {
+        "points": 160,
+        "wape": 24.894514767932492,
+        "bias_pct": 3.467253714914695,
+        "coverage_p10_p90": null,
+        "skus": 5,
+        "omitted": {},
+        "per_sku": {
+          "GOWN-M": {
+            "points": 32,
+            "wape": 44.680851063829785,
+            "bias_pct": 39.00709219858156,
+            "coverage_p10_p90": null
+          },
+          "GOWN-XL": {
+            "points": 32,
+            "wape": 109.40695296523518,
+            "bias_pct": -19.836400817995912,
+            "coverage_p10_p90": null
+          },
+          "KURTI-M": {
+            "points": 32,
+            "wape": 7.82608695652174,
+            "bias_pct": -0.7114624505928854,
+            "coverage_p10_p90": null
+          },
+          "KURTI-XL": {
+            "points": 32,
+            "wape": 6.673407482305358,
+            "bias_pct": -6.167846309403438,
+            "coverage_p10_p90": null
+          },
+          "LEGGING-M": {
+            "points": 32,
+            "wape": 32.35908141962422,
+            "bias_pct": 21.363952679192764,
+            "coverage_p10_p90": null
+          }
+        }
+      },
+      "folds": [
+        {
+          "cutoff": "2026-04-13",
+          "points": 40,
+          "wape": 16.725476358503883,
+          "bias_pct": -9.103740296400847,
+          "coverage_p10_p90": null,
+          "skus": 5,
+          "omitted": {
+            "PALAZZO-XL": "insufficient_history"
+          },
+          "per_sku": {
+            "GOWN-M": {
+              "points": 8,
+              "wape": 46.15384615384615,
+              "bias_pct": 46.15384615384615,
+              "coverage_p10_p90": null
+            },
+            "GOWN-XL": {
+              "points": 8,
+              "wape": 100.0,
+              "bias_pct": -100.0,
+              "coverage_p10_p90": null
+            },
+            "KURTI-M": {
+              "points": 8,
+              "wape": 5.956112852664576,
+              "bias_pct": -2.19435736677116,
+              "coverage_p10_p90": null
+            },
+            "KURTI-XL": {
+              "points": 8,
+              "wape": 8.71369294605809,
+              "bias_pct": -8.71369294605809,
+              "coverage_p10_p90": null
+            },
+            "LEGGING-M": {
+              "points": 8,
+              "wape": 13.513513513513514,
+              "bias_pct": -13.513513513513514,
+              "coverage_p10_p90": null
+            }
+          }
+        },
+        {
+          "cutoff": "2026-05-11",
+          "points": 40,
+          "wape": 17.68802228412256,
+          "bias_pct": 8.07799442896936,
+          "coverage_p10_p90": null,
+          "skus": 5,
+          "omitted": {
+            "PALAZZO-XL": "insufficient_history"
+          },
+          "per_sku": {
+            "GOWN-M": {
+              "points": 8,
+              "wape": 69.01408450704226,
+              "bias_pct": 69.01408450704226,
+              "coverage_p10_p90": null
+            },
+            "GOWN-XL": {
+              "points": 8,
+              "wape": 100.0,
+              "bias_pct": 13.333333333333334,
+              "coverage_p10_p90": null
+            },
+            "KURTI-M": {
+              "points": 8,
+              "wape": 6.211180124223603,
+              "bias_pct": 1.8633540372670807,
+              "coverage_p10_p90": null
+            },
+            "KURTI-XL": {
+              "points": 8,
+              "wape": 2.880658436213992,
+              "bias_pct": -1.2345679012345678,
+              "coverage_p10_p90": null
+            },
+            "LEGGING-M": {
+              "points": 8,
+              "wape": 11.670480549199084,
+              "bias_pct": 11.670480549199084,
+              "coverage_p10_p90": null
+            }
+          }
+        },
+        {
+          "cutoff": "2026-06-08",
+          "points": 40,
+          "wape": 27.61627906976744,
+          "bias_pct": -8.13953488372093,
+          "coverage_p10_p90": null,
+          "skus": 5,
+          "omitted": {
+            "PALAZZO-XL": "insufficient_history"
+          },
+          "per_sku": {
+            "GOWN-M": {
+              "points": 8,
+              "wape": 38.46153846153847,
+              "bias_pct": 38.46153846153847,
+              "coverage_p10_p90": null
+            },
+            "GOWN-XL": {
+              "points": 8,
+              "wape": 100.0,
+              "bias_pct": -100.0,
+              "coverage_p10_p90": null
+            },
+            "KURTI-M": {
+              "points": 8,
+              "wape": 10.625,
+              "bias_pct": -10.0,
+              "coverage_p10_p90": null
+            },
+            "KURTI-XL": {
+              "points": 8,
+              "wape": 4.471544715447155,
+              "bias_pct": -4.0650406504065035,
+              "coverage_p10_p90": null
+            },
+            "LEGGING-M": {
+              "points": 8,
+              "wape": 36.19631901840491,
+              "bias_pct": 32.515337423312886,
+              "coverage_p10_p90": null
+            }
+          }
+        },
+        {
+          "cutoff": "2026-07-06",
+          "points": 40,
+          "wape": 39.770867430441896,
+          "bias_pct": 25.695581014729953,
+          "coverage_p10_p90": null,
+          "skus": 5,
+          "omitted": {
+            "PALAZZO-XL": "insufficient_history"
+          },
+          "per_sku": {
+            "GOWN-M": {
+              "points": 8,
+              "wape": 16.363636363636363,
+              "bias_pct": -12.727272727272727,
+              "coverage_p10_p90": null
+            },
+            "GOWN-XL": {
+              "points": 8,
+              "wape": 140.0,
+              "bias_pct": 122.60869565217392,
+              "coverage_p10_p90": null
+            },
+            "KURTI-M": {
+              "points": 8,
+              "wape": 8.552631578947368,
+              "bias_pct": 7.894736842105263,
+              "coverage_p10_p90": null
+            },
+            "KURTI-XL": {
+              "points": 8,
+              "wape": 10.424710424710424,
+              "bias_pct": -10.424710424710424,
+              "coverage_p10_p90": null
+            },
+            "LEGGING-M": {
+              "points": 8,
+              "wape": 102.60869565217392,
+              "bias_pct": 91.30434782608695,
+              "coverage_p10_p90": null
+            }
+          }
+        }
+      ],
+      "test": {
+        "points": 48,
+        "wape": 12.360939431396787,
+        "bias_pct": -3.0902348578491967,
+        "coverage_p10_p90": null,
+        "skus": 6,
+        "omitted": {},
+        "per_sku": {
+          "GOWN-M": {
+            "points": 8,
+            "wape": 41.46341463414634,
+            "bias_pct": -41.46341463414634,
+            "coverage_p10_p90": null
+          },
+          "GOWN-XL": {
+            "points": 8,
+            "wape": 100.0,
+            "bias_pct": -100.0,
+            "coverage_p10_p90": null
+          },
+          "KURTI-M": {
+            "points": 8,
+            "wape": 7.317073170731707,
+            "bias_pct": -4.878048780487805,
+            "coverage_p10_p90": null
+          },
+          "KURTI-XL": {
+            "points": 8,
+            "wape": 4.364326375711575,
+            "bias_pct": -4.364326375711575,
+            "coverage_p10_p90": null
+          },
+          "LEGGING-M": {
+            "points": 8,
+            "wape": 14.285714285714285,
+            "bias_pct": 14.285714285714285,
+            "coverage_p10_p90": null
+          },
+          "PALAZZO-XL": {
+            "points": 8,
+            "wape": 11.11111111111111,
+            "bias_pct": -2.2222222222222223,
+            "coverage_p10_p90": null
+          }
+        },
+        "per_cohort": {
+          "intermittent": {
+            "points": 8,
+            "wape": 100.0,
+            "bias_pct": -100.0,
+            "coverage_p10_p90": null
+          },
+          "new_since_validation": {
+            "points": 8,
+            "wape": 11.11111111111111,
+            "bias_pct": -2.2222222222222223,
+            "coverage_p10_p90": null
+          },
+          "regular": {
+            "points": 32,
+            "wape": 11.346018322762509,
+            "bias_pct": -1.9027484143763214,
+            "coverage_p10_p90": null
+          }
+        }
+      },
+      "validation_spread": {
+        "min_wape": 16.725476358503883,
+        "max_wape": 39.770867430441896
+      }
+    },
+    "ma4": {
+      "validation": {
+        "points": 160,
+        "wape": 23.115024766097964,
+        "bias_pct": 4.788112272977435,
+        "coverage_p10_p90": null,
+        "skus": 5,
+        "omitted": {},
+        "per_sku": {
+          "GOWN-M": {
+            "points": 32,
+            "wape": 57.446808510638306,
+            "bias_pct": 55.319148936170215,
+            "coverage_p10_p90": null
+          },
+          "GOWN-XL": {
+            "points": 32,
+            "wape": 99.2842535787321,
+            "bias_pct": -26.789366053169733,
+            "coverage_p10_p90": null
+          },
+          "KURTI-M": {
+            "points": 32,
+            "wape": 7.707509881422925,
+            "bias_pct": 0.3952569169960474,
+            "coverage_p10_p90": null
+          },
+          "KURTI-XL": {
+            "points": 32,
+            "wape": 5.51061678463094,
+            "bias_pct": -4.448938321536906,
+            "coverage_p10_p90": null
+          },
+          "LEGGING-M": {
+            "points": 32,
+            "wape": 28.25330549756437,
+            "bias_pct": 22.19902574808629,
+            "coverage_p10_p90": null
+          }
+        }
+      },
+      "folds": [
+        {
+          "cutoff": "2026-04-13",
+          "points": 40,
+          "wape": 16.125617501764292,
+          "bias_pct": -2.328863796753705,
+          "coverage_p10_p90": null,
+          "skus": 5,
+          "omitted": {
+            "PALAZZO-XL": "insufficient_history"
+          },
+          "per_sku": {
+            "GOWN-M": {
+              "points": 8,
+              "wape": 67.3076923076923,
+              "bias_pct": 67.3076923076923,
+              "coverage_p10_p90": null
+            },
+            "GOWN-XL": {
+              "points": 8,
+              "wape": 111.76470588235294,
+              "bias_pct": -52.94117647058824,
+              "coverage_p10_p90": null
+            },
+            "KURTI-M": {
+              "points": 8,
+              "wape": 8.150470219435736,
+              "bias_pct": -6.583072100313479,
+              "coverage_p10_p90": null
+            },
+            "KURTI-XL": {
+              "points": 8,
+              "wape": 6.639004149377594,
+              "bias_pct": -6.639004149377594,
+              "coverage_p10_p90": null
+            },
+            "LEGGING-M": {
+              "points": 8,
+              "wape": 5.518018018018018,
+              "bias_pct": -3.153153153153153,
+              "coverage_p10_p90": null
+            }
+          }
+        },
+        {
+          "cutoff": "2026-05-11",
+          "points": 40,
+          "wape": 16.504178272980504,
+          "bias_pct": 1.392757660167131,
+          "coverage_p10_p90": null,
+          "skus": 5,
+          "omitted": {
+            "PALAZZO-XL": "insufficient_history"
+          },
+          "per_sku": {
+            "GOWN-M": {
+              "points": 8,
+              "wape": 71.83098591549296,
+              "bias_pct": 71.83098591549296,
+              "coverage_p10_p90": null
+            },
+            "GOWN-XL": {
+              "points": 8,
+              "wape": 100.0,
+              "bias_pct": -28.333333333333332,
+              "coverage_p10_p90": null
+            },
+            "KURTI-M": {
+              "points": 8,
+              "wape": 6.211180124223603,
+              "bias_pct": 1.8633540372670807,
+              "coverage_p10_p90": null
+            },
+            "KURTI-XL": {
+              "points": 8,
+              "wape": 3.909465020576132,
+              "bias_pct": -3.7037037037037033,
+              "coverage_p10_p90": null
+            },
+            "LEGGING-M": {
+              "points": 8,
+              "wape": 6.178489702517163,
+              "bias_pct": 3.4324942791762014,
+              "coverage_p10_p90": null
+            }
+          }
+        },
+        {
+          "cutoff": "2026-06-08",
+          "points": 40,
+          "wape": 25.50872093023256,
+          "bias_pct": 0.14534883720930233,
+          "coverage_p10_p90": null,
+          "skus": 5,
+          "omitted": {
+            "PALAZZO-XL": "insufficient_history"
+          },
+          "per_sku": {
+            "GOWN-M": {
+              "points": 8,
+              "wape": 65.38461538461539,
+              "bias_pct": 65.38461538461539,
+              "coverage_p10_p90": null
+            },
+            "GOWN-XL": {
+              "points": 8,
+              "wape": 86.55913978494624,
+              "bias_pct": -73.11827956989248,
+              "coverage_p10_p90": null
+            },
+            "KURTI-M": {
+              "points": 8,
+              "wape": 6.5625,
+              "bias_pct": -3.125,
+              "coverage_p10_p90": null
+            },
+            "KURTI-XL": {
+              "points": 8,
+              "wape": 3.2520325203252036,
+              "bias_pct": 0.8130081300813009,
+              "coverage_p10_p90": null
+            },
+            "LEGGING-M": {
+              "points": 8,
+              "wape": 36.50306748466258,
+              "bias_pct": 33.74233128834356,
+              "coverage_p10_p90": null
+            }
+          }
+        },
+        {
+          "cutoff": "2026-07-06",
+          "points": 40,
+          "wape": 36.292962356792145,
+          "bias_pct": 22.25859247135843,
+          "coverage_p10_p90": null,
+          "skus": 5,
+          "omitted": {
+            "PALAZZO-XL": "insufficient_history"
+          },
+          "per_sku": {
+            "GOWN-M": {
+              "points": 8,
+              "wape": 12.727272727272727,
+              "bias_pct": 1.8181818181818181,
+              "coverage_p10_p90": null
+            },
+            "GOWN-XL": {
+              "points": 8,
+              "wape": 111.73913043478261,
+              "bias_pct": 65.21739130434783,
+              "coverage_p10_p90": null
+            },
+            "KURTI-M": {
+              "points": 8,
+              "wape": 10.032894736842106,
+              "bias_pct": 9.868421052631579,
+              "coverage_p10_p90": null
+            },
+            "KURTI-XL": {
+              "points": 8,
+              "wape": 8.108108108108109,
+              "bias_pct": -8.108108108108109,
+              "coverage_p10_p90": null
+            },
+            "LEGGING-M": {
+              "points": 8,
+              "wape": 102.39130434782608,
+              "bias_pct": 90.43478260869566,
+              "coverage_p10_p90": null
+            }
+          }
+        }
+      ],
+      "test": {
+        "points": 48,
+        "wape": 23.4548825710754,
+        "bias_pct": -15.698393077873918,
+        "coverage_p10_p90": null,
+        "skus": 6,
+        "omitted": {},
+        "per_sku": {
+          "GOWN-M": {
+            "points": 8,
+            "wape": 49.59349593495935,
+            "bias_pct": -49.59349593495935,
+            "coverage_p10_p90": null
+          },
+          "GOWN-XL": {
+            "points": 8,
+            "wape": 289.4736842105263,
+            "bias_pct": 152.63157894736844,
+            "coverage_p10_p90": null
+          },
+          "KURTI-M": {
+            "points": 8,
+            "wape": 8.99390243902439,
+            "bias_pct": -7.926829268292683,
+            "coverage_p10_p90": null
+          },
+          "KURTI-XL": {
+            "points": 8,
+            "wape": 3.6053130929791273,
+            "bias_pct": 0.18975332068311196,
+            "coverage_p10_p90": null
+          },
+          "LEGGING-M": {
+            "points": 8,
+            "wape": 44.21768707482993,
+            "bias_pct": -44.21768707482993,
+            "coverage_p10_p90": null
+          },
+          "PALAZZO-XL": {
+            "points": 8,
+            "wape": 11.11111111111111,
+            "bias_pct": -1.1111111111111112,
+            "coverage_p10_p90": null
+          }
+        },
+        "per_cohort": {
+          "intermittent": {
+            "points": 8,
+            "wape": 289.4736842105263,
+            "bias_pct": 152.63157894736844,
+            "coverage_p10_p90": null
+          },
+          "new_since_validation": {
+            "points": 8,
+            "wape": 11.11111111111111,
+            "bias_pct": -1.1111111111111112,
+            "coverage_p10_p90": null
+          },
+          "regular": {
+            "points": 32,
+            "wape": 21.458773784355177,
+            "bias_pct": -19.802677942212828,
+            "coverage_p10_p90": null
+          }
+        }
+      },
+      "validation_spread": {
+        "min_wape": 16.125617501764292,
+        "max_wape": 36.292962356792145
+      }
+    },
+    "seasonal_naive52": {
+      "validation": {
+        "points": 160,
+        "wape": 34.08548890111906,
+        "bias_pct": -9.356081452944414,
+        "coverage_p10_p90": null,
+        "skus": 5,
+        "omitted": {},
+        "per_sku": {
+          "GOWN-M": {
+            "points": 32,
+            "wape": 11.347517730496454,
+            "bias_pct": 4.964539007092199,
+            "coverage_p10_p90": null
+          },
+          "GOWN-XL": {
+            "points": 32,
+            "wape": 119.83640081799591,
+            "bias_pct": -45.807770961145195,
+            "coverage_p10_p90": null
+          },
+          "KURTI-M": {
+            "points": 32,
+            "wape": 9.723320158102766,
+            "bias_pct": -1.5019762845849802,
+            "coverage_p10_p90": null
+          },
+          "KURTI-XL": {
+            "points": 32,
+            "wape": 31.90091001011122,
+            "bias_pct": -31.90091001011122,
+            "coverage_p10_p90": null
+          },
+          "LEGGING-M": {
+            "points": 32,
+            "wape": 33.82045929018789,
+            "bias_pct": 24.356297842727905,
+            "coverage_p10_p90": null
+          }
+        }
+      },
+      "folds": [
+        {
+          "cutoff": "2026-04-13",
+          "points": 40,
+          "wape": 24.770642201834864,
+          "bias_pct": -8.6803105151729,
+          "coverage_p10_p90": null,
+          "skus": 5,
+          "omitted": {
+            "PALAZZO-XL": "insufficient_history"
+          },
+          "per_sku": {
+            "GOWN-M": {
+              "points": 8,
+              "wape": 12.5,
+              "bias_pct": 4.807692307692308,
+              "coverage_p10_p90": null
+            },
+            "GOWN-XL": {
+              "points": 8,
+              "wape": 172.05882352941177,
+              "bias_pct": 48.529411764705884,
+              "coverage_p10_p90": null
+            },
+            "KURTI-M": {
+              "points": 8,
+              "wape": 7.523510971786834,
+              "bias_pct": -1.8808777429467085,
+              "coverage_p10_p90": null
+            },
+            "KURTI-XL": {
+              "points": 8,
+              "wape": 31.742738589211616,
+              "bias_pct": -31.742738589211616,
+              "coverage_p10_p90": null
+            },
+            "LEGGING-M": {
+              "points": 8,
+              "wape": 9.90990990990991,
+              "bias_pct": -0.45045045045045046,
+              "coverage_p10_p90": null
+            }
+          }
+        },
+        {
+          "cutoff": "2026-05-11",
+          "points": 40,
+          "wape": 29.03899721448468,
+          "bias_pct": -15.11142061281337,
+          "coverage_p10_p90": null,
+          "skus": 5,
+          "omitted": {
+            "PALAZZO-XL": "insufficient_history"
+          },
+          "per_sku": {
+            "GOWN-M": {
+              "points": 8,
+              "wape": 11.267605633802818,
+              "bias_pct": 5.633802816901409,
+              "coverage_p10_p90": null
+            },
+            "GOWN-XL": {
+              "points": 8,
+              "wape": 148.33333333333334,
+              "bias_pct": -51.66666666666667,
+              "coverage_p10_p90": null
+            },
+            "KURTI-M": {
+              "points": 8,
+              "wape": 9.316770186335404,
+              "bias_pct": -3.1055900621118013,
+              "coverage_p10_p90": null
+            },
+            "KURTI-XL": {
+              "points": 8,
+              "wape": 32.30452674897119,
+              "bias_pct": -32.30452674897119,
+              "coverage_p10_p90": null
+            },
+            "LEGGING-M": {
+              "points": 8,
+              "wape": 10.068649885583524,
+              "bias_pct": 1.8306636155606408,
+              "coverage_p10_p90": null
+            }
+          }
+        },
+        {
+          "cutoff": "2026-06-08",
+          "points": 40,
+          "wape": 40.3343023255814,
+          "bias_pct": -11.700581395348838,
+          "coverage_p10_p90": null,
+          "skus": 5,
+          "omitted": {
+            "PALAZZO-XL": "insufficient_history"
+          },
+          "per_sku": {
+            "GOWN-M": {
+              "points": 8,
+              "wape": 11.538461538461538,
+              "bias_pct": 7.6923076923076925,
+              "coverage_p10_p90": null
+            },
+            "GOWN-XL": {
+              "points": 8,
+              "wape": 110.21505376344085,
+              "bias_pct": -71.50537634408603,
+              "coverage_p10_p90": null
+            },
+            "KURTI-M": {
+              "points": 8,
+              "wape": 13.125,
+              "bias_pct": -1.25,
+              "coverage_p10_p90": null
+            },
+            "KURTI-XL": {
+              "points": 8,
+              "wape": 30.89430894308943,
+              "bias_pct": -30.89430894308943,
+              "coverage_p10_p90": null
+            },
+            "LEGGING-M": {
+              "points": 8,
+              "wape": 46.012269938650306,
+              "bias_pct": 38.036809815950924,
+              "coverage_p10_p90": null
+            }
+          }
+        },
+        {
+          "cutoff": "2026-07-06",
+          "points": 40,
+          "wape": 43.780687397708675,
+          "bias_pct": -0.7364975450081833,
+          "coverage_p10_p90": null,
+          "skus": 5,
+          "omitted": {
+            "PALAZZO-XL": "insufficient_history"
+          },
+          "per_sku": {
+            "GOWN-M": {
+              "points": 8,
+              "wape": 9.090909090909092,
+              "bias_pct": 1.8181818181818181,
+              "coverage_p10_p90": null
+            },
+            "GOWN-XL": {
+              "points": 8,
+              "wape": 74.78260869565217,
+              "bias_pct": -53.91304347826087,
+              "coverage_p10_p90": null
+            },
+            "KURTI-M": {
+              "points": 8,
+              "wape": 8.881578947368421,
+              "bias_pct": 0.3289473684210526,
+              "coverage_p10_p90": null
+            },
+            "KURTI-XL": {
+              "points": 8,
+              "wape": 32.625482625482626,
+              "bias_pct": -32.625482625482626,
+              "coverage_p10_p90": null
+            },
+            "LEGGING-M": {
+              "points": 8,
+              "wape": 107.82608695652173,
+              "bias_pct": 95.65217391304348,
+              "coverage_p10_p90": null
+            }
+          }
+        }
+      ],
+      "test": {
+        "points": 40,
+        "wape": 18.98470097357441,
+        "bias_pct": -9.944367176634215,
+        "coverage_p10_p90": null,
+        "skus": 5,
+        "omitted": {
+          "PALAZZO-XL": "requires_52_weeks"
+        },
+        "per_sku": {
+          "GOWN-M": {
+            "points": 8,
+            "wape": 10.569105691056912,
+            "bias_pct": -8.94308943089431,
+            "coverage_p10_p90": null
+          },
+          "GOWN-XL": {
+            "points": 8,
+            "wape": 294.7368421052631,
+            "bias_pct": 294.7368421052631,
+            "coverage_p10_p90": null
+          },
+          "KURTI-M": {
+            "points": 8,
+            "wape": 7.926829268292683,
+            "bias_pct": -6.707317073170732,
+            "coverage_p10_p90": null
+          },
+          "KURTI-XL": {
+            "points": 8,
+            "wape": 28.842504743833018,
+            "bias_pct": -28.842504743833018,
+            "coverage_p10_p90": null
+          },
+          "LEGGING-M": {
+            "points": 8,
+            "wape": 5.895691609977324,
+            "bias_pct": -3.1746031746031744,
+            "coverage_p10_p90": null
+          }
+        },
+        "per_cohort": {
+          "intermittent": {
+            "points": 8,
+            "wape": 294.7368421052631,
+            "bias_pct": 294.7368421052631,
+            "coverage_p10_p90": null
+          },
+          "new_since_validation": {
+            "points": 0,
+            "wape": null,
+            "bias_pct": null,
+            "coverage_p10_p90": null
+          },
+          "regular": {
+            "points": 32,
+            "wape": 15.29245947850599,
+            "bias_pct": -14.023960535588442,
+            "coverage_p10_p90": null
+          }
+        }
+      },
+      "validation_spread": {
+        "min_wape": 24.770642201834864,
+        "max_wape": 43.780687397708675
+      }
+    },
+    "croston_sba": {
+      "validation": {
+        "points": 160,
+        "wape": 28.548295832720065,
+        "bias_pct": -1.4841711622278713,
+        "coverage_p10_p90": null,
+        "skus": 5,
+        "omitted": {},
+        "per_sku": {
+          "GOWN-M": {
+            "points": 32,
+            "wape": 106.93426590583184,
+            "bias_pct": 106.93426590583184,
+            "coverage_p10_p90": null
+          },
+          "GOWN-XL": {
+            "points": 32,
+            "wape": 97.09555768910245,
+            "bias_pct": -51.69098899375324,
+            "coverage_p10_p90": null
+          },
+          "KURTI-M": {
+            "points": 32,
+            "wape": 7.786827891338451,
+            "bias_pct": -6.099917619913425,
+            "coverage_p10_p90": null
+          },
+          "KURTI-XL": {
+            "points": 32,
+            "wape": 13.972494039702296,
+            "bias_pct": -13.972494039702296,
+            "coverage_p10_p90": null
+          },
+          "LEGGING-M": {
+            "points": 32,
+            "wape": 28.179289767339675,
+            "bias_pct": 15.577733212886747,
+            "coverage_p10_p90": null
+          }
+        }
+      },
+      "folds": [
+        {
+          "cutoff": "2026-04-13",
+          "points": 40,
+          "wape": 21.37570493425205,
+          "bias_pct": -4.986034195680812,
+          "coverage_p10_p90": null,
+          "skus": 5,
+          "omitted": {
+            "PALAZZO-XL": "insufficient_history"
+          },
+          "per_sku": {
+            "GOWN-M": {
+              "points": 8,
+              "wape": 77.43166484797996,
+              "bias_pct": 77.43166484797996,
+              "coverage_p10_p90": null
+            },
+            "GOWN-XL": {
+              "points": 8,
+              "wape": 120.2924198713246,
+              "bias_pct": -18.830320514701608,
+              "coverage_p10_p90": null
+            },
+            "KURTI-M": {
+              "points": 8,
+              "wape": 9.221077127017843,
+              "bias_pct": -8.724285915477695,
+              "coverage_p10_p90": null
+            },
+            "KURTI-XL": {
+              "points": 8,
+              "wape": 15.967855973461182,
+              "bias_pct": -15.967855973461182,
+              "coverage_p10_p90": null
+            },
+            "LEGGING-M": {
+              "points": 8,
+              "wape": 7.699473003757166,
+              "bias_pct": -7.563261302306852,
+              "coverage_p10_p90": null
+            }
+          }
+        },
+        {
+          "cutoff": "2026-05-11",
+          "points": 40,
+          "wape": 22.865307926169496,
+          "bias_pct": -5.989752244454835,
+          "coverage_p10_p90": null,
+          "skus": 5,
+          "omitted": {
+            "PALAZZO-XL": "insufficient_history"
+          },
+          "per_sku": {
+            "GOWN-M": {
+              "points": 8,
+              "wape": 126.15232664652119,
+              "bias_pct": 126.15232664652119,
+              "coverage_p10_p90": null
+            },
+            "GOWN-XL": {
+              "points": 8,
+              "wape": 100.0,
+              "bias_pct": -53.92023855856214,
+              "coverage_p10_p90": null
+            },
+            "KURTI-M": {
+              "points": 8,
+              "wape": 9.035321851765875,
+              "bias_pct": -7.511637492351625,
+              "coverage_p10_p90": null
+            },
+            "KURTI-XL": {
+              "points": 8,
+              "wape": 13.789197462178091,
+              "bias_pct": -13.789197462178091,
+              "coverage_p10_p90": null
+            },
+            "LEGGING-M": {
+              "points": 8,
+              "wape": 5.187284638876955,
+              "bias_pct": -4.501998967407131,
+              "coverage_p10_p90": null
+            }
+          }
+        },
+        {
+          "cutoff": "2026-06-08",
+          "points": 40,
+          "wape": 32.048461178766594,
+          "bias_pct": -2.7669568851627817,
+          "coverage_p10_p90": null,
+          "skus": 5,
+          "omitted": {
+            "PALAZZO-XL": "insufficient_history"
+          },
+          "per_sku": {
+            "GOWN-M": {
+              "points": 8,
+              "wape": 155.89316245014538,
+              "bias_pct": 155.89316245014538,
+              "coverage_p10_p90": null
+            },
+            "GOWN-XL": {
+              "points": 8,
+              "wape": 84.94539332645712,
+              "bias_pct": -69.89078665291423,
+              "coverage_p10_p90": null
+            },
+            "KURTI-M": {
+              "points": 8,
+              "wape": 8.748250133611988,
+              "bias_pct": -7.4965002672239756,
+              "coverage_p10_p90": null
+            },
+            "KURTI-XL": {
+              "points": 8,
+              "wape": 11.36779457946834,
+              "bias_pct": -11.36779457946834,
+              "coverage_p10_p90": null
+            },
+            "LEGGING-M": {
+              "points": 8,
+              "wape": 36.19631901840491,
+              "bias_pct": 27.845841149265627,
+              "coverage_p10_p90": null
+            }
+          }
+        },
+        {
+          "cutoff": "2026-07-06",
+          "points": 40,
+          "wape": 39.602391103403995,
+          "bias_pct": 9.315556748769817,
+          "coverage_p10_p90": null,
+          "skus": 5,
+          "omitted": {
+            "PALAZZO-XL": "insufficient_history"
+          },
+          "per_sku": {
+            "GOWN-M": {
+              "points": 8,
+              "wape": 91.6238218535291,
+              "bias_pct": 91.6238218535291,
+              "coverage_p10_p90": null
+            },
+            "GOWN-XL": {
+              "points": 8,
+              "wape": 100.0,
+              "bias_pct": -39.3592772041402,
+              "coverage_p10_p90": null
+            },
+            "KURTI-M": {
+              "points": 8,
+              "wape": 3.9473684210526314,
+              "bias_pct": -0.3806619213954053,
+              "coverage_p10_p90": null
+            },
+            "KURTI-XL": {
+              "points": 8,
+              "wape": 14.761740794605934,
+              "bias_pct": -14.761740794605934,
+              "coverage_p10_p90": null
+            },
+            "LEGGING-M": {
+              "points": 8,
+              "wape": 100.03578258612916,
+              "bias_pct": 81.0126955619079,
+              "coverage_p10_p90": null
+            }
+          }
+        }
+      ],
+      "test": {
+        "points": 48,
+        "wape": 22.763125083510293,
+        "bias_pct": -13.28222356701499,
+        "coverage_p10_p90": null,
+        "skus": 6,
+        "omitted": {},
+        "per_sku": {
+          "GOWN-M": {
+            "points": 8,
+            "wape": 38.01473450442753,
+            "bias_pct": -38.01473450442753,
+            "coverage_p10_p90": null
+          },
+          "GOWN-XL": {
+            "points": 8,
+            "wape": 425.29606215569345,
+            "bias_pct": 333.72808287425806,
+            "coverage_p10_p90": null
+          },
+          "KURTI-M": {
+            "points": 8,
+            "wape": 10.65084601420256,
+            "bias_pct": -10.13608736853024,
+            "coverage_p10_p90": null
+          },
+          "KURTI-XL": {
+            "points": 8,
+            "wape": 10.71735487066667,
+            "bias_pct": -10.71735487066667,
+            "coverage_p10_p90": null
+          },
+          "LEGGING-M": {
+            "points": 8,
+            "wape": 29.212186877453323,
+            "bias_pct": -29.212186877453323,
+            "coverage_p10_p90": null
+          },
+          "PALAZZO-XL": {
+            "points": 8,
+            "wape": 11.390005209223327,
+            "bias_pct": -7.2244548628911,
+            "coverage_p10_p90": null
+          }
+        },
+        "per_cohort": {
+          "intermittent": {
+            "points": 8,
+            "wape": 425.29606215569345,
+            "bias_pct": 333.72808287425806,
+            "coverage_p10_p90": null
+          },
+          "new_since_validation": {
+            "points": 8,
+            "wape": 11.390005209223327,
+            "bias_pct": -7.2244548628911,
+            "coverage_p10_p90": null
+          },
+          "regular": {
+            "points": 32,
+            "wape": 18.816004416139023,
+            "bias_pct": -18.697018626300743,
+            "coverage_p10_p90": null
+          }
+        }
+      },
+      "validation_spread": {
+        "min_wape": 21.37570493425205,
+        "max_wape": 39.602391103403995
+      }
+    },
+    "adida": {
+      "validation": {
+        "points": 160,
+        "wape": 23.43349844065309,
+        "bias_pct": 3.0299027701339214,
+        "coverage_p10_p90": 62.5,
+        "skus": 5,
+        "omitted": {},
+        "per_sku": {
+          "GOWN-M": {
+            "points": 32,
+            "wape": 67.13475177304964,
+            "bias_pct": 66.354609929078,
+            "coverage_p10_p90": 37.5
+          },
+          "GOWN-XL": {
+            "points": 32,
+            "wape": 96.56850715746423,
+            "bias_pct": -44.93251533742332,
+            "coverage_p10_p90": 3.125
+          },
+          "KURTI-M": {
+            "points": 32,
+            "wape": 6.996047430830039,
+            "bias_pct": -1.0592885375494052,
+            "coverage_p10_p90": 100.0
+          },
+          "KURTI-XL": {
+            "points": 32,
+            "wape": 6.007077856420627,
+            "bias_pct": -5.609706774519716,
+            "coverage_p10_p90": 90.625
+          },
+          "LEGGING-M": {
+            "points": 32,
+            "wape": 28.427279053583852,
+            "bias_pct": 22.416144745998608,
+            "coverage_p10_p90": 81.25
+          }
+        }
+      },
+      "folds": [
+        {
+          "cutoff": "2026-04-13",
+          "points": 40,
+          "wape": 17.08680310515173,
+          "bias_pct": -1.1997177134791854,
+          "coverage_p10_p90": 60.0,
+          "skus": 5,
+          "omitted": {
+            "PALAZZO-XL": "insufficient_history"
+          },
+          "per_sku": {
+            "GOWN-M": {
+              "points": 8,
+              "wape": 71.3076923076923,
+              "bias_pct": 71.3076923076923,
+              "coverage_p10_p90": 12.5
+            },
+            "GOWN-XL": {
+              "points": 8,
+              "wape": 117.91176470588236,
+              "bias_pct": -28.35294117647059,
+              "coverage_p10_p90": 0.0
+            },
+            "KURTI-M": {
+              "points": 8,
+              "wape": 7.648902821316616,
+              "bias_pct": -5.579937304075239,
+              "coverage_p10_p90": 100.0
+            },
+            "KURTI-XL": {
+              "points": 8,
+              "wape": 7.98340248962656,
+              "bias_pct": -7.98340248962656,
+              "coverage_p10_p90": 87.5
+            },
+            "LEGGING-M": {
+              "points": 8,
+              "wape": 5.608108108108109,
+              "bias_pct": -3.5135135135135185,
+              "coverage_p10_p90": 100.0
+            }
+          }
+        },
+        {
+          "cutoff": "2026-05-11",
+          "points": 40,
+          "wape": 17.263231197771585,
+          "bias_pct": -1.0250696378830062,
+          "coverage_p10_p90": 62.5,
+          "skus": 5,
+          "omitted": {
+            "PALAZZO-XL": "insufficient_history"
+          },
+          "per_sku": {
+            "GOWN-M": {
+              "points": 8,
+              "wape": 87.38028169014083,
+              "bias_pct": 87.38028169014083,
+              "coverage_p10_p90": 25.0
+            },
+            "GOWN-XL": {
+              "points": 8,
+              "wape": 100.0,
+              "bias_pct": -54.6,
+              "coverage_p10_p90": 0.0
+            },
+            "KURTI-M": {
+              "points": 8,
+              "wape": 5.7267080745341605,
+              "bias_pct": -0.8944099378881973,
+              "coverage_p10_p90": 100.0
+            },
+            "KURTI-XL": {
+              "points": 8,
+              "wape": 4.415637860082301,
+              "bias_pct": -4.378600823045262,
+              "coverage_p10_p90": 87.5
+            },
+            "LEGGING-M": {
+              "points": 8,
+              "wape": 5.940503432494281,
+              "bias_pct": 2.956521739130438,
+              "coverage_p10_p90": 100.0
+            }
+          }
+        },
+        {
+          "cutoff": "2026-06-08",
+          "points": 40,
+          "wape": 26.26744186046512,
+          "bias_pct": 0.6104651162790723,
+          "coverage_p10_p90": 57.49999999999999,
+          "skus": 5,
+          "omitted": {
+            "PALAZZO-XL": "insufficient_history"
+          },
+          "per_sku": {
+            "GOWN-M": {
+              "points": 8,
+              "wape": 81.38461538461537,
+              "bias_pct": 81.38461538461537,
+              "coverage_p10_p90": 12.5
+            },
+            "GOWN-XL": {
+              "points": 8,
+              "wape": 84.43010752688171,
+              "bias_pct": -68.86021505376343,
+              "coverage_p10_p90": 0.0
+            },
+            "KURTI-M": {
+              "points": 8,
+              "wape": 7.024999999999997,
+              "bias_pct": -4.049999999999994,
+              "coverage_p10_p90": 100.0
+            },
+            "KURTI-XL": {
+              "points": 8,
+              "wape": 3.544715447154471,
+              "bias_pct": -1.9837398373983721,
+              "coverage_p10_p90": 100.0
+            },
+            "LEGGING-M": {
+              "points": 8,
+              "wape": 37.47239263803681,
+              "bias_pct": 35.852760736196316,
+              "coverage_p10_p90": 75.0
+            }
+          }
+        },
+        {
+          "cutoff": "2026-07-06",
+          "points": 40,
+          "wape": 34.85270049099836,
+          "bias_pct": 15.42389525368249,
+          "coverage_p10_p90": 70.0,
+          "skus": 5,
+          "omitted": {
+            "PALAZZO-XL": "insufficient_history"
+          },
+          "per_sku": {
+            "GOWN-M": {
+              "points": 8,
+              "wape": 19.636363636363637,
+              "bias_pct": 15.63636363636364,
+              "coverage_p10_p90": 100.0
+            },
+            "GOWN-XL": {
+              "points": 8,
+              "wape": 100.0,
+              "bias_pct": -5.947826086956525,
+              "coverage_p10_p90": 12.5
+            },
+            "KURTI-M": {
+              "points": 8,
+              "wape": 7.625000000000003,
+              "bias_pct": 6.657894736842109,
+              "coverage_p10_p90": 100.0
+            },
+            "KURTI-XL": {
+              "points": 8,
+              "wape": 8.0,
+              "bias_pct": -8.0,
+              "coverage_p10_p90": 87.5
+            },
+            "LEGGING-M": {
+              "points": 8,
+              "wape": 102.3826086956522,
+              "bias_pct": 90.4,
+              "coverage_p10_p90": 50.0
+            }
+          }
+        }
+      ],
+      "test": {
+        "points": 48,
+        "wape": 23.007416563658836,
+        "bias_pct": -8.533992583436337,
+        "coverage_p10_p90": 56.25,
+        "skus": 6,
+        "omitted": {},
+        "per_sku": {
+          "GOWN-M": {
+            "points": 8,
+            "wape": 49.85365853658536,
+            "bias_pct": -49.85365853658536,
+            "coverage_p10_p90": 25.0
+          },
+          "GOWN-XL": {
+            "points": 8,
+            "wape": 559.4736842105264,
+            "bias_pct": 512.6315789473684,
+            "coverage_p10_p90": 12.5
+          },
+          "KURTI-M": {
+            "points": 8,
+            "wape": 8.365853658536585,
+            "bias_pct": -6.97560975609756,
+            "coverage_p10_p90": 100.0
+          },
+          "KURTI-XL": {
+            "points": 8,
+            "wape": 3.6053130929791273,
+            "bias_pct": -2.2390891840607123,
+            "coverage_p10_p90": 100.0
+          },
+          "LEGGING-M": {
+            "points": 8,
+            "wape": 31.33786848072562,
+            "bias_pct": -31.33786848072562,
+            "coverage_p10_p90": 0.0
+          },
+          "PALAZZO-XL": {
+            "points": 8,
+            "wape": 11.11111111111111,
+            "bias_pct": -0.7111111111111118,
+            "coverage_p10_p90": 100.0
+          }
+        },
+        "per_cohort": {
+          "intermittent": {
+            "points": 8,
+            "wape": 559.4736842105264,
+            "bias_pct": 512.6315789473684,
+            "coverage_p10_p90": 12.5
+          },
+          "new_since_validation": {
+            "points": 8,
+            "wape": 11.11111111111111,
+            "bias_pct": -0.7111111111111118,
+            "coverage_p10_p90": 100.0
+          },
+          "regular": {
+            "points": 32,
+            "wape": 17.333333333333332,
+            "bias_pct": -16.504580690627197,
+            "coverage_p10_p90": 56.25
+          }
+        }
+      },
+      "validation_spread": {
+        "min_wape": 17.08680310515173,
+        "max_wape": 34.85270049099836
+      }
+    }
+  },
+  "cohorts": {
+    "GOWN-M": "regular",
+    "GOWN-XL": "intermittent",
+    "KURTI-M": "regular",
+    "KURTI-XL": "regular",
+    "LEGGING-M": "regular",
+    "PALAZZO-XL": "new_since_validation"
+  },
+  "routing": {
+    "per_sku": {
+      "GOWN-M": "seasonal_naive52",
+      "GOWN-XL": "adida",
+      "KURTI-M": "chronos",
+      "KURTI-XL": "ma4",
+      "LEGGING-M": "chronos"
+    },
+    "rules": {
+      "per_sku": {
+        "GOWN-M": "seasonal_naive52",
+        "GOWN-XL": "adida",
+        "KURTI-M": "chronos",
+        "KURTI-XL": "ma4",
+        "LEGGING-M": "chronos"
+      },
+      "intermittency": {
+        "GOWN-M": "chronos",
+        "GOWN-XL": "adida",
+        "KURTI-M": "chronos",
+        "KURTI-XL": "chronos",
+        "LEGGING-M": "chronos"
+      }
+    },
+    "selected_rule": "per_sku",
+    "validation_rules": {
+      "per_sku": {
+        "points": 160,
+        "wape": 19.960702416394266,
+        "bias_pct": -0.13764459123263342,
+        "coverage_p10_p90": null
+      },
+      "intermittency": {
+        "points": 160,
+        "wape": 20.954934755436238,
+        "bias_pct": -1.0739908412582746,
+        "coverage_p10_p90": 55.625
+      }
+    },
+    "validation": {
+      "points": 160,
+      "wape": 19.960702416394266,
+      "bias_pct": -0.13764459123263342,
+      "coverage_p10_p90": null
+    },
+    "test": {
+      "points": 48,
+      "wape": 13.222461271344955,
+      "bias_pct": 4.745827287030309,
+      "coverage_p10_p90": null
+    },
+    "eligible_for_production": false
+  },
+  "execution": {
+    "device": "cpu",
+    "model": "amazon/chronos-t5-small",
+    "model_revision": "a971ba21945c4f1796b17a91fe69214b5f4ad472",
+    "versions": {
+      "numpy": "2.4.6",
+      "pandas": "2.3.3",
+      "torch": "2.12.1",
+      "chronos-forecasting": "2.3.0",
+      "statsforecast": "2.0.1",
+      "transformers": "5.12.1"
+    },
+    "python": "3.12.10",
+    "censoring": "same training-only preprocessing as production",
+    "num_samples": 100,
+    "context_weeks": 104,
+    "fixtures": {
+      "synthetic-training-sales.csv": "90c3141007e17bbffbb0dd121e6e691d1a5e34ebf7f9d0a7046beb7d64f042a4",
+      "synthetic-heldout-sales.csv": "e890af3bdea35049280c821e6199c495493456832454bbad08c3663c1d70ac7e"
+    }
+  }
+}

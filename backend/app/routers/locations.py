@@ -7,12 +7,12 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 
 from app.core.rbac import require_admin
 from app.models.enums import IndustryCode, LocationKind
-from app.models.location import Location
 from app.models.inventory import InventoryLevel
+from app.models.location import Location
 from app.models.sales import HistoricalSale
 from app.routers.industry_router import ActiveIndustry, TenantId
 from app.services.locations import load_locations, network_readiness, sync_locations
@@ -46,6 +46,7 @@ def _network(locs: list[Location]) -> dict[str, Any]:
 @router.get("")
 async def list_locations(request: Request, tenant_id: TenantId, ctx: ActiveIndustry) -> dict[str, Any]:
     from datetime import UTC, datetime
+
     from app.services.decision_builder import latest_completed_run
     from app.services.planning_inputs import is_run_fresh
 
@@ -71,9 +72,10 @@ async def list_locations(request: Request, tenant_id: TenantId, ctx: ActiveIndus
 
 @router.get("/forecast")
 async def location_forecast(request: Request, tenant_id: TenantId, ctx: ActiveIndustry,
-                            sku_id: uuid.UUID) -> dict[str, Any]:
+                            sku_id: uuid.UUID, run_id: uuid.UUID | None = None) -> dict[str, Any]:
     from datetime import UTC, datetime
 
+    from app.models.forecast import ForecastRun
     from app.services.decision_builder import latest_completed_run
     from app.services.location_forecast import location_bands
     from app.services.planning_inputs import FORECAST_MAX_AGE_DAYS, is_run_fresh
@@ -81,16 +83,30 @@ async def location_forecast(request: Request, tenant_id: TenantId, ctx: ActiveIn
     now = datetime.now(UTC)
     db = request.app.state.db
     async with db.session(str(tenant_id)) as session:
-        run = await latest_completed_run(session, tenant_id, IndustryCode(ctx.code))
-        if run is None or not is_run_fresh(run, now):
+        if run_id is not None:
+            mode = ForecastRun.metrics["mode"].astext
+            run = await session.scalar(select(ForecastRun).where(
+                ForecastRun.id == run_id,
+                ForecastRun.tenant_id == tenant_id,
+                ForecastRun.industry == IndustryCode(ctx.code),
+                ForecastRun.status == "completed",
+                or_(mode.is_(None), mode != "backtest"),
+            ))
+            if run is None:
+                raise HTTPException(status_code=404, detail="Forecast run not found")
+        else:
+            run = await latest_completed_run(session, tenant_id, IndustryCode(ctx.code))
+        if run is None or (run_id is None and not is_run_fresh(run, now)):
             return {"run_id": None, "degraded": False, "unassigned_share": None, "locations": [],
                     "reason": f"No forecast from the last {FORECAST_MAX_AGE_DAYS} days"}
-        bands = await location_bands(session, tenant_id, run.id, now)
+        bands = await location_bands(session, tenant_id, run.id, now,
+                                     sku_id=sku_id, include_past=run_id is not None)
         locs = {l.id: l for l in await load_locations(session, tenant_id)}
     metrics = run.metrics or {}
     rows = [
         {"location_id": str(loc_id), "code": locs[loc_id].code, "name": locs[loc_id].name,
-         "p10": b.p10, "p50": b.p50, "p90": b.p90}
+         "p10": b.p10, "p50": b.p50, "p90": b.p90,
+         "forecast_dates": [d.isoformat() for d in b.forecast_dates]}
         for (sid, loc_id), b in bands.items() if sid == sku_id and loc_id in locs
     ]
     return {"run_id": str(run.id), "degraded": bool(metrics.get("location_degraded")),

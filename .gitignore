@@ -74,3 +74,6 @@ backend_logs_utf8.json
 
 # Decoupled production secrets (do not commit)
 archive/secrets/
+
+# Local provider credential supplied outside source control
+/DeepSeek API Key.txt

@@ -1,5 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { StrictMode } from "react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { PortfolioTotals, SimulationResult } from "@/api/scenarios";
@@ -10,7 +12,9 @@ globalThis.ResizeObserver ??= class {
   disconnect() {}
 } as unknown as typeof ResizeObserver;
 
-const api = vi.hoisted(() => ({ presets: vi.fn(), simulate: vi.fn() }));
+const api = vi.hoisted(() => ({ presets: vi.fn(), simulate: vi.fn(), interpret: vi.fn() }));
+vi.mock("@/api/aiInteractive", () => ({ aiInteractiveApi: { interpret: api.interpret } }));
+vi.mock("@/hooks/useCommunicationPreferences", () => ({ useCommunicationPreferences: () => ({ data: { preferences: { language: "en" } } }) }));
 vi.mock("@/api/scenarios", async (orig) => ({
   ...(await orig<typeof import("@/api/scenarios")>()),
   scenariosApi: api,
@@ -61,6 +65,39 @@ describe("Scenario simulator (deep audit F3, F6, F7, F12)", () => {
   beforeEach(() => {
     api.presets.mockResolvedValue({ presets: [] });
     api.simulate.mockResolvedValue(result());
+  });
+
+  it("requests an optional explanation only when the user runs a reviewed scenario", async () => {
+    api.simulate.mockClear();
+    renderPage();
+    await screen.findByText("Gross margin");
+    expect(api.simulate.mock.calls[0][0].explain_ai).toBeUndefined();
+    await userEvent.click(screen.getByRole("checkbox", { name: "Include an AI explanation of engine results" }));
+    await userEvent.click(screen.getByRole("button", { name: "Run simulation" }));
+    expect(api.simulate.mock.calls.at(-1)?.[0].explain_ai).toBe(true);
+  });
+
+  it("settles the initial simulation and enables reviewed runs under StrictMode", async () => {
+    api.simulate.mockClear();
+    render(<StrictMode><QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+      <MemoryRouter><WhatIfScenarioPage /></MemoryRouter>
+    </QueryClientProvider></StrictMode>);
+    await screen.findByText("Gross margin");
+    expect(screen.getByRole("button", { name: "Run simulation" })).toBeEnabled();
+    expect(api.simulate).toHaveBeenCalledTimes(1);
+  });
+
+  it("applies interpreted demand without retaining an unrelated preset outage", async () => {
+    api.interpret.mockResolvedValue({ state: "success", assumptions: { demand_shock_pct: 20 }, evidence: [{ field: "demand_shock_pct", span: "Demand increases by 20%", value: 20 }], unresolved: [] });
+    renderPage();
+    await screen.findByText("Gross margin");
+    await userEvent.type(screen.getByRole("textbox", { name: "Describe a scenario" }), "Demand increases by 20%");
+    await userEvent.click(screen.getByRole("button", { name: "Interpret assumptions" }));
+    await screen.findByRole("spinbutton", { name: "Demand change (%)" });
+    await userEvent.click(screen.getByRole("button", { name: "Apply reviewed assumptions" }));
+    await userEvent.click(screen.getByRole("button", { name: "Run simulation" }));
+    expect(api.simulate.mock.calls.at(-1)?.[0].demand_shock_pct).toBe(20);
+    expect(api.simulate.mock.calls.at(-1)?.[0].supplier_outage_weeks).toBe(0);
   });
 
   it("withholds margin and spend when unit costs are unknown", async () => {

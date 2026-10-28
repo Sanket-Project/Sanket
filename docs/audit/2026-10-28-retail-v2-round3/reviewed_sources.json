@@ -1,0 +1,46 @@
+[
+  {
+    "file": "backend\\app\\services\\integrations\\v2\\catalog.py",
+    "sha256": "ceea3a44ab0dadf8c66808db98b6cfd307350052ab2a5e6c05dd5911caadbeec"
+  },
+  {
+    "file": "backend\\app\\services\\integrations\\v2\\contracts.py",
+    "sha256": "f589176a5d975844081f02106c40da3bc38b98d9dae4aa6637b0971c72f66673"
+  },
+  {
+    "file": "backend\\app\\services\\integrations\\v2\\event_registry.py",
+    "sha256": "bf8055c3f24a996c4ae5982de5e44b9fa1bcde4216b6a99ee6bd890e9bb205fd"
+  },
+  {
+    "file": "backend\\app\\services\\integrations\\v2\\inventory.py",
+    "sha256": "923e044c695e51dd4c08d1b05a5b4fbaa36f1423079cf157614e6ebe1482b704"
+  },
+  {
+    "file": "backend\\app\\services\\integrations\\v2\\sales_returns.py",
+    "sha256": "70d6c9b97e91ff3f9186244faa3af2ef9556005657ecf4480d1ff9540f86b8f7"
+  },
+  {
+    "file": "backend\\app\\services\\integrations\\v2\\upload.py",
+    "sha256": "668312c34bc7a4bb700c082100e6a6acdb68a0ae27afacf4d10a424338a0a2c0"
+  },
+  {
+    "file": "backend\\app\\services\\integrations\\v2\\valuation.py",
+    "sha256": "05462fd7d27440dfebeb5b7c8d5d71b880c40c1c62d3cd9b98eafa4081b4eb08"
+  },
+  {
+    "file": "backend\\app\\services\\integrations\\v2\\__init__.py",
+    "sha256": "67b379a0820fc0f0c8012bfce7de05429bef52aaf9c9a91834aa3806b50e78f8"
+  },
+  {
+    "file": "frontend\\src\\components\\integrations\\ImportUploader.tsx",
+    "sha256": "87faa9dab0d866f969209643e9a0936c9e0309190401e48b24fa033b6dadec3a"
+  },
+  {
+    "file": "frontend\\src\\api\\integrations.ts",
+    "sha256": "44866134420c74a2211d9b6302e8b89c7124f44e17e86c72dd258a47b4425567"
+  },
+  {
+    "file": "backend\\app\\routers\\integrations_hub.py",
+    "sha256": "82143ce5124b697f15567c3d4c9ef07479fea9eb99b5cd51515fa8efb642f39d"
+  }
+]

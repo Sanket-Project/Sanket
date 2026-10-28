@@ -1,7 +1,9 @@
 import { apiClient } from "@/api/client";
+import type { SummaryResult } from "./ai";
 
 /** Scenario levers. Each one changes a physical parameter, never an output. */
 export interface ScenarioLevers {
+  explain_ai?: boolean;
   name?: string;
   preset?: string | null;
   demand_shock_pct: number;
@@ -98,6 +100,7 @@ export interface SkuComparison {
 }
 
 export interface SimulationResult {
+  ai_explanation?: SummaryResult;
   scenario: Record<string, unknown> & { name: string };
   config: {
     /** Weeks actually simulated — never more than the forecast covers. */

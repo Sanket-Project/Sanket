@@ -1,0 +1,11 @@
+{
+  "revision": "0029",
+  "tenant_rls_role_verified": true,
+  "latest_run_id": "7cfb5584-1560-41a0-8acc-5a7af02e3a30",
+  "completed_at": "2026-10-26T17:43:27.613962+00:00",
+  "refresh_states": {
+    "completed": 2
+  },
+  "location_points": 14736,
+  "location_p50_max_reconciliation_error": 0.0002
+}

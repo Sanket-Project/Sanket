@@ -236,9 +236,11 @@ def _short_reason(rec: Recommendation) -> str:
 def render_text(digest: DailyDigest) -> str:
     """Render the digest as a WhatsApp text body."""
     if digest.is_empty:
+        reason = digest.empty_reason or "No purchase recommendations or open alerts are recorded."
         return (
             f"Good morning, {digest.tenant_name}.\n\n"
-            "Nothing needs your attention today — no stockout risks and no orders due.\n\n"
+            f"{reason}\n"
+            "Review demand and stock coverage in SANKET; an empty queue does not establish that stock is sufficient.\n\n"
             "— SANKET"
         )
 

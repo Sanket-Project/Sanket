@@ -1,0 +1,10 @@
+{
+  "matched_skus_enriched": 4125,
+  "positive_period_totals": 4014,
+  "excluded_nonpositive_totals": 111,
+  "unmatched_stock_skus": 9658,
+  "stock_units_unchanged": "38419.00",
+  "historical_sales_rows": 0,
+  "source_days": 298,
+  "rls_scoped": true
+}

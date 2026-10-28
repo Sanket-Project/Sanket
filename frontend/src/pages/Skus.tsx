@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Search,
   FileSpreadsheet,
@@ -17,15 +17,18 @@ import {
   Filter,
   LayoutGrid,
   List,
+  Trash2,
 } from "@/components/ui/icons";
 import clsx from "clsx";
 import { skusApi } from "@/api/skus";
 import { exportApi } from "@/api/export";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ImportModal } from "@/components/ui/ImportModal";
 import { fmtNumber, fmtRelative } from "@/utils/format";
 import { useFormattedCurrency } from "@/hooks/useFormattedCurrency";
+import { getErrorMessage } from "@/utils/errors";
 
 import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { getProductImage, useProductImagesStore } from "@/stores/productImages";
@@ -88,11 +91,21 @@ function stockHealthLabel(s: Sku): { label: string; tone: "good" | "warn" | "low
 // ─────────────────────────────────────────────────────────────────────────────
 // SKU Card (grid view)
 // ─────────────────────────────────────────────────────────────────────────────
-function SkuCard({ sku, accent, fields, images, onClick }: {
+function SkuCard({
+  sku,
+  accent,
+  fields,
+  images,
+  isSelected,
+  onToggleSelect,
+  onClick,
+}: {
   sku: Sku;
   accent: string;
   fields: typeof INDUSTRY_FIELD_LABELS["fashion"];
   images: Record<string, string>;
+  isSelected: boolean;
+  onToggleSelect: (e: React.MouseEvent) => void;
   onClick: () => void;
 }) {
   const { formatPrice } = useFormattedCurrency();
@@ -106,10 +119,29 @@ function SkuCard({ sku, accent, fields, images, onClick }: {
   return (
     <button
       onClick={onClick}
-      className="w-full overflow-hidden rounded-2xl border border-line bg-surface text-left shadow-sm transition hover:-translate-y-0.5 hover:border-line-strong hover:shadow-md group cursor-pointer"
+      className={clsx(
+        "w-full overflow-hidden rounded-2xl border text-left shadow-sm transition hover:-translate-y-0.5 hover:border-line-strong hover:shadow-md group cursor-pointer relative",
+        isSelected ? "border-violet-500 bg-violet-50/10 ring-2 ring-violet-500/20" : "border-line bg-surface"
+      )}
     >
-      <div className="h-36 overflow-hidden bg-surface-2">
+      <div className="relative h-36 overflow-hidden bg-surface-2">
         <img src={imgUrl} alt={sku.description ?? sku.sku_code} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.025]" />
+        {/* Selection Checkbox */}
+        <div
+          className="absolute top-2.5 right-2.5 z-10 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm p-1 rounded-md shadow"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleSelect(e);
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => {}}
+            className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500 cursor-pointer block"
+            aria-label={`Select ${sku.sku_code}`}
+          />
+        </div>
       </div>
 
       <div className="p-5">
@@ -196,10 +228,19 @@ function SkuCard({ sku, accent, fields, images, onClick }: {
 // ─────────────────────────────────────────────────────────────────────────────
 // SKU Row (list view)
 // ─────────────────────────────────────────────────────────────────────────────
-function SkuRow({ sku, gradient, fields, onClick }: {
+function SkuRow({
+  sku,
+  gradient,
+  fields,
+  isSelected,
+  onToggleSelect,
+  onClick,
+}: {
   sku: Sku;
   gradient: string;
   fields: typeof INDUSTRY_FIELD_LABELS["fashion"];
+  isSelected: boolean;
+  onToggleSelect: (e: React.MouseEvent) => void;
   onClick: () => void;
 }) {
   const { formatPrice } = useFormattedCurrency();
@@ -212,8 +253,30 @@ function SkuRow({ sku, gradient, fields, onClick }: {
   return (
     <button
       onClick={onClick}
-      className="w-full text-left flex items-center gap-4 p-3.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group border border-transparent hover:border-slate-200/60 dark:hover:border-slate-700/40"
+      className={clsx(
+        "w-full text-left flex items-center gap-4 p-3.5 rounded-xl transition-colors group border cursor-pointer",
+        isSelected
+          ? "bg-violet-50/20 border-violet-300 dark:border-violet-700/50"
+          : "border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:border-slate-200/60 dark:hover:border-slate-700/40"
+      )}
     >
+      {/* Checkbox */}
+      <div
+        className="shrink-0 p-1"
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleSelect(e);
+        }}
+      >
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={() => {}}
+          className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500 cursor-pointer block"
+          aria-label={`Select ${sku.sku_code}`}
+        />
+      </div>
+
       {/* Colour dot */}
       <div className="h-8 w-1.5 rounded-full shrink-0" style={{ background: gradient }} />
 
@@ -299,8 +362,19 @@ export const SkusPage = () => {
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [sortKey, setSortKey] = useState<SortKey>("updated_at");
   const [importOpen, setImportOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
+  const [confirmDeleteSelected, setConfirmDeleteSelected] = useState(false);
   const qc = useQueryClient();
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const { data: liveSkus } = useQuery({
     queryKey: ["skus", "list"],
@@ -309,6 +383,36 @@ export const SkusPage = () => {
   });
 
   const skus: Sku[] = useMemo(() => liveSkus || [], [liveSkus]);
+
+  const deleteAllMutation = useMutation({
+    mutationFn: () => skusApi.deleteAll(),
+    onSuccess: (res) => {
+      toast.success(`Deleted all ${res.deleted} SKUs`);
+      setSelectedIds(new Set());
+      setConfirmDeleteAll(false);
+      qc.invalidateQueries({ queryKey: ["skus"] });
+      qc.invalidateQueries({ queryKey: ["inventory"] });
+    },
+    onError: (err: unknown) => {
+      toast.error(getErrorMessage(err, "Failed to delete all SKUs"));
+      setConfirmDeleteAll(false);
+    },
+  });
+
+  const deleteSelectedMutation = useMutation({
+    mutationFn: () => skusApi.deleteMany(Array.from(selectedIds)),
+    onSuccess: (res) => {
+      toast.success(`Deleted ${res.deleted} SKU${res.deleted !== 1 ? "s" : ""}`);
+      setSelectedIds(new Set());
+      setConfirmDeleteSelected(false);
+      qc.invalidateQueries({ queryKey: ["skus"] });
+      qc.invalidateQueries({ queryKey: ["inventory"] });
+    },
+    onError: (err: unknown) => {
+      toast.error(getErrorMessage(err, "Failed to delete selected SKUs"));
+      setConfirmDeleteSelected(false);
+    },
+  });
 
   const filtered = useMemo(() => {
     let list = skus;
@@ -373,6 +477,15 @@ export const SkusPage = () => {
             className="glass border border-slate-200 dark:border-slate-700"
           >
             Import CSV
+          </Button>
+          <Button
+            variant="secondary"
+            icon={<Trash2 size={14} />}
+            onClick={() => setConfirmDeleteAll(true)}
+            disabled={skus.length === 0}
+            className="text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40"
+          >
+            Delete All
           </Button>
         </div>
       </div>
@@ -471,6 +584,44 @@ export const SkusPage = () => {
         </div>
       </div>
 
+      {/* ── Bulk selection bar ── */}
+      {selectedIds.size > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-violet-500/10 border border-violet-500/30 backdrop-blur-md animate-fade-in">
+          <div className="flex items-center gap-2 text-xs font-bold text-violet-700 dark:text-violet-300">
+            <span className="h-2 w-2 rounded-full bg-violet-500 animate-pulse" />
+            <span>
+              {selectedIds.size} of {skus.length} SKU{selectedIds.size !== 1 ? "s" : ""} selected
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => setSelectedIds(new Set())}
+              className="text-xs"
+            >
+              Deselect All
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => setSelectedIds(new Set(filtered.map((s) => s.id)))}
+              className="text-xs"
+            >
+              Select Filtered ({filtered.length})
+            </Button>
+            <Button
+              size="sm"
+              icon={<Trash2 size={13} />}
+              onClick={() => setConfirmDeleteSelected(true)}
+              className="bg-rose-600 hover:bg-rose-700 text-white text-xs"
+            >
+              Delete Selected ({selectedIds.size})
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* ── SKU Grid / List ── */}
       {skus.length === 0 ? (
         <div className="glass rounded-2xl p-16 text-center">
@@ -493,6 +644,8 @@ export const SkusPage = () => {
               accent={accent}
               fields={fields}
               images={images}
+              isSelected={selectedIds.has(sku.id)}
+              onToggleSelect={() => toggleSelect(sku.id)}
               onClick={() => navigate(`/workspace/skus/${sku.id}`)}
             />
           ))}
@@ -501,6 +654,29 @@ export const SkusPage = () => {
         <div className="glass rounded-2xl overflow-hidden">
           {/* List header */}
           <div className="flex items-center gap-4 px-4 py-2.5 border-b border-slate-100 dark:border-slate-700/40 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            <div className="shrink-0 p-1">
+              <input
+                type="checkbox"
+                checked={filtered.length > 0 && filtered.every((s) => selectedIds.has(s.id))}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setSelectedIds((prev) => {
+                      const next = new Set(prev);
+                      filtered.forEach((s) => next.add(s.id));
+                      return next;
+                    });
+                  } else {
+                    setSelectedIds((prev) => {
+                      const next = new Set(prev);
+                      filtered.forEach((s) => next.delete(s.id));
+                      return next;
+                    });
+                  }
+                }}
+                className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500 cursor-pointer block"
+                aria-label="Select all SKUs"
+              />
+            </div>
             <div className="w-1.5 shrink-0" />
             <div className="flex-1">SKU</div>
             <div className="w-20 text-right hidden sm:block">{fields.price}</div>
@@ -518,6 +694,8 @@ export const SkusPage = () => {
                 sku={sku}
                 gradient={gradient}
                 fields={fields}
+                isSelected={selectedIds.has(sku.id)}
+                onToggleSelect={() => toggleSelect(sku.id)}
                 onClick={() => navigate(`/workspace/skus/${sku.id}`)}
               />
             ))}
@@ -555,6 +733,49 @@ export const SkusPage = () => {
           }
           return result;
         }}
+      />
+
+      {/* ── Confirm Delete All Dialog ── */}
+      <ConfirmDialog
+        open={confirmDeleteAll}
+        onClose={() => setConfirmDeleteAll(false)}
+        title="Delete All SKUs"
+        tone="danger"
+        loading={deleteAllMutation.isPending}
+        confirmLabel="Delete All SKUs"
+        message={
+          <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+            <p>
+              Are you sure you want to delete all <strong>{skus.length}</strong> SKUs in the{" "}
+              <strong>{displayName}</strong> catalogue?
+            </p>
+            <p className="text-xs text-rose-600 dark:text-rose-400 font-medium">
+              This action permanently deletes all SKU records and stock positions in this industry. It cannot be undone.
+            </p>
+          </div>
+        }
+        onConfirm={() => deleteAllMutation.mutate()}
+      />
+
+      {/* ── Confirm Delete Selected Dialog ── */}
+      <ConfirmDialog
+        open={confirmDeleteSelected}
+        onClose={() => setConfirmDeleteSelected(false)}
+        title="Delete Selected SKUs"
+        tone="danger"
+        loading={deleteSelectedMutation.isPending}
+        confirmLabel={`Delete ${selectedIds.size} SKU${selectedIds.size !== 1 ? "s" : ""}`}
+        message={
+          <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+            <p>
+              Are you sure you want to delete the <strong>{selectedIds.size}</strong> selected SKUs?
+            </p>
+            <p className="text-xs text-rose-600 dark:text-rose-400 font-medium">
+              This action cannot be undone.
+            </p>
+          </div>
+        }
+        onConfirm={() => deleteSelectedMutation.mutate()}
       />
     </div>
   );

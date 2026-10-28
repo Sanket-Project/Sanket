@@ -11,11 +11,165 @@ from app.core.exceptions import ConflictError, NotFoundError
 from app.core.rbac import require_admin
 from app.models.product import Product, Sku
 from app.routers.industry_router import ActiveIndustry, TenantId, UserId
-from app.schemas.product import ProductCreate, ProductOut, ProductUpdate
+from app.schemas.product import ProductBulkDelete, ProductCreate, ProductOut, ProductUpdate
 from app.services import audit
 
 log = structlog.get_logger(__name__)
 router = APIRouter(prefix="/products", tags=["products"])
+
+
+@router.post("/bulk-delete")
+async def bulk_delete_products(
+    body: ProductBulkDelete,
+    request: Request,
+    ctx: ActiveIndustry,
+    tenant_id: TenantId,
+    user_id: UserId,
+    _rbac: Annotated[None, require_admin],
+) -> dict[str, Any]:
+    from app.models.enums import IndustryCode
+    from app.models.pharma import PharmaBatch
+
+    db = request.app.state.db
+    industry = IndustryCode(ctx.code)
+    pids: list[uuid.UUID] = []
+    for raw in body.product_ids:
+        try:
+            pids.append(uuid.UUID(raw))
+        except ValueError:
+            continue
+
+    if not pids:
+        return {"deleted": 0, "cascaded_skus": 0}
+
+    async with db.session(str(tenant_id)) as session:
+        batch_count = (
+            await session.scalar(
+                select(func.count(PharmaBatch.id))
+                .join(Sku, Sku.id == PharmaBatch.sku_id)
+                .where(
+                    Sku.product_id.in_(pids),
+                    Sku.tenant_id == tenant_id,
+                )
+            )
+            or 0
+        )
+        if batch_count:
+            raise ConflictError(
+                f"Cannot delete products: {batch_count} pharma batch record(s) under their SKUs must be retained (GxP)."
+            )
+
+        products = (
+            await session.scalars(
+                select(Product).where(
+                    Product.id.in_(pids),
+                    Product.tenant_id == tenant_id,
+                    Product.industry == industry,
+                )
+            )
+        ).all()
+
+        if not products:
+            return {"deleted": 0, "cascaded_skus": 0}
+
+        actual_pids = [p.id for p in products]
+        sku_count = (
+            await session.scalar(
+                select(func.count(Sku.id)).where(
+                    Sku.product_id.in_(actual_pids), Sku.tenant_id == tenant_id
+                )
+            )
+            or 0
+        )
+
+        for p in products:
+            await audit.record(
+                session,
+                tenant_id=tenant_id,
+                user_id=user_id,
+                action="product.delete",
+                entity_type="product",
+                entity_id=str(p.id),
+                industry=industry,
+                old_value={"name": p.name, "bulk": True},
+                request_id=getattr(request.state, "request_id", None),
+            )
+            await session.delete(p)
+
+    log.info("products.bulk_deleted", deleted=len(products), cascaded_skus=sku_count)
+    return {"deleted": len(products), "cascaded_skus": sku_count}
+
+
+@router.delete("/all")
+async def delete_all_products(
+    request: Request,
+    ctx: ActiveIndustry,
+    tenant_id: TenantId,
+    user_id: UserId,
+    _rbac: Annotated[None, require_admin],
+) -> dict[str, Any]:
+    """Delete all products and cascading SKUs for the tenant in the active industry."""
+    from app.models.enums import IndustryCode
+    from app.models.pharma import PharmaBatch
+
+    db = request.app.state.db
+    industry = IndustryCode(ctx.code)
+
+    async with db.session(str(tenant_id)) as session:
+        batch_count = (
+            await session.scalar(
+                select(func.count(PharmaBatch.id))
+                .join(Sku, Sku.id == PharmaBatch.sku_id)
+                .where(
+                    Sku.tenant_id == tenant_id,
+                    Sku.industry == industry,
+                )
+            )
+            or 0
+        )
+        if batch_count:
+            raise ConflictError(
+                f"Cannot clear products: {batch_count} pharma batch record(s) in this industry must be retained (GxP)."
+            )
+
+        products = (
+            await session.scalars(
+                select(Product).where(
+                    Product.tenant_id == tenant_id,
+                    Product.industry == industry,
+                )
+            )
+        ).all()
+
+        if not products:
+            return {"deleted": 0, "cascaded_skus": 0}
+
+        actual_pids = [p.id for p in products]
+        sku_count = (
+            await session.scalar(
+                select(func.count(Sku.id)).where(
+                    Sku.product_id.in_(actual_pids), Sku.tenant_id == tenant_id
+                )
+            )
+            or 0
+        )
+
+        for p in products:
+            await audit.record(
+                session,
+                tenant_id=tenant_id,
+                user_id=user_id,
+                action="product.delete",
+                entity_type="product",
+                entity_id=str(p.id),
+                industry=industry,
+                old_value={"name": p.name, "clear_all": True},
+                request_id=getattr(request.state, "request_id", None),
+            )
+            await session.delete(p)
+
+    log.info("products.all_deleted", deleted=len(products), cascaded_skus=sku_count)
+    return {"deleted": len(products), "cascaded_skus": sku_count}
 
 
 @router.get("", response_model=list[ProductOut])
@@ -35,7 +189,7 @@ async def list_products(
         rows = await session.execute(
             select(Product)
             .where(Product.tenant_id == tenant_id, Product.industry == industry)
-            .order_by(Product.created_at.desc())
+            .order_by(Product.created_at.desc(), Product.id.desc())
             .limit(min(limit, 200))
             .offset(offset)
         )

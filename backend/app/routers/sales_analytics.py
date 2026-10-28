@@ -14,23 +14,76 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 import structlog
 from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
-from sqlalchemy import func, select
+from sqlalchemy import and_, case, func, or_, select
 from sqlalchemy import text as sa_text
 
 from app.config import get_settings
 from app.core.cache import get_response_cache
+from app.core.exceptions import ConflictError
+from app.core.rbac import require_admin_db
 from app.models.enums import IndustryCode
 from app.models.product import Product, Sku
 from app.models.sales import HistoricalSale
-from app.routers.industry_router import ActiveIndustry, TenantId
+from app.models.tenant import Tenant
+from app.routers.industry_router import ActiveIndustry, TenantId, UserId
 
 log = structlog.get_logger(__name__)
 router = APIRouter(prefix="/analytics/sales", tags=["sales-analytics"])
+
+
+@router.delete("/all")
+async def clear_sales(request: Request, ctx: ActiveIndustry, tenant_id: TenantId,
+                      user_id: UserId, _rbac: Annotated[None, require_admin_db]) -> dict[str, Any]:
+    """Permanently clear the active industry's sales and related import identities."""
+    async with request.app.state.db.session(str(tenant_id)) as session:
+        params = {"tenant": tenant_id, "industry": ctx.code}
+        # V2 events lack an industry field; a unique SKU match is required to scope them.
+        ambiguous = await session.scalar(sa_text("""
+            SELECT count(*) FROM v2_sales_events e WHERE e.tenant_id=:tenant
+              AND (SELECT count(*) FROM skus s WHERE s.tenant_id=e.tenant_id
+                   AND lower(s.sku_code)=lower(e.sku_code)) <> 1
+        """), params)
+        unlinked_returns = await session.scalar(sa_text("""SELECT count(*) FROM v2_return_events
+            WHERE tenant_id=:tenant AND sale_event_id IS NULL"""), params)
+        if ambiguous or unlinked_returns:
+            raise ConflictError("Some imported sales cannot be matched uniquely to an industry; sales were not deleted.")
+        ids = (await session.execute(sa_text("""
+            SELECT e.id FROM v2_sales_events e JOIN skus s ON s.tenant_id=e.tenant_id
+              AND lower(s.sku_code)=lower(e.sku_code)
+            WHERE e.tenant_id=:tenant AND s.industry=CAST(:industry AS industry_code)
+        """), params)).scalars().all()
+        if ids:
+            params["ids"] = ids
+            await session.execute(sa_text("""DELETE FROM event_identity_registry WHERE tenant_id=:tenant AND entity_kind='return'
+                AND target_id IN (SELECT id FROM v2_return_events WHERE tenant_id=:tenant AND sale_event_id=ANY(:ids))"""), params)
+            await session.execute(sa_text("DELETE FROM v2_return_events WHERE tenant_id=:tenant AND sale_event_id=ANY(:ids)"), params)
+            await session.execute(sa_text("DELETE FROM event_identity_registry WHERE tenant_id=:tenant AND entity_kind='sale' AND target_id=ANY(:ids)"), params)
+            await session.execute(sa_text("DELETE FROM v2_sales_events WHERE tenant_id=:tenant AND id=ANY(:ids)"), params)
+        deleted = await session.scalar(sa_text("SELECT sanket_clear_sales(CAST(:industry AS industry_code))"), params)
+        tenant = await session.scalar(select(Tenant).where(Tenant.id == tenant_id).with_for_update())
+        settings = dict(tenant.settings or {})
+        if isinstance(settings.get("client_reports"), dict) and settings["client_reports"].get("industry") == ctx.code:
+            del settings["client_reports"]
+            tenant.settings = settings
+    await get_response_cache(request).invalidate_tenant(tenant_id)
+    log.info("sales.all_deleted", tenant=str(tenant_id), industry=ctx.code, user=str(user_id), deleted=deleted)
+    return {"deleted": deleted, "industry": ctx.code}
+
+
+@router.get("/client-reports")
+async def client_reports(request: Request, ctx: ActiveIndustry, tenant_id: TenantId) -> dict[str, Any]:
+    """Return imported aggregate reports without treating them as SKU transactions."""
+    async with request.app.state.db.session(str(tenant_id)) as session:
+        settings = await session.scalar(select(Tenant.settings).where(Tenant.id == tenant_id))
+    report = (settings or {}).get("client_reports")
+    if not isinstance(report, dict) or report.get("industry") != ctx.code:
+        return {"status": "unavailable", "report": None}
+    return {"status": "available", "report": report}
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -68,6 +121,16 @@ def _period_bounds(now: datetime, period: str) -> tuple[datetime, datetime]:
 #: Revenue is denominated in the SKU's currency (sales rows carry none of
 #: their own). Orphaned sales with no SKU have no known currency.
 _SKU_CURRENCY = func.coalesce(Sku.currency, "unknown").label("currency")
+
+# V2 identifies return events explicitly. Legacy uploads represent standalone
+# returns with zero sold units, returned units and a negative gross amount.
+# Do not exclude aggregate sales rows merely because they also report returns.
+_RETURN_EVENT = or_(
+    func.coalesce(HistoricalSale.metadata_["event_kind"].astext, "sale") == "return",
+    and_(HistoricalSale.units_sold == 0, HistoricalSale.returns > 0,
+         HistoricalSale.gross_revenue < 0),
+)
+_GROSS_BEFORE_RETURNS = case((_RETURN_EVENT, 0), else_=HistoricalSale.gross_revenue)
 
 
 def _money(rows: list[Any]) -> dict[str, Any]:
@@ -131,10 +194,12 @@ async def sales_summary(
                 select(
                     _SKU_CURRENCY,
                     func.coalesce(func.sum(HistoricalSale.units_sold), 0).label("units"),
-                    func.coalesce(func.sum(HistoricalSale.gross_revenue), 0).label("gross"),
+                    func.coalesce(func.sum(_GROSS_BEFORE_RETURNS), 0).label("gross"),
                     func.coalesce(func.sum(HistoricalSale.net_revenue), 0).label("net"),
                     func.coalesce(func.sum(HistoricalSale.returns), 0).label("returns"),
-                    func.count().label("transactions"),
+                    func.count().filter(
+                        ~func.coalesce(_RETURN_EVENT, False)
+                    ).label("transactions"),
                 )
                 .select_from(HistoricalSale)
                 .outerjoin(Sku, Sku.id == HistoricalSale.sku_id)
@@ -249,7 +314,7 @@ async def sales_timeseries(
                         bucket.label("bucket"),
                         _SKU_CURRENCY,
                         func.coalesce(func.sum(HistoricalSale.units_sold), 0).label("units"),
-                        func.coalesce(func.sum(HistoricalSale.gross_revenue), 0).label("gross"),
+                        func.coalesce(func.sum(_GROSS_BEFORE_RETURNS), 0).label("gross"),
                         func.coalesce(func.sum(HistoricalSale.net_revenue), 0).label("net"),
                     )
                     .select_from(HistoricalSale)
@@ -334,6 +399,82 @@ async def sales_timeseries(
 # ── top products ─────────────────────────────────────────────────────────────
 
 
+@router.get("/branches")
+async def branch_sales(
+    request: Request,
+    ctx: ActiveIndustry,
+    tenant_id: TenantId,
+    lookback_days: int = 365,
+    granularity: Literal["day", "week", "month"] = "day",
+) -> dict[str, Any]:
+    """Compare explicit sale locations; never infer branches from regions."""
+    lookback_days = max(1, min(lookback_days, 730))
+    now = datetime.now(UTC)
+    start = _trunc_start(now - timedelta(days=lookback_days), granularity)
+    location = func.nullif(func.trim(HistoricalSale.location), "")
+
+    async def _compute() -> dict[str, Any]:
+        async with request.app.state.db.session(str(tenant_id)) as session:
+            rows = (await session.execute(
+                select(
+                    location.label("name"), _SKU_CURRENCY,
+                    func.sum(HistoricalSale.units_sold).label("units"),
+                    func.sum(_GROSS_BEFORE_RETURNS).label("gross"),
+                    func.sum(HistoricalSale.net_revenue).label("net"),
+                    func.count(_GROSS_BEFORE_RETURNS).label("gross_count"),
+                    func.count().label("records"),
+                )
+                .select_from(HistoricalSale)
+                .outerjoin(Sku, (Sku.id == HistoricalSale.sku_id) & (Sku.tenant_id == tenant_id))
+                .where(
+                    HistoricalSale.tenant_id == tenant_id,
+                    HistoricalSale.industry == IndustryCode(ctx.code),
+                    HistoricalSale.sale_time >= start,
+                    HistoricalSale.sale_time < now,
+                )
+                .group_by(location, _SKU_CURRENCY)
+            )).all()
+        grouped: dict[str, list[Any]] = {}
+        unassigned = 0
+        for row in rows:
+            if row.name is None:
+                unassigned += row.records
+            else:
+                grouped.setdefault(row.name, []).append(row)
+
+        def _branch(name: str, group: list[Any]) -> dict[str, Any]:
+            # NULL amounts are unavailable, not zero. Do not present a partial
+            # currency total as the full branch revenue either.
+            gross = {row.currency: float(row.gross) for row in group
+                     if row.gross_count == row.records}
+            currencies = {row.currency for row in group}
+            complete = all(row.gross_count == row.records for row in group)
+            if not complete:
+                gross = {}
+            return {
+                "name": name,
+                "units_sold": int(sum(row.units or 0 for row in group)),
+                "currency": next(iter(currencies)) if len(currencies) == 1 else None,
+                "gross_revenue": sum(gross.values()) if complete and len(currencies) == 1 else None,
+                "revenue_by_currency": gross,
+            }
+
+        return {
+            "industry": ctx.code,
+            "period_start": start.isoformat(),
+            "as_of": now.isoformat(),
+            "lookback_days": lookback_days,
+            "unassigned_records": unassigned,
+            "branches": [_branch(name, group) for name, group in sorted(grouped.items())],
+        }
+
+    return await get_response_cache(request).get_or_set(
+        tenant_id=tenant_id, name="sales:branches",
+        params={"industry": ctx.code, "lookback_days": lookback_days, "granularity": granularity},
+        ttl_s=get_settings().api_cache_ttl_s, producer=_compute,
+    )
+
+
 @router.get("/top-products")
 async def top_products(
     request: Request,
@@ -363,7 +504,7 @@ async def top_products(
                     select(
                         HistoricalSale.sku_id,
                         func.sum(HistoricalSale.units_sold).label("units"),
-                        func.coalesce(func.sum(HistoricalSale.gross_revenue), 0).label("gross"),
+                        func.coalesce(func.sum(_GROSS_BEFORE_RETURNS), 0).label("gross"),
                         func.sum(HistoricalSale.returns).label("returns"),
                     )
                     .where(*filters)

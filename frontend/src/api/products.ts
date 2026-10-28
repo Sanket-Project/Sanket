@@ -1,4 +1,5 @@
 import { apiClient } from "@/api/client";
+import { cataloguePages } from "@/api/cataloguePagination";
 import type { Product } from "@/types/api";
 import type { ParsedRow } from "@/utils/csvImport";
 
@@ -22,6 +23,7 @@ export interface BulkImportResult {
 const BATCH_SIZE = 20;
 
 export const productsApi = {
+  listAll: (): Promise<Product[]> => cataloguePages((limit, offset) => productsApi.list(limit, offset)),
   list: (limit = 50, offset = 0) =>
     apiClient
       .get<Product[]>("/products", { params: { limit, offset } })
@@ -35,6 +37,14 @@ export const productsApi = {
   remove: (id: string) =>
     apiClient
       .delete<{ deleted: boolean; id: string; cascaded_skus: number }>(`/products/${id}`)
+      .then((r) => r.data),
+  deleteMany: (ids: string[]) =>
+    apiClient
+      .post<{ deleted: number; cascaded_skus: number }>("/products/bulk-delete", { product_ids: ids })
+      .then((r) => r.data),
+  deleteAll: () =>
+    apiClient
+      .delete<{ deleted: number; cascaded_skus: number }>("/products/all")
       .then((r) => r.data),
 
   bulkCreate: async (

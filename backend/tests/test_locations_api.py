@@ -143,3 +143,96 @@ async def test_location_forecast_p50_reconciles(client, signed_in_workspace, db_
     rows = response.json()['locations']
     assert len(rows) == 2
     assert sum(r['p50'][0] for r in rows) == 40
+
+
+async def _saved_location_run(db, tenant, *, value=10, age_days=0, mode="zero_shot",
+                              industry="fashion", status="completed"):
+    import json
+    from datetime import UTC, datetime, timedelta
+    from app.core.calendar import current_week_start
+
+    pid, sku, run, loc = (uuid.uuid4() for _ in range(4))
+    now = datetime.now(UTC)
+    forecast_date = current_week_start(now - timedelta(days=age_days))
+    await db.execute(text("INSERT INTO products (id, tenant_id, industry, name, category, status) "
+        "VALUES (:p, :t, CAST(:i AS industry_code), 'K', 'Kurtis', 'active')"),
+        {"p": str(pid), "t": str(tenant), "i": industry})
+    await db.execute(text("INSERT INTO skus (id, tenant_id, product_id, industry, sku_code) "
+        "VALUES (:s, :t, :p, CAST(:i AS industry_code), :code)"),
+        {"s": str(sku), "t": str(tenant), "p": str(pid), "i": industry, "code": f"SKU-{sku}"})
+    await db.execute(text("INSERT INTO forecast_runs (id, tenant_id, industry, model_stack, "
+        "horizon_weeks, granularity, status, completed_at, metrics) VALUES (:r, :t, "
+        "CAST(:i AS industry_code), ARRAY['test'], 4, 'weekly', :status, :n, CAST(:m AS jsonb))"),
+        {"r": str(run), "t": str(tenant), "i": industry, "status": status,
+         "n": now - timedelta(days=age_days), "m": json.dumps({"mode": mode})})
+    await db.execute(text("INSERT INTO locations (id, tenant_id, code, name) VALUES (:l, :t, :c, 'Store')"),
+        {"l": str(loc), "t": str(tenant), "c": f"store-{loc}"})
+    await db.execute(text("INSERT INTO location_forecast_results (tenant_id, run_id, sku_id, "
+        "location_id, forecast_date, p10, p50, p90, share, share_basis, method) "
+        "VALUES (:t, :r, :s, :l, :d, :v, :v, :v, 1, 'sku_history', 'share_split_v1')"),
+        {"t": str(tenant), "r": str(run), "s": str(sku), "l": str(loc),
+         "d": forecast_date, "v": value})
+    return run, sku, forecast_date
+
+
+async def test_location_forecast_pins_saved_run_and_retains_its_actual_dates(
+    client, signed_in_workspace, db_session,
+):
+    tenant, headers = await signed_in_workspace()
+    run, sku, forecast_date = await _saved_location_run(db_session, tenant, value=17, age_days=60)
+    await _saved_location_run(db_session, tenant, value=99)
+    await db_session.commit()
+    response = await client.get('/api/v1/locations/forecast', headers=headers,
+                                params={"sku_id": str(sku), "run_id": str(run)})
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["run_id"] == str(run)
+    assert body["locations"][0]["p50"] == [17]
+    assert body["locations"][0]["forecast_dates"] == [forecast_date.isoformat()]
+
+
+@pytest.mark.parametrize("invalid_kind", ["foreign_tenant", "foreign_industry", "backtest", "pending", "missing"])
+async def test_location_forecast_rejects_invalid_pinned_run(
+    client, signed_in_workspace, db_session, invalid_kind,
+):
+    tenant, headers = await signed_in_workspace()
+    kwargs = {}
+    if invalid_kind == "foreign_tenant":
+        tenant, _ = await signed_in_workspace()
+    elif invalid_kind == "foreign_industry":
+        kwargs["industry"] = "pharma"
+    elif invalid_kind == "backtest":
+        kwargs["mode"] = "backtest"
+    elif invalid_kind == "pending":
+        kwargs["status"] = "pending"
+    run, sku, _ = await _saved_location_run(db_session, tenant, **kwargs)
+    await db_session.commit()
+    if invalid_kind == "missing":
+        run = uuid.uuid4()
+    response = await client.get('/api/v1/locations/forecast', headers=headers,
+                                params={"sku_id": str(sku), "run_id": str(run)})
+    assert response.status_code == 404, response.text
+
+
+async def test_location_bands_limits_selected_sku_in_sql(
+    db_session, app_role_db, make_tenant, monkeypatch,
+):
+    from datetime import UTC, datetime
+    from app.services.location_forecast import location_bands
+
+    tenant = await make_tenant()
+    run, sku, _ = await _saved_location_run(db_session, tenant)
+    await db_session.commit()
+    statements = []
+    async with app_role_db.session(str(tenant)) as session:
+        original_execute = session.execute
+
+        async def capture(statement, *args, **kwargs):
+            statements.append(str(statement))
+            return await original_execute(statement, *args, **kwargs)
+
+        monkeypatch.setattr(session, "execute", capture)
+        bands = await location_bands(session, tenant, run, datetime.now(UTC), sku_id=sku)
+    assert len(bands) == 1
+    assert all(sid == sku for sid, _ in bands)
+    assert "location_forecast_results.sku_id =" in statements[-1]

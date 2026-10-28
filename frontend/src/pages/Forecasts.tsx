@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Play,
   Download,
@@ -36,19 +36,23 @@ import {
   ReferenceLine,
 } from "recharts";
 import { format, parseISO } from "date-fns";
-import { forecastsApi } from "@/api/forecasts";
-import { decisionsApi } from "@/api/decisions";
 import { exportApi } from "@/api/export";
-import { skusApi } from "@/api/skus";
+import { forecastsApi } from "@/api/forecasts";
 import { locationsApi } from "@/api/locations";
 import { Button } from "@/components/ui/Button";
 import { ForecastConfidencePanel } from "@/components/charts/ForecastConfidencePanel";
 import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { getErrorMessage } from "@/utils/errors";
-import { SKUS_PER_PAGE, buildIndicativePlan, describeSource, omissionReason } from "@/utils/forecastPresentation";
+import { usePersistedForecast } from "@/hooks/usePersistedForecast";
+import { ForecastRunStatus } from "@/components/charts/ForecastRunStatus";
+import { SKUS_PER_PAGE, describeSource, omissionReason } from "@/utils/forecastPresentation";
 import { industryAccent, industryDisplay, industryGradient } from "@/utils/colors";
 import { fmtCompact, fmtNumber } from "@/utils/format";
-import type { ForecastResponse, ForecastRow, IndustryCode } from "@/types/api";
+import type { ForecastRow, IndustryCode } from "@/types/api";
+import { periodProjectionApi } from "@/api/periodProjection";
+import { AverageSalesProjection } from "@/components/charts/AverageSalesProjection";
+import { PageLoader } from "@/components/ui/Spinner";
+import { useAuthStore } from "@/stores/auth";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Industry config
@@ -443,7 +447,7 @@ const SKU_LABELS: Record<string, string> = {
 function LocationForecastView({ skuId, runId }: { skuId: string; runId: string | undefined }) {
   const [location, setLocation] = useState("");
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["location-forecast", skuId, runId], queryFn: () => locationsApi.forecast(skuId),
+    queryKey: ["location-forecast", skuId, runId], queryFn: () => locationsApi.forecast(skuId, runId),
   });
   if (isLoading) return <p>Loading location forecast…</p>;
   if (isError) return <p role="alert">Location forecast could not be loaded.</p>;
@@ -457,17 +461,39 @@ function LocationForecastView({ skuId, runId }: { skuId: string; runId: string |
       Location split incomplete: {data.unassigned_share == null ? "Unknown" : Math.round(data.unassigned_share * 100)}% of sales have no location
     </p>}
     {!data.locations.length ? <p>{data.reason}</p> : <div className="overflow-x-auto"><table className="w-full text-left text-sm">
+      <caption className="sr-only">Expected units per location and forecast week. Exact values include the uncertainty range.</caption>
       <thead><tr><th className="p-2">Location</th>{Array.from({ length: Math.max(...data.locations.map((l) => l.p50.length)) }, (_, i) =>
-        <th key={i} className="p-2">Week {i + 1}</th>)}</tr></thead>
+        <th key={i} className="p-2">{data.locations[0]?.forecast_dates?.[i] ? format(parseISO(data.locations[0].forecast_dates[i]), "d MMM yyyy") : `Week ${i + 1}`}</th>)}</tr></thead>
       <tbody>{data.locations.filter((loc) => !location || loc.code === location).map((loc) => <tr key={loc.location_id} className="border-t border-line">
         <th scope="row" className="p-2">{loc.name}</th>{loc.p50.map((p50, i) =>
-          <td key={i} className="p-2 tabular-nums" title={`P10 ${loc.p10[i]} – P90 ${loc.p90[i]}`}>{p50.toLocaleString()}</td>)}
+          <td key={i} className="p-2 tabular-nums" title={`P10 ${loc.p10[i]} – P90 ${loc.p90[i]}`}><span aria-label={`${p50.toLocaleString()} expected units; uncertainty range ${loc.p10[i].toLocaleString()} to ${loc.p90[i].toLocaleString()} units`}>{p50.toLocaleString()} units</span><span className="sr-only">, range {loc.p10[i].toLocaleString()} to {loc.p90[i].toLocaleString()} units</span></td>)}
       </tr>)}</tbody>
     </table></div>}
   </div>;
 }
 
 export const ForecastsPage = () => {
+  const industry = useWorkspaceIndustry();
+  const tenant = useAuthStore(s => s.tenantId);
+  return <ForecastMethods key={`${tenant}:${industry}`} />;
+};
+
+function ForecastMethods() {
+  const industry = useWorkspaceIndustry();
+  const tenant = useAuthStore(s => s.tenantId);
+  const [method, setMethod] = useState<"average" | "model" | null>(null);
+  const query = useQuery({ queryKey: ["average-sales", tenant, industry, "availability"],
+    queryFn: () => periodProjectionApi.get({ limit: 1 }), retry: false });
+  if (query.isLoading) return <PageLoader />;
+  if (query.isError && method !== "model") return <div role="alert" className="space-y-4 rounded-xl border border-line p-5 text-content"><p>Forecast methods could not be loaded.</p><Button onClick={() => void query.refetch()}>Retry methods</Button><Button variant="secondary" onClick={() => setMethod("model")}>Open Chronos model</Button></div>;
+  if (query.data?.status !== "available") return <ChronosForecastPage />;
+  return <div className="space-y-5"><div className="flex flex-wrap gap-2" aria-label="Forecast method">
+    <Button variant={method !== "model" ? "primary" : "secondary"} aria-pressed={method !== "model"} onClick={() => setMethod("average")}>Average-sales projection</Button>
+    <Button variant={method === "model" ? "primary" : "secondary"} aria-pressed={method === "model"} onClick={() => setMethod("model")}>Chronos model</Button>
+  </div>{method === "model" ? <ChronosForecastPage /> : <AverageSalesProjection />}</div>;
+}
+
+const ChronosForecastPage = () => {
   const industry = useWorkspaceIndustry();
   const accent = industryAccent[industry];
   const gradient = industryGradient[industry];
@@ -477,63 +503,45 @@ export const ForecastsPage = () => {
   const defaultHorizon = presets.find((p) => p.recommended)?.weeks ?? presets[1].weeks;
 
   const [horizon, setHorizon] = useState(defaultHorizon);
-  const [result, setResult] = useState<ForecastResponse | null>(null);
   const [page, setPage] = useState(0);
+  const [search, setSearch] = useState("");
   const [locationSku, setLocationSku] = useState("");
-
-  // Fetch SKUs for mapping ID to code and name/description
-  const { data: skus = [] } = useQuery({
-    queryKey: ["skus"],
-    queryFn: () => skusApi.list({ limit: 1000 }),
+  const [locationSearch, setLocationSearch] = useState("");
+  const [pageRun, setPageRun] = useState<string | undefined>();
+  const run = usePersistedForecast({ horizon, offset: page * SKUS_PER_PAGE, search, runId: page ? pageRun : undefined });
+  const locationCatalog = useQuery({
+    queryKey: ["forecast-location-skus", industry, locationSearch],
+    queryFn: () => forecastsApi.latest({ view: "skus", limit: 100, search: locationSearch }),
+    retry: false,
   });
-
-  const { data: decisionData } = useQuery({
-    queryKey: ["decisions", industry, "open", "forecast-fallback"],
-    queryFn: () => decisionsApi.list({ status: "open", limit: 20 }),
-    staleTime: 60_000,
-  });
-
-  const skuLookup = useMemo(() => {
-    const map = new Map<string, { code: string; name: string }>();
-    skus.forEach((s) => {
-      map.set(s.id, {
-        code: s.sku_code,
-        name: s.description || s.sku_code,
-      });
-    });
-    return map;
-  }, [skus]);
-
-  const run = useMutation({
-    mutationFn: () =>
-      forecastsApi.generate({ horizon, force_zero_shot: true }),
-    onSuccess: (r) => {
-      setResult(r);
-      setPage(0);
-    },
-    onError: () => {
-      setResult(null);
-      setPage(0);
-    },
-  });
-
-  // Auto-generate forecast on mount and when industry/horizon changes.
-  // `mutate` is a stable callback, so this still runs only on those changes.
-  const generate = run.mutate;
-  useEffect(() => {
-    generate();
-  }, [industry, horizon, generate]);
-
-  // Only when the live service failed: a flat, labelled plan from decision inputs.
-  const indicativeResult = useMemo(
-    () => (run.isError ? buildIndicativePlan(decisionData?.decisions ?? [], horizon) : null),
-    [run.isError, decisionData?.decisions, horizon],
-  );
-  const currentResult = result?.rows.length ? result : indicativeResult;
-  const isIndicative = currentResult?.source === "indicative";
-  const source = describeSource(currentResult?.source);
-  const runError = run.isError ? getErrorMessage(run.error, "The forecast could not be generated.") : null;
+  const result = run.data;
+  const currentResult = result;
+  const source = describeSource(result?.source);
+  const runError = run.isError ? getErrorMessage(run.error, "Saved forecast could not be loaded.") : null;
   const omitted = result?.omitted ?? [];
+  const skuLookup = useMemo(() => new Map(Object.entries(result?.sku_labels ?? {})), [result?.sku_labels]);
+  const locationSkuLookup = useMemo(() => new Map(Object.entries(locationCatalog.data?.forecast?.sku_labels ?? {})), [locationCatalog.data?.forecast?.sku_labels]);
+  const totalSkus = result?.total_skus ?? 0;
+  const actualHorizon = result?.horizon_weeks;
+  const completedRun = run.refreshStatus?.status === "completed" ? run.refreshStatus.base_run_id : null;
+  const refreshId = run.refreshStatus?.id;
+  const refreshState = run.refreshStatus?.status;
+  const observedActiveRefresh = useRef<string | undefined>();
+  useEffect(() => {
+    if (refreshState === "pending" || refreshState === "running") {
+      observedActiveRefresh.current = refreshId;
+    } else if (refreshState === "completed") {
+      const justCompleted = refreshId === observedActiveRefresh.current;
+      observedActiveRefresh.current = undefined;
+      if (justCompleted && page > 0 && completedRun && pageRun && completedRun !== pageRun) {
+        setPage(0);
+        setPageRun(undefined);
+        setLocationSku("");
+      }
+    } else if (refreshState === "failed") {
+      observedActiveRefresh.current = undefined;
+    }
+  }, [page, pageRun, completedRun, refreshId, refreshState]);
 
   // Group rows by sku_id
   const grouped = useMemo(() => {
@@ -551,9 +559,9 @@ export const ForecastsPage = () => {
       return ca.localeCompare(cb, undefined, { numeric: true });
     });
   }, [currentResult, skuLookup]);
-  const pageCount = Math.max(1, Math.ceil(grouped.length / SKUS_PER_PAGE));
+  const pageCount = Math.max(1, Math.ceil(totalSkus / SKUS_PER_PAGE));
   const pageStart = page * SKUS_PER_PAGE;
-  const visible = grouped.slice(pageStart, pageStart + SKUS_PER_PAGE);
+  const visible = grouped;
 
   const handleHorizonChange = (w: number) => {
     setHorizon(w);
@@ -581,7 +589,7 @@ export const ForecastsPage = () => {
         </div>
 
         {/* Export buttons — shown when result exists */}
-        {currentResult && !isIndicative && (
+        {currentResult && (
           <div className="flex items-center gap-2 shrink-0">
 
             <button
@@ -600,12 +608,14 @@ export const ForecastsPage = () => {
         )}
       </div>
 
+      <ForecastRunStatus forecast={result} stale={run.stale} refreshing={run.refreshing} generating={run.generating} queued={run.refreshStatus?.status === "pending"} waitingForOtherIndustry={run.waitingForOtherIndustry} error={run.refreshError} />
+      {(run.refreshError || runError) && <Button variant="secondary" onClick={() => { void run.refetch(); run.requestRefresh(); }}>Retry forecast</Button>}
       {/* ── Error: say what the service said, never a blank page ── */}
       {runError && (
         <div role="alert" className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50/70 p-4 text-sm text-rose-800 dark:border-rose-800/50 dark:bg-rose-900/15 dark:text-rose-200">
           <AlertCircle size={18} className="mt-0.5 shrink-0" />
           <div>
-            <p className="font-semibold">No forecast was produced</p>
+            <p className="font-semibold">Saved forecast could not be loaded</p>
             <p className="mt-0.5">{runError}</p>
           </div>
         </div>
@@ -613,26 +623,20 @@ export const ForecastsPage = () => {
 
       {/* ── What produced this result (from the response, never assumed) ── */}
       {currentResult && (
-        <div className={clsx(
-          "flex items-start gap-4 p-4 rounded-2xl border",
-          isIndicative
-            ? "bg-amber-50/70 border-amber-200 dark:bg-amber-900/15 dark:border-amber-800/50"
-            : "bg-slate-50/80 border-slate-200/60 dark:bg-slate-800/30 dark:border-slate-700/40",
-        )}>
+        <div className="flex items-start gap-4 p-4 rounded-2xl border bg-slate-50/80 border-slate-200/60 dark:bg-slate-800/30 dark:border-slate-700/40">
           <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0 bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400">
             <Info size={18} />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug">
-              {source.short} · {horizon} weeks · {displayName}
+              {source.short} · Saved forecast: {actualHorizon} weeks · {displayName}
             </p>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{source.detail}</p>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-              No external signals applied to this forecast — trend and signal adjustment happen only in Hybrid forecasts.
+              {result?.source === "hybrid-trend-fused" ? "Trend-adjusted forecast from a completed Hybrid run." : "No external signals applied to this forecast — trend and signal adjustment happen only in Hybrid forecasts."}
               {result?.history_end ? ` History used: complete weeks before ${result.history_end} (weeks start Monday, UTC).` : ""}
             </p>
           </div>
-          {isIndicative && <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-700 dark:border-amber-800/60 dark:bg-amber-900/20 dark:text-amber-300">Not a model forecast</span>}
         </div>
       )}
 
@@ -690,12 +694,12 @@ export const ForecastsPage = () => {
           {/* Generate button */}
           <div className="flex items-center gap-3 pt-1">
             <Button
-              icon={run.isPending ? <RefreshCw size={14} className="animate-spin" /> : <Play size={14} />}
-              loading={run.isPending}
-              onClick={() => run.mutate()}
+              icon={run.refreshing ? <RefreshCw size={14} className="animate-spin" /> : <Play size={14} />}
+              loading={run.refreshing}
+              onClick={() => { setPage(0); setPageRun(undefined); run.requestRefresh(); }}
               className="btn-primary tactile-press px-6 py-2.5 font-semibold"
             >
-              {run.isPending ? "Generating…" : "Generate Live Forecast"}
+              {run.refreshing ? "Refreshing…" : "Refresh forecast"}
             </Button>
 
           </div>
@@ -715,8 +719,8 @@ export const ForecastsPage = () => {
       {!currentResult ? (
         <div className="glass rounded-2xl p-16 text-center">
           <BarChart2 size={32} className="mx-auto text-slate-300 dark:text-slate-600 mb-3 animate-pulse" />
-          <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">No Forecast Run Executed Yet</p>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Choose a horizon above and click "Generate Live Forecast".</p>
+          <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">No forecast to display</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Import sufficient sales history, then use Refresh forecast to generate a real forecast.</p>
         </div>
       ) : (
         <div className="space-y-5">
@@ -728,20 +732,20 @@ export const ForecastsPage = () => {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <SummaryCard
               label="SKUs forecast"
-              value={`${fmtCompact(grouped.length)} SKUs forecast`}
-              sub={isIndicative ? "Indicative only" : "Every SKU in the response"}
+              value={`${fmtCompact(totalSkus)} SKUs forecast`}
+              sub="SKUs in the saved run"
               icon={<Layers size={16} />}
             />
             <SummaryCard
               label="Not forecast"
-              value={fmtCompact(omitted.length)}
-              sub={omitted.length ? "See the list below for why" : "Every active SKU was forecast"}
+              value={result?.omitted_count == null ? "Unknown" : fmtCompact(result.omitted_count)}
+              sub={result?.omitted_count == null ? "Coverage was not recorded for this run" : result.omitted_count ? "See recorded omissions below" : "No omissions recorded"}
               icon={<AlertCircle size={16} />}
             />
             <SummaryCard
               label="Horizon"
-              value={`${horizon}w`}
-              sub="Weeks of forward coverage"
+              value={`${actualHorizon}w`}
+              sub="Saved forecast horizon"
               icon={<Clock size={16} />}
             />
             <SummaryCard
@@ -753,11 +757,15 @@ export const ForecastsPage = () => {
           </div>
 
           {/* Per-SKU Charts */}
-          {!isIndicative && <div className="rounded-2xl border border-line bg-surface p-4 space-y-3">
+          {<div className="rounded-2xl border border-line bg-surface p-4 space-y-3">
             <h2 className="font-heading font-semibold">By location</h2>
+            <label className="block text-xs font-semibold text-content-muted">Find a SKU
+              <input aria-label="Location forecast SKU search" type="search" value={locationSearch} onChange={(e) => setLocationSearch(e.target.value)}
+                placeholder="Search product or SKU" className="mt-1.5 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm" />
+            </label>
             <select aria-label="Location forecast SKU" value={locationSku} onChange={(e) => setLocationSku(e.target.value)}
               className="rounded-lg border border-line bg-surface px-3 py-2 text-sm">
-              <option value="">Choose SKU</option>{grouped.map(([id]) => <option key={id} value={id}>{skuLookup.get(id)?.code ?? id}</option>)}
+              <option value="">Choose SKU</option>{Array.from(locationSkuLookup.entries()).map(([id, label]) => <option key={id} value={id}>{label.code} · {label.name}</option>)}
             </select>
             {locationSku && <LocationForecastView skuId={locationSku} runId={result?.run_id} />}
           </div>}
@@ -769,9 +777,13 @@ export const ForecastsPage = () => {
               </span>
               <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800/60" />
             </div>
+            <label className="mb-3 block max-w-md text-xs font-semibold text-content-muted">Search forecasts
+              <input aria-label="Search forecasts" type="search" value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); setPageRun(undefined); }}
+                placeholder="Product name or SKU" className="mt-1.5 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm" />
+            </label>
             <div className="mb-3 flex items-center justify-between text-xs text-content-muted">
               <span>
-                Showing {grouped.length ? pageStart + 1 : 0}–{Math.min(pageStart + SKUS_PER_PAGE, grouped.length)} of {grouped.length} SKUs
+                Showing {grouped.length ? pageStart + 1 : 0}–{Math.min(pageStart + SKUS_PER_PAGE, totalSkus)} of {totalSkus} SKUs
               </span>
               {pageCount > 1 && (
                 <span className="flex items-center gap-2">
@@ -780,7 +792,7 @@ export const ForecastsPage = () => {
                     className="rounded-lg border border-line px-2 py-1 disabled:opacity-40">Previous</button>
                   <span>Page {page + 1} of {pageCount}</span>
                   <button type="button" aria-label="Next page" disabled={page >= pageCount - 1}
-                    onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+                    onClick={() => { setPageRun(result?.run_id); setPage((p) => Math.min(pageCount - 1, p + 1)); }}
                     className="rounded-lg border border-line px-2 py-1 disabled:opacity-40">Next</button>
                 </span>
               )}

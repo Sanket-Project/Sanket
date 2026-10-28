@@ -6,6 +6,8 @@ import { AISummary } from "./AISummary";
 
 const api = vi.hoisted(() => ({ summary: vi.fn() }));
 vi.mock("@/api/ai", () => ({ aiApi: api }));
+const preference = vi.hoisted(() => ({ language: "en" }));
+vi.mock("@/hooks/useCommunicationPreferences", () => ({ useCommunicationPreferences: () => ({ data: { preferences: preference } }) }));
 
 it("labels generated content and links evidence without interpreting HTML", async () => {
   api.summary.mockResolvedValue({ state: "success", blocks: [{ text: "Stock cover: 4.5 days. <script>unsafe</script>", kind: "fact", sources: [{ fact_id: "cover", href: "/inventory" }] }] });
@@ -40,4 +42,28 @@ it("links dashboard facts to the actual workspace index", async () => {
   render(<QueryClientProvider client={new QueryClient()}><AISummary feature="planning_brief" /></QueryClientProvider>);
   await userEvent.click(screen.getByRole("button", { name: /Generate AI summary/ }));
   expect(await screen.findByRole("link", { name: "Brief scope" })).toHaveAttribute("href", "/workspace");
+});
+
+it("uses the saved language and clears summaries when that preference changes", async () => {
+  preference.language = "hi";
+  api.summary.mockResolvedValue({ state: "success", blocks: [{ text: "दर्ज स्टॉक: 17", kind: "fact", sources: [{ fact_id: "stock", href: "/inventory" }, { fact_id: "order", href: "/decisions" }] }] });
+  const client = new QueryClient();
+  const { rerender } = render(<QueryClientProvider client={client}><AISummary feature="planning_brief" /></QueryClientProvider>);
+  await userEvent.click(screen.getByRole("button", { name: "एआई सारांश बनाएँ" }));
+  await screen.findByText("दर्ज स्टॉक: 17");
+  expect(screen.getByRole("link", { name: "स्रोत: order" })).toBeInTheDocument();
+  expect(api.summary).toHaveBeenLastCalledWith("planning_brief", undefined, undefined, undefined, "hi");
+  preference.language = "te";
+  rerender(<QueryClientProvider client={client}><AISummary feature="planning_brief" /></QueryClientProvider>);
+  expect(screen.queryByText("दर्ज स्टॉक: 17")).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "ఏఐ సారాంశం రూపొందించండి" })).toBeInTheDocument();
+  preference.language = "en";
+});
+
+it("exposes every cited source when a block combines facts", async () => {
+  api.summary.mockResolvedValue({ state: "success", blocks: [{ text: "Stock and order evidence", kind: "fact", sources: [{ fact_id: "stock", href: "/inventory" }, { fact_id: "order", href: "/decisions" }] }] });
+  render(<QueryClientProvider client={new QueryClient()}><AISummary feature="planning_brief" /></QueryClientProvider>);
+  await userEvent.click(screen.getByRole("button", { name: /Generate AI summary/ }));
+  expect(await screen.findByRole("link", { name: "Stock and order evidence" })).toHaveAttribute("href", "/workspace/inventory");
+  expect(screen.getByRole("link", { name: "Source: order" })).toHaveAttribute("href", "/workspace/decisions");
 });

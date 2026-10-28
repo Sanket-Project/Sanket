@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { AISummary } from "@/components/ai/AISummary";
+import { SupplierDraft } from "@/components/ai/SupplierDraft";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -514,7 +515,7 @@ function DecisionRow({
         </div>
       </div>
 
-      {expanded && <div className="space-y-3 p-3"><AISummary feature="decision_explanation" label="Explain this decision" entityId={d.id} contextKey={JSON.stringify(d)} /><AISummary feature="industry_advice" label="Get industry advice" entityId={d.id} contextKey={JSON.stringify(d)} /><Working decision={d} /></div>}
+      {expanded && <div className="space-y-3 p-3"><AISummary feature="decision_explanation" label="Explain this decision" entityId={d.id} contextKey={JSON.stringify(d)} /><AISummary feature="industry_advice" label="Get industry advice" entityId={d.id} contextKey={JSON.stringify(d)} />{d.kind === "purchase_order" && d.status === "accepted" && !d.expired && <SupplierDraft key={JSON.stringify(d)} decisionId={d.id} />}<Working decision={d} /></div>}
     </Card>
   );
 }
@@ -530,6 +531,19 @@ function Working({ decision: d }: { decision: Decision }) {
     <p className="mt-3 text-xs">Baseline: {d.baseline_units} units. Advisory only — execute the move in your own system.</p>
   </div>;
   const i = d.inputs as DecisionInputs;
+  const required = [i.lead_time_days, i.review_period_days, i.protection_days,
+    i.demand_p50_over_window, i.demand_p90_over_window, i.sigma_over_window,
+    i.service_level, i.z, i.safety_stock_units, i.order_up_to, i.on_hand_units,
+    i.reserved_units, i.inbound_units, i.position_units, i.moq];
+  if (required.some((value) => typeof value !== "number" || !Number.isFinite(value))) {
+    return <div className="border-t border-line bg-surface-2 px-5 py-4 text-sm">
+      <p role="status">Some saved planning inputs are unavailable. Review the recorded fields below; a complete derivation cannot be shown.</p>
+      <dl className="mt-3 grid gap-2 sm:grid-cols-2">{Object.entries(d.inputs).map(([key, value]) => <div key={key}>
+        <dt className="text-xs text-content-subtle">{key.replaceAll("_", " ")}</dt>
+        <dd className="break-words">{value == null ? "Unavailable" : typeof value === "object" ? JSON.stringify(value) : String(value)}</dd>
+      </div>)}</dl>
+    </div>;
+  }
   const rows: Array<[string, string]> = [
     ["Supplier lead time", `${i.lead_time_days} days`],
     ["Review cycle", `${i.review_period_days} days`],

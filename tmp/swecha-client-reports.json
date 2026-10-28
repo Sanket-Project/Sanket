@@ -1,0 +1,467 @@
+{
+  "industry": "fashion",
+  "currency": "INR",
+  "imported_at": "2026-10-27",
+  "sales": {
+    "period": "1–25 October 2026",
+    "net_amount": 2581934.0,
+    "net_units": 2643.0,
+    "rows": 121,
+    "stores": [
+      {
+        "name": "SAI BALAJI FASHIONS - ALWAL",
+        "net_amount": 381154.0,
+        "net_units": 368.0
+      },
+      {
+        "name": "SAI BALAJI FASHIONS - Boduppal",
+        "net_amount": 703918.0,
+        "net_units": 796.0
+      },
+      {
+        "name": "SAI BALAJI FASHIONS - MANSOORABAD",
+        "net_amount": 312294.0,
+        "net_units": 378.0
+      },
+      {
+        "name": "SAI BALAJI FASHIONS - NGO`S COLONY",
+        "net_amount": 790030.0,
+        "net_units": 724.0
+      },
+      {
+        "name": "Sai Balaji Fashions - Habsiguda",
+        "net_amount": 394538.0,
+        "net_units": 377.0
+      }
+    ]
+  },
+  "gross_profit": {
+    "period": "1 January–25 October 2026",
+    "net_sales": 27576336.0,
+    "sales_ex_tax": 25803542.35,
+    "cogs_ex_tax": 16048611.147,
+    "profit": 9754931.203,
+    "margin_pct": 37.80462027532433,
+    "rows": 15524,
+    "stores": [
+      {
+        "name": "SAI BALAJI FASHIONS - ALWAL",
+        "profit": 1285066.69,
+        "sales_ex_tax": 3341607.93
+      },
+      {
+        "name": "SAI BALAJI FASHIONS - Boduppal",
+        "profit": 2502521.362,
+        "sales_ex_tax": 6725686.48
+      },
+      {
+        "name": "SAI BALAJI FASHIONS - MANSOORABAD",
+        "profit": 1510343.8495,
+        "sales_ex_tax": 4182059.78
+      },
+      {
+        "name": "SAI BALAJI FASHIONS - NGO`S COLONY",
+        "profit": 2880761.0006,
+        "sales_ex_tax": 7489716.06
+      },
+      {
+        "name": "Sai Balaji Fashions - Habsiguda",
+        "profit": 1562786.2341,
+        "sales_ex_tax": 3867744.5
+      },
+      {
+        "name": "Sai Balaji Fashions - WH",
+        "profit": 13452.0668,
+        "sales_ex_tax": 196727.6
+      }
+    ],
+    "top_skus": [
+      {
+        "sku": "77SHADP0L49996",
+        "units": 81.0,
+        "profit": 36828.52
+      },
+      {
+        "sku": "77SHADP1X49997",
+        "units": 76.0,
+        "profit": 33684.68
+      },
+      {
+        "sku": "77SHADP0M49995",
+        "units": 75.0,
+        "profit": 33237.56
+      },
+      {
+        "sku": "77SHADP2X49998",
+        "units": 69.0,
+        "profit": 31039.47
+      },
+      {
+        "sku": "77SHADP2X52304",
+        "units": 58.0,
+        "profit": 19434.1
+      },
+      {
+        "sku": "S3GOLDP1X55197",
+        "units": 30.0,
+        "profit": 18298.25
+      },
+      {
+        "sku": "77SHADP0L52302",
+        "units": 53.0,
+        "profit": 17555.71
+      },
+      {
+        "sku": "S3GOLDP2X55198",
+        "units": 29.0,
+        "profit": 17402.49
+      },
+      {
+        "sku": "77SHADP1X52303",
+        "units": 53.0,
+        "profit": 17285.25
+      },
+      {
+        "sku": "S3GOLDP0L55196",
+        "units": 29.0,
+        "profit": 17081.47
+      },
+      {
+        "sku": "77SHADP0M52301",
+        "units": 53.0,
+        "profit": 17006.47
+      },
+      {
+        "sku": "S7SHADP2X56081",
+        "units": 45.0,
+        "profit": 15818.62
+      },
+      {
+        "sku": "S7SHADP0M56078",
+        "units": 44.0,
+        "profit": 15335.8
+      },
+      {
+        "sku": "S3ROSEP0S56305",
+        "units": 26.0,
+        "profit": 15149.16
+      },
+      {
+        "sku": "S3GOLDP0M55195",
+        "units": 25.0,
+        "profit": 15013.79
+      },
+      {
+        "sku": "S3ROSEP0L56307",
+        "units": 25.0,
+        "profit": 14574.16
+      },
+      {
+        "sku": "S3ROSEP2X56309",
+        "units": 25.0,
+        "profit": 14405.93
+      },
+      {
+        "sku": "M11790W3X52225",
+        "units": 49.0,
+        "profit": 14197.99
+      },
+      {
+        "sku": "S7SHADP1X56080",
+        "units": 41.0,
+        "profit": 13701.03
+      },
+      {
+        "sku": "S3ROSEP1X56308",
+        "units": 24.0,
+        "profit": 13612.34
+      }
+    ]
+  },
+  "purchases": {
+    "period": "03-01-2026–23-10-2026 (day-month-year)",
+    "net_amount": 18882379.57,
+    "net_units": 28311.0,
+    "rows": 266,
+    "suppliers": [
+      {
+        "name": "MS DISTRIBUTORS",
+        "net_amount": 2137201.0,
+        "net_units": 2345.0
+      },
+      {
+        "name": "RIDHI SIDHI CREATIONS",
+        "net_amount": 1437240.0,
+        "net_units": 2438.0
+      },
+      {
+        "name": "RUTEJ CLOTHING PRIVATE LIMITED",
+        "net_amount": 1432715.0,
+        "net_units": 2449.0
+      },
+      {
+        "name": "G.T.C",
+        "net_amount": 1400344.0,
+        "net_units": 983.0
+      },
+      {
+        "name": "I-VERY FASHION",
+        "net_amount": 1048063.0,
+        "net_units": 838.0
+      },
+      {
+        "name": "RIYA FASHION",
+        "net_amount": 704637.0,
+        "net_units": 263.0
+      },
+      {
+        "name": "JIGNA ENTERPRISES",
+        "net_amount": 694886.0,
+        "net_units": 1258.0
+      },
+      {
+        "name": "MAHUDI DESIGNER",
+        "net_amount": 677952.0,
+        "net_units": 1125.0
+      },
+      {
+        "name": "AREENA",
+        "net_amount": 617322.3,
+        "net_units": 303.0
+      },
+      {
+        "name": "BLUE LADY PLUS",
+        "net_amount": 547863.0,
+        "net_units": 633.0
+      },
+      {
+        "name": "SHIVOM",
+        "net_amount": 525171.0,
+        "net_units": 493.0
+      },
+      {
+        "name": "SHOBHAWATI CREATION",
+        "net_amount": 498118.75,
+        "net_units": 524.0
+      },
+      {
+        "name": "BLUE TAG",
+        "net_amount": 492158.34,
+        "net_units": 356.0
+      },
+      {
+        "name": "BLUE LADY NX",
+        "net_amount": 461198.0,
+        "net_units": 556.0
+      },
+      {
+        "name": "MISHKA",
+        "net_amount": 425265.75,
+        "net_units": 810.0
+      },
+      {
+        "name": "V FASHION",
+        "net_amount": 416624.0,
+        "net_units": 206.0
+      },
+      {
+        "name": "BHAKTI",
+        "net_amount": 388727.0,
+        "net_units": 375.0
+      },
+      {
+        "name": "MAA ASHAPURA DESIGNING KURTIES",
+        "net_amount": 368711.0,
+        "net_units": 440.0
+      },
+      {
+        "name": "NAINA APPARELS",
+        "net_amount": 361335.13,
+        "net_units": 1152.0
+      },
+      {
+        "name": "GF GOPI FASHION LLP",
+        "net_amount": 359499.0,
+        "net_units": 163.0
+      },
+      {
+        "name": "NEETA ENTERPRISES",
+        "net_amount": 342695.0,
+        "net_units": 2563.0
+      },
+      {
+        "name": "KALRAV CLOTHING CO",
+        "net_amount": 317155.0,
+        "net_units": 366.0
+      },
+      {
+        "name": "M/S. SRI GURU ENTERPRISES",
+        "net_amount": 285599.0,
+        "net_units": 1061.0
+      },
+      {
+        "name": "Uma Agency",
+        "net_amount": 245350.0,
+        "net_units": 841.0
+      },
+      {
+        "name": "ARNAV TRADING COMPANY",
+        "net_amount": 191951.0,
+        "net_units": 497.0
+      },
+      {
+        "name": "SHREE MAYA DRESSES",
+        "net_amount": 188587.6,
+        "net_units": 107.0
+      },
+      {
+        "name": "GUJARAT TEXTILES CO",
+        "net_amount": 184884.0,
+        "net_units": 198.0
+      },
+      {
+        "name": "S V APPARELS",
+        "net_amount": 159804.0,
+        "net_units": 946.0
+      },
+      {
+        "name": "MYVI",
+        "net_amount": 151552.0,
+        "net_units": 293.0
+      },
+      {
+        "name": "SUTRA",
+        "net_amount": 134140.0,
+        "net_units": 61.0
+      },
+      {
+        "name": "CLEOSHA CREATION",
+        "net_amount": 124072.0,
+        "net_units": 167.0
+      },
+      {
+        "name": "RAMESH CREATION",
+        "net_amount": 122944.0,
+        "net_units": 85.0
+      },
+      {
+        "name": "RAMESHWAR CREATION",
+        "net_amount": 122115.0,
+        "net_units": 180.0
+      },
+      {
+        "name": "SK CREATION",
+        "net_amount": 119696.0,
+        "net_units": 117.0
+      },
+      {
+        "name": "CUTE CONCEPTS",
+        "net_amount": 116750.0,
+        "net_units": 72.0
+      },
+      {
+        "name": "AARYA APPARELS",
+        "net_amount": 114763.0,
+        "net_units": 269.0
+      },
+      {
+        "name": "The SAP Enterprises",
+        "net_amount": 110981.0,
+        "net_units": 414.0
+      },
+      {
+        "name": "SRI VASAVI DISTRIBUTORS",
+        "net_amount": 100600.0,
+        "net_units": 487.0
+      },
+      {
+        "name": "BRAHMAS ENTERPRISE",
+        "net_amount": 96778.0,
+        "net_units": 100.0
+      },
+      {
+        "name": "AMBICA TRENDS",
+        "net_amount": 96154.0,
+        "net_units": 123.0
+      },
+      {
+        "name": "NAKSHATRA CLOTHING",
+        "net_amount": 95107.0,
+        "net_units": 198.0
+      },
+      {
+        "name": "JUST FEEL CLOTHING PVT. LTD.",
+        "net_amount": 77506.0,
+        "net_units": 105.0
+      },
+      {
+        "name": "Pipin Fashions And Retail Private Limited",
+        "net_amount": 75883.5,
+        "net_units": 150.0
+      },
+      {
+        "name": "RATNANI TRADING CO",
+        "net_amount": 68435.0,
+        "net_units": 473.0
+      },
+      {
+        "name": "M/S DURGA MARKETING",
+        "net_amount": 56325.0,
+        "net_units": 262.0
+      },
+      {
+        "name": "RASHI CREATION",
+        "net_amount": 55802.0,
+        "net_units": 70.0
+      },
+      {
+        "name": "MAHADEV CREATION",
+        "net_amount": 42845.0,
+        "net_units": 16.0
+      },
+      {
+        "name": "M/S ANJALI AGENCIES",
+        "net_amount": 34264.0,
+        "net_units": 14.0
+      },
+      {
+        "name": "SHREE FASHION",
+        "net_amount": 29988.0,
+        "net_units": 48.0
+      },
+      {
+        "name": "PERONEIRA PVT LTD",
+        "net_amount": 14935.0,
+        "net_units": 71.0
+      },
+      {
+        "name": "Midhunam",
+        "net_amount": 9450.0,
+        "net_units": 20.0
+      },
+      {
+        "name": "RUDRA MARKETING",
+        "net_amount": 162.2,
+        "net_units": 155.0
+      },
+      {
+        "name": "TALLAJI MARKETING",
+        "net_amount": 75.0,
+        "net_units": 72.0
+      }
+    ]
+  },
+  "limitations": [
+    "Dated SKU sales are unavailable; forecasts require SKU-level sales history. Store sales and period gross profit have not been converted into SKU transactions.",
+    "Sales and gross profit cover different periods and must not be added together. Gross profit uses sales and cost excluding tax. Purchases include taxes, discounts and signed purchase returns.",
+    "The stock report does not specify its snapshot date. Inventory records use the import time; confirm the stock date before making operational decisions.",
+    "Catalogue prices use the first reported location for each SKU; original cost, retail price and closing value are retained on each stock position.",
+    "Reserved stock, inbound stock, supplier lead times and reorder thresholds were not supplied. Stock coverage and replenishment recommendations require additional inputs."
+  ],
+  "sources": [
+    "stock balence Report 2026.csv",
+    "Sales Data 2026.xlsx",
+    "Gross Profit Data 2026.xlsx",
+    "Purchasr Report 2026.xlsx"
+  ]
+}

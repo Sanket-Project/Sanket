@@ -1,0 +1,759 @@
+
+ RUN  v2.1.9 C:/Users/admin/Desktop/Prisma/frontend
+
+stderr | src/pages/Inventory.test.tsx > shows one SKU row with store attention, not duplicated SKU rows
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+stderr | src/pages/Forecasts.test.tsx > defaults to an available average-sales projection without starting Chronos
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/Inventory.test.tsx (16 tests) 4531ms
+   ✓ shows one SKU row with store attention, not duplicated SKU rows 464ms
+   ✓ labels period-average cover as an estimate rather than a model forecast 720ms
+   ✓ sends attention filters to the server so results are not limited to the visible page 309ms
+   ✓ imports a SKU beyond the first catalogue page and refreshes its coverage 346ms
+   ✓ closes a parsed stock import when the tenant changes 493ms
+   ✓ uses the paired theme foreground for filled controls in dark mode 358ms
+ ✓ src/pages/Forecasts.test.tsx (13 tests) 7888ms
+   ✓ defaults to an available average-sales projection without starting Chronos 472ms
+   ✓ shows a selected SKU's location forecast and degraded warning 1217ms
+   ✓ Forecasts page (audit F04, F08) > shows the model actually used and every SKU, without invented claims 663ms
+   ✓ Forecasts page (audit F04, F08) > pages through more SKUs than fit on one screen 493ms
+   ✓ shows persisted age and actual horizon while a different horizon refreshes 385ms
+   ✓ returns to the latest run's first page after a refresh completes during pagination 3553ms
+   ✓ keeps pagination usable when the saved run is newer than an old completed refresh 379ms
+ ✓ src/hooks/usePersistedForecast.test.tsx (15 tests) 4674ms
+   ✓ polls the accepted job until the newly persisted result replaces the old run 3071ms
+stderr | src/components/dashboard/PlanningBriefDashboard.test.tsx > PlanningBriefDashboard > charts weekly actuals against the weekly forecast, labelled per week
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ❯ src/components/dashboard/PlanningBriefDashboard.test.tsx (15 tests | 2 failed) 2139ms
+   ✓ PlanningBriefDashboard > charts weekly actuals against the weekly forecast, labelled per week 424ms
+   ✓ PlanningBriefDashboard > shows what the confidence and warning figures are made of 375ms
+   × PlanningBriefDashboard > says decisions are unavailable when they fail to load, not that none are open 126ms
+     → Found multiple elements with the text: Orders due
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<p[39m
+  [33mclass[39m=[32m"text-[10px] font-semibold uppercase tracking-[0.12em] text-content-subtle"[39m
+[36m>[39m
+  [0mOrders due[0m
+[36m</p>[39m
+
+Ignored nodes: comments, script, style
+[36m<p[39m
+  [33mclass[39m=[32m"text-[10px] font-semibold uppercase tracking-[0.12em] text-content-subtle"[39m
+[36m>[39m
+  [0mOrders due[0m
+[36m</p>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"animate-fade-in space-y-3"[39m
+    [36m>[39m
+      [36m<details[39m
+        [33mclass[39m=[32m"rounded-xl border border-line bg-surface px-4 py-2"[39m
+        [33mopen[39m=[32m""[39m
+      [36m>[39m
+        [36m<summary[39m
+          [33mclass[39m=[32m"cursor-pointer text-xs font-semibold text-content-muted"[39m
+        [36m>[39m
+          [0mAI planning summary (optional)[0m
+        [36m</summary>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"pt-2"[39m
+        [36m>[39m
+          [36m<aside[39m
+            [33maria-label[39m=[32m"AI summary"[39m
+            [33mclass[39m=[32m"space-y-2 rounded-xl border border-line bg-surface p-3 text-sm"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"btn-ghost px-3 py-1.5 text-xs"[39m
+            [36m>[39m
+              [0mGenerate AI summary[0m
+            [36m</button>[39m
+          [36m</aside>[39m
+        [36m</div>[39m
+      [36m</details>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"flex flex-col gap-3 rounded-2xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"[39m
+      [36m>[39m
+        [36m<div>[39m
+          [36m<h1[39m
+            [33mclass[39m=[32m"font-heading text-xl font-semibold tracking-tight text-content"[39m
+          [36m>[39m
+            [0mGood morning, Sanket — part of your planning brief is unavailable[0m
+          [36m</h1>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"mt-0.5 text-sm text-content-muted"[39m
+            [33mrole[39m=[32m"alert"[39m
+          [36m>[39m
+            [0mDecisions could not be loaded — the queue is unknown, not empty. Use Refresh brief to retry.[0m
+          [36m</p>[39m
+        [36m</div>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"btn-secondary px-3 py-1.5 text-xs"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"contents"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33mclass[39m=[32m"lucide lucide-refresh-cw"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"14"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"14"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M21 3v5h-5"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M8 16H3v5"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [0mRefresh brief[0m
+        [36m</button>[39m
+      [36m</header>[39m
+      [36m<section[39m
+        [33maria-label[39m=[32m"Planning metrics"[39m
+        [33mclass[39m=[32m"grid gap-3 sm:grid-cols-2 xl:grid-cols-4"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-center gap-3 py-2.5"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33mheight[39m=[32m"17px"[39m
+              [33mrole[39m=[32m"presentation"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"17px"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<g[39m
+                [33mtransform[39m=[32m"translate(2.5 1.5)"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M13.213,14.682H4.865C1.8,14.682-.554,13.574.114,9.117L.892,3.076C1.3.851,2.723,0,3.968,0H14.146c1.263,0,2.6.915,3.076,3.076L18,9.117C18.567,13.071,16.279,14.682,13.213,14.682Z"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-miterlimit[39m=[32m"10"[39m
+                  [33mstroke-width[39m=[32m"1.5px"[39m
+                  [33mtransform[39m=[32m"translate(0.801 5.318)"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M8.659,4.32A4.32,4.32,0,0,0,4.339,0h0A4.32,4.32,0,0,0,0,4.32H0"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-miterlimit[39m=[32m"10"[39m
+                  [33mstroke-width[39m=[32m"1.5px"[39m
+                  [33mtransform[39m=[32m"translate(5.492 0.778)"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M.481.458H.435"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-miterlimit[39m=[32m"10"[39m
+                  [33mstroke-width[39m=[32m"1.5px"[39m
+                  [33mtransform[39m=[32m"translate(12.316 9.144)"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M.481.458H.435"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-miterlimit[39m=[32m"10"[39m
+                  [33mstroke-width[39m=[32m"1.5px"[39m
+                  [33mtransform[39m=[32m"translate(6.485 9.144)"[39m
+                [36m/>[39m
+              [36m</g>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"min-w-0"[39m
+          [36m>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"t...
+   × offers an optional grounded summary above the existing planning metrics 53ms
+     → Found multiple elements with the text: Orders due
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<p[39m
+  [33mclass[39m=[32m"text-[10px] font-semibold uppercase tracking-[0.12em] text-content-subtle"[39m
+[36m>[39m
+  [0mOrders due[0m
+[36m</p>[39m
+
+Ignored nodes: comments, script, style
+[36m<p[39m
+  [33mclass[39m=[32m"text-[10px] font-semibold uppercase tracking-[0.12em] text-content-subtle"[39m
+[36m>[39m
+  [0mOrders due[0m
+[36m</p>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"animate-fade-in space-y-3"[39m
+    [36m>[39m
+      [36m<details[39m
+        [33mclass[39m=[32m"rounded-xl border border-line bg-surface px-4 py-2"[39m
+        [33mopen[39m=[32m""[39m
+      [36m>[39m
+        [36m<summary[39m
+          [33mclass[39m=[32m"cursor-pointer text-xs font-semibold text-content-muted"[39m
+        [36m>[39m
+          [0mAI planning summary (optional)[0m
+        [36m</summary>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"pt-2"[39m
+        [36m>[39m
+          [36m<aside[39m
+            [33maria-label[39m=[32m"AI summary"[39m
+            [33mclass[39m=[32m"space-y-2 rounded-xl border border-line bg-surface p-3 text-sm"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"btn-ghost px-3 py-1.5 text-xs"[39m
+            [36m>[39m
+              [0mGenerate AI summary[0m
+            [36m</button>[39m
+          [36m</aside>[39m
+        [36m</div>[39m
+      [36m</details>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"flex flex-col gap-3 rounded-2xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"[39m
+      [36m>[39m
+        [36m<div>[39m
+          [36m<h1[39m
+            [33mclass[39m=[32m"font-heading text-xl font-semibold tracking-tight text-content"[39m
+          [36m>[39m
+            [0mGood morning, Sanket — your planning brief is ready[0m
+          [36m</h1>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"mt-0.5 text-sm text-content-muted"[39m
+          [36m>[39m
+            [0mLoading decisions…[0m
+          [36m</p>[39m
+        [36m</div>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"btn-secondary px-3 py-1.5 text-xs"[39m
+          [33mdisabled[39m=[32m""[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"h-4 w-4 rounded-full border-2 border-current/30 border-t-current animate-spin"[39m
+          [36m/>[39m
+          [0mRefresh brief[0m
+        [36m</button>[39m
+      [36m</header>[39m
+      [36m<section[39m
+        [33maria-label[39m=[32m"Planning metrics"[39m
+        [33mclass[39m=[32m"grid gap-3 sm:grid-cols-2 xl:grid-cols-4"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-center gap-3 py-2.5"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33mheight[39m=[32m"17px"[39m
+              [33mrole[39m=[32m"presentation"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"17px"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<g[39m
+                [33mtransform[39m=[32m"translate(2.5 1.5)"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M13.213,14.682H4.865C1.8,14.682-.554,13.574.114,9.117L.892,3.076C1.3.851,2.723,0,3.968,0H14.146c1.263,0,2.6.915,3.076,3.076L18,9.117C18.567,13.071,16.279,14.682,13.213,14.682Z"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-miterlimit[39m=[32m"10"[39m
+                  [33mstroke-width[39m=[32m"1.5px"[39m
+                  [33mtransform[39m=[32m"translate(0.801 5.318)"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M8.659,4.32A4.32,4.32,0,0,0,4.339,0h0A4.32,4.32,0,0,0,0,4.32H0"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-miterlimit[39m=[32m"10"[39m
+                  [33mstroke-width[39m=[32m"1.5px"[39m
+                  [33mtransform[39m=[32m"translate(5.492 0.778)"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M.481.458H.435"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-miterlimit[39m=[32m"10"[39m
+                  [33mstroke-width[39m=[32m"1.5px"[39m
+                  [33mtransform[39m=[32m"translate(12.316 9.144)"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M.481.458H.435"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-miterlimit[39m=[32m"10"[39m
+                  [33mstroke-width[39m=[32m"1.5px"[39m
+                  [33mtransform[39m=[32m"translate(6.485 9.144)"[39m
+                [36m/>[39m
+              [36m</g>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"min-w-0"[39m
+          [36m>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"text-[10px] font-semibold uppercase tracking-[0.12em] text-content-subtle"[39m
+            [36m>[39m
+              [0mOrders due[0m
+            [36m</p>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"mt-0.5 font-mono text-lg font-semibold leading-none text-content"[39m
+            [36m>[39m
+              [0m0[0m
+            [36m</p>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"mt-0.5 text-xs text-content-muted"[39m
+            [36m>[39m
+              [0m0 units[0m
+            [36m</p>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-center gap-3 py-2.5"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33mclass[39m=[32m"lucide lucide-triangle-alert"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"17"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+          ...
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/dashboard/PlanningBriefDashboard.test.tsx > PlanningBriefDashboard > says decisions are unavailable when they fail to load, not that none are open
+TestingLibraryElementError: Found multiple elements with the text: Orders due
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+<p
+  class="text-[10px] font-semibold uppercase tracking-[0.12em] text-content-subtle"
+>
+  Orders due
+</p>
+
+Ignored nodes: comments, script, style
+<p
+  class="text-[10px] font-semibold uppercase tracking-[0.12em] text-content-subtle"
+>
+  Orders due
+</p>
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="animate-fade-in space-y-3"
+    >
+      <details
+        class="rounded-xl border border-line bg-surface px-4 py-2"
+        open=""
+      >
+        <summary
+          class="cursor-pointer text-xs font-semibold text-content-muted"
+        >
+          AI planning summary (optional)
+        </summary>
+        <div
+          class="pt-2"
+        >
+          <aside
+            aria-label="AI summary"
+            class="space-y-2 rounded-xl border border-line bg-surface p-3 text-sm"
+          >
+            <button
+              class="btn-ghost px-3 py-1.5 text-xs"
+            >
+              Generate AI summary
+            </button>
+          </aside>
+        </div>
+      </details>
+      <header
+        class="flex flex-col gap-3 rounded-2xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div>
+          <h1
+            class="font-heading text-xl font-semibold tracking-tight text-content"
+          >
+            Good morning, Sanket — part of your planning brief is unavailable
+          </h1>
+          <p
+            class="mt-0.5 text-sm text-content-muted"
+            role="alert"
+          >
+            Decisions could not be loaded — the queue is unknown, not empty. Use Refresh brief to retry.
+          </p>
+        </div>
+        <button
+          class="btn-secondary px-3 py-1.5 text-xs"
+        >
+          <span
+            aria-hidden="true"
+            class="contents"
+          >
+            <svg
+              class="lucide lucide-refresh-cw"
+              fill="none"
+              height="14"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="14"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"
+              />
+              <path
+                d="M21 3v5h-5"
+              />
+              <path
+                d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"
+              />
+              <path
+                d="M8 16H3v5"
+              />
+            </svg>
+          </span>
+          Refresh brief
+        </button>
+      </header>
+      <section
+        aria-label="Planning metrics"
+        class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
+      >
+        <div
+          class="flex items-center gap-3 py-2.5"
+        >
+          <span
+            class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300"
+          >
+            <svg
+              height="17px"
+              role="presentation"
+              viewBox="0 0 24 24"
+              width="17px"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <g
+                transform="translate(2.5 1.5)"
+              >
+                <path
+                  d="M13.213,14.682H4.865C1.8,14.682-.554,13.574.114,9.117L.892,3.076C1.3.851,2.723,0,3.968,0H14.146c1.263,0,2.6.915,3.076,3.076L18,9.117C18.567,13.071,16.279,14.682,13.213,14.682Z"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-miterlimit="10"
+                  stroke-width="1.5px"
+                  transform="translate(0.801 5.318)"
+                />
+                <path
+                  d="M8.659,4.32A4.32,4.32,0,0,0,4.339,0h0A4.32,4.32,0,0,0,0,4.32H0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-miterlimit="10"
+                  stroke-width="1.5px"
+                  transform="translate(5.492 0.778)"
+                />
+                <path
+                  d="M.481.458H.435"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-miterlimit="10"
+                  stroke-width="1.5px"
+                  transform="translate(12.316 9.144)"
+                />
+                <path
+                  d="M.481.458H.435"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-miterlimit="10"
+                  stroke-width="1.5px"
+                  transform="translate(6.485 9.144)"
+                />
+              </g>
+            </svg>
+          </span>
+          <div
+            class="min-w-0"
+          >
+            <p
+              class="t...
+ ❯ Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getElementError node_modules/@testing-library/dom/dist/query-helpers.js:20:35
+ ❯ getMultipleElementsFoundError node_modules/@testing-library/dom/dist/query-helpers.js:23:10
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:55:13
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/dashboard/PlanningBriefDashboard.test.tsx:168:19
+    166| 
+    167|     expect(await screen.findByRole("alert")).toHaveTextContent(/decisi…
+    168|     expect(screen.getByText("Orders due").parentElement).toHaveTextCon…
+       |                   ^
+    169|     expect(screen.queryByText("No open order decision currently requir…
+    170|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/components/dashboard/PlanningBriefDashboard.test.tsx > offers an optional grounded summary above the existing planning metrics
+TestingLibraryElementError: Found multiple elements with the text: Orders due
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+<p
+  class="text-[10px] font-semibold uppercase tracking-[0.12em] text-content-subtle"
+>
+  Orders due
+</p>
+
+Ignored nodes: comments, script, style
+<p
+  class="text-[10px] font-semibold uppercase tracking-[0.12em] text-content-subtle"
+>
+  Orders due
+</p>
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="animate-fade-in space-y-3"
+    >
+      <details
+        class="rounded-xl border border-line bg-surface px-4 py-2"
+        open=""
+      >
+        <summary
+          class="cursor-pointer text-xs font-semibold text-content-muted"
+        >
+          AI planning summary (optional)
+        </summary>
+        <div
+          class="pt-2"
+        >
+          <aside
+            aria-label="AI summary"
+            class="space-y-2 rounded-xl border border-line bg-surface p-3 text-sm"
+          >
+            <button
+              class="btn-ghost px-3 py-1.5 text-xs"
+            >
+              Generate AI summary
+            </button>
+          </aside>
+        </div>
+      </details>
+      <header
+        class="flex flex-col gap-3 rounded-2xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div>
+          <h1
+            class="font-heading text-xl font-semibold tracking-tight text-content"
+          >
+            Good morning, Sanket — your planning brief is ready
+          </h1>
+          <p
+            class="mt-0.5 text-sm text-content-muted"
+          >
+            Loading decisions…
+          </p>
+        </div>
+        <button
+          class="btn-secondary px-3 py-1.5 text-xs"
+          disabled=""
+        >
+          <span
+            aria-hidden="true"
+            class="h-4 w-4 rounded-full border-2 border-current/30 border-t-current animate-spin"
+          />
+          Refresh brief
+        </button>
+      </header>
+      <section
+        aria-label="Planning metrics"
+        class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
+      >
+        <div
+          class="flex items-center gap-3 py-2.5"
+        >
+          <span
+            class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300"
+          >
+            <svg
+              height="17px"
+              role="presentation"
+              viewBox="0 0 24 24"
+              width="17px"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <g
+                transform="translate(2.5 1.5)"
+              >
+                <path
+                  d="M13.213,14.682H4.865C1.8,14.682-.554,13.574.114,9.117L.892,3.076C1.3.851,2.723,0,3.968,0H14.146c1.263,0,2.6.915,3.076,3.076L18,9.117C18.567,13.071,16.279,14.682,13.213,14.682Z"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-miterlimit="10"
+                  stroke-width="1.5px"
+                  transform="translate(0.801 5.318)"
+                />
+                <path
+                  d="M8.659,4.32A4.32,4.32,0,0,0,4.339,0h0A4.32,4.32,0,0,0,0,4.32H0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-miterlimit="10"
+                  stroke-width="1.5px"
+                  transform="translate(5.492 0.778)"
+                />
+                <path
+                  d="M.481.458H.435"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-miterlimit="10"
+                  stroke-width="1.5px"
+                  transform="translate(12.316 9.144)"
+                />
+                <path
+                  d="M.481.458H.435"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-miterlimit="10"
+                  stroke-width="1.5px"
+                  transform="translate(6.485 9.144)"
+                />
+              </g>
+            </svg>
+          </span>
+          <div
+            class="min-w-0"
+          >
+            <p
+              class="text-[10px] font-semibold uppercase tracking-[0.12em] text-content-subtle"
+            >
+              Orders due
+            </p>
+            <p
+              class="mt-0.5 font-mono text-lg font-semibold leading-none text-content"
+            >
+              0
+            </p>
+            <p
+              class="mt-0.5 text-xs text-content-muted"
+            >
+              0 units
+            </p>
+          </div>
+        </div>
+        <div
+          class="flex items-center gap-3 py-2.5"
+        >
+          <span
+            class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300"
+          >
+            <svg
+              class="lucide lucide-triangle-alert"
+              fill="none"
+              height="17"
+              stroke="currentColor"
+          ...
+ ❯ Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getElementError node_modules/@testing-library/dom/dist/query-helpers.js:20:35
+ ❯ getMultipleElementsFoundError node_modules/@testing-library/dom/dist/query-helpers.js:23:10
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:55:13
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/dashboard/PlanningBriefDashboard.test.tsx:220:17
+    218|   renderDashboard();
+    219|   expect(await screen.findByRole("complementary", { name: "AI summary"…
+    220|   expect(screen.getByText("Orders due")).toBeInTheDocument();
+       |                 ^
+    221| });
+    222| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  2 failed | 57 passed (59)
+   Start at  12:19:09
+   Duration  31.39s (transform 2.08s, setup 1.91s, collect 23.27s, tests 19.23s, environment 5.53s, prepare 664ms)
+

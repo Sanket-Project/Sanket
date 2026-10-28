@@ -1,0 +1,213 @@
+FFFFFFFFFFFFFF                                                           [100%]
+================================== FAILURES ===================================
+___________________ test_duplicate_csv_headers_are_rejected ___________________
+..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py:30: in test_duplicate_csv_headers_are_rejected
+    with pytest.raises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+______________________ test_extra_csv_cells_are_rejected ______________________
+..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py:34: in test_extra_csv_cells_are_rejected
+    with pytest.raises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+_________________ test_naive_inventory_timestamp_is_rejected __________________
+..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py:39: in test_naive_inventory_timestamp_is_rejected
+    with pytest.raises(ValidationError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValidationError
+__________________ test_negative_incoming_stock_is_rejected ___________________
+..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py:44: in test_negative_incoming_stock_is_rejected
+    with pytest.raises(ValidationError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValidationError
+________________ test_duplicate_default_variants_are_rejected _________________
+..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py:52: in test_duplicate_default_variants_are_rejected
+    with pytest.raises(ValidationError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValidationError
+_____________________ test_sale_tax_mismatch_is_rejected ______________________
+..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py:57: in test_sale_tax_mismatch_is_rejected
+    with pytest.raises(ValidationError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValidationError
+_____________ test_cancelled_zero_quantity_is_validated_correctly _____________
+..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py:62: in test_cancelled_zero_quantity_is_validated_correctly
+    assert validate_sale_row(row).quantity_sold==0
+           ^^^^^^^^^^^^^^^^^^^^^^
+app\services\integrations\v2\sales_returns.py:152: in validate_sale_row
+    qty_sold = _to_int(row.get("quantity_sold"), "quantity_sold", required=True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\services\integrations\v2\sales_returns.py:45: in _to_int
+    raise ValidationError(f"{field_name} is required", code="MISSING_REQUIRED_FIELD")
+E   app.services.integrations.v2.catalog.ValidationError: quantity_sold is required
+___________________ test_returns_only_period_does_not_crash ___________________
+..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py:65: in test_returns_only_period_does_not_crash
+    result=calculate_period_profitability([], [ReturnProfitabilityInput(Decimal('900'),1,Decimal('600'))])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\services\integrations\v2\valuation.py:99: in calculate_period_profitability
+    gross_margin_pct = (100 * gross_profit / net_revenue.abs()).quantize(_FOUR_DP, rounding=ROUND_HALF_UP)
+                                             ^^^^^^^^^^^^^^^
+E   AttributeError: 'decimal.Decimal' object has no attribute 'abs'
+_ test_return_posting_enforces_original_and_status[wrong_sku_currency_value] __
+..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py:84: in test_return_posting_enforces_original_and_status
+    with pytest.raises(ValidationError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValidationError
+---------------------------- Captured stdout setup ----------------------------
+2026-10-28 10:21:20 [warning  ] config.secrets.weak            detail='METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset � third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key' note='Must be fixed before production deploy'
+-------------------------- Captured stdout teardown ---------------------------
+2026-10-28 10:21:20 [info     ] database.engine.disposed
+___________ test_return_posting_enforces_original_and_status[draft] ___________
+..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py:89: in test_return_posting_enforces_original_and_status
+    assert count==0, f'{mutation} return consumed {count} sold unit(s)'
+E   AssertionError: draft return consumed 1 sold unit(s)
+E   assert 1 == 0
+---------------------------- Captured stdout setup ----------------------------
+2026-10-28 10:21:20 [warning  ] config.secrets.weak            detail='METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset � third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key' note='Must be fixed before production deploy'
+-------------------------- Captured stdout teardown ---------------------------
+2026-10-28 10:21:21 [info     ] database.engine.disposed
+_________ test_return_posting_enforces_original_and_status[rejected] __________
+..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py:89: in test_return_posting_enforces_original_and_status
+    assert count==0, f'{mutation} return consumed {count} sold unit(s)'
+E   AssertionError: rejected return consumed 1 sold unit(s)
+E   assert 1 == 0
+---------------------------- Captured stdout setup ----------------------------
+2026-10-28 10:21:21 [warning  ] config.secrets.weak            detail='METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset � third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key' note='Must be fixed before production deploy'
+-------------------------- Captured stdout teardown ---------------------------
+2026-10-28 10:21:21 [info     ] database.engine.disposed
+___________________ test_cross_tenant_return_fk_is_rejected ___________________
+..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py:105: in test_cross_tenant_return_fk_is_rejected
+    with pytest.raises(Exception):
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE Exception
+---------------------------- Captured stdout setup ----------------------------
+2026-10-28 10:21:21 [warning  ] config.secrets.weak            detail='METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset � third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key' note='Must be fixed before production deploy'
+-------------------------- Captured stdout teardown ---------------------------
+2026-10-28 10:21:21 [info     ] database.engine.disposed
+______________ test_failed_posting_group_leaves_no_partial_sale _______________
+..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py:127: in test_failed_posting_group_leaves_no_partial_sale
+    assert count==0, 'failed group left a partial sale in the caller transaction'
+E   AssertionError: failed group left a partial sale in the caller transaction
+E   assert 1 == 0
+---------------------------- Captured stdout setup ----------------------------
+2026-10-28 10:21:21 [warning  ] config.secrets.weak            detail='METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset � third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key' note='Must be fixed before production deploy'
+-------------------------- Captured stdout teardown ---------------------------
+2026-10-28 10:21:21 [info     ] database.engine.disposed
+__________ test_concurrent_identical_registry_events_are_idempotent ___________
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:550: in _prepare_and_execute
+    self._rows = deque(await prepared_stmt.fetch(*parameters))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\asyncpg\prepared_stmt.py:177: in fetch
+    data = await self.__bind_execute(args, 0, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\asyncpg\prepared_stmt.py:268: in __bind_execute
+    data, status, _ = await self.__do_execute(
+.venv\Lib\site-packages\asyncpg\prepared_stmt.py:257: in __do_execute
+    return await executor(protocol)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+asyncpg/protocol/protocol.pyx:205: in bind_execute
+    ???
+E   asyncpg.exceptions.UniqueViolationError: duplicate key value violates unique constraint "event_identity_registry_tenant_id_source_system_entity_kind_key"
+
+The above exception was the direct cause of the following exception:
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:1969: in _exec_single_context
+    self.dialect.do_execute(
+.venv\Lib\site-packages\sqlalchemy\engine\default.py:952: in do_execute
+    cursor.execute(statement, parameters)
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:585: in execute
+    self._adapt_connection.await_(
+.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py:132: in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:563: in _prepare_and_execute
+    self._handle_exception(error)
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:513: in _handle_exception
+    self._adapt_connection._handle_exception(error)
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:797: in _handle_exception
+    raise translated_error from error
+E   sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.IntegrityError: <class 'asyncpg.exceptions.UniqueViolationError'>: duplicate key value violates unique constraint "event_identity_registry_tenant_id_source_system_entity_kind_key"
+
+The above exception was the direct cause of the following exception:
+..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py:150: in test_concurrent_identical_registry_events_are_idempotent
+    replay=await asyncio.wait_for(concurrent,10)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\asyncio\tasks.py:488: in wait_for
+    return await fut
+           ^^^^^^^^^
+app\services\integrations\v2\event_registry.py:101: in check_and_register
+    await session.execute(
+..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py:145: in observed_execute
+    return await original_execute(statement,*a,**kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\ext\asyncio\session.py:448: in execute
+    result = await greenlet_spawn(
+.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py:201: in greenlet_spawn
+    result = context.throw(*sys.exc_info())
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\orm\session.py:2373: in execute
+    return self._execute_internal(
+.venv\Lib\site-packages\sqlalchemy\orm\session.py:2280: in _execute_internal
+    result = conn.execute(
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:1421: in execute
+    return meth(
+.venv\Lib\site-packages\sqlalchemy\sql\elements.py:526: in _execute_on_connection
+    return connection._execute_clauseelement(
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:1643: in _execute_clauseelement
+    ret = self._execute_context(
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:1848: in _execute_context
+    return self._exec_single_context(
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:1988: in _exec_single_context
+    self._handle_dbapi_exception(
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:2365: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:1969: in _exec_single_context
+    self.dialect.do_execute(
+.venv\Lib\site-packages\sqlalchemy\engine\default.py:952: in do_execute
+    cursor.execute(statement, parameters)
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:585: in execute
+    self._adapt_connection.await_(
+.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py:132: in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:563: in _prepare_and_execute
+    self._handle_exception(error)
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:513: in _handle_exception
+    self._adapt_connection._handle_exception(error)
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:797: in _handle_exception
+    raise translated_error from error
+E   sqlalchemy.exc.IntegrityError: (sqlalchemy.dialects.postgresql.asyncpg.IntegrityError) <class 'asyncpg.exceptions.UniqueViolationError'>: duplicate key value violates unique constraint "event_identity_registry_tenant_id_source_system_entity_kind_key"
+E   [SQL: 
+E               INSERT INTO event_identity_registry (
+E                   tenant_id, source_system, entity_kind, external_event_id, event_line_id, payload_hash, target_id, status
+E               ) VALUES (
+E                   $1, $2, $3, $4, $5, $6, $7, 'committed'
+E               )
+E           ]
+E   [parameters: (UUID('d3a29659-8607-41fe-ac6d-dc7e5a5095a0'), 'REVIEW', 'sale', 'SAME', 'L', '0e784bf657d693a76cf4d1d958bd5aa39ba80b5c3085981813926aeab124fe87', UUID('3fa3105a-b2a4-42ce-b40d-fe0be2c216d8'))]
+E   (Background on this error at: https://sqlalche.me/e/20/gkpj)
+---------------------------- Captured stdout setup ----------------------------
+2026-10-28 10:21:22 [warning  ] config.secrets.weak            detail='METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset � third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key' note='Must be fixed before production deploy'
+-------------------------- Captured stdout teardown ---------------------------
+2026-10-28 10:21:23 [info     ] database.engine.disposed
+=========================== short test summary info ===========================
+FAILED ..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py::test_duplicate_csv_headers_are_rejected
+FAILED ..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py::test_extra_csv_cells_are_rejected
+FAILED ..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py::test_naive_inventory_timestamp_is_rejected
+FAILED ..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py::test_negative_incoming_stock_is_rejected
+FAILED ..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py::test_duplicate_default_variants_are_rejected
+FAILED ..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py::test_sale_tax_mismatch_is_rejected
+FAILED ..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py::test_cancelled_zero_quantity_is_validated_correctly
+FAILED ..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py::test_returns_only_period_does_not_crash
+FAILED ..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py::test_return_posting_enforces_original_and_status[wrong_sku_currency_value]
+FAILED ..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py::test_return_posting_enforces_original_and_status[draft]
+FAILED ..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py::test_return_posting_enforces_original_and_status[rejected]
+FAILED ..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py::test_cross_tenant_return_fk_is_rejected
+FAILED ..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py::test_failed_posting_group_leaves_no_partial_sale
+FAILED ..\docs\audit\2026-10-28-retail-v2-verification\test_review_repros.py::test_concurrent_identical_registry_events_are_idempotent
+14 failed in 35.55s

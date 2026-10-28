@@ -1,0 +1,2 @@
+schema_version,location_code,location_name,location_type,parent_location_code,timezone,state_code,country_code,address,fulfills_orders,status
+retail_v2.0.locations,demo-hyd-store,DEMO ONLY Hyderabad Store,store,,Asia/Kolkata,36,IN,,true,active

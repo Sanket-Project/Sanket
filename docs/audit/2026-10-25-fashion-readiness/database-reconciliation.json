@@ -1,0 +1,44 @@
+[
+  {
+    "sku_code": "GOWN-M",
+    "rows": 208,
+    "units": 3760,
+    "distinct_orders": 104
+  },
+  {
+    "sku_code": "GOWN-XL",
+    "rows": 70,
+    "units": 1960,
+    "distinct_orders": 35
+  },
+  {
+    "sku_code": "KURTI-M",
+    "rows": 208,
+    "units": 8178,
+    "distinct_orders": 104
+  },
+  {
+    "sku_code": "KURTI-XL",
+    "rows": 208,
+    "units": 9580,
+    "distinct_orders": 104
+  },
+  {
+    "sku_code": "LEGGING-M",
+    "rows": 200,
+    "units": 10952,
+    "distinct_orders": 100
+  },
+  {
+    "sku_code": "PALAZZO-XL",
+    "rows": 24,
+    "units": 534,
+    "distinct_orders": 12
+  },
+  {
+    "other_tenant_products_visible": 0
+  },
+  {
+    "partitions": 0
+  }
+]

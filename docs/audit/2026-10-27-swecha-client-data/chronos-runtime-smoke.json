@@ -1,0 +1,13 @@
+{
+  "test_context": "explicitly synthetic 16-week series; not Swecha data",
+  "real_model_inference": true,
+  "shape": [
+    1,
+    4,
+    4
+  ],
+  "finite_outputs": true,
+  "ordered_quantiles": true,
+  "database_writes": false,
+  "elapsed_seconds": 18.77
+}

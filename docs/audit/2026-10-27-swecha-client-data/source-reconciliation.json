@@ -1,0 +1,29 @@
+{
+  "sources": {
+    "stock balence Report 2026.csv": {
+      "sha256": "0f9907cea3e73f9cfb70c6e8bd9ae588a45390e849a097a94d2d293431125a15",
+      "bytes": 3048094
+    },
+    "Sales Data 2026.xlsx": {
+      "sha256": "f0f9064a3a6819be09c9b703f7476262beebd408e33091a3e0498afa6f3d2105",
+      "bytes": 19044
+    },
+    "Gross Profit Data 2026.xlsx": {
+      "sha256": "8cd850ea13e3d28bf779ee702aafa31ad62845c895a661ed4a3a50b3bbd89621",
+      "bytes": 1382424
+    },
+    "Purchasr Report 2026.xlsx": {
+      "sha256": "4fb6adeb9ea7f35eac4e434f2c63dc063a053df82ae69ab75fa367ad3794bfec",
+      "bytes": 22973
+    }
+  },
+  "sales_rows": 121,
+  "gross_profit_rows": 15524,
+  "purchase_rows": 266,
+  "totals_reconciled": true,
+  "sales_net": "2581934",
+  "sales_units": "2643",
+  "gp_sales": "27576336.00",
+  "gross_profit": "9754931.2030",
+  "purchases_net": "18882379.57"
+}

@@ -4,7 +4,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 import { ImportUploader } from "./ImportUploader";
 import { useAuthStore } from "@/stores/auth";
 
-const api = vi.hoisted(() => ({ analyze: vi.fn(), upload: vi.fn() }));
+const api = vi.hoisted(() => ({ analyze: vi.fn(), upload: vi.fn(), v2Preview: vi.fn(), v2Confirm: vi.fn() }));
 vi.mock("@/api/integrations", () => ({ integrationsApi: api }));
 vi.mock("react-hot-toast", () => ({ default: { success: vi.fn(), error: vi.fn() } }));
 
@@ -25,6 +25,57 @@ beforeEach(() => {
   vi.clearAllMocks();
   api.analyze.mockResolvedValue(analysis);
   api.upload.mockResolvedValue({ rows_inserted: 1, rows_updated: 0, rows_unchanged: 0, errors: [], warnings: [] });
+});
+
+function v2File() {
+  const source = "schema_version\nretail_v2.0.sales\n";
+  const file = new File([source], "sales.csv", { type: "text/csv" });
+  Object.defineProperty(file, "slice", { value: () => ({ text: async () => source }) });
+  return file;
+}
+
+it("confirms V2 without legacy analysis and notifies the parent, including replays", async () => {
+  useAuthStore.setState({ role: "admin" });
+  api.v2Preview.mockResolvedValue({ schema: "retail_v2.0.sales", row_count: 1, headers: [], errors: [], can_confirm: true, preview_token: "v2-token" });
+  api.v2Confirm.mockResolvedValueOnce({ rows: 1, inserted: 1, skipped: 0 })
+    .mockResolvedValueOnce({ rows: 1, inserted: 0, skipped: 1 });
+  const done = vi.fn();
+  const { container } = render(<ImportUploader kind="sales" onImported={done} />);
+  const file = v2File();
+  await userEvent.upload(container.querySelector('input[type="file"]')!, file);
+  await screen.findByLabelText("V2 preview");
+  await userEvent.click(screen.getByRole("button", { name: "Import" }));
+  await waitFor(() => expect(api.v2Confirm).toHaveBeenCalledWith(file, "v2-token"));
+  expect(done).toHaveBeenCalledWith(expect.objectContaining({ rows_inserted: 1, sales_rows: 1, rows_unchanged: 0 }));
+  await userEvent.click(screen.getByRole("button", { name: "Re-import" }));
+  await waitFor(() => expect(done).toHaveBeenLastCalledWith(expect.objectContaining({ rows_inserted: 0, rows_unchanged: 1 })));
+  expect(api.analyze).not.toHaveBeenCalled();
+  expect(api.upload).not.toHaveBeenCalled();
+});
+
+it.each(["invalid", "viewer", "failure"])("handles V2 %s without notifying completion", async (scenario) => {
+  const priorRole = useAuthStore.getState().role;
+  useAuthStore.setState({ role: scenario === "viewer" ? "viewer" : "admin" });
+  api.v2Preview.mockResolvedValue({ schema: "retail_v2.0.sales", row_count: 1, headers: [],
+    errors: scenario === "invalid" ? [{ row: 2, code: "UNKNOWN_SKU", message: "Unknown SKU" }] : [],
+    can_confirm: scenario !== "invalid", preview_token: "v2-token" });
+  api.v2Confirm.mockRejectedValue(new Error("Allocation rejected"));
+  const done = vi.fn();
+  try {
+    const { container } = render(<ImportUploader kind="sales" onImported={done} />);
+    await userEvent.upload(container.querySelector('input[type="file"]')!, v2File());
+    await screen.findByLabelText("V2 preview");
+    const button = screen.getByRole("button", { name: "Import" });
+    if (scenario === "failure") {
+      await userEvent.click(button);
+      expect(await screen.findByRole("alert")).toHaveTextContent("Allocation rejected");
+    } else {
+      expect(button).toBeDisabled();
+      await userEvent.click(button);
+      expect(api.v2Confirm).not.toHaveBeenCalled();
+    }
+    expect(done).not.toHaveBeenCalled();
+  } finally { act(() => useAuthStore.setState({ role: priorRole })); }
 });
 
 it("shows confidence and saved reuse but requires an explicit import", async () => {

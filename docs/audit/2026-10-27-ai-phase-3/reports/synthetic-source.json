@@ -1,0 +1,266 @@
+{
+  "fixture": "synthetic, artifact-only, no real business data",
+  "report": {
+    "window_days": 90,
+    "currency": "INR",
+    "currencies": [
+      "INR"
+    ],
+    "tiers": {
+      "opportunity": {
+        "label": "Open recommendations \u2014 forecast-based estimates of what is at stake",
+        "status": "estimate",
+        "lines": [
+          {
+            "key": "open_revenue_at_risk",
+            "label": "Revenue at risk on open recommendations",
+            "tier": "opportunity",
+            "value": 10000.0,
+            "unit": "currency",
+            "currency": "INR",
+            "values_by_currency": {
+              "INR": 10000.0
+            },
+            "additive": true,
+            "basis": "Forecast demand that current stock would not cover over each open order's protection window, valued at selling price. An estimate of what is at stake.",
+            "evidence_count": 1,
+            "details": []
+          },
+          {
+            "key": "open_order_value",
+            "label": "Cost of open recommended orders",
+            "tier": "opportunity",
+            "value": 10000.0,
+            "unit": "currency",
+            "currency": "INR",
+            "values_by_currency": {
+              "INR": 10000.0
+            },
+            "additive": true,
+            "basis": "Recommended units x unit cost for open purchase recommendations.",
+            "evidence_count": 1,
+            "details": []
+          }
+        ]
+      },
+      "estimated_at_approval": {
+        "label": "Estimated when you approved \u2014 not observed savings",
+        "status": "estimate",
+        "lines": [
+          {
+            "key": "working_capital_vs_baseline",
+            "label": "Working capital below the spreadsheet baseline (estimate at approval)",
+            "tier": "estimated_at_approval",
+            "value": 12600.0,
+            "unit": "currency",
+            "currency": "INR",
+            "values_by_currency": {
+              "INR": 12600.0
+            },
+            "additive": true,
+            "basis": "For approved purchase orders: (baseline units - units approved) x the unit cost frozen on the recommendation. Baseline = P90 demand over the full lead-time + review window. It becomes a saving only if the order is placed and received as approved, which Sanket does not record.",
+            "evidence_count": 1,
+            "details": [
+              {
+                "recommendation_id": "00000000-0000-0000-0000-000000000001",
+                "sku_id": "00000000-0000-0000-0000-000000000002",
+                "decided_at": "2026-10-27T00:00:00+00:00",
+                "baseline_units": 100,
+                "ordered_units": 37,
+                "units_below_baseline": 63.0,
+                "unit_cost": 200.0,
+                "currency": "INR",
+                "value": 12600.0
+              }
+            ]
+          },
+          {
+            "key": "carrying_cost_implied",
+            "label": "Carrying cost implied by that difference (derived \u2014 not additional)",
+            "tier": "estimated_at_approval",
+            "value": 362.47,
+            "unit": "currency",
+            "currency": "INR",
+            "values_by_currency": {
+              "INR": 362.47
+            },
+            "additive": false,
+            "basis": "The working-capital difference x the holding-cost rate, pro-rated over each order's protection window. Derived from the line above; adding the two double-counts.",
+            "evidence_count": 1,
+            "details": []
+          },
+          {
+            "key": "revenue_at_risk_covered",
+            "label": "Revenue at risk covered by approved orders (estimate)",
+            "tier": "estimated_at_approval",
+            "value": 10000.0,
+            "unit": "currency",
+            "currency": "INR",
+            "values_by_currency": {
+              "INR": 10000.0
+            },
+            "additive": true,
+            "basis": "Forecast demand stock on hand would not have covered, valued at selling price, for each approved order. Revenue, not profit, and not observed sales.",
+            "evidence_count": 1,
+            "details": []
+          },
+          {
+            "key": "approved_orders_on_alerted_skus",
+            "label": "Approved orders on SKUs with an open shortage alert",
+            "tier": "estimated_at_approval",
+            "value": 0.0,
+            "unit": "count",
+            "currency": null,
+            "values_by_currency": {},
+            "additive": true,
+            "basis": "Approved purchase orders whose SKU had an open or acknowledged shortage alert when the recommendation was generated. A count of approvals, not of stockouts avoided: whether a stockout was avoided is not observed.",
+            "evidence_count": 0,
+            "details": []
+          }
+        ]
+      },
+      "observed": {
+        "label": "Observed outcomes",
+        "status": "not_measurable",
+        "lines": [
+          {
+            "key": "realized_savings",
+            "label": "Realised savings",
+            "tier": "observed",
+            "value": null,
+            "unit": "currency",
+            "currency": null,
+            "values_by_currency": {},
+            "additive": true,
+            "basis": "Not measurable yet. Sanket records approvals, but no supplier order, goods receipt or post-order sell-through, so no saving or avoided stockout has been observed. Measuring it needs those records, compared against the baseline for the same weeks.",
+            "evidence_count": 0,
+            "details": []
+          }
+        ]
+      }
+    },
+    "lines": [
+      {
+        "key": "open_revenue_at_risk",
+        "label": "Revenue at risk on open recommendations",
+        "tier": "opportunity",
+        "value": 10000.0,
+        "unit": "currency",
+        "currency": "INR",
+        "values_by_currency": {
+          "INR": 10000.0
+        },
+        "additive": true,
+        "basis": "Forecast demand that current stock would not cover over each open order's protection window, valued at selling price. An estimate of what is at stake.",
+        "evidence_count": 1,
+        "details": []
+      },
+      {
+        "key": "open_order_value",
+        "label": "Cost of open recommended orders",
+        "tier": "opportunity",
+        "value": 10000.0,
+        "unit": "currency",
+        "currency": "INR",
+        "values_by_currency": {
+          "INR": 10000.0
+        },
+        "additive": true,
+        "basis": "Recommended units x unit cost for open purchase recommendations.",
+        "evidence_count": 1,
+        "details": []
+      },
+      {
+        "key": "working_capital_vs_baseline",
+        "label": "Working capital below the spreadsheet baseline (estimate at approval)",
+        "tier": "estimated_at_approval",
+        "value": 12600.0,
+        "unit": "currency",
+        "currency": "INR",
+        "values_by_currency": {
+          "INR": 12600.0
+        },
+        "additive": true,
+        "basis": "For approved purchase orders: (baseline units - units approved) x the unit cost frozen on the recommendation. Baseline = P90 demand over the full lead-time + review window. It becomes a saving only if the order is placed and received as approved, which Sanket does not record.",
+        "evidence_count": 1,
+        "details": [
+          {
+            "recommendation_id": "00000000-0000-0000-0000-000000000001",
+            "sku_id": "00000000-0000-0000-0000-000000000002",
+            "decided_at": "2026-10-27T00:00:00+00:00",
+            "baseline_units": 100,
+            "ordered_units": 37,
+            "units_below_baseline": 63.0,
+            "unit_cost": 200.0,
+            "currency": "INR",
+            "value": 12600.0
+          }
+        ]
+      },
+      {
+        "key": "carrying_cost_implied",
+        "label": "Carrying cost implied by that difference (derived \u2014 not additional)",
+        "tier": "estimated_at_approval",
+        "value": 362.47,
+        "unit": "currency",
+        "currency": "INR",
+        "values_by_currency": {
+          "INR": 362.47
+        },
+        "additive": false,
+        "basis": "The working-capital difference x the holding-cost rate, pro-rated over each order's protection window. Derived from the line above; adding the two double-counts.",
+        "evidence_count": 1,
+        "details": []
+      },
+      {
+        "key": "revenue_at_risk_covered",
+        "label": "Revenue at risk covered by approved orders (estimate)",
+        "tier": "estimated_at_approval",
+        "value": 10000.0,
+        "unit": "currency",
+        "currency": "INR",
+        "values_by_currency": {
+          "INR": 10000.0
+        },
+        "additive": true,
+        "basis": "Forecast demand stock on hand would not have covered, valued at selling price, for each approved order. Revenue, not profit, and not observed sales.",
+        "evidence_count": 1,
+        "details": []
+      },
+      {
+        "key": "approved_orders_on_alerted_skus",
+        "label": "Approved orders on SKUs with an open shortage alert",
+        "tier": "estimated_at_approval",
+        "value": 0.0,
+        "unit": "count",
+        "currency": null,
+        "values_by_currency": {},
+        "additive": true,
+        "basis": "Approved purchase orders whose SKU had an open or acknowledged shortage alert when the recommendation was generated. A count of approvals, not of stockouts avoided: whether a stockout was avoided is not observed.",
+        "evidence_count": 0,
+        "details": []
+      },
+      {
+        "key": "realized_savings",
+        "label": "Realised savings",
+        "tier": "observed",
+        "value": null,
+        "unit": "currency",
+        "currency": null,
+        "values_by_currency": {},
+        "additive": true,
+        "basis": "Not measurable yet. Sanket records approvals, but no supplier order, goods receipt or post-order sell-through, so no saving or avoided stockout has been observed. Measuring it needs those records, compared against the baseline for the same weeks.",
+        "evidence_count": 0,
+        "details": []
+      }
+    ],
+    "caveat": "Estimates use the inputs frozen on each recommendation. Approving a recommendation is a decision, not an outcome: none of these figures is money saved until orders, receipts and sales confirm it.",
+    "snapshot": "b7dc582f8b462631cd886e88c9127d8af97eae3801282f851f904b6f9afbecb0",
+    "as_of": "2026-10-27T00:00:00+00:00",
+    "sources": [
+      "/workspace/roi",
+      "/workspace/decisions"
+    ],
+    "label": "Factual report"
+  }
+}

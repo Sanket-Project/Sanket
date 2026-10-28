@@ -1,0 +1,1 @@
+schema_version,supplier_code,supplier_name,supplier_type,gstin,state_code,country_code,currency,payment_terms_days,default_lead_time_days,contact_email,phone,address,status

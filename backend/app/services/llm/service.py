@@ -84,7 +84,7 @@ class AIService:
         await self.state.admit(tenant)
         owner = uuid.uuid4().hex
         while True:
-            cached = await self.state.cached(key)
+            cached = await self.state.cached(key) if task.spec.cacheable else None
             if cached is not None:
                 output = task.validate(cached)
                 await self._check_policy(ctx, policy)
@@ -95,7 +95,7 @@ class AIService:
             await self.sleep(0.025)
         try:
             # A producer may have populated the cache between our GET and lease.
-            cached = await self.state.cached(key)
+            cached = await self.state.cached(key) if task.spec.cacheable else None
             if cached is not None:
                 output = task.validate(cached)
                 await self._check_policy(ctx, policy)
@@ -159,7 +159,8 @@ class AIService:
                 raise
             if error is None:
                 await self._check_policy(ctx, policy)
-                await self.state.put(key, owner, reply.value.model_dump_json())
+                if task.spec.cacheable:
+                    await self.state.put(key, owner, reply.value.model_dump_json())
                 return AIResult(state="success", value=reply.value)
             delay = max(error.retry_after, 0.2 * (2 ** index) + self.jitter())
             if (not error.transient or index == self.settings.llm_max_retries

@@ -305,7 +305,9 @@ class ZeroShotForecaster:
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         pipeline = get_chronos_pipeline(self.settings)
         ctx_tensors = [torch.tensor(v, dtype=torch.float32) for v in context_arrays.values()]
-        size = max(1, int(self.settings.zero_shot_batch_size))
+        by_series = max(1, int(self.settings.zero_shot_batch_size))
+        by_paths = max(1, int(self.settings.zero_shot_max_sample_paths) // max(1, num_samples))
+        size = min(by_series, by_paths)
         parts: list[np.ndarray] = []
         for start in range(0, len(ctx_tensors), size):
             forecast = pipeline.predict(
@@ -313,14 +315,16 @@ class ZeroShotForecaster:
                 prediction_length=horizon,
                 num_samples=num_samples,
             )
-            parts.append(
+            samples = (
                 forecast.cpu().numpy() if isinstance(forecast, torch.Tensor) else np.asarray(forecast)
             )
-        arr = np.concatenate(parts, axis=0)
-        # arr shape (N, num_samples, horizon)
-        p10 = np.quantile(arr, 0.1, axis=1)
-        p50 = np.quantile(arr, 0.5, axis=1)
-        p90 = np.quantile(arr, 0.9, axis=1)
+            # Reduce the sample axis before retaining a batch. Otherwise a
+            # 25k-SKU catalogue retains and concatenates every decoded sample,
+            # defeating the bounded prediction batch's memory protection.
+            parts.append(np.quantile(samples, [0.1, 0.5, 0.9], axis=1))
+            del samples, forecast
+        # Each reduced batch is (3, batch_series, horizon).
+        p10, p50, p90 = np.concatenate(parts, axis=1)
         return p10, p50, p90
 
     def _timesfm_predict(

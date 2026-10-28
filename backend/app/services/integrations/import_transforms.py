@@ -12,7 +12,7 @@ from collections.abc import Iterable
 from datetime import date
 from decimal import Decimal, InvalidOperation
 
-from app.services.fashion_sizes import normalize_size
+from app.services.fashion_sizes import normalize_size, size_meaning
 
 _SUMMARY = {"total", "subtotal", "grandtotal"}
 _RANGE = re.compile(r"date\s*range\s*:\s*(\d{2})-(\d{2})-(\d{4})\s*-\s*(\d{2})-(\d{2})-(\d{4})", re.IGNORECASE)
@@ -59,7 +59,8 @@ def parse_style(description: str | None) -> str | None:
 def size_codes(codes: Iterable[str | None]) -> list[dict]:
     """Distinct size codes with counts, and the canonical size only when it is recognised."""
     counts = Counter(str(c).strip().upper() for c in codes if not _blank(c))
-    return [{"code": code, "count": n, "suggestion": normalize_size(code)} for code, n in counts.most_common()]
+    return [{"code": code, "count": n, "suggestion": normalize_size(code), "meaning": size_meaning(code)}
+            for code, n in counts.most_common()]
 
 
 def _part(value: object) -> str:

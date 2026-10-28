@@ -1,0 +1,29 @@
+{
+  "workspace": "swecha-demo",
+  "reads": [
+    {
+      "view": "summary",
+      "elapsed_ms": 163,
+      "run_id": "85ae33de-cb23-413d-86c8-fded0e6ea131",
+      "rows": 12,
+      "total_skus": 209,
+      "location_status": "ready"
+    },
+    {
+      "view": "skus",
+      "elapsed_ms": 153,
+      "run_id": "85ae33de-cb23-413d-86c8-fded0e6ea131",
+      "rows": 72,
+      "total_skus": 209,
+      "location_status": "ready"
+    }
+  ],
+  "concurrent_refresh_requests": 4,
+  "distinct_refresh_ids": [
+    "eb22259f-82b6-4ee0-81f7-d7a451605af3"
+  ],
+  "concurrent_refresh_elapsed_ms": 6375,
+  "read_while_refreshing_ms": 132,
+  "retained_run_id": "85ae33de-cb23-413d-86c8-fded0e6ea131",
+  "refresh_status": "pending"
+}

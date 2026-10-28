@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SANKET Launch Video Composition</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      color: #fff;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: 'IBM Plex Sans', sans-serif;
+    }
+    #canvas {
+      width: 1920px;
+      height: 1080px;
+      background: #060606;
+      box-shadow: 0 0 50px rgba(0,0,0,0.8);
+    }
+    #status {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 14px;
+      color: #BDD9D7;
+      background: rgba(3, 54, 61, 0.7);
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: 1px solid rgba(189, 217, 215, 0.3);
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" width="1920" height="1080"></canvas>
+  <div id="status">Initializing...</div>
+
+  <script>
+    const FPS = 30;
+    const DURATION = 25.0; // 25 seconds
+    const TOTAL_FRAMES = FPS * DURATION; // 750 frames
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const statusEl = document.getElementById('status');
+
+    // Brand Colors
+    const C_DARK_BG = '#060606';
+    const C_EMERALD_DEEP = '#03363D';
+    const C_JET_STREAM = '#BDD9D7';
+    const C_WARM_PLATINUM = '#E8E5D0';
+    const C_MUTED_SAGE = '#91AEAB';
+    const C_CRIMSON = '#EF4444';
+    const C_CYAN_ACCENT = '#06B6D4';
+    const C_EMERALD_BRIGHT = '#10B981';
+
+    // Preloaded image references
+    const images = {};
+    const imgUrls = {
+      logo: '/assets/visuals/sanket-logo.svg',
+      forecast: '/assets/visuals/sanket_forecast_run.png',
+      trend: '/assets/visuals/sanket_trend_engine.png',
+      decision: '/assets/visuals/decision_layer.png',
+      fashion: '/assets/visuals/3d_fashion.png',
+      electronics: '/assets/visuals/3d_electronics.png',
+      pharma: '/assets/visuals/3d_pharma.png'
+    };
+
+    function loadImage(src) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => {
+          console.warn('Image failed to load:', src);
+          resolve(null);
+        };
+        img.src = src;
+      });
+    }
+
+    // Easing equations
+    function clamp(val, min = 0, max = 1) {
+      return Math.max(min, Math.min(max, val));
+    }
+    function easeOutCubic(t) {
+      return 1 - Math.pow(1 - t, 3);
+    }
+    function easeInOutCubic(t) {
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+    function easeOutBack(t) {
+      const c1 = 1.70158;
+      const c3 = c1 + 1;
+      return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+    }
+
+    // Helper: Rounded Rect
+    function roundRect(ctx, x, y, width, height, radius) {
+      if (typeof ctx.roundRect === 'function') {
+        ctx.beginPath();
+        const r = typeof radius === 'number' ? radius : (radius ? radius.tl : 0);
+        ctx.roundRect(x, y, width, height, r);
+        ctx.closePath();
+        return;
+      }
+      if (typeof radius === 'number') {
+        radius = { tl: radius, tr: radius, br: radius, bl: radius };
+      }
+      ctx.beginPath();
+      ctx.moveTo(x + radius.tl, y);
+      ctx.lineTo(x + width - radius.tr, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
+      ctx.lineTo(x + width, y + height - radius.br);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius.br, y + height);
+      ctx.lineTo(x + radius.bl, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
+      ctx.lineTo(x, y + radius.tl);
+      ctx.quadraticCurveTo(x, y, x + radius.tl, y);
+      ctx.closePath();
+    }
+
+    // Wrap text helper
+    function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+      const words = text.split(' ');
+      let line = '';
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && n > 0) {
+          ctx.fillText(line, x, y);
+          line = words[n] + ' ';
+          y += lineHeight;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, x, y);
+    }
+
+    // Particles system
+    const particles = [];
+    for (let i = 0; i < 40; i++) {
+      particles.push({
+        x: (i * 47) % 1920,
+        y: (i * 29) % 1080,
+        size: 1 + (i % 3) * 1.2,
+        speedY: 0.3 + (i % 4) * 0.2,
+        opacity: 0.15 + (i % 5) * 0.08
+      });
+    }
+
+    // Draw universal cinematic ambient background
+    function drawBackground(t, tint = null) {
+      ctx.fillStyle = C_DARK_BG;
+      ctx.fillRect(0, 0, 1920, 1080);
+
+      // Radial aurora gradient
+      const radGrad = ctx.createRadialGradient(960 + Math.sin(t * 0.8) * 120, 480 + Math.cos(t * 0.7) * 80, 50, 960, 540, 980);
+      radGrad.addColorStop(0, tint ? tint.primary : 'rgba(3, 54, 61, 0.45)');
+      radGrad.addColorStop(0.5, tint ? tint.secondary : 'rgba(10, 40, 45, 0.25)');
+      radGrad.addColorStop(1, 'rgba(6, 6, 6, 0.95)');
+      ctx.fillStyle = radGrad;
+      ctx.fillRect(0, 0, 1920, 1080);
+
+      // Subtle cyber grid
+      ctx.save();
+      ctx.strokeStyle = tint ? tint.grid : 'rgba(189, 217, 215, 0.035)';
+      ctx.lineWidth = 1;
+      const gridSize = 80;
+      const gridOffset = (t * 15) % gridSize;
+      for (let x = 0; x <= 1920; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, 1080);
+        ctx.stroke();
+      }
+      for (let y = gridOffset; y <= 1080; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(1920, y);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // Ambient floating particles
+      ctx.save();
+      for (let p of particles) {
+        const py = (p.y - t * 30 * p.speedY) % 1080;
+        const curY = py < 0 ? py + 1080 : py;
+        ctx.fillStyle = tint ? tint.particle : `rgba(222, 219, 200, ${p.opacity})`;
+        ctx.beginPath();
+        ctx.arc(p.x, curY, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // SCENE 1: The Problem (0.0s – 3.5s)
+    // ─────────────────────────────────────────────────────────────────────────
+    function drawScene1(t) {
+      const localT = t;
+      const enterP = clamp(localT / 0.8);
+      const easeEnter = easeOutCubic(enterP);
+      const exitP = clamp((localT - 3.1) / 0.4);
+
+      drawBackground(t, {
+        primary: `rgba(239, 68, 68, ${0.18 + Math.sin(t * 8) * 0.05})`,
+        secondary: 'rgba(30, 10, 12, 0.4)',
+        grid: 'rgba(239, 68, 68, 0.06)',
+        particle: 'rgba(248, 113, 113, 0.35)'
+      });
+
+      ctx.save();
+      if (exitP > 0) {
+        const shake = (Math.random() - 0.5) * exitP * 15;
+        ctx.translate(shake, shake);
+        ctx.scale(1 + exitP * 0.15, 1 + exitP * 0.15);
+      }
+
+      ctx.save();
+      ctx.font = '600 16px "IBM Plex Mono", monospace';
+      ctx.fillStyle = C_CRIMSON;
+      const kickerY = 240 - (1 - easeEnter) * 30;
+      ctx.globalAlpha = easeEnter;
+      ctx.fillText('CRITICAL SUPPLY CHAIN BLIND SPOT', 200, kickerY);
+      ctx.restore();
+
+      ctx.save();
+      ctx.font = '700 76px "Space Grotesk", sans-serif';
+      ctx.fillStyle = C_WARM_PLATINUM;
+      const titleY = 330 - (1 - easeEnter) * 40;
+      ctx.globalAlpha = easeEnter;
+      ctx.fillText('WHY ARE MULTI-BILLION DOLLAR', 200, titleY);
+      ctx.fillStyle = '#FF6B6B';
+      ctx.fillText('SUPPLY CHAINS STILL GUESSING?', 200, titleY + 86);
+
+      ctx.font = '400 24px "IBM Plex Sans", sans-serif';
+      ctx.fillStyle = C_MUTED_SAGE;
+      ctx.fillText('Static spreadsheets fail under demand shocks. Stockouts bleed margin.', 200, titleY + 160);
+      ctx.restore();
+
+      // 3 Floating Alert Cards
+      const cardT = clamp((localT - 0.5) / 1.0);
+      const cardEase = easeOutBack(cardT);
+
+      // Card 1
+      ctx.save();
+      ctx.translate(200, 640);
+      ctx.globalAlpha = cardEase * (1 - exitP);
+      ctx.scale(cardEase, cardEase);
+      roundRect(ctx, 0, 0, 440, 180, 16);
+      ctx.fillStyle = 'rgba(20, 8, 8, 0.85)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.fillStyle = '#EF4444';
+      ctx.beginPath(); ctx.arc(36, 42, 7, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.3)';
+      ctx.beginPath(); ctx.arc(36, 42, 14 + Math.sin(t * 12) * 4, 0, Math.PI * 2); ctx.fill();
+
+      ctx.font = '600 14px "IBM Plex Mono", monospace';
+      ctx.fillStyle = '#F87171';
+      ctx.fillText('STOCKOUT ALERT · URGENT', 60, 46);
+      ctx.font = '700 28px "Space Grotesk", sans-serif';
+      ctx.fillStyle = '#FFF';
+      ctx.fillText('SKU-8820: 4 DAYS COVER', 36, 100);
+      ctx.font = '500 16px "IBM Plex Sans", sans-serif';
+      ctx.fillStyle = '#94A3B8';
+      ctx.fillText('Depletion imminent. Reorder unapproved.', 36, 138);
+      ctx.restore();
+
+      // Card 2
+      const card2T = clamp((localT - 0.7) / 1.0);
+      const card2Ease = easeOutBack(card2T);
+      ctx.save();
+      ctx.translate(680, 640);
+      ctx.globalAlpha = card2Ease * (1 - exitP);
+      ctx.scale(card2Ease, card2Ease);
+      roundRect(ctx, 0, 0, 460, 180, 16);
+      ctx.fillStyle = 'rgba(20, 8, 8, 0.85)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.fillStyle = '#F59E0B';
+      ctx.beginPath(); ctx.arc(36, 42, 7, 0, Math.PI * 2); ctx.fill();
+
+      ctx.font = '600 14px "IBM Plex Mono", monospace';
+      ctx.fillStyle = '#FBBF24';
+      ctx.fillText('DEAD-STOCK THREAT · HIGH', 60, 46);
+      ctx.font = '700 28px "Space Grotesk", sans-serif';
+      ctx.fillStyle = '#FFF';
+      ctx.fillText('SKU-1402: 180 DAYS OVER', 36, 100);
+      ctx.font = '500 16px "IBM Plex Sans", sans-serif';
+      ctx.fillStyle = '#94A3B8';
+      ctx.fillText('Markdown loss exposure: -$420,000', 36, 138);
+      ctx.restore();
+
+      // Card 3
+      const card3T = clamp((localT - 0.9) / 1.0);
+      const card3Ease = easeOutBack(card3T);
+      ctx.save();
+      ctx.translate(1180, 640);
+      ctx.globalAlpha = card3Ease * (1 - exitP);
+      ctx.scale(card3Ease, card3Ease);
+      roundRect(ctx, 0, 0, 460, 180, 16);
+      ctx.fillStyle = 'rgba(20, 8, 8, 0.85)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.3)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.fillStyle = '#94A3B8';
+      ctx.beginPath(); ctx.arc(36, 42, 7, 0, Math.PI * 2); ctx.fill();
+
+      ctx.font = '600 14px "IBM Plex Mono", monospace';
+      ctx.fillStyle = '#CBD5E1';
+      ctx.fillText('SUPPLIER SLIP · VENDOR 114', 60, 46);
+      ctx.font = '700 28px "Space Grotesk", sans-serif';
+      ctx.fillStyle = '#FFF';
+      ctx.fillText('+14 DAYS LEAD DELAY', 36, 100);
+      ctx.font = '500 16px "IBM Plex Sans", sans-serif';
+      ctx.fillStyle = '#94A3B8';
+      ctx.fillText('Component gap cascades to assembly.', 36, 138);
+      ctx.restore();
+
+      ctx.restore();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // SCENE 2: The Solution — Meet SANKET (3.5s – 7.0s)
+    // ─────────────────────────────────────────────────────────────────────────
+    function drawScene2(t) {
+      const localT = t - 3.5;
+      const enterP = clamp(localT / 0.8);
+      const easeEnter = easeOutCubic(enterP);
+      const exitP = clamp((localT - 3.1) / 0.4);
+
+      drawBackground(t, {
+        primary: 'rgba(3, 54, 61, 0.65)',
+        secondary: 'rgba(10, 50, 56, 0.35)',
+        grid: 'rgba(189, 217, 215, 0.05)',
+        particle: 'rgba(189, 217, 215, 0.4)'
+      });
+
+      ctx.save();
+      const alpha = easeEnter * (1 - exitP);
+      ctx.globalAlpha = alpha;
+
+      // Radiant central halo
+      const auraGrad = ctx.createRadialGradient(960, 460, 20, 960, 460, 500);
+      auraGrad.addColorStop(0, 'rgba(189, 217, 215, 0.25)');
+      auraGrad.addColorStop(0.5, 'rgba(3, 54, 61, 0.2)');
+      auraGrad.addColorStop(1, 'rgba(6, 6, 6, 0)');
+      ctx.fillStyle = auraGrad;
+      ctx.beginPath();
+      ctx.arc(960, 460, 500, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Logo Animation
+      const logoScale = 0.85 + easeEnter * 0.15;
+      ctx.save();
+      ctx.translate(960, 360);
+      ctx.scale(logoScale, logoScale);
+
+      roundRect(ctx, -75, -75, 150, 150, 34);
+      ctx.fillStyle = C_EMERALD_DEEP;
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(189, 217, 215, 0.4)';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      const strokeP = clamp(localT / 1.2);
+      ctx.strokeStyle = C_JET_STREAM;
+      ctx.lineWidth = 7;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(-45, 25);
+      ctx.bezierCurveTo(-15, 25, -5, -35, 15, -40);
+      ctx.bezierCurveTo(30, -45, 38, -10, 45, -15);
+      ctx.stroke();
+
+      ctx.strokeStyle = 'rgba(189, 217, 215, 0.3)';
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      ctx.moveTo(-45, 35);
+      ctx.lineTo(45, 35);
+      ctx.stroke();
+
+      if (strokeP > 0.6) {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath(); ctx.arc(15, -40, 7.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.beginPath(); ctx.arc(15, -40, 14 + Math.sin(t * 10) * 3, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.restore();
+
+      // Brand Title
+      ctx.font = '700 84px "Space Grotesk", sans-serif';
+      ctx.fillStyle = C_WARM_PLATINUM;
+      ctx.textAlign = 'center';
+      ctx.fillText('SANKET', 960, 520);
+
+      // Kicker
+      ctx.font = '600 16px "IBM Plex Mono", monospace';
+      ctx.fillStyle = C_JET_STREAM;
+      ctx.fillText('PREDICTIVE SUPPLY CHAIN OPERATING SYSTEM', 960, 570);
+
+      // Tagline
+      ctx.font = '500 32px "Space Grotesk", sans-serif';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillText('Stop guessing demand. Forecast every SKU.', 960, 640);
+
+      // 4 Clean Spaced Value Pills
+      const pills = [
+        'Per-SKU Model Routing',
+        'Empirical Confidence Bounds',
+        'Automated Replenishment Engine',
+        'GxP 21 CFR Part 11 Audit Trail'
+      ];
+      const pillW = 310;
+      const pillGap = 32;
+      const totalW = pills.length * pillW + (pills.length - 1) * pillGap;
+      const startX = (1920 - totalW) / 2;
+      pills.forEach((text, idx) => {
+        const pX = startX + idx * (pillW + pillGap);
+        const pY = 740;
+        ctx.save();
+        roundRect(ctx, pX, pY - 24, pillW, 48, 24);
+        ctx.fillStyle = 'rgba(3, 54, 61, 0.65)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(189, 217, 215, 0.35)';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        ctx.font = '500 14px "IBM Plex Sans", sans-serif';
+        ctx.fillStyle = C_JET_STREAM;
+        ctx.textAlign = 'center';
+        ctx.fillText(text, pX + pillW / 2, pY + 6);
+        ctx.restore();
+      });
+
+      ctx.restore();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // SCENE 3: How It Works — The Closed Loop (7.0s – 11.0s)
+    // ─────────────────────────────────────────────────────────────────────────
+    function drawScene3(t) {
+      const localT = t - 7.0;
+      const enterP = clamp(localT / 0.8);
+      const exitP = clamp((localT - 3.6) / 0.4);
+
+      drawBackground(t);
+
+      ctx.save();
+      ctx.globalAlpha = easeOutCubic(enterP) * (1 - exitP);
+
+      ctx.font = '600 15px "IBM Plex Mono", monospace';
+      ctx.fillStyle = C_JET_STREAM;
+      ctx.fillText('02 · HOW IT WORKS', 200, 160);
+
+      ctx.font = '700 58px "Space Grotesk", sans-serif';
+      ctx.fillStyle = C_WARM_PLATINUM;
+      ctx.fillText('ONE CONTINUOUS OPERATIONAL LOOP', 200, 235);
+
+      ctx.font = '400 22px "IBM Plex Sans", sans-serif';
+      ctx.fillStyle = C_MUTED_SAGE;
+      ctx.fillText('From raw orders to approved reorders in four automated steps.', 200, 280);
+
+      // Connecting Laser Line
+      const laserProgress = clamp(localT / 2.5);
+      ctx.save();
+      ctx.strokeStyle = 'rgba(189, 217, 215, 0.15)';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(200, 560);
+      ctx.lineTo(1720, 560);
+      ctx.stroke();
+
+      const currentLaserX = 200 + laserProgress * 1520;
+      ctx.strokeStyle = C_CYAN_ACCENT;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(200, 560);
+      ctx.lineTo(currentLaserX, 560);
+      ctx.stroke();
+
+      ctx.fillStyle = '#FFF';
+      ctx.beginPath();
+      ctx.arc(currentLaserX, 560, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // 4 Flow Steps
+      const steps = [
+        {
+          num: '01',
+          name: 'INGEST',
+          sub: 'Omnichannel Data',
+          desc: 'Shopify, ERPs, Postgres, or spreadsheets map to one canonical ledger with automated gap auditing.'
+        },
+        {
+          num: '02',
+          name: 'FORECAST',
+          sub: 'Per-SKU AI Routing',
+          desc: 'Zero-shot foundation models (Chronos) + deep ensembles deliver p10/p50/p90 confidence intervals.'
+        },
+        {
+          num: '03',
+          name: 'DECIDE',
+          sub: 'Ranked Action Queue',
+          desc: 'Translates forecast shifts into stock transfers, purchase orders, and markdown hold decisions.'
+        },
+        {
+          num: '04',
+          name: 'ACT',
+          sub: '1-Click Execution',
+          desc: 'Approve procurement with immutable GxP 21 CFR Part 11 audit trails and cold-chain verifications.'
+        }
+      ];
+
+      steps.forEach((step, idx) => {
+        const stepDelay = 0.4 + idx * 0.45;
+        const stepT = clamp((localT - stepDelay) / 0.6);
+        const stepEase = easeOutBack(stepT);
+
+        const cardW = 340;
+        const cardH = 360;
+        const cardX = 200 + idx * 390;
+        const cardY = 380 + (1 - stepEase) * 60;
+
+        ctx.save();
+        ctx.translate(cardX, cardY);
+        ctx.globalAlpha = stepT;
+
+        roundRect(ctx, 0, 0, cardW, cardH, 20);
+        ctx.fillStyle = 'rgba(11, 37, 40, 0.85)';
+        ctx.fill();
+        ctx.strokeStyle = stepT > 0.8 ? 'rgba(189, 217, 215, 0.5)' : 'rgba(189, 217, 215, 0.15)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        roundRect(ctx, 24, 24, 52, 32, 8);
+        ctx.fillStyle = 'rgba(3, 54, 61, 0.9)';
+        ctx.fill();
+        ctx.font = '700 15px "IBM Plex Mono", monospace';
+        ctx.fillStyle = C_JET_STREAM;
+        ctx.textAlign = 'center';
+        ctx.fillText(step.num, 50, 45);
+
+        ctx.fillStyle = C_EMERALD_BRIGHT;
+        ctx.beginPath();
+        ctx.arc(cardW - 36, 40, 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.textAlign = 'left';
+        ctx.font = '700 26px "Space Grotesk", sans-serif';
+        ctx.fillStyle = C_WARM_PLATINUM;
+        ctx.fillText(step.name, 24, 105);
+
+        ctx.font = '600 14px "IBM Plex Mono", monospace';
+        ctx.fillStyle = C_JET_STREAM;
+        ctx.fillText(step.sub, 24, 135);
+
+        ctx.strokeStyle = 'rgba(189, 217, 215, 0.12)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(24, 155);
+        ctx.lineTo(cardW - 24, 155);
+        ctx.stroke();
+
+        ctx.font = '400 16px "IBM Plex Sans", sans-serif';
+        ctx.fillStyle = '#CBD5E1';
+        wrapText(ctx, step.desc, 24, 190, cardW - 48, 26);
+
+        ctx.restore();
+      });
+
+      ctx.restore();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // SCENE 4: Key Features — Real UI & Forecast Run (11.0s – 15.0s)
+    // ─────────────────────────────────────────────────────────────────────────
+    function drawScene4(t) {
+      const localT = t - 11.0;
+      const enterP = clamp(localT / 0.8);
+      const exitP = clamp((localT - 3.6) / 0.4);
+
+      drawBackground(t);
+
+      ctx.save();
+      ctx.globalAlpha = easeOutCubic(enterP) * (1 - exitP);
+
+      ctx.font = '600 15px "IBM Plex Mono", monospace';
+      ctx.fillStyle = C_JET_STREAM;
+      ctx.fillText('03 · FORECAST ENGINE', 200, 140);
+
+      ctx.font = '700 56px "Space Grotesk", sans-serif';
+      ctx.fillStyle = C_WARM_PLATINUM;
+      ctx.fillText('FORECAST EVERY SKU WITH CONFIDENCE', 200, 210);
+
+      ctx.font = '400 22px "IBM Plex Sans", sans-serif';
+      ctx.fillStyle = C_MUTED_SAGE;
+      ctx.fillText('Live empirical confidence bounds and automated backtesting against naive baselines.', 200, 255);
+
+      const frameX = 200;
+      const frameY = 320;
+      const frameW = 1040;
+      const frameH = 680;
+
+      ctx.save();
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+      ctx.shadowBlur = 40;
+      ctx.shadowOffsetY = 20;
+
+      roundRect(ctx, frameX, frameY, frameW, frameH, 16);
+      ctx.fillStyle = '#0B2528';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(189, 217, 215, 0.3)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.restore();
+
+      roundRect(ctx, frameX, frameY, frameW, 46, { tl: 16, tr: 16, br: 0, bl: 0 });
+      ctx.fillStyle = '#071B1D';
+      ctx.fill();
+
+      ctx.fillStyle = '#EF4444';
+      ctx.beginPath(); ctx.arc(frameX + 26, frameY + 23, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#F59E0B';
+      ctx.beginPath(); ctx.arc(frameX + 46, frameY + 23, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#10B981';
+      ctx.beginPath(); ctx.arc(frameX + 66, frameY + 23, 6, 0, Math.PI * 2); ctx.fill();
+
+      roundRect(ctx, frameX + 96, frameY + 11, 460, 24, 6);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+      ctx.fill();
+      ctx.font = '500 12px "IBM Plex Mono", monospace';
+      ctx.fillStyle = '#94A3B8';
+      ctx.fillText('https://sanket.ai/app/forecasts/sku-8820?horizon=12w', frameX + 110, frameY + 27);
+
+      if (images.forecast) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(frameX + 2, frameY + 46, frameW - 4, frameH - 48);
+        ctx.clip();
+        ctx.drawImage(images.forecast, frameX + 2, frameY + 46, frameW - 4, frameH - 48);
+        ctx.restore();
+      }
+
+      // Dynamic Forecast Curve Overlay
+      const points = [
+        { x: frameX + 80, y: frameY + 440 },
+        { x: frameX + 220, y: frameY + 400 },
+        { x: frameX + 380, y: frameY + 360 },
+        { x: frameX + 540, y: frameY + 310 },
+        { x: frameX + 700, y: frameY + 270 },
+        { x: frameX + 860, y: frameY + 220 },
+        { x: frameX + 980, y: frameY + 180 }
+      ];
+
+      ctx.save();
+      // p10/p90 Confidence Band
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y - 35);
+      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y - 45);
+      for (let i = points.length - 1; i >= 0; i--) ctx.lineTo(points[i].x, points[i].y + 45);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(6, 182, 212, 0.16)';
+      ctx.fill();
+
+      // Main p50 Trajectory
+      ctx.strokeStyle = C_CYAN_ACCENT;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+      ctx.stroke();
+
+      const lastPt = points[points.length - 1];
+      ctx.fillStyle = '#FFF';
+      ctx.beginPath(); ctx.arc(lastPt.x, lastPt.y, 7, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(6, 182, 212, 0.4)';
+      ctx.beginPath(); ctx.arc(lastPt.x, lastPt.y, 16 + Math.sin(t * 10) * 4, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+
+      // Right Side Floating Callout Cards
+      const callouts = [
+        {
+          kicker: 'AI MODEL ROUTING',
+          title: 'Chronos + TFT Ensemble',
+          stat: '94.2% Pinball Fit',
+          color: C_JET_STREAM
+        },
+        {
+          kicker: 'UNCERTAINTY ENVELOPE',
+          title: 'Empirical p10 / p50 / p90',
+          stat: 'Zero Bias Drift',
+          color: C_CYAN_ACCENT
+        },
+        {
+          kicker: 'PRESCRIPTIVE ACTION',
+          title: 'Reorder Ready: 1,850 Units',
+          stat: 'Lead Cover 4.0d → 45d',
+          color: C_EMERALD_BRIGHT
+        }
+      ];
+
+      callouts.forEach((c, i) => {
+        const cDelay = 0.5 + i * 0.35;
+        const cT = clamp((localT - cDelay) / 0.5);
+        const cEase = easeOutBack(cT);
+
+        const cx = 1300;
+        const cy = 350 + i * 190;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.globalAlpha = cT;
+        ctx.scale(cEase, cEase);
+
+        roundRect(ctx, 0, 0, 420, 160, 18);
+        ctx.fillStyle = 'rgba(11, 37, 40, 0.9)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(189, 217, 215, 0.35)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.font = '600 13px "IBM Plex Mono", monospace';
+        ctx.fillStyle = c.color;
+        ctx.fillText(c.kicker, 28, 42);
+
+        ctx.font = '700 24px "Space Grotesk", sans-serif';
+        ctx.fillStyle = '#FFF';
+        ctx.fillText(c.title, 28, 82);
+
+        roundRect(ctx, 28, 102, 364, 38, 8);
+        ctx.fillStyle = 'rgba(3, 54, 61, 0.7)';
+        ctx.fill();
+
+        ctx.font = '600 15px "IBM Plex Mono", monospace';
+        ctx.fillStyle = c.color;
+        ctx.fillText(c.stat, 42, 126);
+
+        ctx.restore();
+      });
+
+      ctx.restore();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // SCENE 5: Technology & AI Architecture (15.0s – 18.5s)
+    // ─────────────────────────────────────────────────────────────────────────
+    function drawScene5(t) {
+      const localT = t - 15.0;
+      const enterP = clamp(localT / 0.8);
+      const exitP = clamp((localT - 3.1) / 0.4);
+
+      drawBackground(t, {
+        primary: 'rgba(6, 182, 212, 0.25)',
+        secondary: 'rgba(3, 54, 61, 0.4)',
+        grid: 'rgba(6, 182, 212, 0.05)',
+        particle: 'rgba(6, 182, 212, 0.4)'
+      });
+
+      ctx.save();
+      ctx.globalAlpha = easeOutCubic(enterP) * (1 - exitP);
+
+      ctx.font = '600 15px "IBM Plex Mono", monospace';
+      ctx.fillStyle = C_CYAN_ACCENT;
+      ctx.fillText('04 · ARCHITECTURE & AI', 200, 160);
+
+      ctx.font = '700 58px "Space Grotesk", sans-serif';
+      ctx.fillStyle = C_WARM_PLATINUM;
+      ctx.fillText('ENTERPRISE MULTI-MODEL STACK', 200, 235);
+
+      ctx.font = '400 22px "IBM Plex Sans", sans-serif';
+      ctx.fillStyle = C_MUTED_SAGE;
+      ctx.fillText('Foundation models for new SKUs. Temporal deep learning for history. Strict tenant RLS.', 200, 280);
+
+      const nodes = [
+        {
+          title: 'Amazon Chronos Zero-Shot',
+          type: 'FOUNDATION MODEL',
+          desc: 'Forecasts brand new product launches with zero historical data.',
+          x: 200, y: 370
+        },
+        {
+          title: 'Temporal Fusion Transformer',
+          type: 'DEEP LEARNING ENSEMBLE',
+          desc: 'Multi-horizon neural attention models with exogenous regressors.',
+          x: 1040, y: 370
+        },
+        {
+          title: 'PostgreSQL 16 + pgvector',
+          type: 'ISOLATION & SECURITY',
+          desc: 'Row-level security (RLS) guarantees absolute tenant data privacy.',
+          x: 200, y: 640
+        },
+        {
+          title: 'GxP / 21 CFR Part 11 Audit',
+          type: 'PHARMA-GRADE COMPLIANCE',
+          desc: 'Append-only immutable audit rules for pharmaceutical validation.',
+          x: 1040, y: 640
+        }
+      ];
+
+      nodes.forEach((n, idx) => {
+        const nDelay = 0.2 + idx * 0.25;
+        const nT = clamp((localT - nDelay) / 0.5);
+        const nEase = easeOutBack(nT);
+
+        ctx.save();
+        ctx.translate(n.x, n.y);
+        ctx.globalAlpha = nT;
+        ctx.scale(nEase, nEase);
+
+        roundRect(ctx, 0, 0, 680, 220, 20);
+        ctx.fillStyle = 'rgba(11, 37, 40, 0.88)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(6, 182, 212, 0.35)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        roundRect(ctx, 28, 24, 240, 30, 8);
+        ctx.fillStyle = 'rgba(3, 54, 61, 0.8)';
+        ctx.fill();
+        ctx.font = '600 12px "IBM Plex Mono", monospace';
+        ctx.fillStyle = C_CYAN_ACCENT;
+        ctx.fillText(n.type, 40, 44);
+
+        ctx.font = '700 28px "Space Grotesk", sans-serif';
+        ctx.fillStyle = '#FFF';
+        ctx.fillText(n.title, 28, 96);
+
+        ctx.font = '400 17px "IBM Plex Sans", sans-serif';
+        ctx.fillStyle = '#CBD5E1';
+        ctx.fillText(n.desc, 28, 142);
+
+        roundRect(ctx, 28, 168, 180, 28, 6);
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.15)';
+        ctx.fill();
+        ctx.font = '600 12px "IBM Plex Mono", monospace';
+        ctx.fillStyle = '#34D399';
+        ctx.fillText('● SYSTEM ACTIVE', 40, 187);
+
+        ctx.restore();
+      });
+
+      ctx.restore();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // SCENE 6: Real-World Impact (18.5s – 22.0s)
+    // ─────────────────────────────────────────────────────────────────────────
+    function drawScene6(t) {
+      const localT = t - 18.5;
+      const enterP = clamp(localT / 0.8);
+      const exitP = clamp((localT - 3.1) / 0.4);
+
+      drawBackground(t, {
+        primary: 'rgba(16, 185, 129, 0.2)',
+        secondary: 'rgba(3, 54, 61, 0.45)',
+        grid: 'rgba(16, 185, 129, 0.05)',
+        particle: 'rgba(16, 185, 129, 0.35)'
+      });
+
+      ctx.save();
+      ctx.globalAlpha = easeOutCubic(enterP) * (1 - exitP);
+
+      ctx.font = '600 15px "IBM Plex Mono", monospace';
+      ctx.fillStyle = C_EMERALD_BRIGHT;
+      ctx.fillText('05 · MEASURABLE OUTCOMES', 200, 140);
+
+      ctx.font = '700 58px "Space Grotesk", sans-serif';
+      ctx.fillStyle = C_WARM_PLATINUM;
+      ctx.fillText('PROVEN IMPACT ACROSS VERTICALS', 200, 215);
+
+      ctx.font = '400 22px "IBM Plex Sans", sans-serif';
+      ctx.fillStyle = C_MUTED_SAGE;
+      ctx.fillText('Deployed across Fashion, Consumer Electronics, and Pharmaceuticals.', 200, 260);
+
+      const verticals = [
+        {
+          name: 'Apparel & Fashion',
+          metric: '-35%',
+          label: 'STOCKOUT REDUCTION',
+          sub: '12-week horizon with viral trend and markdown optimization',
+          img: images.fashion
+        },
+        {
+          name: 'Consumer Electronics',
+          metric: '99.4%',
+          label: 'SERVICE LEVEL TARGET',
+          sub: 'Component lead-time buffering and BOM risk mitigation',
+          img: images.electronics
+        },
+        {
+          name: 'Pharmaceuticals',
+          metric: '52-WK',
+          label: 'GxP AUDITED HORIZON',
+          sub: '21 CFR Part 11 compliant cold-chain and batch expiry ledger',
+          img: images.pharma
+        }
+      ];
+
+      verticals.forEach((v, idx) => {
+        const vDelay = 0.2 + idx * 0.3;
+        const vT = clamp((localT - vDelay) / 0.6);
+        const vEase = easeOutBack(vT);
+
+        const cardW = 480;
+        const cardH = 660;
+        const cardX = 200 + idx * 530;
+        const cardY = 320 + (1 - vEase) * 60;
+
+        ctx.save();
+        ctx.translate(cardX, cardY);
+        ctx.globalAlpha = vT;
+
+        roundRect(ctx, 0, 0, cardW, cardH, 24);
+        ctx.fillStyle = 'rgba(11, 37, 40, 0.9)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(189, 217, 215, 0.3)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        if (v.img) {
+          ctx.save();
+          roundRect(ctx, 24, 24, cardW - 48, 260, 16);
+          ctx.clip();
+          ctx.drawImage(v.img, 24, 24, cardW - 48, 260);
+          ctx.restore();
+        }
+
+        roundRect(ctx, 24, 310, cardW - 48, 36, 8);
+        ctx.fillStyle = 'rgba(3, 54, 61, 0.8)';
+        ctx.fill();
+        ctx.font = '600 13px "IBM Plex Mono", monospace';
+        ctx.fillStyle = C_JET_STREAM;
+        ctx.textAlign = 'center';
+        ctx.fillText(v.name.toUpperCase(), cardW / 2, 333);
+
+        ctx.textAlign = 'left';
+        ctx.font = '700 78px "Space Grotesk", sans-serif';
+        ctx.fillStyle = '#FFF';
+        ctx.fillText(v.metric, 36, 435);
+
+        ctx.font = '700 15px "IBM Plex Mono", monospace';
+        ctx.fillStyle = C_EMERALD_BRIGHT;
+        ctx.fillText(v.label, 36, 475);
+
+        ctx.strokeStyle = 'rgba(189, 217, 215, 0.12)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(36, 505);
+        ctx.lineTo(cardW - 36, 505);
+        ctx.stroke();
+
+        ctx.font = '400 16px "IBM Plex Sans", sans-serif';
+        ctx.fillStyle = '#CBD5E1';
+        wrapText(ctx, v.sub, 36, 545, cardW - 72, 26);
+
+        ctx.restore();
+      });
+
+      ctx.restore();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // SCENE 7: Strong Closing Statement & Grand Finale (22.0s – 25.0s)
+    // ─────────────────────────────────────────────────────────────────────────
+    function drawScene7(t) {
+      const localT = t - 22.0;
+      const enterP = clamp(localT / 0.7);
+      const easeEnter = easeOutCubic(enterP);
+
+      drawBackground(t, {
+        primary: 'rgba(3, 54, 61, 0.75)',
+        secondary: 'rgba(10, 50, 56, 0.45)',
+        grid: 'rgba(189, 217, 215, 0.06)',
+        particle: 'rgba(189, 217, 215, 0.45)'
+      });
+
+      ctx.save();
+      ctx.globalAlpha = easeEnter;
+
+      const glowGrad = ctx.createRadialGradient(960, 480, 50, 960, 480, 600);
+      glowGrad.addColorStop(0, 'rgba(189, 217, 215, 0.28)');
+      glowGrad.addColorStop(0.4, 'rgba(3, 54, 61, 0.22)');
+      glowGrad.addColorStop(1, 'rgba(6, 6, 6, 0)');
+      ctx.fillStyle = glowGrad;
+      ctx.beginPath();
+      ctx.arc(960, 480, 600, 0, Math.PI * 2);
+      ctx.fill();
+
+      // SANKET Logo Emblem
+      ctx.save();
+      ctx.translate(960, 280);
+      const scale = 0.9 + easeEnter * 0.1;
+      ctx.scale(scale, scale);
+
+      roundRect(ctx, -60, -60, 120, 120, 28);
+      ctx.fillStyle = C_EMERALD_DEEP;
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(189, 217, 215, 0.5)';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      ctx.strokeStyle = C_JET_STREAM;
+      ctx.lineWidth = 6;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(-36, 20);
+      ctx.bezierCurveTo(-12, 20, -4, -28, 12, -32);
+      ctx.bezierCurveTo(24, -36, 30, -8, 36, -12);
+      ctx.stroke();
+
+      ctx.strokeStyle = 'rgba(189, 217, 215, 0.3)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(-36, 28);
+      ctx.lineTo(36, 28);
+      ctx.stroke();
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(12, -32, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Brand Title
+      ctx.font = '700 92px "Space Grotesk", sans-serif';
+      ctx.fillStyle = C_WARM_PLATINUM;
+      ctx.textAlign = 'center';
+      ctx.fillText('STOP GUESSING DEMAND.', 960, 460);
+
+      // Italicized Subtitle
+      ctx.font = '500 48px "Space Grotesk", sans-serif';
+      ctx.fillStyle = C_JET_STREAM;
+      ctx.fillText('Forecast every SKU.', 960, 535);
+
+      ctx.font = '400 20px "IBM Plex Sans", sans-serif';
+      ctx.fillStyle = C_MUTED_SAGE;
+      ctx.fillText('The unified predictive intelligence platform for enterprise supply chains.', 960, 600);
+
+      // Call to action pills
+      const ctaY = 700;
+      // Button 1: Request Enterprise Demo
+      ctx.save();
+      roundRect(ctx, 960 - 280, ctaY, 260, 56, 28);
+      ctx.fillStyle = C_WARM_PLATINUM;
+      ctx.fill();
+      ctx.shadowColor = 'rgba(232, 229, 208, 0.4)';
+      ctx.shadowBlur = 20;
+
+      ctx.font = '600 15px "Space Grotesk", sans-serif';
+      ctx.fillStyle = '#060606';
+      ctx.textAlign = 'center';
+      ctx.fillText('REQUEST ENTERPRISE DEMO', 960 - 150, ctaY + 34);
+      ctx.restore();
+
+      // Button 2: Try Live Sandbox
+      ctx.save();
+      roundRect(ctx, 960 + 20, ctaY, 260, 56, 28);
+      ctx.fillStyle = 'rgba(3, 54, 61, 0.5)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(189, 217, 215, 0.5)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.font = '600 15px "Space Grotesk", sans-serif';
+      ctx.fillStyle = C_JET_STREAM;
+      ctx.textAlign = 'center';
+      ctx.fillText('TRY LIVE SANDBOX →', 960 + 150, ctaY + 34);
+      ctx.restore();
+
+      // Footer
+      ctx.font = '500 13px "IBM Plex Mono", monospace';
+      ctx.fillStyle = 'rgba(232, 229, 208, 0.45)';
+      ctx.textAlign = 'center';
+      ctx.fillText('SANKET · WWW.SANKET.AI · FASHION · ELECTRONICS · PHARMACEUTICALS', 960, 960);
+
+      ctx.restore();
+    }
+
+    // Master Switcher
+    function renderFrame(frameIdx) {
+      const t = frameIdx / FPS;
+      if (t < 3.5) drawScene1(t);
+      else if (t < 7.0) drawScene2(t);
+      else if (t < 11.0) drawScene3(t);
+      else if (t < 15.0) drawScene4(t);
+      else if (t < 18.5) drawScene5(t);
+      else if (t < 22.0) drawScene6(t);
+      else drawScene7(t);
+    }
+
+    async function main() {
+      statusEl.innerText = 'Preloading fonts & visual assets...';
+      try {
+        await Promise.race([
+          document.fonts.ready,
+          new Promise(r => setTimeout(r, 1000))
+        ]);
+      } catch (e) {}
+
+      for (const [key, url] of Object.entries(imgUrls)) {
+        try {
+          images[key] = await Promise.race([
+            loadImage(url),
+            new Promise(r => setTimeout(() => r(null), 1000))
+          ]);
+        } catch (e) {
+          images[key] = null;
+        }
+      }
+      try {
+        for (let f = 0; f < TOTAL_FRAMES; f++) {
+          if (f <= 5 || f % 30 === 0) {
+            await fetch('/log?msg=' + encodeURIComponent('start_' + f));
+          }
+          renderFrame(f);
+          const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.96));
+          if (!blob) throw new Error('toBlob returned null for frame ' + f);
+          await fetch('/save_frame?frame=' + f, { method: 'POST', body: blob });
+          if (f <= 5 || f % 30 === 0) {
+            await fetch('/log?msg=' + encodeURIComponent('saved_' + f));
+          }
+        }
+        statusEl.innerText = 'All frames rendered! Finalizing...';
+        await fetch('/done', { method: 'POST' });
+      } catch (err) {
+        console.error('Render error:', err);
+        await fetch('/log?error=' + encodeURIComponent(err.message + ' ' + (err.stack || '')));
+      }
+    }
+
+    window.onload = main;
+  </script>
+</body>
+</html>

@@ -1,0 +1,211 @@
+FFFFFFF                                                                  [100%]
+================================== FAILURES ===================================
+___________ test_invalid_return_does_not_leave_registered_identity ____________
+..\docs\audit\2026-10-28-retail-v2-copilot-review\test_followup_repros.py:30: in test_invalid_return_does_not_leave_registered_identity
+    assert count==0, 'Rejected return left a registry entry in the caller transaction'
+E   AssertionError: Rejected return left a registry entry in the caller transaction
+E   assert 1 == 0
+---------------------------- Captured stdout setup ----------------------------
+2026-10-28 10:47:00 [warning  ] config.secrets.weak            detail='METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset � third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key' note='Must be fixed before production deploy'
+-------------------------- Captured stdout teardown ---------------------------
+2026-10-28 10:47:02 [info     ] database.engine.disposed
+____________ test_draft_return_can_be_approved_under_same_identity ____________
+..\docs\audit\2026-10-28-retail-v2-copilot-review\test_followup_repros.py:44: in test_draft_return_can_be_approved_under_same_identity
+    result=await service.post_return_event(session,ctx.tenant_id,ret)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\services\integrations\v2\event_registry.py:194: in post_return_event
+    is_dup, target_id = await self.check_and_register(
+app\services\integrations\v2\event_registry.py:106: in check_and_register
+    raise ValidationError(
+E   app.services.integrations.v2.catalog.ValidationError: Conflicting payload under event identity DEMO-POS/return/DEMO-RET-001/DEMO-RLINE-001
+---------------------------- Captured stdout setup ----------------------------
+2026-10-28 10:47:02 [warning  ] config.secrets.weak            detail='METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset � third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key' note='Must be fixed before production deploy'
+-------------------------- Captured stdout teardown ---------------------------
+2026-10-28 10:47:02 [info     ] database.engine.disposed
+______________ test_zero_value_sale_has_valid_zero_value_return _______________
+..\docs\audit\2026-10-28-retail-v2-copilot-review\test_followup_repros.py:59: in test_zero_value_sale_has_valid_zero_value_return
+    assert (await service.post_return_event(session,ctx.tenant_id,ret))['status']=='approved'
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\services\integrations\v2\event_registry.py:240: in post_return_event
+    if ret.tax_amount != (ret.return_value_ex_tax * (orig_row["tax_amount"] / orig_row["net_sale_ex_tax"])).quantize(Decimal("0.01")):
+                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   decimal.InvalidOperation: [<class 'decimal.DivisionUndefined'>]
+---------------------------- Captured stdout setup ----------------------------
+2026-10-28 10:47:02 [warning  ] config.secrets.weak            detail='METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset � third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key' note='Must be fixed before production deploy'
+-------------------------- Captured stdout teardown ---------------------------
+2026-10-28 10:47:02 [info     ] database.engine.disposed
+__________________ test_inventory_exact_retry_is_idempotent ___________________
+..\docs\audit\2026-10-28-retail-v2-copilot-review\test_followup_repros.py:70: in test_inventory_exact_retry_is_idempotent
+    again=await upload.confirm(app_role_db,content,preview['preview_token'],ctx.tenant_id,ctx.user_id,IndustryCode.fashion,SECRET)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\services\integrations\v2\upload.py:136: in confirm
+    raise ValueError("Inventory snapshot is stale for this SKU and location")
+E   ValueError: Inventory snapshot is stale for this SKU and location
+---------------------------- Captured stdout setup ----------------------------
+2026-10-28 10:47:02 [warning  ] config.secrets.weak            detail='METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset � third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key' note='Must be fixed before production deploy'
+-------------------------- Captured stdout teardown ---------------------------
+2026-10-28 10:47:03 [info     ] database.engine.disposed
+________________ test_v2_http_rejects_unknown_sku_and_location ________________
+..\docs\audit\2026-10-28-retail-v2-copilot-review\test_followup_repros.py:80: in test_v2_http_rejects_unknown_sku_and_location
+    assert result['can_confirm'] is False, 'Empty tenant catalog was accepted without resolving the sample SKU/location'
+E   AssertionError: Empty tenant catalog was accepted without resolving the sample SKU/location
+E   assert True is False
+---------------------------- Captured stdout setup ----------------------------
+2026-10-28 10:47:03 [info     ] otel.disabled                  reason='OTLP_ENDPOINT not set'
+2026-10-28 10:47:07 [warning  ] config.secrets.weak            detail='METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset � third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key' note='Must be fixed before production deploy'
+2026-10-28 10:47:07 [info     ] otel.disabled                  reason='OTLP_ENDPOINT not set'
+{"mode": "in-process", "note": "Set REDIS_URL for distributed rate limiting across replicas", "event": "startup.rate_limit.mode", "logger": "app.main", "level": "warning", "timestamp": "2026-10-28T05:17:07.477644Z", "app": "sanket"}
+{"reason": "REDIS_URL unset; using in-process only", "event": "realtime.redis.disabled", "logger": "app.realtime.connection_manager", "level": "info", "timestamp": "2026-10-28T05:17:07.479062Z", "app": "sanket"}
+{"note": "REDIS_URL unset \u2014 hybrid forecasts run in-process (not durable)", "event": "startup.arq.disabled", "logger": "app.main", "level": "warning", "timestamp": "2026-10-28T05:17:07.479456Z", "app": "sanket"}
+{"event": "startup.http_client.ready", "logger": "app.main", "level": "info", "timestamp": "2026-10-28T05:17:07.792247Z", "app": "sanket"}
+{"lock": "background-singletons", "identity": "DESKTOP-N8KTDPL:11292:d8f40962", "event": "leader_lock.acquired", "logger": "app.core.distributed_lock", "level": "info", "timestamp": "2026-10-28T05:17:07.851109Z", "app": "sanket"}
+{"event": "leader.singletons.started", "logger": "app.main", "level": "info", "timestamp": "2026-10-28T05:17:07.851521Z", "app": "sanket"}
+{"event": "startup.db.ok", "logger": "app.main", "level": "info", "timestamp": "2026-10-28T05:17:08.038875Z", "app": "sanket"}
+{"env": "development", "version": "0.1.0", "event": "startup.complete", "logger": "app.main", "level": "info", "timestamp": "2026-10-28T05:17:08.039221Z", "app": "sanket"}
+{"detail": "METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset \u2014 third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key", "note": "Must be fixed before production deploy", "event": "config.secrets.weak", "logger": "app.config", "level": "warning", "timestamp": "2026-10-28T05:17:08.080153Z", "app": "sanket"}
+---------------------------- Captured stdout call -----------------------------
+{"detail": "the role is a SUPERUSER (bypasses RLS); the role has BYPASSRLS (bypasses RLS)", "note": "Tenant isolation is NOT enforced with this DB role/config.", "event": "database.rls_check.unenforced", "logger": "app.core.database", "level": "warning", "timestamp": "2026-10-28T05:17:08.144362Z", "app": "sanket"}
+{"event": "setup plugin alembic.autogenerate.schemas", "logger": "alembic.runtime.plugins", "level": "info", "timestamp": "2026-10-28T05:17:08.484808Z", "app": "sanket"}
+{"event": "setup plugin alembic.autogenerate.tables", "logger": "alembic.runtime.plugins", "level": "info", "timestamp": "2026-10-28T05:17:08.485119Z", "app": "sanket"}
+{"event": "setup plugin alembic.autogenerate.types", "logger": "alembic.runtime.plugins", "level": "info", "timestamp": "2026-10-28T05:17:08.485317Z", "app": "sanket"}
+{"event": "setup plugin alembic.autogenerate.constraints", "logger": "alembic.runtime.plugins", "level": "info", "timestamp": "2026-10-28T05:17:08.485511Z", "app": "sanket"}
+{"event": "setup plugin alembic.autogenerate.defaults", "logger": "alembic.runtime.plugins", "level": "info", "timestamp": "2026-10-28T05:17:08.485710Z", "app": "sanket"}
+{"event": "setup plugin alembic.autogenerate.comments", "logger": "alembic.runtime.plugins", "level": "info", "timestamp": "2026-10-28T05:17:08.486107Z", "app": "sanket"}
+{"revision": ["0037"], "event": "database.migration_check.ok", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-28T05:17:08.663597Z", "app": "sanket"}
+{"note": "all partitions already present", "event": "database.partitions.ok", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-28T05:17:08.678117Z", "app": "sanket"}
+{"event": "database.seed.start", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-28T05:17:09.066400Z", "app": "sanket"}
+{"tenant_id": "6fb8a68a-8455-48e5-a9cb-e23c7c3fb941", "event": "database.seed.completed", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-28T05:17:09.171775Z", "app": "sanket"}
+{"event": "database.engine.disposed", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-28T05:17:09.262477Z", "app": "sanket"}
+{"event": "startup.db_initialization.complete", "logger": "app.main", "level": "info", "timestamp": "2026-10-28T05:17:09.262963Z", "app": "sanket"}
+{"user_id": "e0f0b21f-f024-4682-bcf1-0571fe552eaa", "event": "auth.dev_login.ok", "request_id": "17db0c54-91cb-420a-8eae-d10326dc3875", "logger": "app.routers.auth", "level": "info", "timestamp": "2026-10-28T05:17:09.424804Z", "app": "sanket"}
+{"event": "HTTP Request: POST http://test/api/v1/auth/dev-login \"HTTP/1.1 200 OK\"", "logger": "httpx", "level": "info", "timestamp": "2026-10-28T05:17:09.429902Z", "app": "sanket"}
+{"event": "HTTP Request: POST http://test/api/v1/integrations/v2/preview \"HTTP/1.1 200 OK\"", "logger": "httpx", "level": "info", "timestamp": "2026-10-28T05:17:09.885902Z", "app": "sanket"}
+------------------------------ Captured log call ------------------------------
+WARNING  app.core.database:database.py:171 {'detail': 'the role is a SUPERUSER (bypasses RLS); the role has BYPASSRLS (bypasses RLS)', 'note': 'Tenant isolation is NOT enforced with this DB role/config.', 'event': 'database.rls_check.unenforced', 'logger': 'app.core.database', 'level': 'warning', 'timestamp': '2026-10-28T05:17:08.144362Z', 'app': 'sanket'}
+INFO     alembic.runtime.plugins:plugins.py:37 setup plugin alembic.autogenerate.schemas
+INFO     alembic.runtime.plugins:plugins.py:37 setup plugin alembic.autogenerate.tables
+INFO     alembic.runtime.plugins:plugins.py:37 setup plugin alembic.autogenerate.types
+INFO     alembic.runtime.plugins:plugins.py:37 setup plugin alembic.autogenerate.constraints
+INFO     alembic.runtime.plugins:plugins.py:37 setup plugin alembic.autogenerate.defaults
+INFO     alembic.runtime.plugins:plugins.py:37 setup plugin alembic.autogenerate.comments
+INFO     app.core.database:database.py:205 {'revision': ['0037'], 'event': 'database.migration_check.ok', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-28T05:17:08.663597Z', 'app': 'sanket'}
+INFO     app.core.database:database.py:239 {'note': 'all partitions already present', 'event': 'database.partitions.ok', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-28T05:17:08.678117Z', 'app': 'sanket'}
+INFO     app.core.database:database.py:278 {'event': 'database.seed.start', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-28T05:17:09.066400Z', 'app': 'sanket'}
+INFO     app.core.database:database.py:316 {'tenant_id': '6fb8a68a-8455-48e5-a9cb-e23c7c3fb941', 'event': 'database.seed.completed', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-28T05:17:09.171775Z', 'app': 'sanket'}
+INFO     app.core.database:database.py:245 {'event': 'database.engine.disposed', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-28T05:17:09.262477Z', 'app': 'sanket'}
+INFO     app.main:main.py:212 {'event': 'startup.db_initialization.complete', 'logger': 'app.main', 'level': 'info', 'timestamp': '2026-10-28T05:17:09.262963Z', 'app': 'sanket'}
+INFO     app.routers.auth:auth.py:336 {'user_id': 'e0f0b21f-f024-4682-bcf1-0571fe552eaa', 'event': 'auth.dev_login.ok', 'request_id': '17db0c54-91cb-420a-8eae-d10326dc3875', 'logger': 'app.routers.auth', 'level': 'info', 'timestamp': '2026-10-28T05:17:09.424804Z', 'app': 'sanket'}
+INFO     httpx:_client.py:1740 HTTP Request: POST http://test/api/v1/auth/dev-login "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1740 HTTP Request: POST http://test/api/v1/integrations/v2/preview "HTTP/1.1 200 OK"
+-------------------------- Captured stdout teardown ---------------------------
+{"event": "database.engine.disposed", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-28T05:17:09.906284Z", "app": "sanket"}
+{"event": "signal_pipeline.stopped", "logger": "app.services.external_signals.signal_pipeline", "level": "info", "timestamp": "2026-10-28T05:17:09.909292Z", "app": "sanket"}
+{"event": "shopify_poller.stopped", "logger": "app.services.integrations.shopify_poller", "level": "info", "timestamp": "2026-10-28T05:17:09.909570Z", "app": "sanket"}
+{"event": "leader.singletons.stopped", "logger": "app.main", "level": "info", "timestamp": "2026-10-28T05:17:09.909823Z", "app": "sanket"}
+{"event": "signal_pipeline.stopped", "logger": "app.services.external_signals.signal_pipeline", "level": "info", "timestamp": "2026-10-28T05:17:09.910100Z", "app": "sanket"}
+{"event": "shopify_poller.stopped", "logger": "app.services.integrations.shopify_poller", "level": "info", "timestamp": "2026-10-28T05:17:09.910233Z", "app": "sanket"}
+{"event": "realtime.shutdown.complete", "logger": "app.realtime.connection_manager", "level": "info", "timestamp": "2026-10-28T05:17:09.910340Z", "app": "sanket"}
+{"event": "database.engine.disposed", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-28T05:17:09.923734Z", "app": "sanket"}
+{"event": "shutdown.complete", "logger": "app.main", "level": "info", "timestamp": "2026-10-28T05:17:09.924243Z", "app": "sanket"}
+---------------------------- Captured log teardown ----------------------------
+INFO     app.core.database:database.py:245 {'event': 'database.engine.disposed', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-28T05:17:09.906284Z', 'app': 'sanket'}
+INFO     app.services.external_signals.signal_pipeline:signal_pipeline.py:104 {'event': 'signal_pipeline.stopped', 'logger': 'app.services.external_signals.signal_pipeline', 'level': 'info', 'timestamp': '2026-10-28T05:17:09.909292Z', 'app': 'sanket'}
+INFO     app.services.integrations.shopify_poller:shopify_poller.py:68 {'event': 'shopify_poller.stopped', 'logger': 'app.services.integrations.shopify_poller', 'level': 'info', 'timestamp': '2026-10-28T05:17:09.909570Z', 'app': 'sanket'}
+INFO     app.main:main.py:180 {'event': 'leader.singletons.stopped', 'logger': 'app.main', 'level': 'info', 'timestamp': '2026-10-28T05:17:09.909823Z', 'app': 'sanket'}
+INFO     app.services.external_signals.signal_pipeline:signal_pipeline.py:104 {'event': 'signal_pipeline.stopped', 'logger': 'app.services.external_signals.signal_pipeline', 'level': 'info', 'timestamp': '2026-10-28T05:17:09.910100Z', 'app': 'sanket'}
+INFO     app.services.integrations.shopify_poller:shopify_poller.py:68 {'event': 'shopify_poller.stopped', 'logger': 'app.services.integrations.shopify_poller', 'level': 'info', 'timestamp': '2026-10-28T05:17:09.910233Z', 'app': 'sanket'}
+INFO     app.realtime.connection_manager:connection_manager.py:78 {'event': 'realtime.shutdown.complete', 'logger': 'app.realtime.connection_manager', 'level': 'info', 'timestamp': '2026-10-28T05:17:09.910340Z', 'app': 'sanket'}
+INFO     app.core.database:database.py:245 {'event': 'database.engine.disposed', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-28T05:17:09.923734Z', 'app': 'sanket'}
+INFO     app.main:main.py:259 {'event': 'shutdown.complete', 'logger': 'app.main', 'level': 'info', 'timestamp': '2026-10-28T05:17:09.924243Z', 'app': 'sanket'}
+_____________ test_v2_sales_appear_in_existing_analytics_history ______________
+..\docs\audit\2026-10-28-retail-v2-copilot-review\test_followup_repros.py:91: in test_v2_sales_appear_in_existing_analytics_history
+    assert count>0, 'Successful V2 sale import did not reach the existing analytics history'
+E   AssertionError: Successful V2 sale import did not reach the existing analytics history
+E   assert 0 > 0
+---------------------------- Captured stdout setup ----------------------------
+{"detail": "METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset \u2014 third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key", "note": "Must be fixed before production deploy", "event": "config.secrets.weak", "logger": "app.config", "level": "warning", "timestamp": "2026-10-28T05:17:09.940144Z", "app": "sanket"}
+{"reason": "OTLP_ENDPOINT not set", "event": "otel.disabled", "logger": "app.core.observability", "level": "info", "timestamp": "2026-10-28T05:17:09.941146Z", "app": "sanket"}
+{"mode": "in-process", "note": "Set REDIS_URL for distributed rate limiting across replicas", "event": "startup.rate_limit.mode", "logger": "app.main", "level": "warning", "timestamp": "2026-10-28T05:17:09.948022Z", "app": "sanket"}
+{"reason": "REDIS_URL unset; using in-process only", "event": "realtime.redis.disabled", "logger": "app.realtime.connection_manager", "level": "info", "timestamp": "2026-10-28T05:17:09.948267Z", "app": "sanket"}
+{"note": "REDIS_URL unset \u2014 hybrid forecasts run in-process (not durable)", "event": "startup.arq.disabled", "logger": "app.main", "level": "warning", "timestamp": "2026-10-28T05:17:09.948375Z", "app": "sanket"}
+{"event": "startup.http_client.ready", "logger": "app.main", "level": "info", "timestamp": "2026-10-28T05:17:09.968309Z", "app": "sanket"}
+{"lock": "background-singletons", "identity": "DESKTOP-N8KTDPL:11292:b2f7b948", "event": "leader_lock.acquired", "logger": "app.core.distributed_lock", "level": "info", "timestamp": "2026-10-28T05:17:09.973359Z", "app": "sanket"}
+{"event": "leader.singletons.started", "logger": "app.main", "level": "info", "timestamp": "2026-10-28T05:17:09.973903Z", "app": "sanket"}
+{"event": "startup.db.ok", "logger": "app.main", "level": "info", "timestamp": "2026-10-28T05:17:10.113262Z", "app": "sanket"}
+{"env": "development", "version": "0.1.0", "event": "startup.complete", "logger": "app.main", "level": "info", "timestamp": "2026-10-28T05:17:10.113890Z", "app": "sanket"}
+{"detail": "METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset \u2014 third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key", "note": "Must be fixed before production deploy", "event": "config.secrets.weak", "logger": "app.config", "level": "warning", "timestamp": "2026-10-28T05:17:10.148574Z", "app": "sanket"}
+----------------------------- Captured log setup ------------------------------
+WARNING  app.config:config.py:428 {'detail': 'METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset � third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key', 'note': 'Must be fixed before production deploy', 'event': 'config.secrets.weak', 'logger': 'app.config', 'level': 'warning', 'timestamp': '2026-10-28T05:17:09.940144Z', 'app': 'sanket'}
+INFO     app.core.observability:observability.py:197 {'reason': 'OTLP_ENDPOINT not set', 'event': 'otel.disabled', 'logger': 'app.core.observability', 'level': 'info', 'timestamp': '2026-10-28T05:17:09.941146Z', 'app': 'sanket'}
+---------------------------- Captured stdout call -----------------------------
+{"detail": "the role is a SUPERUSER (bypasses RLS); the role has BYPASSRLS (bypasses RLS)", "note": "Tenant isolation is NOT enforced with this DB role/config.", "event": "database.rls_check.unenforced", "logger": "app.core.database", "level": "warning", "timestamp": "2026-10-28T05:17:10.217290Z", "app": "sanket"}
+{"revision": ["0037"], "event": "database.migration_check.ok", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-28T05:17:10.336895Z", "app": "sanket"}
+{"note": "all partitions already present", "event": "database.partitions.ok", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-28T05:17:10.351924Z", "app": "sanket"}
+{"slug": "sanket-dev", "event": "database.seed.tenant_exists", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-28T05:17:10.608805Z", "app": "sanket"}
+{"event": "database.engine.disposed", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-28T05:17:10.616709Z", "app": "sanket"}
+{"event": "startup.db_initialization.complete", "logger": "app.main", "level": "info", "timestamp": "2026-10-28T05:17:10.617003Z", "app": "sanket"}
+{"user_id": "5c50e90d-711b-4669-9340-0c978d97de62", "event": "auth.dev_login.ok", "request_id": "9d44898a-4114-46c4-b407-8df4011f3e29", "logger": "app.routers.auth", "level": "info", "timestamp": "2026-10-28T05:17:10.809049Z", "app": "sanket"}
+{"event": "HTTP Request: POST http://test/api/v1/auth/dev-login \"HTTP/1.1 200 OK\"", "logger": "httpx", "level": "info", "timestamp": "2026-10-28T05:17:10.814419Z", "app": "sanket"}
+{"event": "HTTP Request: POST http://test/api/v1/integrations/v2/preview \"HTTP/1.1 200 OK\"", "logger": "httpx", "level": "info", "timestamp": "2026-10-28T05:17:11.234824Z", "app": "sanket"}
+{"event": "HTTP Request: POST http://test/api/v1/integrations/v2/confirm \"HTTP/1.1 200 OK\"", "logger": "httpx", "level": "info", "timestamp": "2026-10-28T05:17:11.366049Z", "app": "sanket"}
+------------------------------ Captured log call ------------------------------
+WARNING  app.core.database:database.py:171 {'detail': 'the role is a SUPERUSER (bypasses RLS); the role has BYPASSRLS (bypasses RLS)', 'note': 'Tenant isolation is NOT enforced with this DB role/config.', 'event': 'database.rls_check.unenforced', 'logger': 'app.core.database', 'level': 'warning', 'timestamp': '2026-10-28T05:17:10.217290Z', 'app': 'sanket'}
+INFO     app.core.database:database.py:205 {'revision': ['0037'], 'event': 'database.migration_check.ok', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-28T05:17:10.336895Z', 'app': 'sanket'}
+INFO     app.core.database:database.py:239 {'note': 'all partitions already present', 'event': 'database.partitions.ok', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-28T05:17:10.351924Z', 'app': 'sanket'}
+INFO     app.core.database:database.py:276 {'slug': 'sanket-dev', 'event': 'database.seed.tenant_exists', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-28T05:17:10.608805Z', 'app': 'sanket'}
+INFO     app.core.database:database.py:245 {'event': 'database.engine.disposed', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-28T05:17:10.616709Z', 'app': 'sanket'}
+INFO     app.main:main.py:212 {'event': 'startup.db_initialization.complete', 'logger': 'app.main', 'level': 'info', 'timestamp': '2026-10-28T05:17:10.617003Z', 'app': 'sanket'}
+INFO     app.routers.auth:auth.py:336 {'user_id': '5c50e90d-711b-4669-9340-0c978d97de62', 'event': 'auth.dev_login.ok', 'request_id': '9d44898a-4114-46c4-b407-8df4011f3e29', 'logger': 'app.routers.auth', 'level': 'info', 'timestamp': '2026-10-28T05:17:10.809049Z', 'app': 'sanket'}
+INFO     httpx:_client.py:1740 HTTP Request: POST http://test/api/v1/auth/dev-login "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1740 HTTP Request: POST http://test/api/v1/integrations/v2/preview "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1740 HTTP Request: POST http://test/api/v1/integrations/v2/confirm "HTTP/1.1 200 OK"
+-------------------------- Captured stdout teardown ---------------------------
+{"event": "database.engine.disposed", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-28T05:17:11.410403Z", "app": "sanket"}
+{"event": "signal_pipeline.stopped", "logger": "app.services.external_signals.signal_pipeline", "level": "info", "timestamp": "2026-10-28T05:17:11.412945Z", "app": "sanket"}
+{"event": "shopify_poller.stopped", "logger": "app.services.integrations.shopify_poller", "level": "info", "timestamp": "2026-10-28T05:17:11.413179Z", "app": "sanket"}
+{"event": "leader.singletons.stopped", "logger": "app.main", "level": "info", "timestamp": "2026-10-28T05:17:11.413301Z", "app": "sanket"}
+{"event": "signal_pipeline.stopped", "logger": "app.services.external_signals.signal_pipeline", "level": "info", "timestamp": "2026-10-28T05:17:11.413443Z", "app": "sanket"}
+{"event": "shopify_poller.stopped", "logger": "app.services.integrations.shopify_poller", "level": "info", "timestamp": "2026-10-28T05:17:11.413605Z", "app": "sanket"}
+{"event": "realtime.shutdown.complete", "logger": "app.realtime.connection_manager", "level": "info", "timestamp": "2026-10-28T05:17:11.413723Z", "app": "sanket"}
+{"event": "database.engine.disposed", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-28T05:17:11.428169Z", "app": "sanket"}
+{"event": "shutdown.complete", "logger": "app.main", "level": "info", "timestamp": "2026-10-28T05:17:11.428465Z", "app": "sanket"}
+---------------------------- Captured log teardown ----------------------------
+INFO     app.core.database:database.py:245 {'event': 'database.engine.disposed', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-28T05:17:11.410403Z', 'app': 'sanket'}
+INFO     app.services.external_signals.signal_pipeline:signal_pipeline.py:104 {'event': 'signal_pipeline.stopped', 'logger': 'app.services.external_signals.signal_pipeline', 'level': 'info', 'timestamp': '2026-10-28T05:17:11.412945Z', 'app': 'sanket'}
+INFO     app.services.integrations.shopify_poller:shopify_poller.py:68 {'event': 'shopify_poller.stopped', 'logger': 'app.services.integrations.shopify_poller', 'level': 'info', 'timestamp': '2026-10-28T05:17:11.413179Z', 'app': 'sanket'}
+INFO     app.main:main.py:180 {'event': 'leader.singletons.stopped', 'logger': 'app.main', 'level': 'info', 'timestamp': '2026-10-28T05:17:11.413301Z', 'app': 'sanket'}
+INFO     app.services.external_signals.signal_pipeline:signal_pipeline.py:104 {'event': 'signal_pipeline.stopped', 'logger': 'app.services.external_signals.signal_pipeline', 'level': 'info', 'timestamp': '2026-10-28T05:17:11.413443Z', 'app': 'sanket'}
+INFO     app.services.integrations.shopify_poller:shopify_poller.py:68 {'event': 'shopify_poller.stopped', 'logger': 'app.services.integrations.shopify_poller', 'level': 'info', 'timestamp': '2026-10-28T05:17:11.413605Z', 'app': 'sanket'}
+INFO     app.realtime.connection_manager:connection_manager.py:78 {'event': 'realtime.shutdown.complete', 'logger': 'app.realtime.connection_manager', 'level': 'info', 'timestamp': '2026-10-28T05:17:11.413723Z', 'app': 'sanket'}
+INFO     app.core.database:database.py:245 {'event': 'database.engine.disposed', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-28T05:17:11.428169Z', 'app': 'sanket'}
+INFO     app.main:main.py:259 {'event': 'shutdown.complete', 'logger': 'app.main', 'level': 'info', 'timestamp': '2026-10-28T05:17:11.428465Z', 'app': 'sanket'}
+_________ test_final_partial_return_gets_original_rounding_remainder __________
+..\docs\audit\2026-10-28-retail-v2-copilot-review\test_followup_repros.py:104: in test_final_partial_return_gets_original_rounding_remainder
+    result=await service.post_return_event(session,ctx.tenant_id,replace(ret,return_id=f'ROUND-{i}',return_value_ex_tax=Decimal(value),tax_amount=Decimal(tax),refund_reference=None,refund_amount=None,refund_method=None,refund_at=None))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\services\integrations\v2\event_registry.py:241: in post_return_event
+    raise ValidationError("Return tax does not match the original discounted allocation", code="RETURN_TAX_MISMATCH")
+E   app.services.integrations.v2.catalog.ValidationError: Return tax does not match the original discounted allocation
+---------------------------- Captured stdout setup ----------------------------
+{"detail": "METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset \u2014 third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key", "note": "Must be fixed before production deploy", "event": "config.secrets.weak", "logger": "app.config", "level": "warning", "timestamp": "2026-10-28T05:17:11.445763Z", "app": "sanket"}
+----------------------------- Captured log setup ------------------------------
+WARNING  app.config:config.py:428 {'detail': 'METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset � third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key', 'note': 'Must be fixed before production deploy', 'event': 'config.secrets.weak', 'logger': 'app.config', 'level': 'warning', 'timestamp': '2026-10-28T05:17:11.445763Z', 'app': 'sanket'}
+-------------------------- Captured stdout teardown ---------------------------
+{"event": "database.engine.disposed", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-28T05:17:11.651766Z", "app": "sanket"}
+---------------------------- Captured log teardown ----------------------------
+INFO     app.core.database:database.py:245 {'event': 'database.engine.disposed', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-28T05:17:11.651766Z', 'app': 'sanket'}
+============================== warnings summary ===============================
+docs/audit/2026-10-28-retail-v2-copilot-review/test_followup_repros.py::test_v2_http_rejects_unknown_sku_and_location
+  C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\passlib\handlers\argon2.py:716: DeprecationWarning: Accessing argon2.__version__ is deprecated and will be removed in a future release. Use importlib.metadata directly to query for argon2-cffi's packaging metadata.
+    _argon2_cffi.__version__, max_version)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED ..\docs\audit\2026-10-28-retail-v2-copilot-review\test_followup_repros.py::test_invalid_return_does_not_leave_registered_identity
+FAILED ..\docs\audit\2026-10-28-retail-v2-copilot-review\test_followup_repros.py::test_draft_return_can_be_approved_under_same_identity
+FAILED ..\docs\audit\2026-10-28-retail-v2-copilot-review\test_followup_repros.py::test_zero_value_sale_has_valid_zero_value_return
+FAILED ..\docs\audit\2026-10-28-retail-v2-copilot-review\test_followup_repros.py::test_inventory_exact_retry_is_idempotent
+FAILED ..\docs\audit\2026-10-28-retail-v2-copilot-review\test_followup_repros.py::test_v2_http_rejects_unknown_sku_and_location
+FAILED ..\docs\audit\2026-10-28-retail-v2-copilot-review\test_followup_repros.py::test_v2_sales_appear_in_existing_analytics_history
+FAILED ..\docs\audit\2026-10-28-retail-v2-copilot-review\test_followup_repros.py::test_final_partial_return_gets_original_rounding_remainder
+7 failed, 1 warning in 38.80s

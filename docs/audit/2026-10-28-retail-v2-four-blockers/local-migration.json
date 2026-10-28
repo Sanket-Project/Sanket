@@ -1,0 +1,58 @@
+{
+  "database": "sanket_recovered_20261026",
+  "revision_before": [
+    "0035"
+  ],
+  "before": {
+    "history_rows": 34370,
+    "v2_history_rows": 0
+  },
+  "backup": "C:\\Users\\admin\\Desktop\\Prisma\\backups\\sanket_recovered_20261026_before_0038_20261028T070107Z.dump",
+  "backup_bytes": 5782393,
+  "backup_catalog_verified": true,
+  "revision_after": [
+    "0038"
+  ],
+  "after": {
+    "history_rows": 34370,
+    "v2_history_rows": 0
+  },
+  "v2_facts": {
+    "sales": 0,
+    "returns": 0
+  },
+  "rls_tables": [
+    {
+      "relname": "event_identity_registry",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "stock_authorities",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "v2_inventory_snapshots",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "v2_return_events",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "v2_sales_events",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    }
+  ],
+  "application_role": {
+    "role": "sanket_app",
+    "rolsuper": false,
+    "rolbypassrls": false
+  },
+  "cross_tenant_history_visible": 0,
+  "status": "applied_and_verified"
+}

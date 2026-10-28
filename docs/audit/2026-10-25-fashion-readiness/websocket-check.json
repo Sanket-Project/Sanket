@@ -1,0 +1,6 @@
+{
+  "connection_ready": true,
+  "correct_tenant": true,
+  "ping_pong": true,
+  "scope": "Local authenticated handshake and keepalive only; no sales event fan-out assertion."
+}

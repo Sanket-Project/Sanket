@@ -10,6 +10,7 @@ import { PageLoader } from "@/components/ui/Spinner";
 import { useFormattedCurrency } from "@/hooks/useFormattedCurrency";
 import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { roiApi, type RoiLine, type RoiTier } from "@/api/roi";
+import { ManagementReport } from "@/components/ai/ManagementReport";
 
 const WINDOWS = [30, 90, 180, 365];
 const TIER_ORDER: RoiTier[] = ["opportunity", "estimated_at_approval", "observed"];
@@ -151,6 +152,7 @@ export const ROIDashboardPage = () => {
         </div>
       </div>
 
+      <ManagementReport windowDays={windowDays} />
       {nothingYet ? (
         <Card padding="none">
           <EmptyState

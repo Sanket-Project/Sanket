@@ -1,0 +1,6 @@
+ Container prisma-redis-1 Running 
+ Container prisma-postgres-1 Running 
+ Container prisma-redis-1 Waiting 
+ Container prisma-postgres-1 Waiting 
+ Container prisma-redis-1 Healthy 
+ Container prisma-postgres-1 Healthy 

@@ -1,0 +1,31 @@
+FF                                                                       [100%]
+================================== FAILURES ===================================
+_________________ test_dead_worker_is_reported_and_retryable __________________
+tests\test_persisted_forecasts.py:202: in test_dead_worker_is_reported_and_retryable
+    assert data['refresh']['status'] == 'failed'
+E   AssertionError: assert 'running' == 'failed'
+E     
+E     - failed
+E     + running
+---------------------------- Captured stdout setup ----------------------------
+2026-10-26 22:57:44 [warning  ] config.secrets.weak            detail='METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset � third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key' note='Must be fixed before production deploy'
+2026-10-26 22:57:44 [warning  ] config.secrets.weak            detail='METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset � third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key' note='Must be fixed before production deploy'
+-------------------------- Captured stdout teardown ---------------------------
+2026-10-26 22:57:48 [info     ] database.engine.disposed
+2026-10-26 22:57:48 [info     ] database.engine.disposed
+______________ test_pending_reservation_recovers_missing_enqueue ______________
+tests\test_persisted_forecasts.py:219: in test_pending_reservation_recovers_missing_enqueue
+    assert queue.enqueue_job.await_count == 2
+E   AssertionError: assert 1 == 2
+E    +  where 1 = <AsyncMock name='mock.enqueue_job' id='2417546311200'>.await_count
+E    +    where <AsyncMock name='mock.enqueue_job' id='2417546311200'> = <AsyncMock id='2417546312208'>.enqueue_job
+---------------------------- Captured stdout setup ----------------------------
+2026-10-26 22:57:48 [warning  ] config.secrets.weak            detail='METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset � third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key' note='Must be fixed before production deploy'
+2026-10-26 22:57:48 [warning  ] config.secrets.weak            detail='METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset � third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key' note='Must be fixed before production deploy'
+-------------------------- Captured stdout teardown ---------------------------
+2026-10-26 22:57:48 [info     ] database.engine.disposed
+2026-10-26 22:57:48 [info     ] database.engine.disposed
+=========================== short test summary info ===========================
+FAILED tests/test_persisted_forecasts.py::test_dead_worker_is_reported_and_retryable
+FAILED tests/test_persisted_forecasts.py::test_pending_reservation_recovers_missing_enqueue
+2 failed, 11 deselected in 32.42s

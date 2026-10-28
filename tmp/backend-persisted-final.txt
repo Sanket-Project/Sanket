@@ -1,0 +1,95 @@
+============================= test session starts =============================
+platform win32 -- Python 3.14.3, pytest-9.1.0, pluggy-1.6.0
+rootdir: C:\Users\admin\Desktop\Prisma\backend
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.14.0, Faker-40.23.0, hypothesis-6.170.11, asyncio-1.4.0, cov-7.1.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 674 items
+
+tests\test_accept_invite.py ...........                                  [  1%]
+tests\test_allocation.py .........                                       [  2%]
+tests\test_auth.py ....................                                  [  5%]
+tests\test_billing.py .......................                            [  9%]
+tests\test_cache.py ......                                               [ 10%]
+tests\test_calendar_convention.py ....                                   [ 10%]
+tests\test_connector_catalog.py ......                                   [ 11%]
+tests\test_decision_engine.py ..............................             [ 16%]
+tests\test_decision_expiry.py .....                                      [ 16%]
+tests\test_decision_readiness.py ..........                              [ 18%]
+tests\test_dedupe_sales.py ..........                                    [ 19%]
+tests\test_dev_stack.py .....                                            [ 20%]
+tests\test_digest_readiness.py ..                                        [ 20%]
+tests\test_distributed_lock.py .....                                     [ 21%]
+tests\test_entitlement.py ..................                             [ 24%]
+tests\test_external_signals.py ......                                    [ 25%]
+tests\test_fashion_sizes.py .......................                      [ 28%]
+tests\test_file_import.py .............................................  [ 35%]
+tests\test_financial_currency.py ...                                     [ 35%]
+tests\test_firebase_auth.py .........                                    [ 37%]
+tests\test_forecast_accuracy.py ............                             [ 38%]
+tests\test_forecast_backtest.py .....                                    [ 39%]
+tests\test_forecast_gate.py .....                                        [ 40%]
+tests\test_forecast_scale.py .                                           [ 40%]
+tests\test_forecast_sku_cap.py .                                         [ 40%]
+tests\test_health.py ...                                                 [ 41%]
+tests\test_idempotency.py .....                                          [ 41%]
+tests\test_industry_config.py ..........                                 [ 43%]
+tests\test_industry_context.py .........                                 [ 44%]
+tests\test_industry_migration.py .........                               [ 45%]
+tests\test_industry_scope.py ......................                      [ 49%]
+tests\test_integrations_hub_db.py .......                                [ 50%]
+tests\test_inventory_coverage.py .............                           [ 52%]
+tests\test_inventory_service.py ........                                 [ 53%]
+tests\test_location_accuracy.py ....                                     [ 54%]
+tests\test_location_decisions_ledger.py .....                            [ 54%]
+tests\test_location_forecast_schema.py ..                                [ 55%]
+tests\test_location_forecast_split.py ...........                        [ 56%]
+tests\test_location_shares.py ...............                            [ 58%]
+tests\test_locations_api.py ..............                               [ 60%]
+tests\test_locations_schema.py ...                                       [ 61%]
+tests\test_locations_service.py ....                                     [ 62%]
+tests\test_ml_loader_sql.py ..                                           [ 62%]
+tests\test_network_decisions_allocation.py ........                      [ 63%]
+tests\test_network_decisions_transfers.py .....                          [ 64%]
+tests\test_partitions.py ........                                        [ 65%]
+tests\test_persisted_forecasts.py .................                      [ 67%]
+tests\test_pharma_gxp.py ...                                             [ 68%]
+tests\test_planning_inputs.py ....                                       [ 68%]
+tests\test_private_access.py .....                                       [ 69%]
+tests\test_rate_limit.py ........                                        [ 70%]
+tests\test_rbac.py ...                                                   [ 71%]
+tests\test_remediation_seed.py .....                                     [ 72%]
+tests\test_rls_isolation.py ....                                         [ 72%]
+tests\test_roi_tiers.py ........                                         [ 73%]
+tests\test_sales_currency.py .........                                   [ 75%]
+tests\test_sales_identity.py ..........                                  [ 76%]
+tests\test_sales_import_replay.py .............                          [ 78%]
+tests\test_sales_record_identity_migration.py ..                         [ 78%]
+tests\test_sales_timeseries_gaps.py .                                    [ 79%]
+tests\test_scenario_readiness.py ..                                      [ 79%]
+tests\test_scenario_simulator.py .......................                 [ 82%]
+tests\test_shopify_sync.py ..........                                    [ 84%]
+tests\test_sql_source.py .....................                           [ 87%]
+tests\test_suite_isolation.py .                                          [ 87%]
+tests\test_transfers.py ........                                         [ 88%]
+tests\test_trend_evidence.py ........                                    [ 89%]
+tests\test_upload_api_replay.py ...                                      [ 90%]
+tests\test_validation_errors.py ....                                     [ 90%]
+tests\test_webhook_delivery.py ......                                    [ 91%]
+tests\test_webhook_replay.py ......                                      [ 92%]
+tests\test_whatsapp_digest.py .............................              [ 97%]
+tests\test_woocommerce_sync.py ........                                  [ 98%]
+tests\test_zero_demand_import.py ............                            [100%]
+
+============================== warnings summary ===============================
+tests/test_accept_invite.py::test_accepted_invite_inherits_the_workspace_industry
+  C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\passlib\handlers\argon2.py:716: DeprecationWarning: Accessing argon2.__version__ is deprecated and will be removed in a future release. Use importlib.metadata directly to query for argon2-cffi's packaging metadata.
+    _argon2_cffi.__version__, max_version)
+
+tests/test_forecast_sku_cap.py::test_run_keeps_more_than_fifty_skus
+  C:\Users\admin\Desktop\Prisma\backend\ml\sanket_ml\fusion\hybrid_forecaster.py:142: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    generated_at=datetime.utcnow(),
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================= 674 passed, 2 warnings in 364.25s (0:06:04) =================

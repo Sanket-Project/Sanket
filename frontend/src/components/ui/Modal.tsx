@@ -9,7 +9,7 @@ interface Props {
   title?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "md" | "lg" | "xl" | "wide";
 }
 
 const FOCUSABLE =
@@ -73,11 +73,13 @@ export const Modal = ({
     md: "max-w-lg",
     lg: "max-w-2xl",
     xl: "max-w-4xl",
+    wide: "max-w-[1600px] max-h-[92dvh] flex flex-col",
   }[size];
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[10vh] overflow-y-auto bg-slate-950/40 backdrop-blur-md animate-fade-in"
+      className={clsx("fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto bg-slate-950/40 backdrop-blur-md animate-fade-in",
+        size === "wide" ? "pt-[4dvh]" : "pt-[10vh]")}
       onClick={onClose}
     >
       <div
@@ -92,7 +94,7 @@ export const Modal = ({
         )}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex shrink-0 items-center justify-between mb-5">
           <h2
             id={titleId.current}
             className="font-heading text-xl font-semibold text-content tracking-tight"
@@ -107,7 +109,7 @@ export const Modal = ({
             <X size={18} aria-hidden="true" />
           </button>
         </div>
-        <div className="text-content-muted text-sm leading-relaxed">{children}</div>
+        <div className={clsx("text-content-muted text-sm leading-relaxed", size === "wide" && "min-h-0 overflow-y-auto pr-1")}>{children}</div>
         {footer && (
           <div className="mt-6 pt-5 border-t border-line flex justify-end gap-3">
             {footer}

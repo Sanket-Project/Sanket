@@ -1,0 +1,154 @@
+{
+  "dataset": "DETERMINISTIC SYNTHETIC - NOT SWECHA SALES",
+  "scoring": "Forecast steps paired with next 8 withheld Monday-labelled buckets; response dates separately fail alignment (Sunday vs Monday).",
+  "portfolio_wape": 97.45,
+  "last_value_wape": 12.36,
+  "interval_coverage_pct": 16.67,
+  "n_skus": 6,
+  "n_heldout_points": 48,
+  "rows": [
+    {
+      "sku": "KURTI-M",
+      "pattern": "stable",
+      "actual_units": 328,
+      "forecast_units": 621.47,
+      "wape": 89.47,
+      "bias_pct": 89.47,
+      "interval_coverage_pct": 0.0,
+      "baselines": {
+        "last_value": 7.32,
+        "last4_mean": 8.99,
+        "seasonal52": 7.93
+      },
+      "forecast_dates": [
+        "2026-08-30",
+        "2026-09-06",
+        "2026-09-13",
+        "2026-09-20",
+        "2026-09-27",
+        "2026-10-04",
+        "2026-10-11",
+        "2026-10-18"
+      ]
+    },
+    {
+      "sku": "KURTI-XL",
+      "pattern": "trend",
+      "actual_units": 527,
+      "forecast_units": 1047.78,
+      "wape": 98.82,
+      "bias_pct": 98.82,
+      "interval_coverage_pct": 0.0,
+      "baselines": {
+        "last_value": 4.36,
+        "last4_mean": 3.61,
+        "seasonal52": 28.84
+      },
+      "forecast_dates": [
+        "2026-08-30",
+        "2026-09-06",
+        "2026-09-13",
+        "2026-09-20",
+        "2026-09-27",
+        "2026-10-04",
+        "2026-10-11",
+        "2026-10-18"
+      ]
+    },
+    {
+      "sku": "GOWN-M",
+      "pattern": "seasonal",
+      "actual_units": 123,
+      "forecast_units": 229.94,
+      "wape": 86.94,
+      "bias_pct": 86.94,
+      "interval_coverage_pct": 0.0,
+      "baselines": {
+        "last_value": 41.46,
+        "last4_mean": 49.59,
+        "seasonal52": 10.57
+      },
+      "forecast_dates": [
+        "2026-08-30",
+        "2026-09-06",
+        "2026-09-13",
+        "2026-09-20",
+        "2026-09-27",
+        "2026-10-04",
+        "2026-10-11",
+        "2026-10-18"
+      ]
+    },
+    {
+      "sku": "GOWN-XL",
+      "pattern": "intermittent",
+      "actual_units": 19,
+      "forecast_units": 31.98,
+      "wape": 268.31,
+      "bias_pct": 68.31,
+      "interval_coverage_pct": 100.0,
+      "baselines": {
+        "last_value": 100.0,
+        "last4_mean": 289.47,
+        "seasonal52": 294.74
+      },
+      "forecast_dates": [
+        "2026-08-30",
+        "2026-09-06",
+        "2026-09-13",
+        "2026-09-20",
+        "2026-09-27",
+        "2026-10-04",
+        "2026-10-11",
+        "2026-10-18"
+      ]
+    },
+    {
+      "sku": "LEGGING-M",
+      "pattern": "stockout",
+      "actual_units": 441,
+      "forecast_units": 884.06,
+      "wape": 100.47,
+      "bias_pct": 100.47,
+      "interval_coverage_pct": 0.0,
+      "baselines": {
+        "last_value": 14.29,
+        "last4_mean": 44.22,
+        "seasonal52": 5.9
+      },
+      "forecast_dates": [
+        "2026-08-30",
+        "2026-09-06",
+        "2026-09-13",
+        "2026-09-20",
+        "2026-09-27",
+        "2026-10-04",
+        "2026-10-11",
+        "2026-10-18"
+      ]
+    },
+    {
+      "sku": "PALAZZO-XL",
+      "pattern": "new",
+      "actual_units": 180,
+      "forecast_units": 341.58,
+      "wape": 89.77,
+      "bias_pct": 89.77,
+      "interval_coverage_pct": 0.0,
+      "baselines": {
+        "last_value": 11.11,
+        "last4_mean": 11.11
+      },
+      "forecast_dates": [
+        "2026-08-30",
+        "2026-09-06",
+        "2026-09-13",
+        "2026-09-20",
+        "2026-09-27",
+        "2026-10-04",
+        "2026-10-11",
+        "2026-10-18"
+      ]
+    }
+  ]
+}

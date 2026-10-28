@@ -1,0 +1,953 @@
+============================= test session starts =============================
+platform win32 -- Python 3.14.3, pytest-9.1.0, pluggy-1.6.0
+rootdir: C:\Users\admin\Desktop\Prisma\backend
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.14.0, Faker-40.23.0, hypothesis-6.170.11, asyncio-1.4.0, cov-7.1.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 672 items
+
+tests\test_accept_invite.py ...........                                  [  1%]
+tests\test_allocation.py .........                                       [  2%]
+tests\test_auth.py ....................                                  [  5%]
+tests\test_billing.py .......................                            [  9%]
+tests\test_cache.py ......                                               [ 10%]
+tests\test_calendar_convention.py ....                                   [ 10%]
+tests\test_connector_catalog.py ......                                   [ 11%]
+tests\test_decision_engine.py ..............................             [ 16%]
+tests\test_decision_expiry.py .....                                      [ 16%]
+tests\test_decision_readiness.py ..........                              [ 18%]
+tests\test_dedupe_sales.py ..........                                    [ 19%]
+tests\test_dev_stack.py .....                                            [ 20%]
+tests\test_digest_readiness.py ..                                        [ 20%]
+tests\test_distributed_lock.py .....                                     [ 21%]
+tests\test_entitlement.py ..................                             [ 24%]
+tests\test_external_signals.py ......                                    [ 25%]
+tests\test_fashion_sizes.py .......................                      [ 28%]
+tests\test_file_import.py .............................................  [ 35%]
+tests\test_financial_currency.py ...                                     [ 35%]
+tests\test_firebase_auth.py .........                                    [ 37%]
+tests\test_forecast_accuracy.py ............                             [ 38%]
+tests\test_forecast_backtest.py .....                                    [ 39%]
+tests\test_forecast_gate.py .....                                        [ 40%]
+tests\test_forecast_scale.py F                                           [ 40%]
+tests\test_forecast_sku_cap.py .                                         [ 40%]
+tests\test_health.py ...                                                 [ 41%]
+tests\test_idempotency.py .....                                          [ 41%]
+tests\test_industry_config.py ..........                                 [ 43%]
+tests\test_industry_context.py .........                                 [ 44%]
+tests\test_industry_migration.py .........                               [ 46%]
+tests\test_industry_scope.py ......................                      [ 49%]
+tests\test_integrations_hub_db.py .......                                [ 50%]
+tests\test_inventory_coverage.py .............                           [ 52%]
+tests\test_inventory_service.py ........                                 [ 53%]
+tests\test_location_accuracy.py ....                                     [ 54%]
+tests\test_location_decisions_ledger.py .....                            [ 54%]
+tests\test_location_forecast_schema.py ..                                [ 55%]
+tests\test_location_forecast_split.py ...........                        [ 56%]
+tests\test_location_shares.py ...............                            [ 59%]
+tests\test_locations_api.py ..............                               [ 61%]
+tests\test_locations_schema.py ...                                       [ 61%]
+tests\test_locations_service.py ....                                     [ 62%]
+tests\test_ml_loader_sql.py ..                                           [ 62%]
+tests\test_network_decisions_allocation.py ........                      [ 63%]
+tests\test_network_decisions_transfers.py .....                          [ 64%]
+tests\test_partitions.py ........                                        [ 65%]
+tests\test_persisted_forecasts.py ...............                        [ 67%]
+tests\test_pharma_gxp.py ...                                             [ 68%]
+tests\test_planning_inputs.py ....                                       [ 68%]
+tests\test_private_access.py .....                                       [ 69%]
+tests\test_rate_limit.py ........                                        [ 70%]
+tests\test_rbac.py ...                                                   [ 71%]
+tests\test_remediation_seed.py .....                                     [ 72%]
+tests\test_rls_isolation.py ....                                         [ 72%]
+tests\test_roi_tiers.py ........                                         [ 73%]
+tests\test_sales_currency.py .........                                   [ 75%]
+tests\test_sales_identity.py ..........                                  [ 76%]
+tests\test_sales_import_replay.py .............                          [ 78%]
+tests\test_sales_record_identity_migration.py ..                         [ 78%]
+tests\test_sales_timeseries_gaps.py .                                    [ 79%]
+tests\test_scenario_readiness.py ..                                      [ 79%]
+tests\test_scenario_simulator.py .......................                 [ 82%]
+tests\test_shopify_sync.py ..........                                    [ 84%]
+tests\test_sql_source.py .....................                           [ 87%]
+tests\test_suite_isolation.py .                                          [ 87%]
+tests\test_transfers.py ........                                         [ 88%]
+tests\test_trend_evidence.py ........                                    [ 89%]
+tests\test_upload_api_replay.py ...                                      [ 90%]
+tests\test_validation_errors.py ....                                     [ 90%]
+tests\test_webhook_delivery.py ......                                    [ 91%]
+tests\test_webhook_replay.py ......                                      [ 92%]
+tests\test_whatsapp_digest.py .............................              [ 97%]
+tests\test_woocommerce_sync.py ........                                  [ 98%]
+tests\test_zero_demand_import.py ............                            [100%]
+
+================================== FAILURES ===================================
+_______ test_25k_sku_forecast_reads_are_bounded_and_summary_reconciles ________
+
+self = <sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_cursor object at 0x000001DFD711C220>
+operation = '\n                SELECT s.id, s.sku_code, s.description FROM skus s JOIN\n                (SELECT DISTINCT sku_id FR...            ORDER BY sku_id LIMIT $3 OFFSET $4) p ON p.sku_id=s.id\n                WHERE s.tenant_id=$1\n            '
+parameters = (UUID('130c2402-e056-41de-8d29-3b3495a3449a'), UUID('a8deca95-0a4e-4167-a4bc-0e665c46eff9'), 6, 24996)
+
+    async def _prepare_and_execute(self, operation, parameters):
+        adapt_connection = self._adapt_connection
+    
+        async with adapt_connection._execute_mutex:
+            if not adapt_connection._started:
+                await adapt_connection._start_transaction()
+    
+            if parameters is None:
+                parameters = ()
+    
+            try:
+                prepared_stmt, attributes = await adapt_connection._prepare(
+                    operation, self._invalidate_schema_cache_asof
+                )
+    
+                if attributes:
+                    self.description = [
+                        (
+                            attr.name,
+                            attr.type.oid,
+                            None,
+                            None,
+                            None,
+                            None,
+                            None,
+                        )
+                        for attr in attributes
+                    ]
+                else:
+                    self.description = None
+    
+                if self.server_side:
+                    self._cursor = await prepared_stmt.cursor(*parameters)
+                    self.rowcount = -1
+                else:
+>                   self._rows = deque(await prepared_stmt.fetch(*parameters))
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:550: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\asyncpg\prepared_stmt.py:177: in fetch
+    data = await self.__bind_execute(args, 0, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\asyncpg\prepared_stmt.py:268: in __bind_execute
+    data, status, _ = await self.__do_execute(
+.venv\Lib\site-packages\asyncpg\prepared_stmt.py:257: in __do_execute
+    return await executor(protocol)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+>   ???
+E   asyncpg.exceptions.QueryCanceledError: canceling statement due to user request
+
+asyncpg/protocol/protocol.pyx:205: QueryCanceledError
+
+The above exception was the direct cause of the following exception:
+
+self = <sqlalchemy.engine.base.Connection object at 0x000001DFD6FEE030>
+dialect = <sqlalchemy.dialects.postgresql.asyncpg.PGDialect_asyncpg object at 0x000001DFD9D5EC10>
+context = <sqlalchemy.dialects.postgresql.asyncpg.PGExecutionContext_asyncpg object at 0x000001DFD7684850>
+statement = <sqlalchemy.dialects.postgresql.asyncpg.PGCompiler_asyncpg object at 0x000001DFD9FD1450>
+parameters = [(UUID('130c2402-e056-41de-8d29-3b3495a3449a'), UUID('a8deca95-0a4e-4167-a4bc-0e665c46eff9'), 6, 24996)]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+    
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+    
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters: Optional[_AnyExecuteParams]
+    
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+    
+        if self._has_events or self.engine._has_events:
+            for fn in self.dispatch.before_cursor_execute:
+                str_statement, effective_parameters = fn(
+                    self,
+                    cursor,
+                    str_statement,
+                    effective_parameters,
+                    context,
+                    context.executemany,
+                )
+    
+        if self._echo:
+            self._log_info(str_statement)
+    
+            stats = context._get_cache_stats()
+    
+            if not self.engine.hide_parameters:
+                self._log_info(
+                    "[%s] %r",
+                    stats,
+                    sql_util._repr_params(
+                        effective_parameters,
+                        batches=10,
+                        ismulti=context.executemany,
+                    ),
+                )
+            else:
+                self._log_info(
+                    "[%s] [SQL parameters hidden due to hide_parameters=True]",
+                    stats,
+                )
+    
+        evt_handled: bool = False
+        try:
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+>                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:1969: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\sqlalchemy\engine\default.py:952: in do_execute
+    cursor.execute(statement, parameters)
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:585: in execute
+    self._adapt_connection.await_(
+.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py:132: in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:563: in _prepare_and_execute
+    self._handle_exception(error)
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:513: in _handle_exception
+    self._adapt_connection._handle_exception(error)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <AdaptedConnection <asyncpg.connection.Connection object at 0x000001DFD6ED96D0>>
+error = QueryCanceledError('canceling statement due to user request')
+
+    def _handle_exception(self, error):
+        if self._connection.is_closed():
+            self._transaction = None
+            self._started = False
+    
+        if not isinstance(error, AsyncAdapt_asyncpg_dbapi.Error):
+            exception_mapping = self.dbapi._asyncpg_error_translate
+    
+            for super_ in type(error).__mro__:
+                if super_ in exception_mapping:
+                    translated_error = exception_mapping[super_](
+                        "%s: %s" % (type(error), error)
+                    )
+                    translated_error.pgcode = translated_error.sqlstate = (
+                        getattr(error, "sqlstate", None)
+                    )
+>                   raise translated_error from error
+E                   sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.Error: <class 'asyncpg.exceptions.QueryCanceledError'>: canceling statement due to user request
+
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:797: Error
+
+The above exception was the direct cause of the following exception:
+
+client = <httpx.AsyncClient object at 0x000001DFD40D8E90>
+db_session = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x000001DFD9DF4130>
+signed_in_workspace = <function signed_in_workspace.<locals>._make at 0x000001DFD89CCA90>
+
+    
+    async def test_25k_sku_forecast_reads_are_bounded_and_summary_reconciles(
+        client, db_session, signed_in_workspace,
+    ):
+        tenant, headers = await signed_in_workspace()
+        first_sku = await _sku(db_session, tenant, 'SCALE-00000')
+        run = await _forecast(db_session, tenant, first_sku,
+                              completed=datetime.now(UTC), weekly_p50=1)
+        # Model the planner statistics immediately before a large import. Reads
+        # must remain bounded before autovacuum has refreshed these statistics.
+        await db_session.execute(text('ANALYZE skus'))
+        await db_session.execute(text('ANALYZE forecast_results'))
+        # One SQL insert creates the large catalogue. This tests read scalability,
+        # not 25k API product writes or a prohibitively long real inference run.
+        await db_session.execute(text("""
+            INSERT INTO skus (id, tenant_id, product_id, industry, sku_code)
+            SELECT md5(CAST(CAST(:t AS uuid) AS text) || ':' || CAST(n AS text))::uuid,
+                   :t, s.product_id, 'fashion', 'SCALE-' || lpad(CAST(n AS text), 5, '0')
+            FROM generate_series(1, 24999) n CROSS JOIN skus s WHERE s.id=:s
+        """), {'t': tenant, 's': first_sku})
+        await db_session.execute(text("""
+            INSERT INTO forecast_results
+                (tenant_id,run_id,sku_id,forecast_date,p10,p50,p90,model_name)
+            SELECT :t, :r, s.id, f.forecast_date, 1, 1, 1, 'chronos_zero_shot'
+            FROM skus s CROSS JOIN forecast_results f
+            WHERE s.tenant_id=:t AND s.id<>:s AND f.run_id=:r AND f.sku_id=:s
+        """), {'t': tenant, 'r': run, 's': first_sku})
+        # A second model row for one SKU must be averaged before portfolio summing.
+        await db_session.execute(text("""
+            INSERT INTO forecast_results
+                (tenant_id,run_id,sku_id,forecast_date,p10,p50,p90,model_name)
+            SELECT tenant_id,run_id,sku_id,forecast_date,2,2,2,'another-model'
+            FROM forecast_results WHERE run_id=:r AND sku_id=:s
+        """), {'r': run, 's': first_sku})
+        await db_session.commit()
+    
+        summary = await client.get('/api/v1/forecasts/latest', headers=headers,
+                                   params={'view': 'summary'})
+        assert summary.status_code == 200, summary.text
+        portfolio = summary.json()['forecast']
+>       assert portfolio['total_skus'] == 25000
+
+tests\test_forecast_scale.py:51: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\httpx\_client.py:1768: in get
+    return await self.request(
+.venv\Lib\site-packages\httpx\_client.py:1540: in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\httpx\_client.py:1629: in send
+    response = await self._send_handling_auth(
+.venv\Lib\site-packages\httpx\_client.py:1657: in _send_handling_auth
+    response = await self._send_handling_redirects(
+.venv\Lib\site-packages\httpx\_client.py:1694: in _send_handling_redirects
+    response = await self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\httpx\_client.py:1730: in _send_single_request
+    response = await transport.handle_async_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\httpx\_transports\asgi.py:170: in handle_async_request
+    await self.app(scope, receive, send)
+.venv\Lib\site-packages\fastapi\applications.py:1162: in __call__
+    await super().__call__(scope, receive, send)
+.venv\Lib\site-packages\starlette\applications.py:90: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv\Lib\site-packages\starlette\middleware\errors.py:186: in __call__
+    raise exc
+.venv\Lib\site-packages\starlette\middleware\errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+.venv\Lib\site-packages\starlette\middleware\cors.py:88: in __call__
+    await self.app(scope, receive, send)
+.venv\Lib\site-packages\starlette\middleware\base.py:193: in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\middleware\security_headers.py:39: in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\starlette\middleware\base.py:168: in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+.venv\Lib\site-packages\starlette\middleware\base.py:144: in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+.venv\Lib\site-packages\starlette\middleware\base.py:193: in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\core\observability.py:92: in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\starlette\middleware\base.py:168: in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+.venv\Lib\site-packages\starlette\middleware\base.py:144: in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+.venv\Lib\site-packages\starlette\middleware\base.py:193: in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\middleware\rate_limit.py:261: in dispatch
+    return await self._dispatch_ip(request, call_next, path)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\middleware\rate_limit.py:292: in _dispatch_ip
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\starlette\middleware\base.py:168: in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+.venv\Lib\site-packages\starlette\middleware\base.py:144: in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+.venv\Lib\site-packages\starlette\middleware\base.py:193: in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\middleware\usage_metering.py:48: in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\starlette\middleware\base.py:168: in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+.venv\Lib\site-packages\starlette\middleware\base.py:144: in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+.venv\Lib\site-packages\starlette\middleware\base.py:193: in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\middleware\region_router.py:56: in dispatch
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\starlette\middleware\base.py:168: in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+.venv\Lib\site-packages\starlette\middleware\base.py:144: in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+.venv\Lib\site-packages\starlette\middleware\base.py:193: in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\middleware\tenant_context.py:163: in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\starlette\middleware\base.py:168: in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+.venv\Lib\site-packages\starlette\middleware\base.py:144: in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+.venv\Lib\site-packages\starlette\middleware\base.py:193: in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\middleware\rate_limit.py:263: in dispatch
+    return await self._dispatch_user(request, call_next, path)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\middleware\rate_limit.py:360: in _dispatch_user
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\starlette\middleware\base.py:168: in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+.venv\Lib\site-packages\starlette\middleware\base.py:144: in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+.venv\Lib\site-packages\starlette\middleware\base.py:193: in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\middleware\idempotency.py:68: in dispatch
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\starlette\middleware\base.py:168: in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+.venv\Lib\site-packages\starlette\middleware\base.py:144: in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+.venv\Lib\site-packages\starlette\middleware\exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+.venv\Lib\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv\Lib\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv\Lib\site-packages\fastapi\middleware\asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv\Lib\site-packages\starlette\routing.py:660: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv\Lib\site-packages\starlette\routing.py:680: in app
+    await route.handle(scope, receive, send)
+.venv\Lib\site-packages\fastapi\routing.py:1650: in handle
+    await self.original_router.handle(scope, receive, send)
+.venv\Lib\site-packages\fastapi\routing.py:2102: in handle
+    await included_router._handle_selected(scope, receive, send)
+.venv\Lib\site-packages\fastapi\routing.py:1670: in _handle_selected
+    await original_route.handle(scope, receive, send)
+.venv\Lib\site-packages\fastapi\routing.py:1218: in handle
+    await app(scope, receive, send)
+.venv\Lib\site-packages\fastapi\routing.py:143: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+.venv\Lib\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv\Lib\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv\Lib\site-packages\fastapi\routing.py:129: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\fastapi\routing.py:683: in app
+    raw_response = await run_endpoint_function(
+.venv\Lib\site-packages\fastapi\routing.py:337: in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\routers\forecasts.py:46: in latest_forecast
+    return await read_latest(request.app.state.db, tenant_id, industry.code,
+app\services\persisted_forecasts.py:90: in read_latest
+    label_rows = (await session.execute(text("""
+.venv\Lib\site-packages\sqlalchemy\ext\asyncio\session.py:448: in execute
+    result = await greenlet_spawn(
+.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py:201: in greenlet_spawn
+    result = context.throw(*sys.exc_info())
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\orm\session.py:2373: in execute
+    return self._execute_internal(
+.venv\Lib\site-packages\sqlalchemy\orm\session.py:2280: in _execute_internal
+    result = conn.execute(
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:1421: in execute
+    return meth(
+.venv\Lib\site-packages\sqlalchemy\sql\elements.py:526: in _execute_on_connection
+    return connection._execute_clauseelement(
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:1643: in _execute_clauseelement
+    ret = self._execute_context(
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:1848: in _execute_context
+    return self._exec_single_context(
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:1988: in _exec_single_context
+    self._handle_dbapi_exception(
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:2365: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:1969: in _exec_single_context
+    self.dialect.do_execute(
+.venv\Lib\site-packages\sqlalchemy\engine\default.py:952: in do_execute
+    cursor.execute(statement, parameters)
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:585: in execute
+    self._adapt_connection.await_(
+.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py:132: in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:563: in _prepare_and_execute
+    self._handle_exception(error)
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:513: in _handle_exception
+    self._adapt_connection._handle_exception(error)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <AdaptedConnection <asyncpg.connection.Connection object at 0x000001DFD6ED96D0>>
+error = QueryCanceledError('canceling statement due to user request')
+
+    def _handle_exception(self, error):
+        if self._connection.is_closed():
+            self._transaction = None
+            self._started = False
+    
+        if not isinstance(error, AsyncAdapt_asyncpg_dbapi.Error):
+            exception_mapping = self.dbapi._asyncpg_error_translate
+    
+            for super_ in type(error).__mro__:
+                if super_ in exception_mapping:
+                    translated_error = exception_mapping[super_](
+                        "%s: %s" % (type(error), error)
+                    )
+                    translated_error.pgcode = translated_error.sqlstate = (
+                        getattr(error, "sqlstate", None)
+                    )
+>                   raise translated_error from error
+E                   sqlalchemy.exc.DBAPIError: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.QueryCanceledError'>: canceling statement due to user request
+E                   [SQL: 
+E                                   SELECT s.id, s.sku_code, s.description FROM skus s JOIN
+E                                   (SELECT DISTINCT sku_id FROM forecast_results WHERE tenant_id=$1 AND run_id=$2
+E                                    ORDER BY sku_id LIMIT $3 OFFSET $4) p ON p.sku_id=s.id
+E                                   WHERE s.tenant_id=$1
+E                               ]
+E                   [parameters: (UUID('130c2402-e056-41de-8d29-3b3495a3449a'), UUID('a8deca95-0a4e-4167-a4bc-0e665c46eff9'), 6, 24996)]
+E                   (Background on this error at: https://sqlalche.me/e/20/dbapi)
+
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:797: DBAPIError
+---------------------------- Captured stdout setup ----------------------------
+{"detail": "METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset \u2014 third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key", "note": "Must be fixed before production deploy", "event": "config.secrets.weak", "logger": "app.config", "level": "warning", "timestamp": "2026-10-26T17:35:07.090476Z", "app": "sanket"}
+{"reason": "OTLP_ENDPOINT not set", "event": "otel.disabled", "logger": "app.core.observability", "level": "info", "timestamp": "2026-10-26T17:35:07.091593Z", "app": "sanket"}
+{"mode": "in-process", "note": "Set REDIS_URL for distributed rate limiting across replicas", "event": "startup.rate_limit.mode", "logger": "app.main", "level": "warning", "timestamp": "2026-10-26T17:35:07.097668Z", "app": "sanket"}
+{"reason": "REDIS_URL unset; using in-process only", "event": "realtime.redis.disabled", "logger": "app.realtime.connection_manager", "level": "info", "timestamp": "2026-10-26T17:35:07.097885Z", "app": "sanket"}
+{"note": "REDIS_URL unset \u2014 hybrid forecasts run in-process (not durable)", "event": "startup.arq.disabled", "logger": "app.main", "level": "warning", "timestamp": "2026-10-26T17:35:07.097982Z", "app": "sanket"}
+{"event": "startup.http_client.ready", "logger": "app.main", "level": "info", "timestamp": "2026-10-26T17:35:07.122135Z", "app": "sanket"}
+{"lock": "background-singletons", "identity": "DESKTOP-N8KTDPL:22188:3d470c10", "event": "leader_lock.acquired", "logger": "app.core.distributed_lock", "level": "info", "timestamp": "2026-10-26T17:35:07.125430Z", "app": "sanket"}
+{"event": "leader.singletons.started", "logger": "app.main", "level": "info", "timestamp": "2026-10-26T17:35:07.125678Z", "app": "sanket"}
+{"event": "startup.db.ok", "logger": "app.main", "level": "info", "timestamp": "2026-10-26T17:35:07.257273Z", "app": "sanket"}
+{"env": "development", "version": "0.1.0", "event": "startup.complete", "logger": "app.main", "level": "info", "timestamp": "2026-10-26T17:35:07.257619Z", "app": "sanket"}
+{"detail": "METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset \u2014 third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key", "note": "Must be fixed before production deploy", "event": "config.secrets.weak", "logger": "app.config", "level": "warning", "timestamp": "2026-10-26T17:35:07.271294Z", "app": "sanket"}
+----------------------------- Captured log setup ------------------------------
+WARNING  app.config:config.py:393 {'detail': 'METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset � third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key', 'note': 'Must be fixed before production deploy', 'event': 'config.secrets.weak', 'logger': 'app.config', 'level': 'warning', 'timestamp': '2026-10-26T17:35:07.090476Z', 'app': 'sanket'}
+INFO     app.core.observability:observability.py:197 {'reason': 'OTLP_ENDPOINT not set', 'event': 'otel.disabled', 'logger': 'app.core.observability', 'level': 'info', 'timestamp': '2026-10-26T17:35:07.091593Z', 'app': 'sanket'}
+---------------------------- Captured stdout call -----------------------------
+{"detail": "the role is a SUPERUSER (bypasses RLS); the role has BYPASSRLS (bypasses RLS)", "note": "Tenant isolation is NOT enforced with this DB role/config.", "event": "database.rls_check.unenforced", "logger": "app.core.database", "level": "warning", "timestamp": "2026-10-26T17:35:07.351457Z", "app": "sanket"}
+{"revision": ["0028"], "event": "database.migration_check.ok", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-26T17:35:07.427713Z", "app": "sanket"}
+{"note": "all partitions already present", "event": "database.partitions.ok", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-26T17:35:07.445916Z", "app": "sanket"}
+{"slug": "sanket-dev", "event": "database.seed.tenant_exists", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-26T17:35:07.705831Z", "app": "sanket"}
+{"event": "database.engine.disposed", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-26T17:35:07.716522Z", "app": "sanket"}
+{"event": "startup.db_initialization.complete", "logger": "app.main", "level": "info", "timestamp": "2026-10-26T17:35:07.716848Z", "app": "sanket"}
+{"user_id": "5aba78a9-257c-472b-84ff-5c202e050419", "event": "auth.dev_login.ok", "request_id": "ae22d8cd-4a0a-412a-b3b2-d1c27afd32a7", "logger": "app.routers.auth", "level": "info", "timestamp": "2026-10-26T17:35:07.934685Z", "app": "sanket"}
+{"event": "HTTP Request: POST http://test/api/v1/auth/dev-login \"HTTP/1.1 200 OK\"", "logger": "httpx", "level": "info", "timestamp": "2026-10-26T17:35:07.939417Z", "app": "sanket"}
+{"event": "HTTP Request: GET http://test/api/v1/forecasts/latest?view=summary \"HTTP/1.1 200 OK\"", "logger": "httpx", "level": "info", "timestamp": "2026-10-26T17:36:29.789342Z", "app": "sanket"}
+{"path": "/api/v1/forecasts/latest", "error": "(sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.QueryCanceledError'>: canceling statement due to user request\n[SQL: \n                SELECT s.id, s.sku_code, s.description FROM skus s JOIN\n                (SELECT DISTINCT sku_id FROM forecast_results WHERE tenant_id=$1 AND run_id=$2\n                 ORDER BY sku_id LIMIT $3 OFFSET $4) p ON p.sku_id=s.id\n                WHERE s.tenant_id=$1\n            ]\n[parameters: (UUID('130c2402-e056-41de-8d29-3b3495a3449a'), UUID('a8deca95-0a4e-4167-a4bc-0e665c46eff9'), 6, 24996)]\n(Background on this error at: https://sqlalche.me/e/20/dbapi)", "exc_info": true, "event": "unhandled.exception", "logger": "app.main", "level": "error", "timestamp": "2026-10-26T17:39:57.097880Z", "app": "sanket"}
+------------------------------ Captured log call ------------------------------
+WARNING  app.core.database:database.py:171 {'detail': 'the role is a SUPERUSER (bypasses RLS); the role has BYPASSRLS (bypasses RLS)', 'note': 'Tenant isolation is NOT enforced with this DB role/config.', 'event': 'database.rls_check.unenforced', 'logger': 'app.core.database', 'level': 'warning', 'timestamp': '2026-10-26T17:35:07.351457Z', 'app': 'sanket'}
+INFO     app.core.database:database.py:205 {'revision': ['0028'], 'event': 'database.migration_check.ok', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-26T17:35:07.427713Z', 'app': 'sanket'}
+INFO     app.core.database:database.py:239 {'note': 'all partitions already present', 'event': 'database.partitions.ok', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-26T17:35:07.445916Z', 'app': 'sanket'}
+INFO     app.core.database:database.py:276 {'slug': 'sanket-dev', 'event': 'database.seed.tenant_exists', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-26T17:35:07.705831Z', 'app': 'sanket'}
+INFO     app.core.database:database.py:245 {'event': 'database.engine.disposed', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-26T17:35:07.716522Z', 'app': 'sanket'}
+INFO     app.main:main.py:212 {'event': 'startup.db_initialization.complete', 'logger': 'app.main', 'level': 'info', 'timestamp': '2026-10-26T17:35:07.716848Z', 'app': 'sanket'}
+INFO     app.routers.auth:auth.py:336 {'user_id': '5aba78a9-257c-472b-84ff-5c202e050419', 'event': 'auth.dev_login.ok', 'request_id': 'ae22d8cd-4a0a-412a-b3b2-d1c27afd32a7', 'logger': 'app.routers.auth', 'level': 'info', 'timestamp': '2026-10-26T17:35:07.934685Z', 'app': 'sanket'}
+INFO     httpx:_client.py:1740 HTTP Request: POST http://test/api/v1/auth/dev-login "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1740 HTTP Request: GET http://test/api/v1/forecasts/latest?view=summary "HTTP/1.1 200 OK"
+ERROR    app.main:main.py:373 {'path': '/api/v1/forecasts/latest', 'error': "(sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.QueryCanceledError'>: canceling statement due to user request\n[SQL: \n                SELECT s.id, s.sku_code, s.description FROM skus s JOIN\n                (SELECT DISTINCT sku_id FROM forecast_results WHERE tenant_id=$1 AND run_id=$2\n                 ORDER BY sku_id LIMIT $3 OFFSET $4) p ON p.sku_id=s.id\n                WHERE s.tenant_id=$1\n            ]\n[parameters: (UUID('130c2402-e056-41de-8d29-3b3495a3449a'), UUID('a8deca95-0a4e-4167-a4bc-0e665c46eff9'), 6, 24996)]\n(Background on this error at: https://sqlalche.me/e/20/dbapi)", 'exc_info': True, 'event': 'unhandled.exception', 'logger': 'app.main', 'level': 'error', 'timestamp': '2026-10-26T17:39:57.097880Z', 'app': 'sanket'}
+Traceback (most recent call last):
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 550, in _prepare_and_execute
+    self._rows = deque(await prepared_stmt.fetch(*parameters))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\asyncpg\prepared_stmt.py", line 177, in fetch
+    data = await self.__bind_execute(args, 0, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\asyncpg\prepared_stmt.py", line 268, in __bind_execute
+    data, status, _ = await self.__do_execute(
+                      ^^^^^^^^^^^^^^^^^^^^^^^^
+        lambda protocol: protocol.bind_execute(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            self._state, args, '', limit, True, timeout))
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\asyncpg\prepared_stmt.py", line 257, in __do_execute
+    return await executor(protocol)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "asyncpg/protocol/protocol.pyx", line 205, in bind_execute
+asyncpg.exceptions.QueryCanceledError: canceling statement due to user request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\engine\default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 585, in execute
+    self._adapt_connection.await_(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self._prepare_and_execute(operation, parameters)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 563, in _prepare_and_execute
+    self._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 513, in _handle_exception
+    self._adapt_connection._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 797, in _handle_exception
+    raise translated_error from error
+sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.Error: <class 'asyncpg.exceptions.QueryCanceledError'>: canceling statement due to user request
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 88, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\app\middleware\security_headers.py", line 39, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\app\core\observability.py", line 92, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\app\middleware\rate_limit.py", line 261, in dispatch
+    return await self._dispatch_ip(request, call_next, path)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\app\middleware\rate_limit.py", line 292, in _dispatch_ip
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\app\middleware\usage_metering.py", line 48, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\app\middleware\region_router.py", line 56, in dispatch
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\app\middleware\tenant_context.py", line 163, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\app\middleware\rate_limit.py", line 263, in dispatch
+    return await self._dispatch_user(request, call_next, path)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\app\middleware\rate_limit.py", line 360, in _dispatch_user
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\app\middleware\idempotency.py", line 68, in dispatch
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\fastapi\middleware\asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\routing.py", line 680, in app
+    await route.handle(scope, receive, send)
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\fastapi\routing.py", line 1650, in handle
+    await self.original_router.handle(scope, receive, send)
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\fastapi\routing.py", line 2102, in handle
+    await included_router._handle_selected(scope, receive, send)
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\fastapi\routing.py", line 1670, in _handle_selected
+    await original_route.handle(scope, receive, send)
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\fastapi\routing.py", line 1218, in handle
+    await app(scope, receive, send)
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\fastapi\routing.py", line 143, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\fastapi\routing.py", line 129, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\fastapi\routing.py", line 683, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\fastapi\routing.py", line 337, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\app\routers\forecasts.py", line 46, in latest_forecast
+    return await read_latest(request.app.state.db, tenant_id, industry.code,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                             view=view, offset=offset, limit=limit, run_id=run_id)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\app\services\persisted_forecasts.py", line 90, in read_latest
+    label_rows = (await session.execute(text("""
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    """), args)).all()
+    ^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\ext\asyncio\session.py", line 448, in execute
+    result = await greenlet_spawn(
+             ^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 201, in greenlet_spawn
+    result = context.throw(*sys.exc_info())
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2373, in execute
+    return self._execute_internal(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        statement,
+        ^^^^^^^^^^
+    ...<4 lines>...
+        _add_event=_add_event,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2280, in _execute_internal
+    result = conn.execute(
+        statement, params or {}, execution_options=execution_options
+    )
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1421, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1988, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 2365, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\engine\default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 585, in execute
+    self._adapt_connection.await_(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self._prepare_and_execute(operation, parameters)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 563, in _prepare_and_execute
+    self._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 513, in _handle_exception
+    self._adapt_connection._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 797, in _handle_exception
+    raise translated_error from error
+sqlalchemy.exc.DBAPIError: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.QueryCanceledError'>: canceling statement due to user request
+[SQL: 
+                SELECT s.id, s.sku_code, s.description FROM skus s JOIN
+                (SELECT DISTINCT sku_id FROM forecast_results WHERE tenant_id=$1 AND run_id=$2
+                 ORDER BY sku_id LIMIT $3 OFFSET $4) p ON p.sku_id=s.id
+                WHERE s.tenant_id=$1
+            ]
+[parameters: (UUID('130c2402-e056-41de-8d29-3b3495a3449a'), UUID('a8deca95-0a4e-4167-a4bc-0e665c46eff9'), 6, 24996)]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+-------------------------- Captured stdout teardown ---------------------------
+{"event": "database.engine.disposed", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-26T17:40:03.569764Z", "app": "sanket"}
+{"event": "signal_pipeline.stopped", "logger": "app.services.external_signals.signal_pipeline", "level": "info", "timestamp": "2026-10-26T17:40:03.571566Z", "app": "sanket"}
+{"event": "shopify_poller.stopped", "logger": "app.services.integrations.shopify_poller", "level": "info", "timestamp": "2026-10-26T17:40:03.572005Z", "app": "sanket"}
+{"event": "leader.singletons.stopped", "logger": "app.main", "level": "info", "timestamp": "2026-10-26T17:40:03.572295Z", "app": "sanket"}
+{"event": "signal_pipeline.stopped", "logger": "app.services.external_signals.signal_pipeline", "level": "info", "timestamp": "2026-10-26T17:40:03.572733Z", "app": "sanket"}
+{"event": "shopify_poller.stopped", "logger": "app.services.integrations.shopify_poller", "level": "info", "timestamp": "2026-10-26T17:40:03.573030Z", "app": "sanket"}
+{"event": "realtime.shutdown.complete", "logger": "app.realtime.connection_manager", "level": "info", "timestamp": "2026-10-26T17:40:03.573449Z", "app": "sanket"}
+{"event": "database.engine.disposed", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-26T17:40:03.632456Z", "app": "sanket"}
+{"event": "shutdown.complete", "logger": "app.main", "level": "info", "timestamp": "2026-10-26T17:40:03.632928Z", "app": "sanket"}
+---------------------------- Captured log teardown ----------------------------
+INFO     app.core.database:database.py:245 {'event': 'database.engine.disposed', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-26T17:40:03.569764Z', 'app': 'sanket'}
+INFO     app.services.external_signals.signal_pipeline:signal_pipeline.py:104 {'event': 'signal_pipeline.stopped', 'logger': 'app.services.external_signals.signal_pipeline', 'level': 'info', 'timestamp': '2026-10-26T17:40:03.571566Z', 'app': 'sanket'}
+INFO     app.services.integrations.shopify_poller:shopify_poller.py:68 {'event': 'shopify_poller.stopped', 'logger': 'app.services.integrations.shopify_poller', 'level': 'info', 'timestamp': '2026-10-26T17:40:03.572005Z', 'app': 'sanket'}
+INFO     app.main:main.py:180 {'event': 'leader.singletons.stopped', 'logger': 'app.main', 'level': 'info', 'timestamp': '2026-10-26T17:40:03.572295Z', 'app': 'sanket'}
+INFO     app.services.external_signals.signal_pipeline:signal_pipeline.py:104 {'event': 'signal_pipeline.stopped', 'logger': 'app.services.external_signals.signal_pipeline', 'level': 'info', 'timestamp': '2026-10-26T17:40:03.572733Z', 'app': 'sanket'}
+INFO     app.services.integrations.shopify_poller:shopify_poller.py:68 {'event': 'shopify_poller.stopped', 'logger': 'app.services.integrations.shopify_poller', 'level': 'info', 'timestamp': '2026-10-26T17:40:03.573030Z', 'app': 'sanket'}
+INFO     app.realtime.connection_manager:connection_manager.py:78 {'event': 'realtime.shutdown.complete', 'logger': 'app.realtime.connection_manager', 'level': 'info', 'timestamp': '2026-10-26T17:40:03.573449Z', 'app': 'sanket'}
+INFO     app.core.database:database.py:245 {'event': 'database.engine.disposed', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-26T17:40:03.632456Z', 'app': 'sanket'}
+INFO     app.main:main.py:247 {'event': 'shutdown.complete', 'logger': 'app.main', 'level': 'info', 'timestamp': '2026-10-26T17:40:03.632928Z', 'app': 'sanket'}
+============================== warnings summary ===============================
+tests/test_accept_invite.py::test_accepted_invite_inherits_the_workspace_industry
+  C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\passlib\handlers\argon2.py:716: DeprecationWarning: Accessing argon2.__version__ is deprecated and will be removed in a future release. Use importlib.metadata directly to query for argon2-cffi's packaging metadata.
+    _argon2_cffi.__version__, max_version)
+
+tests/test_forecast_sku_cap.py::test_run_keeps_more_than_fifty_skus
+  C:\Users\admin\Desktop\Prisma\backend\ml\sanket_ml\fusion\hybrid_forecaster.py:142: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    generated_at=datetime.utcnow(),
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_forecast_scale.py::test_25k_sku_forecast_reads_are_bounded_and_summary_reconciles
+============ 1 failed, 671 passed, 2 warnings in 699.53s (0:11:39) ============

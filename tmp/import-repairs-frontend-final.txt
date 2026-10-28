@@ -1,0 +1,186 @@
+
+> sanket-frontend@0.1.0 test
+> vitest run
+
+
+ RUN  v2.1.9 C:/Users/admin/Desktop/Prisma/frontend
+
+stderr | src/pages/Inventory.test.tsx > shows one SKU row with store attention, not duplicated SKU rows
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+stderr | src/pages/Forecasts.test.tsx > identifies stale saved results while a refresh is running
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/Inventory.test.tsx (16 tests) 2248ms
+   ✓ labels period-average cover as an estimate rather than a model forecast 341ms
+ ✓ src/pages/Forecasts.test.tsx (15 tests) 6136ms
+   ✓ identifies stale saved results while a refresh is running 437ms
+   ✓ shows a selected SKU's location forecast and degraded warning 307ms
+   ✓ Forecasts page (audit F04, F08) > pages through more SKUs than fit on one screen 435ms
+   ✓ shows persisted age and actual horizon while a different horizon refreshes 321ms
+   ✓ returns to the latest run's first page after a refresh completes during pagination 3341ms
+stderr | src/components/dashboard/PlanningBriefDashboard.test.tsx > PlanningBriefDashboard > marks the dashboard's saved forecast as stale while new data is being processed
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/components/dashboard/PlanningBriefDashboard.test.tsx (16 tests) 1509ms
+ ✓ src/hooks/usePersistedForecast.test.tsx (15 tests) 4592ms
+   ✓ polls the accepted job until the newly persisted result replaces the old run 3095ms
+stderr | src/pages/CompanyTrends.test.tsx > Company Trend Analysis > keeps company sales distinct from catalogue-matched relative external interest
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/CompanyTrends.test.tsx (11 tests) 2481ms
+   ✓ Company Trend Analysis > keeps company sales distinct from catalogue-matched relative external interest 428ms
+   ✓ Company Trend Analysis > offers Hyderabad and all Telangana districts without inventing district interest 764ms
+   ✓ Company Trend Analysis > searches uploaded catalogue options remotely and requests the selected SKU 627ms
+ ✓ src/components/integrations/ImportUploader.test.tsx (11 tests) 2357ms
+   ✓ confirms V2 without legacy analysis and notifies the parent, including replays 456ms
+   ✓ preserves a manually selected header when requesting table suggestions 531ms
+stderr | src/pages/Decisions.test.tsx > keeps accepted-order details usable when frozen planning inputs are incomplete
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+stderr | src/pages/SalesAnalytics.test.tsx > Sales analytics currency (audit F03) > shows an INR total as the same INR total, not 83x larger
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/Decisions.test.tsx (10 tests) 1126ms
+   ✓ keeps accepted-order details usable when frozen planning inputs are incomplete 384ms
+ ✓ src/pages/SalesAnalytics.test.tsx (11 tests) 860ms
+stderr | src/components/layout/Sidebar.test.tsx > Sidebar mobile drawer > keeps closed navigation out of the keyboard and accessibility trees
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/components/layout/Sidebar.test.tsx (11 tests) 1481ms
+   ✓ Sidebar mobile drawer > moves focus into the drawer and makes the page behind it inert 302ms
+ ✓ src/components/integrations/SmartImport.test.tsx (8 tests) 3681ms
+   ✓ plans several files and shows one card per file 415ms
+   ✓ imports a file with the user's edits 384ms
+   ✓ shows labelled mappings, searches beyond 60 codes and filters unresolved codes 1855ms
+ ✓ src/components/ui/SearchableSelect.test.tsx (7 tests) 1198ms
+stderr | src/pages/WhatIfScenario.test.tsx > Scenario simulator (deep audit F3, F6, F7, F12) > requests an optional explanation only when the user runs a reviewed scenario
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/WhatIfScenario.test.tsx (7 tests) 1457ms
+   ✓ Scenario simulator (deep audit F3, F6, F7, F12) > requests an optional explanation only when the user runs a reviewed scenario 461ms
+   ✓ Scenario simulator (deep audit F3, F6, F7, F12) > applies interpreted demand without retaining an unrelated preset outage 610ms
+stderr | src/pages/ForecastAccuracy.test.tsx > Forecast accuracy (audit F02) > reports a failed accuracy request instead of empty readiness
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/ForecastAccuracy.test.tsx (6 tests) 1007ms
+   ✓ Forecast accuracy (audit F02) > runs a backtest only from a past Monday 635ms
+ ✓ src/components/ai/AISummary.test.tsx (6 tests) 485ms
+ ✓ src/components/ai/Interactive.test.tsx (6 tests) 2615ms
+   ✓ interactive AI review boundaries > requires reviewing and applying assumptions; interpretation never applies or simulates 828ms
+   ✓ interactive AI review boundaries > clears scenario interpretation when workspace changes 446ms
+   ✓ interactive AI review boundaries > keeps chat only in the current identity and renders every safe citation 369ms
+   ✓ interactive AI review boundaries > allows cancellation and never exposes an unsafe source URL 368ms
+   ✓ interactive AI review boundaries > explains policy_blocked instead of hiding the cause 315ms
+ ✓ src/api/skus.test.ts (5 tests) 16ms
+ ✓ src/components/ai/ManagementArtifacts.test.tsx (4 tests) 1214ms
+   ✓ requires preview and explicit report-email confirmation 755ms
+   ✓ does not send a supplier email when a draft is generated or edited 332ms
+stderr | src/pages/ROIDashboard.test.tsx > ROI dashboard (audit F10) > labels approval figures as estimates and realised savings as not measurable
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/ROIDashboard.test.tsx (2 tests) 179ms
+ ✓ src/pages/Integrations.test.tsx (4 tests) 549ms
+ ✓ src/components/charts/AverageSalesProjection.test.tsx (3 tests) 364ms
+ ✓ src/components/auth/IdentityQueryProvider.test.tsx (4 tests) 168ms
+ ✓ src/components/ai/AISettings.test.tsx (4 tests) 442ms
+   ✓ requires explicit permissions and sends only the reviewed settings 349ms
+ ✓ src/components/dashboard/ClientReports.test.tsx (4 tests) 311ms
+stderr | src/pages/Login.test.tsx > invitation-only sign in > submits credentials and opens the workspace
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/Login.test.tsx (5 tests) 1869ms
+   ✓ invitation-only sign in > submits credentials and opens the workspace 1090ms
+   ✓ invitation-only sign in > shows credential errors and keeps password-manager support 761ms
+ ✓ src/pages/onboarding/StepData.test.tsx (2 tests) 477ms
+   ✓ offers period totals during onboarding and reports a replay honestly 429ms
+ ✓ src/hooks/useFormattedCurrency.test.ts (6 tests) 55ms
+ ✓ src/components/settings/NetworkCard.test.tsx (4 tests) 356ms
+ ✓ src/pages/LandingPage.test.tsx (6 tests) 8ms
+ ✓ src/pages/TrendAnalysis.test.tsx (5 tests) 196ms
+stderr | src/pages/FinancialImpact.test.tsx > Financial impact currency (audit F03) > shows rupee exposure in rupees, not dollars
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/FinancialImpact.test.tsx (2 tests) 187ms
+ ✓ src/utils/forecastPresentation.test.ts (8 tests) 14ms
+ ✓ src/components/charts/ForecastChart.test.tsx (6 tests) 97ms
+ ✓ src/components/dashboard/WhatsAppStatus.test.tsx (6 tests) 78ms
+ ✓ src/utils/errors.test.ts (8 tests) 7ms
+ ✓ src/styles/typography-contract.test.ts (3 tests) 171ms
+ ✓ src/api/planningKeys.test.ts (4 tests) 16ms
+stderr | src/pages/Products.test.tsx > counts every product and lets users page and search the entire catalogue
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/Products.test.tsx (2 tests) 1087ms
+   ✓ counts every product and lets users page and search the entire catalogue 1065ms
+ ✓ src/pages/landing/content.test.ts (6 tests) 8ms
+ ✓ src/stores/auth.test.ts (4 tests) 6ms
+ ✓ src/utils/uploadSummary.test.ts (4 tests) 7ms
+ ✓ src/components/ai/CommunicationPreferences.test.tsx (1 test) 295ms
+ ✓ src/utils/format.test.ts (9 tests) 19ms
+ ✓ src/components/products/ProductCleanup.test.tsx (1 test) 468ms
+   ✓ requires preview and explicit confirmation before changing a product 467ms
+ ✓ src/pages/landing/sections/ConnectorGrid.test.tsx (5 tests) 619ms
+ ✓ src/components/layout/WorkspaceIndustryBadge.test.tsx (3 tests) 132ms
+stderr | src/components/layout/ScrollManager.test.tsx > ScrollManager > opens a newly visited page at the top
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/components/layout/ScrollManager.test.tsx (3 tests) 46ms
+ ✓ src/pages/landing/typography.test.ts (5 tests) 10ms
+stderr | src/pages/DataQuality.test.tsx > binds confirmed fixes to the reviewed preview token
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/DataQuality.test.tsx (1 test) 429ms
+   ✓ binds confirmed fixes to the reviewed preview token 428ms
+ ✓ src/styles/trend-control-tokens.test.ts (2 tests) 331ms
+ ✓ src/stores/productImages.test.ts (19 tests) 9ms
+ ✓ src/components/layout/CurrencyMenu.test.tsx (3 tests) 515ms
+ ✓ src/components/auth/IndustryRoute.test.tsx (3 tests) 37ms
+ ✓ src/pages/landing/sections/ModuleGrid.test.tsx (3 tests) 449ms
+ ✓ src/pages/landing/sections/IndustryTabs.test.tsx (3 tests) 435ms
+stderr | src/pages/ShortageAlerts.test.tsx > offers an optional explanation while retaining the original risk and acknowledgment
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/ShortageAlerts.test.tsx (1 test) 256ms
+ ✓ src/components/signals/TrendPanel.test.tsx (2 tests) 92ms
+ ✓ src/api/cataloguePagination.test.ts (4 tests) 10ms
+ ✓ src/utils/integrationGroups.test.ts (2 tests) 8ms
+stderr | src/pages/DirectAccess.test.tsx > does not expose public signup even through an old signup URL
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/DirectAccess.test.tsx (2 tests) 416ms
+   ✓ does not expose public signup even through an old signup URL 328ms
+ ✓ src/pages/landing/sections/ForecastEngine.test.tsx (2 tests) 61ms
+ ✓ src/components/ai/OnboardingHelper.test.tsx (1 test) 505ms
+   ✓ asks for catalog-grounded setup help without sending credentials 503ms
+ ✓ src/components/ai/ImportFormats.test.tsx (1 test) 223ms
+ ✓ src/components/ui/Skeleton.test.tsx (4 tests) 50ms
+ ✓ src/components/ai/AISettingsSmartImport.test.tsx (1 test) 74ms
+ ✓ src/pages/landing/sections/SignalGrid.test.tsx (2 tests) 204ms
+ ✓ src/components/ui/Modal.test.tsx (1 test) 129ms
+ ✓ src/utils/indiaRegions.test.ts (1 test) 5ms
+ ✓ src/config.test.ts (1 test) 3ms
+ ✓ src/components/ui/Modal.wide.test.tsx (1 test) 103ms
+
+ Test Files  69 passed (69)
+      Tests  354 passed (354)
+   Start at  17:25:43
+   Duration  135.06s (transform 3.78s, setup 24.30s, collect 77.89s, tests 47.05s, environment 84.21s, prepare 11.78s)
+

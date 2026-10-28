@@ -43,6 +43,7 @@ router = APIRouter(prefix="/scenarios", tags=["scenarios"])
 
 class ScenarioBody(BaseModel):
     name: str = Field(default="Custom scenario", max_length=120)
+    explain_ai: bool = False
     preset: str | None = Field(default=None, max_length=60)
 
     demand_shock_pct: float = Field(default=0.0, ge=-95.0, le=500.0)
@@ -222,6 +223,17 @@ async def simulate(
         skus=len(economics),
         horizon=body.horizon_weeks,
     )
+    if body.explain_ai:
+        from app.services.llm.interactive_service import explain_result
+        from app.services.llm.policy import AIContext
+        from app.services.llm.errors import AIError
+        try:
+            from app.services.notifications.communications import read_preferences
+            language = (await read_preferences(db, tenant_id, request.state.user_id)).language
+            payload["ai_explanation"] = await explain_result(request, getattr(request.app.state, "ai", None),
+                AIContext(tenant_id, request.state.user_id, industry, "scenario_explanation"), payload, language)
+        except (AIError, ValueError, TimeoutError):
+            payload["ai_explanation"] = {"state": "unavailable", "blocks": []}
     return payload
 
 

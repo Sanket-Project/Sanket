@@ -1,0 +1,8 @@
+.................                                                        [100%]
+============================== warnings summary ===============================
+tests/test_persisted_forecasts.py::test_latest_empty_does_not_infer
+  C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\passlib\handlers\argon2.py:716: DeprecationWarning: Accessing argon2.__version__ is deprecated and will be removed in a future release. Use importlib.metadata directly to query for argon2-cffi's packaging metadata.
+    _argon2_cffi.__version__, max_version)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+17 passed, 1 warning in 44.07s

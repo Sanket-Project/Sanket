@@ -23,6 +23,7 @@ describe("invalidatePlanningData", () => {
     for (const root of [
       "inventory-levels", "inventory-coverage", "decisions",
       "dashboard-history", "forecast-confidence", "data-quality", "roi-summary",
+      "average-sales",
     ]) {
       expect(roots).toContain(root);
     }
@@ -32,5 +33,13 @@ describe("invalidatePlanningData", () => {
   it("never re-runs forecast generation as a side effect of invalidation", () => {
     // ["dashboard-forecast"] is POST /forecasts/generate — an ML inference run.
     expect(PLANNING_KEYS.map((key) => key[0])).not.toContain("dashboard-forecast");
+  });
+
+  it("invalidates company sales and catalogue trend selections after an upload", async () => {
+    const qc = new QueryClient();
+    const keys = [["trends", "company", "fashion", { days: 28 }], ["trends", "catalogue", "sku", "fashion", "kurta"]];
+    keys.forEach((key) => qc.setQueryData(key, { cached: true }));
+    await invalidatePlanningData(qc);
+    keys.forEach((key) => expect(qc.getQueryState(key)?.isInvalidated).toBe(true));
   });
 });

@@ -8,16 +8,16 @@ describe("ModuleGrid", () => {
     render(<ModuleGrid />);
     expect(screen.getByRole("button", { name: /demand forecasting/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /decision engine/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /what-if scenarios/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /inventory & cover/i })).toBeInTheDocument();
   });
 
   it("opens a module's detail when selected", async () => {
     const user = userEvent.setup();
     render(<ModuleGrid />);
-    await user.click(screen.getByRole("button", { name: /what-if scenarios/i }));
+    await user.click(screen.getByRole("button", { name: /inventory & cover/i }));
 
-    expect(screen.getByText(/simulate a promotion/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /what-if scenarios/i })).toHaveAttribute(
+    expect(screen.getByText(/current levels by location/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /inventory & cover/i })).toHaveAttribute(
       "aria-expanded",
       "true",
     );
@@ -26,10 +26,10 @@ describe("ModuleGrid", () => {
   it("shows one detail at a time", async () => {
     const user = userEvent.setup();
     render(<ModuleGrid />);
-    await user.click(screen.getByRole("button", { name: /what-if scenarios/i }));
+    await user.click(screen.getByRole("button", { name: /inventory & cover/i }));
     await user.click(screen.getByRole("button", { name: /data quality/i }));
 
     expect(screen.getByText(/flags gaps, duplicates/i)).toBeInTheDocument();
-    expect(screen.queryByText(/simulate a promotion/i)).toBeNull();
+    expect(screen.queryByText(/current levels by location/i)).toBeNull();
   });
 });

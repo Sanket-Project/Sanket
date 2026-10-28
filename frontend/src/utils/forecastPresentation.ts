@@ -21,6 +21,16 @@ const SOURCES: Record<string, { short: string; detail: string; isModel: boolean 
     detail: "A model trained on this workspace's own sales history.",
     isModel: true,
   },
+  "hybrid-trend-fused": {
+    short: "Hybrid forecast",
+    detail: "A completed model forecast adjusted using the Hybrid run's recorded trend signals.",
+    isModel: true,
+  },
+  ensemble: {
+    short: "Model ensemble",
+    detail: "A persisted forecast produced by the run's recorded model ensemble.",
+    isModel: true,
+  },
   indicative: {
     short: "Indicative plan",
     detail:

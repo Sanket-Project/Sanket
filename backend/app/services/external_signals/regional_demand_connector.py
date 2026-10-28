@@ -109,6 +109,35 @@ CITY_STATE_MAP = {
     "thrissur": "Kerala",
 }
 
+INDIAN_STATES = {
+    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa",
+    "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala",
+    "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland",
+    "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura",
+    "Uttar Pradesh", "Uttarakhand", "West Bengal", "Andaman and Nicobar Islands",
+    "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Jammu and Kashmir",
+    "Ladakh", "Lakshadweep", "Puducherry",
+}
+
+
+def region_metadata(name: str) -> dict:
+    """A provider CITY request can return states; retain the actual granularity.
+
+    Unknown places do not become rural/tier-three cities. A city sharing a
+    district name is still city evidence, not evidence for the entire district.
+    """
+    clean = name.strip().casefold()
+    state = next((s for s in INDIAN_STATES if s.casefold() == clean), None)
+    if state:
+        return {"state": state, "city": None, "district": None,
+                "geography_level": "state", "tier": None}
+    if clean in CITY_STATE_MAP:
+        tier = "TIER1" if clean in TIER_1_METROS else "TIER2" if clean in TIER_2_CITIES else "TIER3"
+        return {"state": CITY_STATE_MAP[clean], "city": name.strip().title(), "district": None,
+                "geography_level": "city", "tier": tier}
+    return {"state": None, "city": None, "district": None,
+            "geography_level": "unknown", "tier": None}
+
 
 class RegionalDemandConnector(SignalConnector):
     """Fetches nationwide regional demand distribution across Indian cities and districts (Tier 1/2/3)."""
@@ -122,8 +151,7 @@ class RegionalDemandConnector(SignalConnector):
 
         try:
             # We attempt to fetch the national distribution from Google Trends for each keyword.
-            # In case pytrends is offline, rate-limited, or not installed, we fallback to a high-fidelity
-            # Indian city and district demand simulator to guarantee seamless, uninterrupted dashboard operation.
+            # Missing dependencies, rate limits and offline sources yield no evidence.
             import asyncio
 
             return await asyncio.to_thread(self._fetch_distribution, industry, keywords)
@@ -141,7 +169,7 @@ class RegionalDemandConnector(SignalConnector):
 
             pytrend = TrendReq(hl="en-IN", tz=330, timeout=(5, 10))
         except ImportError:
-            log.info("regional_demand.pytrends.missing — emitting high-fidelity synthetic")
+            log.info("regional_demand.pytrends.missing")
             return []
 
         parked = cooldown.seconds_remaining()
@@ -174,7 +202,8 @@ class RegionalDemandConnector(SignalConnector):
                             continue
 
                         city_str = str(city_name).strip().lower()
-                        tier = self._classify_tier(city_str)
+                        geography = region_metadata(str(city_name))
+                        tier = (geography["tier"] or "unknown").lower()
 
                         # Calculate normalized score in [-1.0, +1.0] from search interest (0-100)
                         score = (interest_val - 50.0) / 50.0
@@ -196,9 +225,8 @@ class RegionalDemandConnector(SignalConnector):
                                 ],
                                 region=f"IN-{tier.capitalize()}-{city_str.capitalize()}",
                                 payload={
-                                    "city": city_str.capitalize(),
-                                    "state": CITY_STATE_MAP.get(city_str, "Unknown"),
-                                    "tier": tier.upper(),
+                                    **geography,
+                                    "place_name": str(city_name).strip(),
                                     "product": kw,
                                     "category": cat,
                                     "relative_search_interest": interest_val,
@@ -212,8 +240,7 @@ class RegionalDemandConnector(SignalConnector):
                     cooldown.record_rate_limited(self.name)
                     break
 
-        # If live fetch didn't yield results (due to Google Trends rate-limiting or offline state),
-        # gracefully fall back to the premium simulator.
+        # A missing observation remains missing.
         if not out:
             return []
         cooldown.record_success()

@@ -1,5 +1,7 @@
 # Claude handoff: finish SANKET AI phases 3 and 4
 
+> Historical handoff: the remaining Phase 3/4 implementation has since been completed locally. See [final verification](../audit/2026-10-27-ai-phases34-final/REPORT.md) before starting any of the tasks below. Real email still requires operator SMTP configuration; no deployment or live-generation quality evaluation is claimed.
+
 Copy the prompt below into Claude Code from `C:\Users\admin\Desktop\Prisma`.
 
 ---

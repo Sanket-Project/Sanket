@@ -1,14 +1,6 @@
-// India state → district reference data + helpers for the Regional Insights view.
-//
-// Google Trends only resolves to a handful of metro "cities" per query, so a
-// state filter would otherwise surface just 1-2 centers. To give planners a
-// real state-level breakdown we keep a curated list of the most relevant
-// districts per state (capped to keep the grid responsive) and model demand
-// Used to populate the regional state filter on the Trends page.
-
-// Top ~15 districts per state, ordered by economic prominence. Not the full
-// official list (that would be hundreds of cards for a big state) but a far
-// richer view than the raw signal feed provides.
+// Geographic choices are reference data, never a source of demand estimates.
+// Telangana's complete official list: https://www.telangana.gov.in/about/districts/
+// Other states currently contain a partial district reference.
 export const INDIA_STATE_DISTRICTS: Record<string, string[]> = {
   "Maharashtra": [
     "Mumbai", "Pune", "Thane", "Nagpur", "Nashik", "Aurangabad", "Solapur",
@@ -25,9 +17,12 @@ export const INDIA_STATE_DISTRICTS: Record<string, string[]> = {
     "Kanchipuram", "Cuddalore", "Karur",
   ],
   "Telangana": [
-    "Hyderabad", "Rangareddy", "Medchal-Malkajgiri", "Warangal", "Karimnagar",
-    "Khammam", "Nizamabad", "Nalgonda", "Mahbubnagar", "Siddipet", "Sangareddy",
-    "Adilabad", "Suryapet", "Jagtial", "Medak",
+    "Adilabad", "Bhadradri Kothagudem", "Hanumakonda", "Hyderabad", "Jagtial", "Jangaon",
+    "Jayashankar Bhupalpally", "Jogulamba Gadwal", "Kamareddy", "Karimnagar", "Khammam",
+    "Kumuram Bheem", "Mahabubabad", "Mahabubnagar", "Mancherial", "Medak", "Medchal-Malkajgiri",
+    "Mulugu", "Nagarkurnool", "Nalgonda", "Narayanpet", "Nirmal", "Nizamabad", "Peddapalli",
+    "Rajanna Sircilla", "Rangareddy", "Sangareddy", "Siddipet", "Suryapet", "Vikarabad",
+    "Wanaparthy", "Warangal", "Yadadri Bhuvanagiri",
   ],
   "Delhi": [
     "New Delhi", "Central Delhi", "North Delhi", "South Delhi", "East Delhi",

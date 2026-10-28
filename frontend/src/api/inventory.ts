@@ -23,6 +23,22 @@ export interface InventoryLevelsResponse {
   levels: InventoryLevel[];
 }
 
+export interface InventoryOverview {
+  industry: string;
+  offset: number;
+  limit: number;
+  total_skus: number;
+  total_positions: number;
+  totals: { available_units: number; inbound_units: number };
+  locations: string[];
+  skus: Array<{ sku_id: string; sku_code: string; product_name: string }>;
+  levels: InventoryLevel[];
+  coverage: CoverageResponse;
+  recommendations: Array<{ sku_id: string; location: string | null; headline: string }>;
+}
+export type InventoryAttention = "all" | "needs" | "excess" | "unknown";
+export type InventorySort = "sku" | "available_asc" | "available_desc" | "freshness";
+
 export interface InventoryUpsertItem {
   sku_id: string;
   on_hand_units: number;
@@ -50,13 +66,13 @@ export interface LocationCoverage {
   inbound_units: number;
   as_of: string | null;
   stock_stale: boolean;
-  location_demand: { weekly_units: number | null; weeks_observed: number; basis: "location_sales" | null };
+  location_demand: { weekly_units: number | null; weeks_observed: number; basis: "location_sales" | "period_average" | null };
   cover_days: number | null;
   status: CoverageStatus | null;
   /** Set for excess stock: what to do instead of reordering. */
   next_action?: string | null;
   reason: string;
-  demand_basis?: "forecast" | "trailing_actuals" | null;
+  demand_basis?: "forecast" | "trailing_actuals" | "period_average" | null;
   open_transfer?: { units: number; destination: string } | null;
   degraded?: boolean;
   unassigned_share?: number | null;
@@ -67,7 +83,7 @@ export interface SkuCoverage {
   sku_code: string;
   lead_time_days: number;
   lead_time_assumed: boolean;
-  demand: { basis: "forecast" | "trailing_actuals" | null; weekly_units: number | null; run_id: string | null; reason: string };
+  demand: { basis: "forecast" | "trailing_actuals" | "period_average" | null; weekly_units: number | null; run_id: string | null; reason: string };
   /** Pooled across every location. */
   sku_wide: {
     available_units: number;
@@ -99,6 +115,8 @@ export interface CoverageResponse {
 }
 
 export const inventoryApi = {
+  overview: (params: { offset: number; limit: number; search: string; location: string; attention?: InventoryAttention; sort?: InventorySort }): Promise<InventoryOverview> =>
+    apiClient.get("/inventory/overview", { params }).then((r) => r.data),
   /** Days of cover per SKU (pooled) and per location, from demand and lead time. */
   coverage: (): Promise<CoverageResponse> =>
     apiClient.get("/inventory/coverage").then((r) => r.data),
@@ -113,6 +131,16 @@ export const inventoryApi = {
   upsert: (items: InventoryUpsertItem[]): Promise<InventoryUpsertResponse> =>
     apiClient
       .put("/inventory/levels", { items })
+      .then((r) => r.data),
+
+  deleteMany: (skuIds: string[]): Promise<{ deleted: number; industry: string }> =>
+    apiClient
+      .post("/inventory/levels/bulk-delete", { sku_ids: skuIds })
+      .then((r) => r.data),
+
+  deleteAll: (): Promise<{ deleted: number; industry: string }> =>
+    apiClient
+      .delete("/inventory/levels/all")
       .then((r) => r.data),
 };
 

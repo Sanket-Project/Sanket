@@ -1,0 +1,231 @@
+[
+  {
+    "file": "C:\\Users\\admin\\Downloads\\stock balence Report 2026.csv",
+    "sha256": "0f9907cea3e73f9cfb70c6e8bd9ae588a45390e849a097a94d2d293431125a15",
+    "bytes": 3048094,
+    "provenance": "client report; origin inferred from existing audit; identity not independently authenticated",
+    "tables": [
+      {
+        "sheet": "CSV",
+        "header_row": 1,
+        "headers": [
+          "Company Name",
+          "Stock No",
+          "Item Description",
+          "Category",
+          "Brand",
+          "Style No",
+          "Sub Category",
+          "Cost Price",
+          "Retail Price",
+          "Closing Bal.Qty",
+          "Closing Bal.Val"
+        ],
+        "physical_rows": 16521,
+        "data_rows_before_total_filter": 16520
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\admin\\Downloads\\Sales Data 2026.xlsx",
+    "sha256": "f0f9064a3a6819be09c9b703f7476262beebd408e33091a3e0498afa6f3d2105",
+    "bytes": 19044,
+    "provenance": "client report",
+    "tables": [
+      {
+        "sheet": "Sheet1",
+        "header_row": 9,
+        "headers": [
+          "Company Name",
+          "Voucher Date",
+          "Type",
+          "Total Sales Bill",
+          "Sales Qty",
+          "Sales Amount",
+          "Total Return Bill",
+          "Return Qty",
+          "Return Amount",
+          "Total Net Bill",
+          "Net Qty",
+          "Net Amount",
+          "CARD",
+          "Cash",
+          "Credit Note",
+          "E-Wallet",
+          "Payment Pendig"
+        ],
+        "physical_rows": 131,
+        "physical_columns": 17,
+        "formula_cells": 0,
+        "formula_cells_without_cached_value": 0
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\admin\\Downloads\\Gross Profit Data 2026.xlsx",
+    "sha256": "8cd850ea13e3d28bf779ee702aafa31ad62845c895a661ed4a3a50b3bbd89621",
+    "bytes": 1382424,
+    "provenance": "client report",
+    "tables": [
+      {
+        "sheet": "Sheet1",
+        "header_row": 9,
+        "headers": [
+          "Company Name",
+          "Stock No",
+          "Item Description",
+          "Brand",
+          "Sales Qty",
+          "Net Sales Value",
+          "Sale Value (Without Tax)",
+          "Cost of Goods (With Tax)",
+          "Cost of Goods (Without Tax)",
+          "Gross Profit Amount",
+          "Gross Profit % (Based on Cost)",
+          "Gross Profit % (Based on Sale)"
+        ],
+        "physical_rows": 15534,
+        "physical_columns": 12,
+        "formula_cells": 0,
+        "formula_cells_without_cached_value": 0
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\admin\\Downloads\\Purchasr Report 2026.xlsx",
+    "sha256": "4fb6adeb9ea7f35eac4e434f2c63dc063a053df82ae69ab75fa367ad3794bfec",
+    "bytes": 22973,
+    "provenance": "client report",
+    "tables": [
+      {
+        "sheet": "Sheet1",
+        "header_row": 2,
+        "headers": [
+          "Voucher Type",
+          "Voucher Date",
+          "Voucher Number",
+          "Party Name",
+          "Quantity",
+          "Disc. Amount",
+          "Tax Amount",
+          "Net Amount"
+        ],
+        "physical_rows": 269,
+        "physical_columns": 8,
+        "formula_cells": 0,
+        "formula_cells_without_cached_value": 0
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\admin\\Desktop\\Prisma\\_to_delete\\qa_artifacts\\qa_test_products_import.xlsx",
+    "sha256": "7fa94a884846c9865de54ac72a039efcab2be8c8d17457fe56b5bffb65731534",
+    "bytes": 5296,
+    "provenance": "synthetic QA fixture",
+    "tables": [
+      {
+        "sheet": "Products",
+        "header_row": 1,
+        "headers": [
+          "name",
+          "category",
+          "subcategory",
+          "brand",
+          "external_id",
+          "lead_time",
+          "safety_stock",
+          "forecast_demand",
+          "monthly_sales"
+        ],
+        "physical_rows": 6,
+        "physical_columns": 9,
+        "formula_cells": 0,
+        "formula_cells_without_cached_value": 0
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\admin\\Desktop\\Prisma\\_to_delete\\qa_artifacts\\qa_test_inventory_import.xlsx",
+    "sha256": "32b4e384c3fdcb4c8ad33cf32ab4cfb52c19c6e8ca1277d3c270489a20252df8",
+    "bytes": 4999,
+    "provenance": "synthetic QA fixture",
+    "tables": [
+      {
+        "sheet": "Inventory",
+        "header_row": 1,
+        "headers": [
+          "sku_code",
+          "on_hand_units",
+          "inbound_units",
+          "reserved_units"
+        ],
+        "physical_rows": 5,
+        "physical_columns": 4,
+        "formula_cells": 0,
+        "formula_cells_without_cached_value": 0
+      }
+    ]
+  },
+  {
+    "file": "C:\\Users\\admin\\Desktop\\Prisma\\_to_delete\\qa_artifacts\\Redwine_Label_Fashion_Sales_and_Inventory_Record (1).xlsx",
+    "sha256": "6d3c3ce4fcd7f0ee94aaa111f4632bd510c997449c0748d607206d03f1a143d6",
+    "bytes": 60915,
+    "provenance": "archived fashion workbook; business authenticity unverified; excluded from live client controls",
+    "tables": [
+      {
+        "sheet": "Executive Summary",
+        "physical_rows": 14,
+        "physical_columns": 8,
+        "note": "Presentation dashboard, not an import table; formula cache availability reviewed separately"
+      },
+      {
+        "sheet": "Sales Ledger",
+        "header_row": 1,
+        "headers": [
+          "Order ID",
+          "Order Date",
+          "SKU",
+          "Product ID",
+          "Product Name",
+          "Category",
+          "Size",
+          "Quantity Ordered",
+          "Unit Retail Price",
+          "Total Revenue",
+          "Unit Product Cost",
+          "Total Cost of Goods",
+          "Gross Profit Contribution",
+          "Fulfillment Warehouse",
+          "Sales Channel"
+        ],
+        "physical_rows": 501,
+        "physical_columns": 15,
+        "formula_cells": 1500,
+        "formula_cells_without_cached_value": 1500
+      },
+      {
+        "sheet": "Warehouse Inventory",
+        "header_row": 1,
+        "headers": [
+          "SKU",
+          "Product ID",
+          "Product Name",
+          "Category",
+          "Size",
+          "Warehouse Code",
+          "Fulfillment City",
+          "Stock On Hand (Qty)",
+          "Safety/Reorder Threshold",
+          "Unit Cost (INR)",
+          "Unit Price (INR)",
+          "Total Asset Value (At Cost)",
+          "Inventory Status"
+        ],
+        "physical_rows": 151,
+        "physical_columns": 13,
+        "formula_cells": 300,
+        "formula_cells_without_cached_value": 300
+      }
+    ]
+  }
+]

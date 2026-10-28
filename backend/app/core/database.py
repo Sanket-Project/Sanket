@@ -143,18 +143,26 @@ class Database:
                     )
                 )
         except Exception as exc:
-            # Never let an introspection hiccup itself cause an outage; surface it.
+            if strict:
+                raise RuntimeError(
+                    "Refusing to start: tenant isolation could not be verified. "
+                    "Check database connectivity and role inspection permissions."
+                ) from exc
             log.warning("database.rls_check.skipped", error=str(exc))
             return
 
         is_super = bool(role[0]) if role else False
         is_bypass = bool(role[1]) if role else False
         problems: list[str] = []
+        if role is None or any(value is None for value in role):
+            problems.append("the runtime role's RLS privileges could not be verified")
         if is_super:
             problems.append("the role is a SUPERUSER (bypasses RLS)")
         if is_bypass:
             problems.append("the role has BYPASSRLS (bypasses RLS)")
-        if forced is False:
+        if forced is None:
+            problems.append("the 'tenants' table's FORCE RLS setting could not be verified")
+        elif forced is False:
             problems.append("the 'tenants' table is missing FORCE ROW LEVEL SECURITY")
 
         if not problems:

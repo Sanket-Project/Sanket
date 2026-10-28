@@ -1,0 +1,1 @@
+schema_version,snapshot_id,as_of,sku_code,location_code,on_hand_qty,reserved_qty,damaged_qty,quarantine_qty,in_transit_qty,open_po_qty,source_system,count_reference,reported_stock_value_ex_tax,currency

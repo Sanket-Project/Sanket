@@ -31,9 +31,6 @@ const ProductsPage = lazy(() =>
 const SkusPage = lazy(() =>
   import("@/pages/Skus").then((m) => ({ default: m.SkusPage }))
 );
-const SignalsPage = lazy(() =>
-  import("@/pages/Signals").then((m) => ({ default: m.SignalsPage }))
-);
 const ForecastsPage = lazy(() =>
   import("@/pages/Forecasts").then((m) => ({ default: m.ForecastsPage }))
 );
@@ -73,9 +70,6 @@ const FinancialImpactPage = lazy(() =>
 const SalesAnalyticsPage = lazy(() =>
   import("@/pages/SalesAnalytics").then((m) => ({ default: m.SalesAnalyticsPage }))
 );
-const ForecastAccuracyPage = lazy(() =>
-  import("@/pages/ForecastAccuracy").then((m) => ({ default: m.ForecastAccuracyPage }))
-);
 const InventoryPage = lazy(() =>
   import("@/pages/Inventory").then((m) => ({ default: m.InventoryPage }))
 );
@@ -102,9 +96,6 @@ const DecisionsPage = lazy(() =>
 );
 const ROIDashboardPage = lazy(() =>
   import("@/pages/ROIDashboard").then((m) => ({ default: m.ROIDashboardPage }))
-);
-const WhatIfScenarioPage = lazy(() =>
-  import("@/pages/WhatIfScenario").then((m) => ({ default: m.WhatIfScenarioPage }))
 );
 const DataQualityPage = lazy(() =>
   import("@/pages/DataQuality").then((m) => ({ default: m.DataQualityPage }))
@@ -239,7 +230,6 @@ export default function App() {
             <Route path="skus" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><SkusPage /></Suspense></ErrorBoundary>} />
             <Route path="skus/:id" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><SkuDetailPage /></Suspense></ErrorBoundary>} />
             <Route path="inventory" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><InventoryPage /></Suspense></ErrorBoundary>} />
-            <Route path="signals" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><SignalsPage /></Suspense></ErrorBoundary>} />
             <Route path="trends" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><TrendAnalysisPage /></Suspense></ErrorBoundary>} />
             <Route path="forecasts" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><ForecastsPage /></Suspense></ErrorBoundary>} />
             <Route path="forecasts/hybrid" element={<Navigate to="/workspace/forecasts" replace />} />
@@ -249,10 +239,8 @@ export default function App() {
             <Route path="financial" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><FinancialImpactPage /></Suspense></ErrorBoundary>} />
             <Route path="decisions" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><DecisionsPage /></Suspense></ErrorBoundary>} />
             <Route path="roi" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><ROIDashboardPage /></Suspense></ErrorBoundary>} />
-            <Route path="scenarios" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><WhatIfScenarioPage /></Suspense></ErrorBoundary>} />
             <Route path="data-quality" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><DataQualityPage /></Suspense></ErrorBoundary>} />
             <Route path="notifications" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><NotificationsPage /></Suspense></ErrorBoundary>} />
-            <Route path="forecast-accuracy" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><ForecastAccuracyPage /></Suspense></ErrorBoundary>} />
             {/* Industry-scoped. The sidebar already hides this for other
                 workspaces; the guard covers a typed URL, and the server
                 answers 403 regardless. */}

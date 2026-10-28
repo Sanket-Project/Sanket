@@ -18,7 +18,9 @@ ones whose sync adapter isn't built yet — connecting records the request
 from __future__ import annotations
 
 import asyncio
+import csv
 import hashlib
+import io
 import json
 import secrets
 import uuid
@@ -50,6 +52,7 @@ from app.services.integrations import sql_source
 from app.services.integrations.file_import import import_rows, parse_table
 from app.services.integrations.import_review import analyze_import, confirm_import
 from app.services.integrations.smart_import import MAX_FILES, confirm_plan, plan_files, preview_plan
+from app.services.integrations.v2 import upload as v2_upload
 from app.services.llm.policy import AIContext
 from app.services.integrations.woocommerce_client import WooCommerceClient, WooCommerceError
 from app.services.integrations.woocommerce_sync import run_woocommerce_sync
@@ -604,6 +607,25 @@ async def upload_file(
     if len(content) > _MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=413, detail="File exceeds the 10 MB limit")
 
+    # V2-marked files must never fall through to a permissive V1 mapping.
+    try:
+        v2_headers, v2_rows = v2_upload.parse_v2_csv(content)
+        if v2_upload.detect_v2_schema(v2_headers, v2_rows[0] if v2_rows else None):
+            raise HTTPException(
+                status_code=400,
+                detail="V2 files use /integrations/v2/preview and /integrations/v2/confirm",
+            )
+    except ValueError:
+        try:
+            raw_headers = next(csv.reader(io.StringIO(content.decode("utf-8-sig"))))
+        except (UnicodeDecodeError, StopIteration, csv.Error):
+            raw_headers = []
+        if v2_upload.detect_v2_schema([str(header).strip() for header in raw_headers]) in v2_upload.SUPPORTED_SCHEMAS:
+            raise HTTPException(
+                status_code=400,
+                detail="Malformed V2 file; use the V2 preview endpoint to review actionable errors",
+            )
+
     if analysis_token or table_selections:
         try:
             if not analysis_token or not table_selections:
@@ -844,3 +866,44 @@ async def ingest_push(request: Request) -> dict:
         skipped=skipped,
     )
     return {"ok": True, "accepted": accepted, "unchanged": unchanged, "skipped": skipped}
+
+
+@router.post("/v2/preview")
+async def preview_v2_file(
+    request: Request,
+    tenant_id: TenantId,
+    user_id: UserId,
+    tenant_industry: TenantIndustry,
+    file: Annotated[UploadFile, File()],
+) -> dict[str, Any]:
+    content = await _read_upload(file)
+    try:
+        result = v2_upload.preview(content, tenant_id, user_id, get_settings().jwt_secret)
+        return await v2_upload.validate_tenant_references(request.app.state.db, tenant_id, result, content)
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/v2/confirm")
+async def confirm_v2_file(
+    request: Request,
+    tenant_id: TenantId,
+    user_id: UserId,
+    tenant_industry: TenantIndustry,
+    file: Annotated[UploadFile, File()],
+    preview_token: Annotated[str, Form(max_length=16000)],
+) -> dict[str, Any]:
+    content = await _read_upload(file)
+    try:
+        return await v2_upload.confirm(
+            request.app.state.db,
+            content,
+            preview_token,
+            tenant_id,
+            user_id,
+            tenant_industry,
+            get_settings().jwt_secret,
+            validate_references=True,
+        )
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc

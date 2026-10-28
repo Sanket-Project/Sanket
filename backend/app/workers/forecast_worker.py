@@ -26,8 +26,20 @@ from app.core.database import Database
 from app.realtime.connection_manager import ConnectionManager
 from app.schemas.trends import HybridForecastRequest
 from app.services.hybrid_forecast import execute_hybrid_run
+from app.services.persisted_forecasts import execute_baseline_refresh
+from app.services.notifications.weekly import run_weekly_summary
 
 log = structlog.get_logger(__name__)
+
+
+async def run_baseline_forecast(ctx: dict, refresh_id: str, tenant_id: str) -> str:
+    await execute_baseline_refresh(ctx, refresh_id, tenant_id)
+    return refresh_id
+
+
+async def run_company_trends(ctx: dict, tenant_id: str, industry_code: str) -> dict:
+    from app.services.company_trends import refresh_company_interest
+    return await refresh_company_interest(ctx["db"], tenant_id, industry_code)
 
 
 async def run_hybrid_forecast(
@@ -57,6 +69,13 @@ async def startup(ctx: dict) -> None:
 
     configure_logging(settings)
     ctx["db"] = Database(settings)
+    from app.services.llm.client import ProviderClient
+    from app.services.llm.policy import PolicyStore
+    from app.services.llm.service import AIService
+    from app.services.llm.state import AIState
+    from app.services.llm.telemetry import Telemetry
+    ctx["ai"] = AIService(settings, PolicyStore(ctx["db"]), AIState(ctx["redis"], settings),
+                           ProviderClient(settings), Telemetry(ctx["db"], settings))
     ctx["http"] = httpx.AsyncClient(
         timeout=settings.ml_api_timeout_s,
         limits=httpx.Limits(max_keepalive_connections=10, max_connections=20),
@@ -68,6 +87,7 @@ async def startup(ctx: dict) -> None:
 
 
 async def shutdown(ctx: dict) -> None:
+    await ctx["ai"].aclose()
     await ctx["http"].aclose()
     await ctx["db"].close()
     log.info("forecast_worker.shutdown")
@@ -87,11 +107,12 @@ def _redis_settings() -> RedisSettings:
 class WorkerSettings:
     """arq entrypoint — `arq app.workers.forecast_worker.WorkerSettings`."""
 
-    functions = [run_hybrid_forecast]
+    functions = [run_hybrid_forecast, run_baseline_forecast, run_company_trends, run_weekly_summary]
     on_startup = startup
     on_shutdown = shutdown
     redis_settings = _redis_settings()
     # Chronos inference is slow; allow generous headroom before arq aborts a job.
-    job_timeout = 600
-    max_jobs = 4
+    job_timeout = get_settings().forecast_job_timeout_s
+    # CPU-only inference has a substantial per-job memory footprint.
+    max_jobs = 1
     keep_result = 3600

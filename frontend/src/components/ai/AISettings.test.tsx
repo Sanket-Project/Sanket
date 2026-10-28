@@ -34,3 +34,15 @@ it("exposes the implemented explanation controls with readable labels", async ()
   expect(await screen.findByLabelText("Decision explanations")).not.toBeChecked();
   expect(screen.getByLabelText("Alert and anomaly explanations")).not.toBeChecked();
 });
+
+it("exposes regional report and interactive task controls by their product names", async () => {
+  api.settings.mockResolvedValue({ enabled: false, sharing: "headers_only", tasks: { weekly_summary: false,
+    roi_report: false, supplier_draft: false, scenario_interpretation: false, scenario_explanation: false,
+    data_qa_plan: false, data_qa_answer: false }, aggregate_context: false, product_names: false, can_manage: true });
+  render(<QueryClientProvider client={new QueryClient()}><AISettings /></QueryClientProvider>);
+  expect(await screen.findByLabelText("Weekly email summaries")).not.toBeChecked();
+  expect(screen.getByLabelText("ROI report summaries")).not.toBeChecked();
+  expect(screen.getByLabelText("Supplier draft summaries")).not.toBeChecked();
+  expect(screen.getByLabelText("Natural-language scenarios")).not.toBeChecked();
+  expect(screen.getByLabelText("Read-only data questions")).not.toBeChecked();
+});

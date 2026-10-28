@@ -1,0 +1,3 @@
+schema_version,snapshot_id,as_of,sku_code,location_code,on_hand_qty,reserved_qty,damaged_qty,quarantine_qty,in_transit_qty,open_po_qty,source_system,count_reference,reported_stock_value_ex_tax,currency
+retail_v2.0.inventory,DEMO-SNAP-001,2026-10-01T09:00:00+05:30,DEMO-KUR-001-BLU-M,demo-hyd-store,20,2,1,0,0,0,DEMO-POS,DEMO-COUNT-001,12000.0000,INR
+retail_v2.0.inventory,DEMO-SNAP-001,2026-10-01T09:00:00+05:30,DEMO-DUP-001-NAT-OS,demo-hyd-store,10,0,0,0,0,0,DEMO-POS,DEMO-COUNT-001,2000.0000,INR

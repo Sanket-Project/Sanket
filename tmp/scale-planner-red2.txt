@@ -1,0 +1,161 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+_______ test_25k_sku_forecast_reads_are_bounded_and_summary_reconciles ________
+.venv\Lib\site-packages\anyio\streams\memory.py:117: in receive
+    return self.receive_nowait()
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\anyio\streams\memory.py:112: in receive_nowait
+    raise WouldBlock
+E   anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+..\..\..\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\asyncio\tasks.py:488: in wait_for
+    return await fut
+           ^^^^^^^^^
+.venv\Lib\site-packages\httpx\_client.py:1768: in get
+    return await self.request(
+.venv\Lib\site-packages\httpx\_client.py:1540: in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\httpx\_client.py:1629: in send
+    response = await self._send_handling_auth(
+.venv\Lib\site-packages\httpx\_client.py:1657: in _send_handling_auth
+    response = await self._send_handling_redirects(
+.venv\Lib\site-packages\httpx\_client.py:1694: in _send_handling_redirects
+    response = await self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\httpx\_client.py:1730: in _send_single_request
+    response = await transport.handle_async_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\httpx\_transports\asgi.py:170: in handle_async_request
+    await self.app(scope, receive, send)
+.venv\Lib\site-packages\fastapi\applications.py:1162: in __call__
+    await super().__call__(scope, receive, send)
+.venv\Lib\site-packages\starlette\applications.py:90: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv\Lib\site-packages\starlette\middleware\errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+.venv\Lib\site-packages\starlette\middleware\cors.py:88: in __call__
+    await self.app(scope, receive, send)
+.venv\Lib\site-packages\starlette\middleware\base.py:193: in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\middleware\security_headers.py:39: in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\starlette\middleware\base.py:151: in call_next
+    message = await recv_stream.receive()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\anyio\streams\memory.py:125: in receive
+    await receive_event.wait()
+.venv\Lib\site-packages\anyio\_backends\_asyncio.py:1840: in wait
+    await self._event.wait()
+..\..\..\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\asyncio\locks.py:213: in wait
+    await fut
+E   asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+tests\test_forecast_scale.py:56: in test_25k_sku_forecast_reads_are_bounded_and_summary_reconciles
+    response = await asyncio.wait_for(client.get('/api/v1/forecasts/latest', headers=headers,
+..\..\..\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\asyncio\tasks.py:487: in wait_for
+    async with timeouts.timeout(timeout):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\asyncio\timeouts.py:114: in __aexit__
+    raise TimeoutError from exc_val
+E   TimeoutError
+---------------------------- Captured stdout setup ----------------------------
+2026-10-26 23:13:38 [warning  ] config.secrets.weak            detail='METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset � third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key' note='Must be fixed before production deploy'
+2026-10-26 23:13:38 [info     ] otel.disabled                  reason='OTLP_ENDPOINT not set'
+2026-10-26 23:13:39 [warning  ] config.secrets.weak            detail='METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset � third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key' note='Must be fixed before production deploy'
+2026-10-26 23:13:39 [info     ] otel.disabled                  reason='OTLP_ENDPOINT not set'
+{"mode": "in-process", "note": "Set REDIS_URL for distributed rate limiting across replicas", "event": "startup.rate_limit.mode", "logger": "app.main", "level": "warning", "timestamp": "2026-10-26T17:43:39.884788Z", "app": "sanket"}
+{"reason": "REDIS_URL unset; using in-process only", "event": "realtime.redis.disabled", "logger": "app.realtime.connection_manager", "level": "info", "timestamp": "2026-10-26T17:43:39.885151Z", "app": "sanket"}
+{"note": "REDIS_URL unset \u2014 hybrid forecasts run in-process (not durable)", "event": "startup.arq.disabled", "logger": "app.main", "level": "warning", "timestamp": "2026-10-26T17:43:39.885354Z", "app": "sanket"}
+{"event": "startup.http_client.ready", "logger": "app.main", "level": "info", "timestamp": "2026-10-26T17:43:40.041688Z", "app": "sanket"}
+{"lock": "background-singletons", "identity": "DESKTOP-N8KTDPL:22780:991fe40a", "event": "leader_lock.acquired", "logger": "app.core.distributed_lock", "level": "info", "timestamp": "2026-10-26T17:43:40.074074Z", "app": "sanket"}
+{"event": "leader.singletons.started", "logger": "app.main", "level": "info", "timestamp": "2026-10-26T17:43:40.074291Z", "app": "sanket"}
+{"event": "startup.db.ok", "logger": "app.main", "level": "info", "timestamp": "2026-10-26T17:43:40.166995Z", "app": "sanket"}
+{"env": "development", "version": "0.1.0", "event": "startup.complete", "logger": "app.main", "level": "info", "timestamp": "2026-10-26T17:43:40.167208Z", "app": "sanket"}
+{"detail": "METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset \u2014 third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key", "note": "Must be fixed before production deploy", "event": "config.secrets.weak", "logger": "app.config", "level": "warning", "timestamp": "2026-10-26T17:43:40.174578Z", "app": "sanket"}
+---------------------------- Captured stdout call -----------------------------
+{"detail": "the role is a SUPERUSER (bypasses RLS); the role has BYPASSRLS (bypasses RLS)", "note": "Tenant isolation is NOT enforced with this DB role/config.", "event": "database.rls_check.unenforced", "logger": "app.core.database", "level": "warning", "timestamp": "2026-10-26T17:43:40.220188Z", "app": "sanket"}
+{"event": "setup plugin alembic.autogenerate.schemas", "logger": "alembic.runtime.plugins", "level": "info", "timestamp": "2026-10-26T17:43:40.382882Z", "app": "sanket"}
+{"event": "setup plugin alembic.autogenerate.tables", "logger": "alembic.runtime.plugins", "level": "info", "timestamp": "2026-10-26T17:43:40.383051Z", "app": "sanket"}
+{"event": "setup plugin alembic.autogenerate.types", "logger": "alembic.runtime.plugins", "level": "info", "timestamp": "2026-10-26T17:43:40.383130Z", "app": "sanket"}
+{"event": "setup plugin alembic.autogenerate.constraints", "logger": "alembic.runtime.plugins", "level": "info", "timestamp": "2026-10-26T17:43:40.383196Z", "app": "sanket"}
+{"event": "setup plugin alembic.autogenerate.defaults", "logger": "alembic.runtime.plugins", "level": "info", "timestamp": "2026-10-26T17:43:40.383270Z", "app": "sanket"}
+{"event": "setup plugin alembic.autogenerate.comments", "logger": "alembic.runtime.plugins", "level": "info", "timestamp": "2026-10-26T17:43:40.383333Z", "app": "sanket"}
+{"revision": ["0028"], "event": "database.migration_check.ok", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-26T17:43:40.524863Z", "app": "sanket"}
+{"note": "all partitions already present", "event": "database.partitions.ok", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-26T17:43:40.535211Z", "app": "sanket"}
+{"event": "database.seed.start", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-26T17:43:40.764935Z", "app": "sanket"}
+{"tenant_id": "c5e5fb45-8eeb-4b8e-b5b8-003710c36bef", "event": "database.seed.completed", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-26T17:43:40.840525Z", "app": "sanket"}
+{"event": "database.engine.disposed", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-26T17:43:40.887870Z", "app": "sanket"}
+{"event": "startup.db_initialization.complete", "logger": "app.main", "level": "info", "timestamp": "2026-10-26T17:43:40.888191Z", "app": "sanket"}
+{"user_id": "86789e9e-ed93-4bd9-baa0-34dfb04c2c3e", "event": "auth.dev_login.ok", "request_id": "460b2c08-30cb-485b-8a9a-f6a5208ad5e9", "logger": "app.routers.auth", "level": "info", "timestamp": "2026-10-26T17:43:41.021698Z", "app": "sanket"}
+{"event": "HTTP Request: POST http://test/api/v1/auth/dev-login \"HTTP/1.1 200 OK\"", "logger": "httpx", "level": "info", "timestamp": "2026-10-26T17:43:41.024112Z", "app": "sanket"}
+{"event": "HTTP Request: GET http://test/api/v1/forecasts/latest?view=summary \"HTTP/1.1 200 OK\"", "logger": "httpx", "level": "info", "timestamp": "2026-10-26T17:43:48.563243Z", "app": "sanket"}
+{"event": "Exception terminating connection <AdaptedConnection <asyncpg.connection.Connection object at 0x0000020208B4DB80>>", "exc_info": ["<class 'asyncio.exceptions.CancelledError'>", "CancelledError(\"Cancelled via cancel scope 202094d82d0 by <Task cancelling name='starlette.middleware.base.BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.coro' coro=<TaskHandle._run_coro() running at C:\\\\Users\\\\admin\\\\Desktop\\\\Prisma\\\\backend\\\\.venv\\\\Lib\\\\site-packages\\\\anyio\\\\_core\\\\_tasks.py:278> cb=[TaskGroup._spawn.<locals>.task_done() at C:\\\\Users\\\\admin\\\\Desktop\\\\Prisma\\\\backend\\\\.venv\\\\Lib\\\\site-packages\\\\anyio\\\\_backends\\\\_asyncio.py:832]>\")", "<traceback object at 0x00000202092F6B80>"], "tenant_id": "0074c955-226a-4991-ab3f-73624426fcf6", "user_id": "86789e9e-ed93-4bd9-baa0-34dfb04c2c3e", "request_id": "b6cb5fc0-14ac-4715-b31d-3997b8ad1928", "industry": "fashion", "role": "admin", "logger": "sqlalchemy.pool.impl.AsyncAdaptedQueuePool", "level": "error", "timestamp": "2026-10-26T17:43:58.575915Z", "app": "sanket"}
+------------------------------ Captured log call ------------------------------
+WARNING  app.core.database:database.py:171 {'detail': 'the role is a SUPERUSER (bypasses RLS); the role has BYPASSRLS (bypasses RLS)', 'note': 'Tenant isolation is NOT enforced with this DB role/config.', 'event': 'database.rls_check.unenforced', 'logger': 'app.core.database', 'level': 'warning', 'timestamp': '2026-10-26T17:43:40.220188Z', 'app': 'sanket'}
+INFO     alembic.runtime.plugins:plugins.py:37 setup plugin alembic.autogenerate.schemas
+INFO     alembic.runtime.plugins:plugins.py:37 setup plugin alembic.autogenerate.tables
+INFO     alembic.runtime.plugins:plugins.py:37 setup plugin alembic.autogenerate.types
+INFO     alembic.runtime.plugins:plugins.py:37 setup plugin alembic.autogenerate.constraints
+INFO     alembic.runtime.plugins:plugins.py:37 setup plugin alembic.autogenerate.defaults
+INFO     alembic.runtime.plugins:plugins.py:37 setup plugin alembic.autogenerate.comments
+INFO     app.core.database:database.py:205 {'revision': ['0028'], 'event': 'database.migration_check.ok', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-26T17:43:40.524863Z', 'app': 'sanket'}
+INFO     app.core.database:database.py:239 {'note': 'all partitions already present', 'event': 'database.partitions.ok', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-26T17:43:40.535211Z', 'app': 'sanket'}
+INFO     app.core.database:database.py:278 {'event': 'database.seed.start', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-26T17:43:40.764935Z', 'app': 'sanket'}
+INFO     app.core.database:database.py:316 {'tenant_id': 'c5e5fb45-8eeb-4b8e-b5b8-003710c36bef', 'event': 'database.seed.completed', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-26T17:43:40.840525Z', 'app': 'sanket'}
+INFO     app.core.database:database.py:245 {'event': 'database.engine.disposed', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-26T17:43:40.887870Z', 'app': 'sanket'}
+INFO     app.main:main.py:212 {'event': 'startup.db_initialization.complete', 'logger': 'app.main', 'level': 'info', 'timestamp': '2026-10-26T17:43:40.888191Z', 'app': 'sanket'}
+INFO     app.routers.auth:auth.py:336 {'user_id': '86789e9e-ed93-4bd9-baa0-34dfb04c2c3e', 'event': 'auth.dev_login.ok', 'request_id': '460b2c08-30cb-485b-8a9a-f6a5208ad5e9', 'logger': 'app.routers.auth', 'level': 'info', 'timestamp': '2026-10-26T17:43:41.021698Z', 'app': 'sanket'}
+INFO     httpx:_client.py:1740 HTTP Request: POST http://test/api/v1/auth/dev-login "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1740 HTTP Request: GET http://test/api/v1/forecasts/latest?view=summary "HTTP/1.1 200 OK"
+ERROR    sqlalchemy.pool.impl.AsyncAdaptedQueuePool:base.py:377 Exception terminating connection <AdaptedConnection <asyncpg.connection.Connection object at 0x0000020208B4DB80>>
+Traceback (most recent call last):
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\pool\base.py", line 373, in _close_connection
+    self._dialect.do_terminate(connection)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 1131, in do_terminate
+    dbapi_connection.terminate()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\connectors\asyncio.py", line 402, in terminate
+    self.await_(asyncio.shield(self._terminate_graceful_close()))  # type: ignore[attr-defined] # noqa: E501
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+asyncio.exceptions.CancelledError: Cancelled via cancel scope 202094d82d0 by <Task cancelling name='starlette.middleware.base.BaseHTTPMiddleware.__call__.<locals>.call_next.<locals>.coro' coro=<TaskHandle._run_coro() running at C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\anyio\_core\_tasks.py:278> cb=[TaskGroup._spawn.<locals>.task_done() at C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\anyio\_backends\_asyncio.py:832]>
+-------------------------- Captured stdout teardown ---------------------------
+{"event": "database.engine.disposed", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-26T17:43:59.904988Z", "app": "sanket"}
+{"event": "signal_pipeline.stopped", "logger": "app.services.external_signals.signal_pipeline", "level": "info", "timestamp": "2026-10-26T17:43:59.906018Z", "app": "sanket"}
+{"event": "shopify_poller.stopped", "logger": "app.services.integrations.shopify_poller", "level": "info", "timestamp": "2026-10-26T17:43:59.906604Z", "app": "sanket"}
+{"event": "leader.singletons.stopped", "logger": "app.main", "level": "info", "timestamp": "2026-10-26T17:43:59.906872Z", "app": "sanket"}
+{"event": "signal_pipeline.stopped", "logger": "app.services.external_signals.signal_pipeline", "level": "info", "timestamp": "2026-10-26T17:43:59.907128Z", "app": "sanket"}
+{"event": "shopify_poller.stopped", "logger": "app.services.integrations.shopify_poller", "level": "info", "timestamp": "2026-10-26T17:43:59.907325Z", "app": "sanket"}
+{"event": "realtime.shutdown.complete", "logger": "app.realtime.connection_manager", "level": "info", "timestamp": "2026-10-26T17:43:59.907506Z", "app": "sanket"}
+{"event": "database.engine.disposed", "logger": "app.core.database", "level": "info", "timestamp": "2026-10-26T17:43:59.915068Z", "app": "sanket"}
+{"event": "shutdown.complete", "logger": "app.main", "level": "info", "timestamp": "2026-10-26T17:43:59.915366Z", "app": "sanket"}
+---------------------------- Captured log teardown ----------------------------
+INFO     app.core.database:database.py:245 {'event': 'database.engine.disposed', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-26T17:43:59.904988Z', 'app': 'sanket'}
+INFO     app.services.external_signals.signal_pipeline:signal_pipeline.py:104 {'event': 'signal_pipeline.stopped', 'logger': 'app.services.external_signals.signal_pipeline', 'level': 'info', 'timestamp': '2026-10-26T17:43:59.906018Z', 'app': 'sanket'}
+INFO     app.services.integrations.shopify_poller:shopify_poller.py:68 {'event': 'shopify_poller.stopped', 'logger': 'app.services.integrations.shopify_poller', 'level': 'info', 'timestamp': '2026-10-26T17:43:59.906604Z', 'app': 'sanket'}
+INFO     app.main:main.py:180 {'event': 'leader.singletons.stopped', 'logger': 'app.main', 'level': 'info', 'timestamp': '2026-10-26T17:43:59.906872Z', 'app': 'sanket'}
+INFO     app.services.external_signals.signal_pipeline:signal_pipeline.py:104 {'event': 'signal_pipeline.stopped', 'logger': 'app.services.external_signals.signal_pipeline', 'level': 'info', 'timestamp': '2026-10-26T17:43:59.907128Z', 'app': 'sanket'}
+INFO     app.services.integrations.shopify_poller:shopify_poller.py:68 {'event': 'shopify_poller.stopped', 'logger': 'app.services.integrations.shopify_poller', 'level': 'info', 'timestamp': '2026-10-26T17:43:59.907325Z', 'app': 'sanket'}
+INFO     app.realtime.connection_manager:connection_manager.py:78 {'event': 'realtime.shutdown.complete', 'logger': 'app.realtime.connection_manager', 'level': 'info', 'timestamp': '2026-10-26T17:43:59.907506Z', 'app': 'sanket'}
+INFO     app.core.database:database.py:245 {'event': 'database.engine.disposed', 'logger': 'app.core.database', 'level': 'info', 'timestamp': '2026-10-26T17:43:59.915068Z', 'app': 'sanket'}
+INFO     app.main:main.py:247 {'event': 'shutdown.complete', 'logger': 'app.main', 'level': 'info', 'timestamp': '2026-10-26T17:43:59.915366Z', 'app': 'sanket'}
+============================== warnings summary ===============================
+tests/test_forecast_scale.py::test_25k_sku_forecast_reads_are_bounded_and_summary_reconciles
+  C:\Users\admin\Desktop\Prisma\backend\.venv\Lib\site-packages\passlib\handlers\argon2.py:716: DeprecationWarning: Accessing argon2.__version__ is deprecated and will be removed in a future release. Use importlib.metadata directly to query for argon2-cffi's packaging metadata.
+    _argon2_cffi.__version__, max_version)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_forecast_scale.py::test_25k_sku_forecast_reads_are_bounded_and_summary_reconciles
+1 failed, 1 warning in 53.43s

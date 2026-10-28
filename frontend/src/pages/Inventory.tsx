@@ -1,523 +1,320 @@
-import { useState, useMemo } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  Warehouse,
-  Upload,
-  RefreshCw,
-  AlertTriangle,
-  CheckCircle,
-  Info,
-  TrendingDown,
-  Package,
-  Search,
-  ArrowRight,
-} from "@/components/ui/icons";
-import clsx from "clsx";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Warehouse, Upload, RefreshCw, Search, ChevronDown, ChevronRight, Trash2 } from "@/components/ui/icons";
 import { format, parseISO } from "date-fns";
+import toast from "react-hot-toast";
+import clsx from "clsx";
 
 import { inventoryApi, validateInventoryRows, downloadInventoryTemplate } from "@/api/inventory";
+import type { InventoryAttention, InventoryLevel, InventorySort, InventoryUpsertItem, LocationCoverage, SkuCoverage } from "@/api/inventory";
 import { exportApi } from "@/api/export";
-import toast from "react-hot-toast";
-import type { InventoryLevel, InventoryUpsertItem, SkuCoverage } from "@/api/inventory";
 import { skusApi } from "@/api/skus";
 import { parseFile } from "@/utils/csvImport";
 import type { ParsedRow } from "@/utils/csvImport";
 import { ImportModal } from "@/components/ui/ImportModal";
 import type { ImportResult } from "@/components/ui/ImportModal";
-import { Card } from "@/components/ui/Card";
-import { KPICard } from "@/components/charts/KPICard";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PageLoader } from "@/components/ui/Spinner";
 import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
-import { decisionsApi, type Decision } from "@/api/decisions";
-import { getProductImage, useProductImagesStore } from "@/stores/productImages";
 import { invalidatePlanningData } from "@/api/planningKeys";
+import { useAuthStore } from "@/stores/auth";
+import { getErrorMessage } from "@/utils/errors";
 
-// ── Coverage classification ────────────────────────────────────────────────
+const PAGE_SIZE = 25;
+const REQUIRED_COLUMNS = ["sku_code", "on_hand_units"] as const;
+const OPTIONAL_COLUMNS = ["inbound_units", "reserved_units", "location"] as const;
+const fmt = (n: number) => new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(n);
+type Attention = "all" | "needs" | "excess" | "unknown";
+const controls = "rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-content transition hover:bg-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:opacity-40";
 
-const INVENTORY_REQUIRED_COLUMNS = ["sku_code", "on_hand_units"] as const;
-const INVENTORY_OPTIONAL_COLUMNS = ["inbound_units", "reserved_units", "location"] as const;
-
-type CoverageStatus = "healthy" | "low" | "critical" | "excess" | "unknown" | "unavailable";
-
-/**
- * What a stock row shows, straight from /inventory/coverage: the location's
- * own cover when its sales support one, otherwise the SKU-wide (pooled) cover
- * labelled as such, otherwise unknown with the reason. Never a fixed unit
- * threshold, and never dependent on whether a recommendation exists.
- */
-function rowCoverage(sku: SkuCoverage | undefined, location: string, failed = false) {
-  if (failed) {
-    return {
-      status: "unavailable" as CoverageStatus,
-      label: "Cover could not be loaded",
-      reason: "Coverage service unavailable — retry with Refresh. No status is inferred.",
-    };
-  }
-  if (!sku) {
-    return { status: "unknown" as CoverageStatus, label: "Cover unknown", reason: "No coverage data for this SKU yet." };
-  }
-  const loc = sku.locations.find((l) => l.location === location);
-  if (loc?.status && loc.cover_days != null) {
-    return {
-      status: loc.status as CoverageStatus,
-      label: `Store cover ${loc.cover_days} days`,
-      reason: loc.reason,
-      nextAction: loc.next_action ?? null,
-    };
-  }
-  if (sku.sku_wide.status !== "unknown" && sku.sku_wide.cover_days != null) {
-    return {
-      status: sku.sku_wide.status as CoverageStatus,
-      label: `SKU-wide cover ${sku.sku_wide.cover_days} days (all locations)`,
-      reason: loc?.reason ?? sku.sku_wide.reason,
-      nextAction: sku.sku_wide.next_action ?? null,
-    };
-  }
-  if (sku.sku_wide.status === "healthy") {
-    return { status: "healthy" as CoverageStatus, label: "No sales expected", reason: sku.sku_wide.reason };
-  }
-  return { status: "unknown" as CoverageStatus, label: "Cover unknown", reason: sku.sku_wide.reason };
+function storeStatus(cov: LocationCoverage | undefined) {
+  if (cov?.status === "healthy" && cov.location_demand?.weekly_units === 0) return "healthy";
+  if (cov?.cover_days == null || cov.status == null) return "unknown";
+  return cov.status;
 }
 
-const STATUS_CONFIG: Record<CoverageStatus, { label: string; classes: string; dot: string }> = {
-  healthy:   { label: "Healthy",    classes: "bg-emerald-50 text-emerald-700 border-emerald-200",  dot: "bg-emerald-400" },
-  low:       { label: "Low",        classes: "bg-amber-50 text-amber-700 border-amber-200",        dot: "bg-amber-400"   },
-  critical:  { label: "Critical",   classes: "bg-red-50 text-red-700 border-red-200",              dot: "bg-red-500"     },
-  excess:    { label: "Excess",     classes: "bg-blue-50 text-blue-700 border-blue-200",           dot: "bg-blue-400"    },
-  unknown:   { label: "Unknown",    classes: "bg-slate-50 text-slate-500 border-slate-200",        dot: "bg-slate-300"   },
-  unavailable: { label: "Unavailable", classes: "bg-slate-50 text-slate-500 border-slate-200",     dot: "bg-slate-300"   },
-};
-
-const StatusBadge = ({ status }: { status: CoverageStatus }) => {
-  const cfg = STATUS_CONFIG[status];
-  return (
-    <span className={clsx("inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-xs font-medium", cfg.classes)}>
-      <span className={clsx("h-1.5 w-1.5 rounded-full", cfg.dot)} />
-      {cfg.label}
-    </span>
-  );
-};
-
-// ── Provenance — where a stock row came from and when it was observed ──────
-// "Real" only meant "not seed/fallback", which says nothing about whether the
-// source is authentic; name the source and the as-of date instead.
-
-const SOURCE_LABELS: Record<string, string> = {
-  csv: "CSV import",
-  upload: "File upload",
-  excel: "Excel import",
-  manual: "Manual entry",
-  api: "API push",
-  webhook: "Webhook push",
-  fallback: "Estimate (safety stock × 2)",
-  synthetic: "Synthetic fixture",
-  synthetic_test: "Synthetic fixture",
-};
-
-function provenanceLabel(source: string, asOf: string | null): string {
-  const known = SOURCE_LABELS[source.toLowerCase()];
-  const name = known ?? `${source.replace(/[_-]+/g, " ").replace(/^\w/, (c) => c.toUpperCase())} sync`;
-  return asOf ? `${name} · as of ${format(parseISO(asOf), "d MMM yyyy")}` : `${name} · no as-of date`;
+function StoreDetail({ level, cov, sku, recommendation }: { level: InventoryLevel; cov: LocationCoverage | undefined; sku: SkuCoverage | undefined; recommendation: string | undefined }) {
+  const status = storeStatus(cov);
+  const labels = { critical: "Needs stock soon", low: "Running low", healthy: "Enough stock", excess: "Overstock", unknown: "Missing data" };
+  const sourceNames: Record<string, string> = { csv: "CSV import", upload: "File upload", manual: "Manual entry", api: "API push", fallback: "Estimate", synthetic_test: "Test fixture" };
+  return <section className="rounded-xl border border-line bg-surface p-4">
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <h3 className="font-semibold text-content">{level.location}</h3>
+      <span className={clsx("whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold", status === "critical" ? "bg-red-50 text-red-700" : status === "low" ? "bg-amber-50 text-amber-800" : status === "excess" ? "bg-blue-50 text-blue-700" : status === "healthy" ? "bg-emerald-50 text-emerald-700" : "bg-surface-2 text-content-muted")}>{labels[status]}</span>
+    </div>
+    <p className="mt-1 text-xs text-content-muted">{sourceNames[level.source] ?? `${level.source} sync`} · {level.as_of ? `as of ${format(parseISO(level.as_of), "d MMM yyyy")}` : "No observation date"}</p>
+    <dl className="my-4 grid grid-cols-3 gap-3 text-sm">
+      <div><dt className="text-xs text-content-muted">Available</dt><dd className="mt-1 font-mono font-semibold">{fmt(level.available_units)}</dd></div>
+      <div><dt className="text-xs text-content-muted">Arriving</dt><dd className="mt-1 font-mono font-semibold">{fmt(level.inbound_units)}</dd></div>
+      <div><dt className="text-xs text-content-muted">Reserved</dt><dd className="mt-1 font-mono font-semibold">{fmt(level.reserved_units)}</dd></div>
+    </dl>
+    <p className="text-sm font-medium">{cov?.cover_days != null ? cov.demand_basis === "period_average" ? `Estimated stock cover: ${cov.cover_days} days` : `Stock lasts ${cov.cover_days} days` : status === "healthy" && cov?.location_demand?.weekly_units === 0 ? "No sales expected in this forecast window" : "Store cover unknown"}</p>
+    <p className="mt-1 text-xs text-content-muted">{cov?.reason || "Add sales tagged to this store to calculate its cover."}</p>
+    {cov?.degraded && <p className="mt-2 text-xs text-amber-800">Location split incomplete: {cov.unassigned_share == null ? "Unknown share" : `${Math.round(cov.unassigned_share * 100)}% of sales`} has no location.</p>}
+    <div className="mt-3 border-t border-line pt-3 text-sm font-semibold text-[var(--accent)]">
+      {recommendation ? <Link to="/workspace/decisions">{recommendation}</Link>
+        : cov?.open_transfer ? <Link to="/workspace/decisions">Review transfer of {cov.open_transfer.units} to {cov.open_transfer.destination}</Link>
+        : cov?.next_action ? <p>{cov.next_action}</p>
+        : status === "critical" || status === "low" ? <Link to="/workspace/decisions">Review shortage</Link>
+        : status === "excess" ? <p>Review excess stock and incoming orders</p>
+        : status === "unknown" ? <p>Review sales and stock data</p>
+        : <p>Keep monitoring</p>}
+    </div>
+    {sku && <details className="mt-3 text-xs text-content-muted"><summary className="cursor-pointer">How this is calculated</summary>
+      <p className="mt-2">{cov?.demand_basis === "forecast" ? "Based on this store’s forecast." : cov?.demand_basis === "trailing_actuals" ? "Based on this store’s uploaded sales." : cov?.demand_basis === "period_average" ? "Based on this store’s reported period average. Assumes an unchanged daily selling rate; confirm stock date and lead time before ordering." : "A store demand estimate is not available."} Replenishment time: {sku.lead_time_days} days{sku.lead_time_assumed ? " (assumed)" : ""}.</p>
+      {sku.sku_wide.cover_days != null && <p className="mt-1">All-store pooled cover: {sku.sku_wide.cover_days} days. This does not describe this store’s cover.</p>}
+    </details>}
+  </section>;
 }
-
-const SourceBadge = ({ source, asOf }: { source: string; asOf: string | null }) => {
-  const isEstimate = source === "seed" || source === "fallback";
-  return (
-    <span
-      className={clsx(
-        "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border",
-        isEstimate
-          ? "bg-amber-100 text-amber-700 border-amber-200"
-          : "bg-surface-2 text-content-muted border-line",
-      )}
-    >
-      {isEstimate && <AlertTriangle size={9} />}
-      {provenanceLabel(source, asOf)}
-    </span>
-  );
-};
-
-// ── Formatting helpers ─────────────────────────────────────────────────────
-
-const fmtUnits = (n: number) =>
-  new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n);
-
-// ── Main page ──────────────────────────────────────────────────────────────
 
 export const InventoryPage = () => {
+  const tenantId = useAuthStore((state) => state.tenantId);
   const industry = useWorkspaceIndustry();
+  return <InventoryWorkspace key={`${tenantId}:${industry}`} />;
+};
+
+const InventoryWorkspace = () => {
+  const industry = useWorkspaceIndustry();
+  const tenantId = useAuthStore((state) => state.tenantId);
   const qc = useQueryClient();
   const [importOpen, setImportOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [locationFilter, setLocationFilter] = useState("");
-  const images = useProductImagesStore((s) => s.images);
+  const [location, setLocation] = useState("");
+  const [offset, setOffset] = useState(0);
+  const [attention, setAttention] = useState<Attention>("all");
+  const [sort, setSort] = useState<InventorySort>("sku");
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [skuCodeToId, setSkuCodeToId] = useState<Record<string, string>>({});
+  const [selectedSkuIds, setSelectedSkuIds] = useState<Set<string>>(new Set());
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
+  const [confirmDeleteSelected, setConfirmDeleteSelected] = useState(false);
 
-  // ── Data fetching ────────────────────────────────────────────────────────
-  const { data, isLoading, isFetching, isError: levelsFailed } = useQuery({
-    queryKey: ["inventory-levels", industry],
-    queryFn: () => inventoryApi.levels(),
-    staleTime: 60_000,
-  });
-
-  // SKU list is needed to map sku_code → sku_id during CSV import
-  const { data: skuData } = useQuery({
-    queryKey: ["skus-list", industry],
-    queryFn: () => skusApi.list(),
-    staleTime: 5 * 60_000,
-  });
-
-  const { data: coverageData, isError: coverageFailed } = useQuery({
-    queryKey: ["inventory-coverage", industry],
-    queryFn: () => inventoryApi.coverage(),
-    staleTime: 60_000,
-  });
-  const coverageBySku = useMemo(
-    () => new Map((coverageData?.skus ?? []).map((s) => [s.sku_id, s])),
-    [coverageData?.skus],
-  );
-
-  const { data: decisionData, isError: decisionsFailed } = useQuery({
-    queryKey: ["decisions", industry, "open", "inventory-context"],
-    queryFn: () => decisionsApi.list({ status: "open", limit: 500 }),
-    staleTime: 60_000,
-  });
-
-  const decisionBySku = useMemo(() => {
-    const priority: Record<Decision["urgency"], number> = { critical: 4, high: 3, normal: 2, low: 1 };
-    return (decisionData?.decisions ?? []).reduce((bySku, decision) => {
-      const current = bySku.get(decision.sku_id);
-      const decisionRank = priority[decision.urgency] + (decision.kind === "purchase_order" ? 10 : 0);
-      const currentRank = current ? priority[current.urgency] + (current.kind === "purchase_order" ? 10 : 0) : -1;
-      if (!current || decisionRank > currentRank) bySku.set(decision.sku_id, decision);
-      return bySku;
-    }, new Map<string, Decision>());
-  }, [decisionData?.decisions]);
-
-  const skuCodeToId = useMemo(() => {
-    const map: Record<string, string> = {};
-    // skusApi.list() returns Sku[] directly
-    (Array.isArray(skuData) ? skuData : []).forEach((s: { sku_code: string; id: string }) => {
-      map[s.sku_code] = s.id;
+  const toggleSelectSku = (id: string) => {
+    setSelectedSkuIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
     });
-    return map;
-  }, [skuData]);
+  };
 
-  // ── Derived stats ────────────────────────────────────────────────────────
-  const levels = useMemo(() => data?.levels ?? [], [data?.levels]);
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase();
-    return levels.filter(
-      (l) => (!locationFilter || l.location.trim().toLowerCase() === locationFilter.trim().toLowerCase()) &&
-        (!search.trim() || l.sku_code.toLowerCase().includes(q) || l.location.toLowerCase().includes(q)),
-    );
-  }, [levels, search, locationFilter]);
-  const locationOptions = [...new Set((coverageData?.skus ?? []).flatMap((sku) => sku.locations.map((l) => l.location)))].sort();
+  const deleteAllMutation = useMutation({
+    mutationFn: () => inventoryApi.deleteAll(),
+    onSuccess: (res) => {
+      toast.success(`Cleared all ${res.deleted} stock positions`);
+      setSelectedSkuIds(new Set());
+      setConfirmDeleteAll(false);
+      void refresh();
+    },
+    onError: (err: unknown) => {
+      toast.error(getErrorMessage(err, "Failed to clear stock"));
+      setConfirmDeleteAll(false);
+    },
+  });
 
-  const totalOnHand = levels.reduce((s, l) => s + l.on_hand_units, 0);
-  const totalInbound = levels.reduce((s, l) => s + l.inbound_units, 0);
-  const totalAvailable = levels.reduce((s, l) => s + l.available_units, 0);
-  const statusOf = (level: InventoryLevel) =>
-    rowCoverage(coverageBySku.get(level.sku_id), level.location, coverageFailed).status;
-  // Stock, cover and decisions are one picture: refresh them together so cover
-  // never describes the previous stock (deep audit F9).
-  const refreshAll = () => invalidatePlanningData(qc);
-  const nCritical = levels.filter((level) => statusOf(level) === "critical").length;
-  const nLow = levels.filter((level) => statusOf(level) === "low").length;
-  const nEstimate = levels.filter((l) => l.source === "seed" || l.source === "fallback").length;
-  const hasEstimates = nEstimate > 0;
+  const deleteSelectedMutation = useMutation({
+    mutationFn: () => inventoryApi.deleteMany(Array.from(selectedSkuIds)),
+    onSuccess: (res) => {
+      toast.success(`Deleted ${res.deleted} stock position${res.deleted !== 1 ? "s" : ""}`);
+      setSelectedSkuIds(new Set());
+      setConfirmDeleteSelected(false);
+      void refresh();
+    },
+    onError: (err: unknown) => {
+      toast.error(getErrorMessage(err, "Failed to delete selected stock"));
+      setConfirmDeleteSelected(false);
+    },
+  });
 
-  // ── CSV import handlers ───────────────────────────────────────────────────
+  const { data, isLoading, isFetching, isError } = useQuery({
+    queryKey: ["inventory-levels", "overview", tenantId, industry, search, location, attention, sort, offset],
+    queryFn: () => inventoryApi.overview({ offset, limit: PAGE_SIZE, search, location, attention, sort }), staleTime: 60_000,
+    placeholderData: (previous, query) => query?.queryKey[2] === tenantId && query.queryKey[3] === industry ? previous : undefined,
+  });
+  const coverage = useMemo(() => new Map((data?.coverage.skus ?? []).map((s) => [s.sku_id, s])), [data?.coverage.skus]);
+  const rows = useMemo(() => (data?.skus ?? []).map((sku) => {
+    const levels = data?.levels.filter((level) => level.sku_id === sku.sku_id) ?? [];
+    const cov = coverage.get(sku.sku_id);
+    const states = levels.map((level) => storeStatus(cov?.locations.find((c) => c.location === level.location)));
+    return { ...sku, levels, cov, needs: states.filter((s) => s === "critical" || s === "low").length,
+      excess: states.filter((s) => s === "excess").length, unknown: states.filter((s) => s === "unknown").length };
+  }), [data?.skus, data?.levels, coverage]);
+  const filtered = rows;
+  const isTrulyEmpty = !isError && data?.total_skus === 0 && !search && !location;
+  const assumed = [...new Set(rows.filter((r) => r.cov?.lead_time_assumed).map((r) => r.cov!.lead_time_days))];
+  const refresh = () => invalidatePlanningData(qc);
+  const toggle = (id: string) => setExpanded((prior) => { const next = new Set(prior); if (next.has(id)) next.delete(id); else next.add(id); return next; });
+
+  const allPageIds = useMemo(() => filtered.map((r) => r.sku_id), [filtered]);
+  const isAllSelected = allPageIds.length > 0 && allPageIds.every((id) => selectedSkuIds.has(id));
+  const toggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedSkuIds((prev) => {
+        const next = new Set(prev);
+        allPageIds.forEach((id) => next.delete(id));
+        return next;
+      });
+    } else {
+      setSelectedSkuIds((prev) => {
+        const next = new Set(prev);
+        allPageIds.forEach((id) => next.add(id));
+        return next;
+      });
+    }
+  };
+
   const handleParse = async (file: File) => {
     const parsed = await parseFile(file);
-    const validation = validateInventoryRows(parsed.rows, skuCodeToId);
-    return { parsed, validation };
-  };
-
-  const handleImport = async (
-    rows: ParsedRow[],
-    onProgress: (done: number, total: number) => void,
-  ): Promise<ImportResult> => {
-    const BATCH = 100;
-    let created = 0;
-    let failed = 0;
-    const errors: ImportResult["errors"] = [];
-
-    for (let i = 0; i < rows.length; i += BATCH) {
-      const batch = rows.slice(i, i + BATCH);
-      const items: InventoryUpsertItem[] = batch.map((row) => ({
-        sku_id: skuCodeToId[row.sku_code.trim()],
-        on_hand_units: Number(row.on_hand_units),
-        inbound_units: row.inbound_units ? Number(row.inbound_units) : 0,
-        reserved_units: row.reserved_units ? Number(row.reserved_units) : 0,
-        location: row.location?.trim() || "default",
-        source: "csv",
-      }));
-      try {
-        const res = await inventoryApi.upsert(items);
-        created += res.upserted;
-      } catch (e) {
-        failed += batch.length;
-        errors.push({ row: {}, reason: String(e) });
-      }
-      onProgress(Math.min(i + BATCH, rows.length), rows.length);
+    // Read catalogue pages only during import, stopping once this file is resolved.
+    const needed = new Set(parsed.rows.map((row) => row.sku_code?.trim()).filter(Boolean));
+    const map: Record<string, string> = {};
+    for (let start = 0; ; start += 200) {
+      const page = await skusApi.list({ limit: 200, offset: start, active_only: false });
+      for (const sku of page) if (needed.has(sku.sku_code)) map[sku.sku_code] = sku.id;
+      if (page.length < 200 || Object.keys(map).length === needed.size) break;
     }
-
-    await refreshAll();
+    setSkuCodeToId(map);
+    return { parsed, validation: validateInventoryRows(parsed.rows, map) };
+  };
+  const handleImport = async (rowsToImport: ParsedRow[], onProgress: (done: number, total: number) => void): Promise<ImportResult> => {
+    let created = 0; let failed = 0;
+    const errors: ImportResult["errors"] = [];
+    for (let i = 0; i < rowsToImport.length; i += 100) {
+      const batch = rowsToImport.slice(i, i + 100);
+      const items: InventoryUpsertItem[] = batch.map((row) => ({ sku_id: skuCodeToId[row.sku_code.trim()], on_hand_units: Number(row.on_hand_units), inbound_units: Number(row.inbound_units || 0), reserved_units: Number(row.reserved_units || 0), location: row.location?.trim() || "default", source: "csv" }));
+      try { created += (await inventoryApi.upsert(items)).upserted; }
+      catch (error) { failed += batch.length; errors.push({ row: {}, reason: String(error) }); }
+      onProgress(Math.min(i + 100, rowsToImport.length), rowsToImport.length);
+    }
+    await refresh();
     return { created, skipped: 0, failed, errors };
   };
-
   if (isLoading) return <PageLoader />;
-
-  return (
-    <div className="space-y-4">
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-3 rounded-2xl border border-line bg-surface px-5 py-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2 text-[var(--accent)] text-xs font-semibold uppercase tracking-[0.12em]">
-            <Warehouse size={14} /> Inventory
-          </div>
-          <h1 className="mt-1 font-heading text-3xl font-semibold tracking-tight text-content">Know what needs action</h1>
-          <p className="mt-1 text-sm text-content-muted">
-            Stock, cover, and the next planning decision in one place.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => void refreshAll()}
-            disabled={isFetching}
-            className="flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3 py-1.5 text-sm text-content-muted transition hover:border-line-strong hover:text-content disabled:opacity-50"
-          >
-            <RefreshCw size={13} className={isFetching ? "animate-spin" : ""} />
-            Refresh
-          </button>
-          <button
-            onClick={() => exportApi.inventoryCsv().catch(() => toast.error("Export failed"))}
-            className="flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3 py-1.5 text-sm font-medium text-content transition hover:bg-surface-2"
-          >
-            <Upload size={13} />
-            Export CSV
-          </button>
-          <button
-            onClick={() => setImportOpen(true)}
-            className="flex items-center gap-1.5 rounded-lg bg-[var(--accent)] px-3 py-1.5 text-sm font-medium text-white transition hover:brightness-95"
-          >
-            <Upload size={13} />
-            Import CSV
-          </button>
-        </div>
+  return <div className="space-y-5">
+    <header className="flex flex-col justify-between gap-4 rounded-2xl border border-line bg-surface p-5 xl:flex-row xl:items-center">
+      <div><p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[var(--accent)]"><Warehouse size={15} />Stock overview</p>
+        <h1 className="mt-2 font-heading text-2xl font-semibold text-content">Inventory</h1>
+        <p className="mt-1 max-w-lg text-sm text-content-muted">See what you have, where it is, and which stores need attention.</p></div>
+      <div className="flex flex-wrap gap-2">
+        <button onClick={() => void refresh()} disabled={isFetching} className={controls}><span className="flex items-center gap-2"><RefreshCw size={14} />Refresh</span></button>
+        <button onClick={() => void exportApi.inventoryCsv().catch(() => toast.error("Export failed"))} className={controls}>Export CSV</button>
+        {!isTrulyEmpty && <button onClick={() => setImportOpen(true)} className={`${controls} !bg-[var(--accent)] !text-accent-fg`}>Import stock</button>}
+        <button
+          onClick={() => setConfirmDeleteAll(true)}
+          disabled={!data?.total_positions || isFetching}
+          className={`${controls} text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 flex items-center gap-1.5`}
+        >
+          <Trash2 size={14} /> Clear stock
+        </button>
       </div>
-
-      {levelsFailed && (
-        <div role="alert" className="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200">
-          <AlertTriangle size={16} className="mt-0.5 shrink-0" />
-          <p>
-            Stock could not be loaded. The figures below are not a confirmed empty position — use
-            Refresh to try again.
-          </p>
-        </div>
-      )}
-
-      {/* ── Estimate warning banner ─────────────────────────────────────────── */}
-      {hasEstimates && (
-        <div className="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
-          <AlertTriangle size={16} className="text-amber-500 mt-0.5 shrink-0" />
-          <div>
-            <span className="font-semibold text-amber-800 text-sm">
-              {nEstimate} SKU{nEstimate !== 1 ? "s" : ""} running on estimated stock
-            </span>
-            <p className="text-amber-700 text-xs mt-0.5">
-              These rows use <code className="font-mono bg-amber-100 px-1 rounded">safety_stock × 2</code> as a
-              placeholder. Import real warehouse data via CSV or connect your WMS to fix shortage
-              alerts and coverage-days for those SKUs.
-            </p>
+    </header>
+    {isError ? <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-5 text-red-800">Stock could not be loaded. Refresh to try again; an empty position has not been confirmed.</div>
+      : isTrulyEmpty ? <section className="rounded-2xl border border-line bg-surface p-6 sm:p-8">
+        <Warehouse size={30} className="text-[var(--accent)]" />
+        <h2 className="mt-4 font-heading text-xl font-semibold">Build your stock picture</h2>
+        <p className="mt-2 max-w-xl text-sm text-content-muted">Start with your catalogue, add sales history, then upload the quantities at each store. Your own data will appear here.</p>
+        <ol className="mt-6 grid gap-3 lg:grid-cols-3">
+          <li className="rounded-xl border border-line p-4"><p className="text-xs text-content-muted">01 · Catalogue</p><Link className="mt-2 block font-semibold text-[var(--accent)]" to="/workspace/products">Add products and SKUs</Link><p className="mt-1 text-sm text-content-muted">Give every variant a unique SKU code.</p></li>
+          <li className="rounded-xl border border-line p-4"><p className="text-xs text-content-muted">02 · Demand</p><Link className="mt-2 block font-semibold text-[var(--accent)]" to="/workspace/integrations">Add sales history</Link><p className="mt-1 text-sm text-content-muted">Include store names to calculate local stock cover.</p></li>
+          <li className="rounded-xl border border-line p-4"><p className="text-xs text-content-muted">03 · Stock</p><button onClick={() => setImportOpen(true)} className="mt-2 flex items-center gap-2 font-semibold text-[var(--accent)]"><Upload size={15} />Import stock</button><p className="mt-1 text-sm text-content-muted">Upload on-hand, reserved and arriving quantities.</p></li>
+        </ol>
+      </section> : <>
+        <section className="grid gap-3 sm:grid-cols-3" aria-label="Stock totals for current search and location">
+          <div className="rounded-xl border border-line bg-surface p-4"><p className="text-xs text-content-muted">Stock in scope</p><p className="mt-2 font-semibold">{data?.total_skus ?? 0} SKUs · {data?.total_positions ?? 0} stock positions</p></div>
+          <div className="rounded-xl border border-line bg-surface p-4"><p className="text-xs text-content-muted">Available units</p><p className="mt-2 font-mono text-xl font-semibold">{fmt(data?.totals.available_units ?? 0)}</p><p className="mt-1 text-xs text-content-muted">After reservations</p></div>
+          <div className="rounded-xl border border-line bg-surface p-4"><p className="text-xs text-content-muted">Arriving units</p><p className="mt-2 font-mono text-xl font-semibold">{fmt(data?.totals.inbound_units ?? 0)}</p></div>
+        </section>
+        <section className="rounded-2xl border border-line bg-surface p-4 sm:p-5">
+          <div className="flex flex-col gap-3 md:flex-row md:items-end">
+            <label className="flex-1 text-xs font-semibold text-content-muted">Search stock<div className="relative mt-1.5"><Search size={15} className="absolute left-3 top-3 text-content-muted" /><input aria-label="Search stock" type="search" value={search} onChange={(e) => { setSearch(e.target.value); setOffset(0); }} placeholder="Product, SKU or store" className={`${controls} w-full pl-9 font-normal`} /></div></label>
+            <label className="text-xs font-semibold text-content-muted">Location<select aria-label="Location" value={location} onChange={(e) => { setLocation(e.target.value); setOffset(0); }} className={`${controls} mt-1.5 block min-w-44`}><option value="">All locations</option>{data?.locations.map((name) => <option key={name} value={name}>{name}</option>)}</select></label>
           </div>
-        </div>
-      )}
-
-      {/* ── KPI strip ──────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <KPICard
-          label="Total On-Hand"
-          value={levelsFailed ? "Unavailable" : fmtUnits(totalOnHand)}
-          icon={<Package size={16} />}
-          tone="default"
-        />
-        <KPICard
-          label="Available (net reserved)"
-          value={levelsFailed ? "Unavailable" : fmtUnits(totalAvailable)}
-          icon={<CheckCircle size={16} />}
-          tone="default"
-        />
-        <KPICard
-          label="Inbound"
-          value={levelsFailed ? "Unavailable" : fmtUnits(totalInbound)}
-          icon={<TrendingDown size={16} />}
-          tone="default"
-        />
-        <KPICard
-          label="At Risk"
-          value={levelsFailed || coverageFailed ? "Unavailable" : `${nCritical} critical · ${nLow} low`}
-          icon={<AlertTriangle size={16} />}
-          tone={nCritical > 0 ? "danger" : nLow > 0 ? "warning" : "default"}
-        />
-      </div>
-
-      {/* ── Stock table ────────────────────────────────────────────────────── */}
-      <Card
-        title={`Stock decisions (${filtered.length})`}
-        description="Each row answers three questions: what do we have, why does it matter, and what should happen next?"
-      >
-        {/* Search */}
-        <label className="mb-3 flex items-center gap-2 text-sm">Location
-          <select aria-label="Location" value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)}
-            className="rounded-lg border border-line bg-surface px-3 py-2 text-content">
-            <option value="">All locations</option>
-            {locationOptions.map((location) => <option key={location} value={location}>{location}</option>)}
-          </select>
-        </label>
-        <div className="mb-4 relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Filter by SKU code or location…"
-            className="w-full rounded-lg border border-line bg-surface py-2 pl-9 pr-3 text-sm text-content placeholder:text-content-subtle focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-emerald-200/50"
-          />
-        </div>
-
-        {levelsFailed ? (
-          <p className="py-10 text-center text-sm text-content-muted">
-            Stock rows are unavailable until the inventory service responds.
-          </p>
-        ) : levels.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="h-14 w-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
-              <Warehouse size={24} className="text-slate-400" />
+          <div className="my-4 flex flex-wrap items-center gap-2" aria-label="Attention filters across all results"><span className="mr-1 text-xs text-content-muted">All results</span>{([["all", "All"], ["needs", "Needs stock"], ["excess", "Overstock"], ["unknown", "Missing data"]] as const).map(([value, label]) => <button key={value} aria-pressed={attention === value} onClick={() => { setAttention(value as InventoryAttention); setOffset(0); }} className={clsx(controls, "!rounded-full !px-3 !py-1.5 !text-xs", attention === value && "!border-[var(--accent)] !bg-[var(--accent)] !text-accent-fg")}>{label}</button>)}<label className="ml-auto text-xs font-semibold text-content-muted">Sort<select aria-label="Sort inventory" value={sort} onChange={(e) => { setSort(e.target.value as InventorySort); setOffset(0); }} className={`${controls} ml-2`}><option value="sku">SKU</option><option value="available_asc">Available: low to high</option><option value="available_desc">Available: high to low</option><option value="freshness">Freshest update</option></select></label></div>
+          {assumed.length > 0 && <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">Replenishment time assumed: {assumed.join(", ")} days for some SKUs on this page. Add supplier lead times for more precise warnings.</p>}
+          {rows.some(row => row.cov?.demand.basis === "period_average" || row.cov?.locations.some(loc => loc.demand_basis === "period_average")) && <p className="mb-4 rounded-lg border border-line px-3 py-3 text-xs text-content-muted">Average-sales estimates are used where dated SKU history is unavailable. Store cover assumes the reported period average continues. Confirm stock dates and supplier lead times before acting; these estimates do not generate purchase or transfer decisions.</p>}
+          {selectedSkuIds.size > 0 && (
+            <div className="flex items-center justify-between rounded-xl bg-[var(--accent)]/10 border border-[var(--accent)]/20 px-4 py-2.5 mb-4 text-sm">
+              <span className="font-medium text-content">
+                {selectedSkuIds.size} SKU position{selectedSkuIds.size !== 1 ? "s" : ""} selected
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setSelectedSkuIds(new Set())}
+                  className="text-xs text-content-muted hover:text-content underline px-2 py-1"
+                >
+                  Deselect all
+                </button>
+                <button
+                  onClick={() => setConfirmDeleteSelected(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-sm transition"
+                >
+                  <Trash2 size={13} />
+                  Delete Selected
+                </button>
+              </div>
             </div>
-            <p className="font-semibold text-slate-600">No stock data yet</p>
-            <p className="text-sm text-slate-400 mt-1 max-w-xs">
-              Import a CSV with your warehouse quantities to power shortage alerts and coverage insights.
-            </p>
-            <button
-              onClick={() => setImportOpen(true)}
-              className="mt-4 flex items-center gap-2 text-sm font-medium text-white bg-violet-600 hover:bg-violet-700 rounded-lg px-4 py-2 transition-colors"
-            >
-              <Upload size={14} />
-              Import inventory
-            </button>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-100">
-                  {[
-                    "Product / SKU",
-                    "Available",
-                    "Inbound",
-                    "Cover & status",
-                    "Why it matters",
-                    "Next action",
-                  ].map((h) => (
-                    <th key={h} className="text-left py-2.5 px-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {filtered.map((lvl) => {
-                  const decision = decisionBySku.get(lvl.sku_id);
-                  const skuCov = coverageBySku.get(lvl.sku_id);
-                  const cov = rowCoverage(skuCov, lvl.location, coverageFailed);
-                  const locationCov = skuCov?.locations.find((l) => l.location === lvl.location);
-                  const status = cov.status;
-                  const img = getProductImage(lvl.sku_id, industry, images, lvl.sku_code);
-                  return (
-                    <tr key={`${lvl.sku_id}-${lvl.location}`} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="py-3 px-3">
-                        <div className="flex min-w-[190px] items-center gap-3">
-                          <img src={img} alt="" className="h-11 w-11 rounded-lg border border-line bg-surface-2 object-cover" />
-                          <div><p className="font-mono text-xs font-semibold text-content">{lvl.sku_code}</p><p className="mt-0.5 text-[11px] text-content-subtle">{lvl.location} · <SourceBadge source={lvl.source} asOf={lvl.as_of} /></p></div>
-                        </div>
-                      </td>
-                      <td className="py-3 px-3 font-bold tabular-nums">
-                        <span className={clsx(
-                          status === "critical" && "text-red-600",
-                          status === "low" && "text-amber-600",
-                          status === "healthy" && "text-emerald-600",
-                          (status === "unknown" || status === "unavailable") && "text-slate-400",
-                        )}>
-                          {fmtUnits(lvl.available_units)}
-                        </span>
-                      </td>
-                      <td className="py-3 px-3 font-mono text-sm text-emerald-600">{lvl.inbound_units > 0 ? `+${fmtUnits(lvl.inbound_units)}` : "—"}</td>
-                      <td className="py-3 px-3"><div className="flex min-w-[130px] flex-col items-start gap-1"><StatusBadge status={status} /><span className="text-xs text-content-muted">{cov.label}</span>{skuCov?.lead_time_assumed && <span className="rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">Lead time assumed ({skuCov.lead_time_days}-day default)</span>}</div></td>
-                      <td className="max-w-[320px] py-3 px-3 text-xs leading-5 text-content-muted">
-                        {cov.reason || decision?.reasons[0]?.text}
-                        {locationCov?.demand_basis === "forecast" && <p className="mt-1 text-xs font-medium">From location forecast</p>}
-                        {locationCov?.degraded && <p className="mt-1 text-xs font-medium text-amber-700">
-                          Location split incomplete: {locationCov.unassigned_share == null ? "Unknown" : Math.round(locationCov.unassigned_share * 100)}% of sales have no location
-                        </p>}
-                      </td>
-                      <td className="py-3 px-3">
-                        {locationCov?.open_transfer && <Link to="/workspace/decisions" className="block text-xs font-semibold text-[var(--accent)]">
-                          Transfer {locationCov.open_transfer.units} to {locationCov.open_transfer.destination} suggested
-                        </Link>}
-                        {decision ? (
-                          <Link to="/workspace/decisions" className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-semibold text-[var(--accent)]">{decision.headline}<ArrowRight size={12} /></Link>
-                        ) : "nextAction" in cov && cov.nextAction ? (
-                          <span className="text-xs font-medium text-content">{cov.nextAction}</span>
-                        ) : decisionsFailed || status === "unavailable" ? (
-                          <span className="text-xs text-content-subtle">Unavailable — refresh to retry</span>
-                        ) : (
-                          <span className="text-xs text-content-subtle">No action</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+          )}
+          <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b border-line text-left text-xs text-content-muted">
+            <th className="py-3 pl-3 pr-2 w-8">
+              <input
+                type="checkbox"
+                aria-label="Select all SKUs on page"
+                checked={isAllSelected}
+                onChange={toggleSelectAll}
+                className="h-4 w-4 rounded border-line text-[var(--accent)] focus:ring-[var(--accent)] cursor-pointer"
+              />
+            </th>
+            <th className="py-3 pr-4 font-medium">Product / SKU</th><th className="px-3 py-3 font-medium">Available</th><th className="px-3 py-3 font-medium">Arriving</th><th className="py-3 pl-3 font-medium">Store attention</th></tr></thead>
+            <tbody className="divide-y divide-line">{filtered.map((row) => <Fragment key={row.sku_id}>
+              <tr>
+                <td className="py-4 pl-3 pr-2 w-8">
+                  <input
+                    type="checkbox"
+                    aria-label={`Select ${row.sku_code}`}
+                    checked={selectedSkuIds.has(row.sku_id)}
+                    onChange={() => toggleSelectSku(row.sku_id)}
+                    className="h-4 w-4 rounded border-line text-[var(--accent)] focus:ring-[var(--accent)] cursor-pointer"
+                  />
+                </td>
+                <td className="py-4 pr-4">{location ? <span><span className="block font-semibold text-content">{row.product_name}</span><span className="mt-1 block font-mono text-xs text-content-muted">{row.sku_code}</span></span> : <button aria-expanded={expanded.has(row.sku_id)} aria-controls={`stores-${row.sku_id}`} aria-label={`${expanded.has(row.sku_id) ? "Hide" : "Show"} stores for ${row.sku_code}`} onClick={() => toggle(row.sku_id)} className="flex items-center gap-2 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]">{expanded.has(row.sku_id) ? <ChevronDown size={15} /> : <ChevronRight size={15} />}<span><span className="block font-semibold text-content">{row.product_name}</span><span className="mt-1 block font-mono text-xs text-content-muted">{row.sku_code}</span></span></button>}</td>
+                <td className="px-3 py-4 font-mono">{fmt(row.levels.reduce((sum, l) => sum + l.available_units, 0))}</td><td className="px-3 py-4 font-mono">{fmt(row.levels.reduce((sum, l) => sum + l.inbound_units, 0))}</td>
+                <td className="py-4 pl-3 text-xs"><div className="space-y-1">{row.needs > 0 && <p className="font-semibold text-red-700">{row.needs} {row.needs === 1 ? "store needs" : "stores need"} stock</p>}{row.excess > 0 && <p className="text-blue-700">{row.excess} {row.excess === 1 ? "store has" : "stores have"} overstock</p>}{row.unknown > 0 && <p className="text-content-muted">{row.unknown} {row.unknown === 1 ? "store needs" : "stores need"} data</p>}{!row.needs && !row.excess && !row.unknown && <p className="text-emerald-700">Enough stock at {row.levels.length} {row.levels.length === 1 ? "store" : "stores"}</p>}</div></td></tr>
+              {(expanded.has(row.sku_id) || location) && <tr id={`stores-${row.sku_id}`}><td colSpan={5} className="pb-4"><div className="grid gap-3 bg-surface-2 p-3 xl:grid-cols-2">{row.levels.map((level) => <StoreDetail key={level.location} level={level} cov={row.cov?.locations.find((c) => c.location === level.location)} sku={row.cov} recommendation={data?.recommendations?.find((r) => r.sku_id === row.sku_id && r.location?.trim().toLowerCase() === level.location.trim().toLowerCase())?.headline} />)}</div></td></tr>}
+            </Fragment>)}</tbody></table></div>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4"><p className="text-xs text-content-muted">{(data?.total_skus ?? 0) > 0 ? `${offset + 1}–${Math.min(offset + PAGE_SIZE, data!.total_skus)} of ${data!.total_skus} matching SKUs` : "0 matching SKUs"} · Filters apply across the full result set.</p><div className="flex gap-2"><button aria-label="Previous page" onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))} disabled={offset === 0 || isFetching} className={controls}>Previous</button><button aria-label="Next page" onClick={() => setOffset(offset + PAGE_SIZE)} disabled={offset + PAGE_SIZE >= (data?.total_skus ?? 0) || isFetching} className={controls}>Next</button></div></div>
+        </section>
+      </>}
+    <ImportModal open={importOpen} onClose={() => setImportOpen(false)} title="Import warehouse stock" description="Upload current quantities for each SKU and store" requiredColumns={REQUIRED_COLUMNS} optionalColumns={OPTIONAL_COLUMNS} tip="Use the same store names as your sales history. Re-importing updates the existing SKU/store position." onParse={handleParse} onImport={handleImport} onDownloadTemplate={downloadInventoryTemplate} />
 
-        {/* Legend */}
-        {levels.length > 0 && (
-          <div className="mt-4 flex flex-wrap items-center gap-4 pt-4 border-t border-slate-100">
-            <div className="flex items-center gap-1.5 text-xs text-slate-500">
-              <Info size={11} className="text-slate-400" />
-              <span className="font-semibold text-slate-600">Available</span> = on-hand − reserved ·
-              Critical = cover at or below lead time · Low = within 1.5× lead time · Excess = cover beyond 2× (lead time + review period) · Unknown = no demand basis or stock older than 30 days
-            </div>
-            <div className="flex items-center gap-3 ml-auto">
-              {Object.entries(STATUS_CONFIG)
-                .filter(([k]) => k !== "unavailable")
-                .map(([key, cfg]) => (
-                  <div key={key} className="flex items-center gap-1.5 text-xs text-slate-500">
-                    <span className={clsx("h-2 w-2 rounded-full", cfg.dot)} />
-                    {cfg.label}
-                  </div>
-                ))}
-            </div>
-          </div>
-        )}
-      </Card>
+    <ConfirmDialog
+      open={confirmDeleteAll}
+      onClose={() => setConfirmDeleteAll(false)}
+      title="Clear All Stock Positions"
+      tone="danger"
+      loading={deleteAllMutation.isPending}
+      confirmLabel="Delete All Stock"
+      message={
+        <p>
+          Are you sure you want to delete ALL inventory stock positions for the <strong>{industry}</strong> industry? This action cannot be undone.
+        </p>
+      }
+      onConfirm={() => deleteAllMutation.mutate()}
+    />
 
-      {/* ── Import modal ────────────────────────────────────────────────────── */}
-      <ImportModal
-        open={importOpen}
-        onClose={() => setImportOpen(false)}
-        title="Import warehouse stock"
-        description="Upload current on-hand quantities from your WMS or ERP export"
-        requiredColumns={INVENTORY_REQUIRED_COLUMNS}
-        optionalColumns={INVENTORY_OPTIONAL_COLUMNS}
-        tip='Each row upserts the position for that SKU. Re-importing the same SKU updates its quantity — no duplicates.'
-        onParse={handleParse}
-        onImport={handleImport}
-        onDownloadTemplate={downloadInventoryTemplate}
-      />
-    </div>
-  );
+    <ConfirmDialog
+      open={confirmDeleteSelected}
+      onClose={() => setConfirmDeleteSelected(false)}
+      title="Delete Selected Stock Positions"
+      tone="danger"
+      loading={deleteSelectedMutation.isPending}
+      confirmLabel={`Delete ${selectedSkuIds.size} Stock Position${selectedSkuIds.size !== 1 ? "s" : ""}`}
+      message={
+        <p>
+          Are you sure you want to delete stock positions for <strong>{selectedSkuIds.size}</strong> selected SKU(s)? This action cannot be undone.
+        </p>
+      }
+      onConfirm={() => deleteSelectedMutation.mutate()}
+    />
+  </div>;
 };

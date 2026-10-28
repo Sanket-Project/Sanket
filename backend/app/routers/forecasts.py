@@ -12,13 +12,13 @@ service token.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, timedelta
 import uuid
-from typing import Annotated, Any
+from datetime import UTC, date, datetime, timedelta
+from typing import Annotated, Any, Literal
 
 import httpx
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 
@@ -28,7 +28,54 @@ from app.services.forecast_gate import assert_forecastable
 
 log = structlog.get_logger(__name__)
 router = APIRouter(prefix="/forecasts", tags=["forecast"])
+
+
+@router.get("/average-sales")
+async def average_sales_projection(
+    request: Request, tenant_id: TenantId, industry: ActiveIndustry,
+    horizon_weeks: int = Query(default=12, ge=1, le=52),
+    offset: int = Query(default=0, ge=0), limit: int = Query(default=25, ge=1, le=100),
+    search: str = Query(default="", max_length=200),
+) -> dict[str, Any]:
+    from app.services.period_projection import projection
+    return await projection(request.app.state.db, tenant_id, industry.code,
+                            horizon_weeks=horizon_weeks, offset=offset, limit=limit, search=search)
 SettingsDep = Annotated[Settings, Depends(get_settings)]
+
+
+def _forecast_queue(request: Request):
+    return getattr(request.app.state, 'arq', None)
+
+
+@router.get('/latest')
+async def latest_forecast(
+    request: Request, tenant_id: TenantId, industry: ActiveIndustry,
+    view: Literal['summary', 'skus'] = 'skus',
+    offset: int = Query(default=0, ge=0), limit: int = Query(default=6, ge=1, le=100),
+    search: str = Query(default="", max_length=200),
+    run_id: uuid.UUID | None = None,
+) -> dict[str, Any]:
+    from app.services.persisted_forecasts import read_latest
+    return await read_latest(request.app.state.db, tenant_id, industry.code,
+                             view=view, offset=offset, limit=limit, search=search, run_id=run_id)
+
+
+class RefreshForecastBody(BaseModel):
+    horizon: int = Field(default=26, ge=1, le=104)
+    force: bool = False
+    force_zero_shot: bool = True
+
+
+@router.post('/refresh', status_code=202)
+async def refresh_forecast(
+    body: RefreshForecastBody, request: Request, tenant_id: TenantId, industry: ActiveIndustry,
+) -> dict[str, Any]:
+    from app.services.persisted_forecasts import request_refresh
+    async with request.app.state.db.session(str(tenant_id)) as session:
+        await assert_forecastable(session, tenant_id=tenant_id, industry=industry.code)
+    return await request_refresh(request.app.state.db, _forecast_queue(request), tenant_id,
+                                 industry.code, horizon=body.horizon, force=body.force,
+                                 force_zero_shot=body.force_zero_shot)
 
 
 class GenerateForecastBody(BaseModel):

@@ -1,0 +1,17 @@
+{
+  "id": "00000000-0000-0000-0000-000000000001",
+  "sku_id": "00000000-0000-0000-0000-000000000002",
+  "sku_code": "SYNTHETIC-SKU",
+  "quantity": 37,
+  "currency": "INR",
+  "updated_at": "2026-10-27T00:00:00+00:00",
+  "expires_at": "2026-11-01 00:00:00+00:00",
+  "revision": "1e4683db787460f6387bdefa8c4ab6e62d7f8f09c792c831818291695b8d7f78",
+  "recipient": null,
+  "subject": "Purchase order request: SYNTHETIC-SKU",
+  "body": "Please confirm availability and delivery for 37 units of SKU SYNTHETIC-SKU. Currency: INR. Please provide a quotation and delivery date. This is a draft based on the approved recommendation; it does not record a supplier order.",
+  "whatsapp_text": "Please confirm availability and delivery for 37 units of SKU SYNTHETIC-SKU. Currency: INR. Please provide a quotation and delivery date. This is a draft based on the approved recommendation; it does not record a supplier order.",
+  "label": "Factual template",
+  "source": "/workspace/decisions",
+  "language": "en"
+}

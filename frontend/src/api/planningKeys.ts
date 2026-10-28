@@ -10,9 +10,9 @@ export const INTEGRATION_CATALOG_KEY = ["integration", "catalog"] as const;
  * change every one of these, so they are invalidated together: refetching only
  * the screen the user clicked left coverage and decisions describing old stock.
  *
- * Deliberately excludes ["dashboard-forecast"]: its query runs
- * POST /forecasts/generate (an ML inference), which should happen only when a
- * user asks for it, not as a side effect of accepting a recommendation.
+ * ["forecasts"] includes persisted latest-run reads. Invalidating those reads
+ * never starts synchronous inference; stale data is refreshed through the
+ * deduplicated background job endpoint.
  */
 export const PLANNING_KEYS: readonly QueryKey[] = [
   ["inventory-levels"],
@@ -22,6 +22,7 @@ export const PLANNING_KEYS: readonly QueryKey[] = [
   ["roi-summary"],
   ["dashboard-history"],
   ["forecasts"],
+  ["average-sales"],
   ["forecast-confidence"],
   ["data-quality"],
   ["onboarding-readiness"],
@@ -30,6 +31,7 @@ export const PLANNING_KEYS: readonly QueryKey[] = [
   ["sales-summary"],
   ["sales-timeseries"],
   ["sales-top-products"],
+  ["trends"],
   ["skus"],
   ["skus-list"],
   INTEGRATION_CATALOG_KEY,

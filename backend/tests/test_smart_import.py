@@ -55,7 +55,7 @@ async def test_stock_balance_plans_groups_pieces_and_imports(app_role_db):
     assert plan["preview"]["source_rows"] == 3
     assert plan["preview"]["output_rows"] == 2
     assert [e["reason"] for e in plan["exclusions"]] == ["summary_row"]
-    assert {"code": "0L", "count": 1, "suggestion": None} in plan["size_codes"]
+    assert {"code": "0L", "count": 1, "suggestion": None, "meaning": "Source-specific code — review required"} in plan["size_codes"]
     assert await scalar(app_role_db, ctx, "SELECT count(*) FROM skus WHERE tenant_id=:t") == 0
 
     decision["size_map"] = {"0L": "L"}

@@ -19,6 +19,11 @@ describe("describeSource", () => {
   it("does not invent a model for an unknown source", () => {
     expect(describeSource(undefined).short).toBe("Unknown source");
   });
+
+  it("identifies persisted hybrid and ensemble runs without calling them zero-shot", () => {
+    expect(describeSource("hybrid-trend-fused").short).toBe("Hybrid forecast");
+    expect(describeSource("ensemble").short).toBe("Model ensemble");
+  });
 });
 
 describe("omissionReason", () => {

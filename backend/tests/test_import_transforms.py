@@ -22,9 +22,9 @@ def test_parse_variant_spaced_and_compact():
 
 def test_size_codes_suggest_only_known_sizes():
     out = t.size_codes(["0L", "0L", "XL", "2XL", "free", None, ""])
-    assert out[0] == {"code": "0L", "count": 2, "suggestion": None}
-    assert {"code": "2XL", "count": 1, "suggestion": "XXL"} in out
-    assert {"code": "FREE", "count": 1, "suggestion": "FREE"} in out
+    assert out[0] == {"code": "0L", "count": 2, "suggestion": None, "meaning": "Source-specific code — review required"}
+    assert {"code": "2XL", "count": 1, "suggestion": "XXL", "meaning": "Letter size: XXL"} in out
+    assert {"code": "FREE", "count": 1, "suggestion": "FREE", "meaning": "Free / one size"} in out
     assert len(out) == 4
 
 

@@ -169,7 +169,13 @@ function PlanCard({ card, canImport, onEdit, onRefresh, onConfirm }: {
   const { plan, decision, evaluation } = card;
   const { preview } = evaluation;
   const unusable = decision.destinations.length === 0 && plan.unusable_reason;
-  const unknownSizes = evaluation.size_codes.filter((c) => !c.suggestion);
+  const [sizeSearch, setSizeSearch] = useState("");
+  const [reviewOnly, setReviewOnly] = useState(false);
+  const needsReview = (code: PlanEvaluation["size_codes"][number]) =>
+    !Object.hasOwn(decision.size_map, code.code) && !code.suggestion;
+  const reviewCount = evaluation.size_codes.filter(needsReview).length;
+  const visibleSizes = evaluation.size_codes.filter((c) =>
+    (!reviewOnly || needsReview(c)) && `${c.code} ${c.meaning ?? ""} ${c.suggestion ?? ""}`.toLowerCase().includes(sizeSearch.trim().toLowerCase()));
   const missing = Object.entries(evaluation.missing).filter(([, m]) => m?.length);
 
   return <section aria-label={plan.filename} className="space-y-3 rounded-xl border border-line bg-surface-2 p-3">
@@ -221,14 +227,43 @@ function PlanCard({ card, canImport, onEdit, onRefresh, onConfirm }: {
             </select></label>)}</div>
       </details>
 
-      {unknownSizes.length > 0 && <details className="text-xs" open><summary>{unknownSizes.length} size codes need a size</summary>
-        <p className="my-1 text-content-muted">These codes are not standard sizes. Pick one, or leave blank — the code stays part of the SKU either way.</p>
-        <div className="grid gap-1 sm:grid-cols-3">{unknownSizes.slice(0, 60).map((c) => <label key={c.code} className="flex items-center gap-2">
-          <span className="w-20 font-mono">{c.code}</span><span className="w-12 text-content-subtle">{c.count}</span>
-          <select className="input" aria-label={`Size for code ${c.code}`} value={decision.size_map[c.code] ?? ""}
-            onChange={(e) => onEdit({ size_map: { ...decision.size_map, [c.code]: e.target.value } })}>
-            <option value="">Leave blank</option>{SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select></label>)}</div>
+      {evaluation.size_codes.length > 0 && <details className="rounded-xl border border-line-strong bg-surface p-4 text-xs" open>
+        <summary className="cursor-pointer font-medium text-content">Size recognition · {evaluation.size_codes.length} codes · {reviewCount} need review</summary>
+        <p className="mt-2 text-content-muted">Recognised letter sizes are applied automatically. Original codes stay in the SKU. Numeric sizes and ranges are identified below; choose a letter size only if appropriate.</p>
+        <div className="my-4 flex flex-wrap items-end gap-4">
+          <label className="flex min-w-0 flex-1 flex-col gap-1">Search size codes
+            <input type="search" className="input w-full" value={sizeSearch} placeholder="Code, meaning or detected size"
+              onChange={(e) => setSizeSearch(e.target.value)} /></label>
+          <label className="flex min-h-11 items-center gap-2"><input type="checkbox" checked={reviewOnly}
+            onChange={(e) => setReviewOnly(e.target.checked)} />Needs review only</label>
+          <span role="status" className="pb-3 text-content-subtle">Showing {visibleSizes.length} of {evaluation.size_codes.length}</span>
+        </div>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-4">{visibleSizes.map((c) => {
+          const overridden = Object.hasOwn(decision.size_map, c.code);
+          return <div key={c.code} className="min-w-0 rounded-xl border border-line-strong bg-surface-2 p-4">
+            <dl className="mb-3 flex items-start justify-between gap-4">
+              <div className="min-w-0"><dt className="text-content-subtle">Original code</dt>
+                <dd className="mt-1 break-words font-mono text-base font-semibold text-content">{c.code}</dd></div>
+              <div className="shrink-0 text-right"><dt className="text-content-subtle">Rows using it</dt>
+                <dd className="mt-1 font-mono text-base text-content">{c.count.toLocaleString()}</dd></div>
+            </dl>
+            <p className="mb-3 min-h-8 text-content-muted">{c.meaning ?? (c.suggestion ? `Letter size: ${c.suggestion}` : "Source-specific code — review required")}</p>
+            <label className="flex flex-col gap-1">Detected size / override
+              <select className="input w-full" aria-label={`Size for code ${c.code}`} value={decision.size_map[c.code] ?? c.suggestion ?? ""}
+                onChange={(e) => onEdit({ size_map: { ...decision.size_map, [c.code]: e.target.value } })}>
+                <option value="">Leave blank</option>{SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </label>
+            <div className="mt-2 flex min-h-7 items-center justify-between gap-2">
+              <span className="text-content-subtle">{overridden ? (decision.size_map[c.code] ? "Your selection" : "Reviewed · left blank") : c.suggestion ? "Automatically recognised" : "Needs review"}</span>
+              {overridden ? <button type="button" className="underline" onClick={() => {
+                const next = { ...decision.size_map }; delete next[c.code]; onEdit({ size_map: next });
+              }}>Reset</button> : !c.suggestion && <button type="button" className="underline"
+                onClick={() => onEdit({ size_map: { ...decision.size_map, [c.code]: "" } })}>Keep blank</button>}
+            </div>
+          </div>;
+        })}</div>
+        {visibleSizes.length === 0 && <p className="py-6 text-center text-content-muted">No size codes match these filters.</p>}
       </details>}
 
       <p className={clsx("text-xs", card.stale && "text-content-subtle")}>
@@ -250,7 +285,7 @@ function PlanCard({ card, canImport, onEdit, onRefresh, onConfirm }: {
       {card.evaluation.problems?.map((problem) => <p key={problem} role="alert" className="text-xs">{problem}</p>)}
       {card.error && <p role="alert" className="rounded-lg border border-line p-2 text-xs">{card.error}</p>}
       {card.result ? <p role="status" className="flex items-center gap-1 text-xs"><CheckCircle size={14} aria-hidden="true" />{summary(card.result)}</p>
-        : <div className="flex flex-wrap gap-2">
+        : <div className="sticky bottom-0 z-10 flex flex-wrap gap-2 border-t border-line bg-surface-2 py-3">
           <Button size="sm" variant="ghost" onClick={onRefresh} disabled={card.busy}>Update preview</Button>
           <Button size="sm" variant="secondary" onClick={onConfirm} loading={card.busy}
             disabled={!canImport || card.busy || !ready(card)}>Import this file</Button>

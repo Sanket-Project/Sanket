@@ -57,9 +57,11 @@ class Tenant(UUIDPrimaryKey, TimestampMixin, Base):
     trial_ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     contract_ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
-    users: Mapped[list[User]] = relationship("User", back_populates="tenant", lazy="raise")
+    users: Mapped[list[User]] = relationship(
+        "User", back_populates="tenant", lazy="raise", cascade="all, delete", passive_deletes=True
+    )
     industry_profiles: Mapped[list[IndustryProfile]] = relationship(  # type: ignore[name-defined]
-        "IndustryProfile", back_populates="tenant", lazy="raise"
+        "IndustryProfile", back_populates="tenant", lazy="raise", cascade="all, delete", passive_deletes=True
     )
 
 
@@ -91,7 +93,7 @@ class User(UUIDPrimaryKey, TimestampMixin, Base):
 
     tenant: Mapped[Tenant] = relationship("Tenant", back_populates="users", lazy="raise")
     refresh_tokens: Mapped[list[RefreshToken]] = relationship(
-        "RefreshToken", back_populates="user", lazy="raise"
+        "RefreshToken", back_populates="user", lazy="raise", cascade="all, delete", passive_deletes=True
     )
 
 

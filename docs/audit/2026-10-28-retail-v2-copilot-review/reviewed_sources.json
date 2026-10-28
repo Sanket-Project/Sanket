@@ -1,0 +1,46 @@
+[
+  {
+    "file": "backend\\app\\services\\integrations\\v2\\catalog.py",
+    "sha256": "ceea3a44ab0dadf8c66808db98b6cfd307350052ab2a5e6c05dd5911caadbeec"
+  },
+  {
+    "file": "backend\\app\\services\\integrations\\v2\\contracts.py",
+    "sha256": "f589176a5d975844081f02106c40da3bc38b98d9dae4aa6637b0971c72f66673"
+  },
+  {
+    "file": "backend\\app\\services\\integrations\\v2\\event_registry.py",
+    "sha256": "01992064f6f0b5819dd20fbe43c723d4bc4e6dacbae9801f9b78983b25318cfc"
+  },
+  {
+    "file": "backend\\app\\services\\integrations\\v2\\inventory.py",
+    "sha256": "923e044c695e51dd4c08d1b05a5b4fbaa36f1423079cf157614e6ebe1482b704"
+  },
+  {
+    "file": "backend\\app\\services\\integrations\\v2\\sales_returns.py",
+    "sha256": "70d6c9b97e91ff3f9186244faa3af2ef9556005657ecf4480d1ff9540f86b8f7"
+  },
+  {
+    "file": "backend\\app\\services\\integrations\\v2\\upload.py",
+    "sha256": "bd5cb8f1c9e41e246444b6cb98643211a4e6bb4bc9b86ea329f12d005c954bd1"
+  },
+  {
+    "file": "backend\\app\\services\\integrations\\v2\\valuation.py",
+    "sha256": "05462fd7d27440dfebeb5b7c8d5d71b880c40c1c62d3cd9b98eafa4081b4eb08"
+  },
+  {
+    "file": "backend\\app\\services\\integrations\\v2\\__init__.py",
+    "sha256": "67b379a0820fc0f0c8012bfce7de05429bef52aaf9c9a91834aa3806b50e78f8"
+  },
+  {
+    "file": "backend\\alembic\\versions\\0036_retail_v2_foundation.py",
+    "sha256": "5c6b0cdb4926d93bf56841f61eed1e58a17c7da7a7d9b4e38a2f2b20a37c1ddd"
+  },
+  {
+    "file": "backend\\alembic\\versions\\0037_retail_v2_tenant_scoped_return_fk.py",
+    "sha256": "2429935bcffb69af42eb1aaddef734696250c8aabeae911e148e4a68cec51113"
+  },
+  {
+    "file": "backend\\app\\routers\\integrations_hub.py",
+    "sha256": "227b3a63ceaf6ee014e4b9e938dbeaf39e868799966fe1657942ba268e6347c1"
+  }
+]

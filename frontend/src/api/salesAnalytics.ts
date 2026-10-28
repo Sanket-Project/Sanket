@@ -72,7 +72,20 @@ export interface TopProductsResponse {
 
 export type TopProductPeriod = "today" | "week" | "month" | "year" | "all";
 
+export interface BranchSalesResponse {
+  industry: string;
+  period_start: string;
+  as_of: string;
+  unassigned_records: number;
+  branches: { name: string; units_sold: number; gross_revenue: number | null;
+    currency: string | null; revenue_by_currency: Record<string, number> }[];
+}
+
 export const salesAnalyticsApi = {
+  deleteAll: (): Promise<{ deleted: number; industry: string }> =>
+    apiClient.delete("/analytics/sales/all").then(r => r.data),
+  branches: (lookbackDays = 365, granularity: "day" | "week" | "month" = "month"): Promise<BranchSalesResponse> =>
+    apiClient.get("/analytics/sales/branches", { params: { lookback_days: lookbackDays, granularity } }).then(r => r.data),
   summary: (): Promise<SalesSummaryResponse> =>
     apiClient.get("/analytics/sales/summary").then((r) => r.data),
 

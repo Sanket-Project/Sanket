@@ -13,6 +13,7 @@ from sqlalchemy import create_engine, text
 
 from sanket_ml.config import MLSettings, get_ml_settings
 from sanket_ml.data.loader import HistoricalSalesLoader
+from sanket_ml.inference.guard import tenant_inference_slot
 from sanket_ml.models.base import BaseForecaster, ForecastQuantiles
 from sanket_ml.models.ensemble import StackedEnsemble
 
@@ -36,6 +37,53 @@ class InferenceService:
         self.loader = HistoricalSalesLoader(self.settings)
         self._engine = create_engine(self.settings.database_url, pool_pre_ping=True)
 
+    def tenant_slot(self, tenant_id: uuid.UUID):
+        return tenant_inference_slot(self._engine, tenant_id)
+
+    def find_refresh(self, tenant_id: uuid.UUID, refresh_id: uuid.UUID) -> dict | None:
+        """Recover a committed refresh after its caller or worker disappeared.
+
+        Called while holding the tenant compute lock, so a retry cannot race
+        the original inference. Both queries also carry explicit tenant filters
+        in addition to the normal RLS transaction context.
+        """
+        with self._engine.begin() as conn:
+            conn.execute(
+                text("SELECT set_config('app.current_tenant_id', :tenant_id, true)"),
+                {"tenant_id": str(tenant_id)},
+            )
+            run = conn.execute(text("""
+                SELECT id, model_stack, metrics FROM forecast_runs
+                WHERE tenant_id = :tenant_id AND status = 'completed'
+                  AND metrics->>'refresh_id' = :refresh_id
+                ORDER BY completed_at DESC LIMIT 1
+            """), {"tenant_id": str(tenant_id), "refresh_id": str(refresh_id)}).mappings().first()
+            if run is None:
+                return None
+            rows = conn.execute(text("""
+                SELECT sku_id, forecast_date, AVG(p10) AS p10,
+                       AVG(p50) AS p50, AVG(p90) AS p90
+                FROM forecast_results WHERE tenant_id = :tenant_id AND run_id = :run_id
+                GROUP BY sku_id, forecast_date ORDER BY sku_id, forecast_date
+            """), {"tenant_id": str(tenant_id), "run_id": str(run["id"])}).mappings().all()
+        meta = run["metrics"] or {}
+        source = meta.get("model")
+        if source not in ("chronos_zero_shot", "timesfm_zero_shot"):
+            stack = run["model_stack"] or []
+            source = next((m for m in stack if m in ("chronos_zero_shot", "timesfm_zero_shot")), "trained")
+        return {
+            "run_id": str(run["id"]), "n_predictions": len(rows),
+            "source": source, "context_source": meta.get("context_source", "artifact"),
+            "n_series": len({row["sku_id"] for row in rows}),
+            "rows": [{
+                "sku_id": str(row["sku_id"]), "forecast_date": row["forecast_date"].isoformat(),
+                "p10": float(row["p10"]), "p50": float(row["p50"]), "p90": float(row["p90"]),
+            } for row in rows],
+            "calendar": meta.get("calendar"), "history_end": meta.get("history_end"),
+            "first_forecast_week": meta.get("first_forecast_week"),
+            "omitted": meta.get("omitted", []),
+        }
+
     def load_artifacts(self, artifact_dir: Path) -> tuple[list[BaseForecaster], StackedEnsemble]:
         models: list[BaseForecaster] = []
         ensemble_path = artifact_dir / "ensemble.joblib"
@@ -55,12 +103,13 @@ class InferenceService:
         industry: str,
         artifact_dir: Path,
         horizon: int,
+        run_metadata: dict | None = None,
     ) -> InferenceResult:
         log.info("inference.start", tenant=str(tenant_id), industry=industry, horizon=horizon)
         models, ensemble = self.load_artifacts(artifact_dir)
         forecasts = [m.predict(horizon=horizon) for m in models]
         combined = ensemble.predict(forecasts)
-        run_id = self._persist(tenant_id, industry, combined, horizon, models)
+        run_id = self._persist(tenant_id, industry, combined, horizon, models, run_metadata)
         log.info("inference.done", run_id=str(run_id), n_predictions=len(combined.unique_id))
         return InferenceResult(
             tenant_id=tenant_id,
@@ -76,6 +125,7 @@ class InferenceService:
         fc: ForecastQuantiles,
         horizon: int,
         models: Iterable[BaseForecaster],
+        run_metadata: dict | None = None,
     ) -> uuid.UUID:
         return self.persist_forecast(
             tenant_id=tenant_id,
@@ -83,6 +133,7 @@ class InferenceService:
             fc=fc,
             horizon=horizon,
             model_stack=[m.name for m in models],
+            run_metadata=run_metadata,
         )
 
     def persist_forecast(

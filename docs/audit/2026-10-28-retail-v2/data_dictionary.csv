@@ -1,0 +1,146 @@
+template,position,column,data_type,requirement,meaning_and_validation,synthetic_example
+products,1,schema_version,text,R,Exactly retail_v2.0.products,retail_v2.0.products
+products,2,product_code,text(64),R,Stable tenant-unique product/style identity; never infer from name,DEMO-KUR-001
+products,3,product_name,text(200),R,Display name; never a relationship key,Demo cotton printed kurti
+products,4,brand_code,text(64),O,Approved tenant brand lookup; blank means unknown,DEMO-BRAND
+products,5,category_code,text(64),R,Approved leaf category; its parent supplies subcategory hierarchy,KURTI
+products,6,style_number,text(64),O,Manufacturer style; not globally unique,DEMO-ST-101
+products,7,description,text,O,Plain text description,Cotton printed straight kurti
+products,8,collection_code,text(64),O,Tenant collection lookup,DEMO-FESTIVE-26
+products,9,season_code,text(64),O,Tenant season lookup; not an inferred date,AW26
+products,10,status,enum,R,active; seasonal; clearance; pre_launch; discontinued,active
+products,11,hsn_code,text(8),O,Verified HSN as text; required before taxable posting if applicable; blank in samples,
+products,12,tax_class_code,text(64),O,Effective-dated tax class lookup; required before taxable posting,DEMO-TAX-5
+products,13,manufacturer_supplier_code,text(64),O,Supplier FK for manufacturer only; purchasing suppliers use supplier_skus,DEMO-SUP-001
+products,14,image_urls,json array,O,HTTPS URLs; no image fetched during import; blank unknown,
+products,15,attributes_json,json object,O,Category-schema validated product defaults; SKU may override declared variant dimensions,"{""fabric"":""cotton"",""pattern"":""floral"",""fit"":""straight"",""sleeve"":""three_quarter"",""neckline"":""round"",""length"":""knee"",""occasion"":[""casual""]}"
+skus,1,schema_version,text,R,Exactly retail_v2.0.skus,retail_v2.0.skus
+skus,2,sku_code,text(64),R,Tenant-unique stable sellable variant; preserve leading zeros,DEMO-KUR-001-BLU-M
+skus,3,product_code,text(64),R,FK products.product_code; no catch-all parent in V2,DEMO-KUR-001
+skus,4,external_sku_id,text(128),O,Source-specific identity; source_system is supplied by import profile,DEMO-EXT-001
+skus,5,color_code,text(64),C,Required if category uses color dimension; approved lookup,BLUE
+skus,6,color_name,text(100),O,Display label; must agree with color_code,Blue
+skus,7,size_code,text(32),C,Required if category uses size; approved size-system lookup,M
+skus,8,size_system,text(32),C,Required with size_code; label IN_ALPHA does not imply universal measurements,IN_ALPHA
+skus,9,barcode,text(64),O,Internal barcode text; distinct namespace from GTIN,
+skus,10,gtin,text(14),O,Only legitimate assigned 8/12/13/14 digit GTIN with valid check digit; blank sample,
+skus,11,mrp_incl_tax,"decimal(18,2)",O,Nonnegative INR example; regulated maximum retail price; effective from price_valid_from,1575.00
+skus,12,selling_price_incl_tax,"decimal(18,2)",O,Nonnegative default price; actual transaction price is separate,1050.00
+skus,13,reference_cost_ex_tax,"decimal(18,4)",O,Optional planning/reference cost; never historical COGS,600.0000
+skus,14,currency,char(3),R,ISO currency code; INR samples; never silently default USD,INR
+skus,15,price_valid_from,timestamptz,C,Required if MRP or selling price provided; creates price list record,2026-10-01T00:00:00+05:30
+skus,16,status,enum,R,active; inactive; discontinued,active
+skus,17,attributes_json,json object,O,"Variant-only schema-validated attributes, e.g. measurements","{""bust_cm"":96}"
+inventory,1,schema_version,text,R,Exactly retail_v2.0.inventory; snapshot contract only,retail_v2.0.inventory
+inventory,2,snapshot_id,text(128),R,Source-stable snapshot identity; repeated keys are retry not new adjustment,DEMO-SNAP-001
+inventory,3,as_of,timestamptz,R,Business measurement time with offset; not upload timestamp,2026-10-01T09:00:00+05:30
+inventory,4,sku_code,text(64),R,FK skus.sku_code,DEMO-KUR-001-BLU-M
+inventory,5,location_code,text(64),R,FK locations.location_code,demo-hyd-store
+inventory,6,on_hand_qty,integer,R,Nonnegative physically held units including reserved/damaged/quarantine,20
+inventory,7,reserved_qty,integer,R,"Nonnegative subset of good on-hand, exclusive of damaged/quarantine",2
+inventory,8,damaged_qty,integer,R,Nonnegative mutually exclusive unavailable stock bucket,1
+inventory,9,quarantine_qty,integer,R,Nonnegative mutually exclusive quality-control stock bucket,0
+inventory,10,in_transit_qty,integer,O,Destination-bound dispatched transfer units; reconcile transfer ledger; not on hand,0
+inventory,11,open_po_qty,integer,O,Unreceived and uncancelled PO units; excludes transfer transit,0
+inventory,12,source_system,text(64),R,Registered external authority identifier; tenant scope server supplied,DEMO-POS
+inventory,13,count_reference,text(128),O,Approved physical count reference; mandatory for count adjustment posting,DEMO-COUNT-001
+inventory,14,reported_stock_value_ex_tax,"decimal(18,4)",O,Nonnegative source control value only; never silently overwrite cost ledger,12000.0000
+inventory,15,currency,char(3),C,Required when reported_stock_value_ex_tax present,INR
+sales,1,schema_version,text,R,Exactly retail_v2.0.sales,retail_v2.0.sales
+sales,2,source_system,text(64),R,Registered source namespace; not a generic upload label,DEMO-POS
+sales,3,transaction_id,text(128),R,Immutable source event identifier,DEMO-TXN-001
+sales,4,order_id,text(128),R,Source order header identity,DEMO-ORDER-001
+sales,5,order_line_id,text(128),R,Stable order line identity; cannot substitute SKU when repeated lines exist,DEMO-LINE-001
+sales,6,transaction_at,timestamptz,R,Recognition event time with offset; local business day from location timezone,2026-10-02T12:00:00+05:30
+sales,7,sku_code,text(64),R,FK skus.sku_code; product derived through SKU,DEMO-KUR-001-BLU-M
+sales,8,location_code,text(64),R,Selling location FK; fulfillment location optional separately,demo-hyd-store
+sales,9,fulfillment_location_code,text(64),O,Stock issuing location FK; defaults to selling location only by confirmed profile,demo-hyd-store
+sales,10,channel_code,text(64),R,Approved channel lookup; pos; web; marketplace examples,pos
+sales,11,quantity_sold,integer,R,Nonnegative; >0 for recognized sale; zero only for cancelled state,2
+sales,12,returns,integer,R,Exactly 0 here; physical returns posted only through returns.csv,0
+sales,13,unit_price_ex_tax,"decimal(18,4)",R,"Nonnegative selling price before discount excluding GST, per unit",1000.0000
+sales,14,mrp_incl_tax,"decimal(18,2)",O,Historical MRP snapshot; not used to derive realized revenue,1575.00
+sales,15,discount_ex_tax,"decimal(18,2)",R,"Nonnegative total allocated LINE discount, not percentage and not per unit",200.00
+sales,16,tax_code,text(64),R,Approved effective-dated classification; sample is illustrative only,DEMO-TAX-5
+sales,17,tax_rate_pct,"decimal(7,4)",R,Nonnegative percentage; 5 means 5 percent; validate against configured tax code,5.0000
+sales,18,tax_amount,"decimal(18,2)",R,Nonnegative GST total; inclusive/exclusive source conversion happens before this contract,90.00
+sales,19,currency,char(3),R,ISO currency code; one currency per order,INR
+sales,20,order_status,enum,R,completed; cancelled; completed means recognized and fulfilled for this simple contract,completed
+sales,21,invoice_number,text(128),O,Source tax invoice reference; required by configured fiscal posting policy,DEMO-INV-001
+sales,22,place_of_supply_state_code,text(2),C,Required for GST posting; official state code text,36
+sales,23,payment_method,text(64),O,Convenience only for exactly one tender; mixed requires payment child import,upi
+sales,24,payment_reference,text(128),C,Required to create a payment; blank method alone does not imply payment,DEMO-PAY-001
+sales,25,payment_amount,"decimal(18,2)",C,Nonnegative; repeat order payment reference must carry identical header data,1890.00
+returns,1,schema_version,text,R,Exactly retail_v2.0.returns,retail_v2.0.returns
+returns,2,source_system,text(64),R,Registered source namespace,DEMO-POS
+returns,3,return_id,text(128),R,Stable return header identity,DEMO-RET-001
+returns,4,return_line_id,text(128),R,Stable return line identity,DEMO-RLINE-001
+returns,5,return_at,timestamptz,R,Approved return/credit recognition time; received disposition applied at this time in simple contract,2026-10-03T13:00:00+05:30
+returns,6,original_source_system,text(64),C,Original namespace; mandatory unless approved unlinked return workflow,DEMO-POS
+returns,7,original_transaction_id,text(128),C,Original sale event; mandatory for linked return,DEMO-TXN-001
+returns,8,original_order_line_id,text(128),C,Original line; cumulative approved returns cannot exceed recognized sold units,DEMO-LINE-001
+returns,9,sku_code,text(64),R,FK SKU; must match original line,DEMO-KUR-001-BLU-M
+returns,10,location_code,text(64),R,Receiving location FK; may differ from original sale,demo-hyd-store
+returns,11,returns,integer,R,Strictly positive physical return quantity; never negative sales,1
+returns,12,return_value_ex_tax,"decimal(18,2)",R,"Nonnegative credit after original discount allocation, excluding GST",900.00
+returns,13,tax_code,text(64),R,Original applicable tax classification; do not use today's rate,DEMO-TAX-5
+returns,14,tax_amount,"decimal(18,2)",R,Nonnegative credited GST; separate fiscal eligibility validation,45.00
+returns,15,currency,char(3),R,Must match original sale or use explicit FX workflow,INR
+returns,16,reason_code,text(64),R,Approved reason e.g. size_issue; damaged; unwanted,size_issue
+returns,17,disposition,enum,R,restock; quarantine; damaged; no_receipt; simple file records physical outcome,restock
+returns,18,credit_note_number,text(128),O,Fiscal/commercial credit reference; required for fiscal posting policy,DEMO-CN-001
+returns,19,refund_reference,text(128),O,Optional one refund header; repeated ref must agree and allocated child lines deduplicate,DEMO-REF-001
+returns,20,refund_amount,"decimal(18,2)",C,Nonnegative cash credit; required with refund reference; not additional revenue reversal,945.00
+returns,21,refund_method,text(64),C,Required with refund reference; tender lookup,upi
+returns,22,refund_at,timestamptz,C,Required with refund reference; can differ from return time,2026-10-03T14:00:00+05:30
+returns,23,exchange_order_id,text(128),O,Optional replacement sale order identity; both legs remain independent,
+returns,24,status,enum,R,approved; draft; rejected; only approved posts credit and receipt,approved
+purchases,1,schema_version,text,R,Exactly retail_v2.0.purchases; one row per document line event,retail_v2.0.purchases
+purchases,2,source_system,text(64),R,Registered source namespace,DEMO-ERP
+purchases,3,document_type,enum,R,purchase_order; goods_receipt; supplier_invoice; purchase_return,purchase_order
+purchases,4,document_id,text(128),R,Stable identity within source and document type,DEMO-PO-001
+purchases,5,document_line_id,text(128),R,Stable line identity within document,DEMO-POL-001
+purchases,6,document_at,timestamptz,R,Business posting/order time with offset,2026-10-04T10:00:00+05:30
+purchases,7,supplier_code,text(64),R,FK suppliers.supplier_code,DEMO-SUP-001
+purchases,8,sku_code,text(64),R,FK SKU; invoice summaries without SKU use separate summary lane,DEMO-KUR-001-BLU-M
+purchases,9,location_code,text(64),R,Destination/return-issuing location FK,demo-hyd-store
+purchases,10,po_id,text(128),C,PO header identity; required for PO and linked documents,DEMO-PO-001
+purchases,11,po_line_id,text(128),C,PO line identity; required for linked receipt/invoice/return,DEMO-POL-001
+purchases,12,related_document_id,text(128),C,For purchase_return: original receipt document ID; optional invoice/receipt matching elsewhere,
+purchases,13,related_document_line_id,text(128),C,Required with related document ID; original source is same namespace in simple contract,
+purchases,14,quantity,integer,R,Strictly positive ordered/received/invoiced/returned units according to document_type,10
+purchases,15,unit_cost_ex_tax,"decimal(18,4)",R,Nonnegative unit base cost; realized receipt cost and invoice variance kept separately,600.0000
+purchases,16,discount_ex_tax,"decimal(18,2)",R,Nonnegative total line discount,0.00
+purchases,17,freight_ex_tax,"decimal(18,2)",R,Nonnegative allocated line freight; never repeat whole-header freight on each line,0.00
+purchases,18,tax_code,text(64),R,Configured purchase tax classification; sample illustrative,DEMO-TAX-5
+purchases,19,tax_rate_pct,"decimal(7,4)",R,Percentage; effective-date validate,5.0000
+purchases,20,tax_amount,"decimal(18,2)",R,Nonnegative total line tax after applicable allocation,300.00
+purchases,21,currency,char(3),R,ISO currency code; one currency per document,INR
+purchases,22,invoice_number,text(128),C,Required on supplier_invoice; unique per supplier/fiscal scope,
+purchases,23,expected_delivery_date,date,O,ISO YYYY-MM-DD; useful on PO,2026-10-10
+purchases,24,status,enum,R,draft; posted; cancelled; posted events immutable,posted
+suppliers,1,schema_version,text,R,Exactly retail_v2.0.suppliers,retail_v2.0.suppliers
+suppliers,2,supplier_code,text(64),R,Tenant-unique stable identity,DEMO-SUP-001
+suppliers,3,supplier_name,text(200),R,Synthetic sample name explicitly marked,DEMO ONLY Apparel Supplier
+suppliers,4,supplier_type,enum,R,manufacturer; wholesaler; distributor; other,manufacturer
+suppliers,5,gstin,text(15),O,Verified tax registration; blank sample; syntax validity does not establish registration,
+suppliers,6,state_code,text(2),C,Required for GST posting; state lookup,36
+suppliers,7,country_code,char(2),R,ISO country code,IN
+suppliers,8,currency,char(3),R,Default purchasing currency; transaction snapshots override explicitly,INR
+suppliers,9,payment_terms_days,integer,O,Nonnegative contractual due-day offset,30
+suppliers,10,default_lead_time_days,integer,O,Nonnegative fallback only; supplier_skus owns item-specific values,7
+suppliers,11,contact_email,text(254),O,Optional email; no message sent by importing,demo-supplier@example.invalid
+suppliers,12,phone,text(32),O,Optional contact number preserved as text,
+suppliers,13,address,text,O,Supplier address; blank synthetic sample,
+suppliers,14,status,enum,R,active; inactive; blocked,active
+locations,1,schema_version,text,R,Exactly retail_v2.0.locations,retail_v2.0.locations
+locations,2,location_code,text(64),R,Tenant-unique stable identity; explicit aliases map legacy case variants,demo-hyd-store
+locations,3,location_name,text(200),R,Human label,DEMO ONLY Hyderabad Store
+locations,4,location_type,enum,R,store; warehouse; virtual,store
+locations,5,parent_location_code,text(64),O,FK location; no self-link or cycles,
+locations,6,timezone,text(64),R,IANA timezone; business day calculated here,Asia/Kolkata
+locations,7,state_code,text(2),C,Required for GST posting,36
+locations,8,country_code,char(2),R,ISO country code,IN
+locations,9,address,text,O,Postal address; blank synthetic sample,
+locations,10,fulfills_orders,boolean,R,true or false only,true
+locations,11,status,enum,R,active; inactive,active

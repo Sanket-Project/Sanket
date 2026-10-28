@@ -92,6 +92,7 @@ _WORDS = {
 
 
 def render_narrative(task: NarrativeInput, output: NarrativeOutput) -> list[dict]:
+    from app.services.notifications.localization import translate
     validate_narrative(output.model_dump_json(), task)
     facts = {f.id: f for f in task.facts}
     result = []
@@ -99,10 +100,14 @@ def render_narrative(task: NarrativeInput, output: NarrativeOutput) -> list[dict
         selected = [facts[i] for i in block.fact_ids]
         pieces = []
         for fact in selected:
+            label = translate(fact.label, task.language)
             if block.proposition == "fact":
-                pieces.append(f"{fact.label}: {fact.value}{' ' + fact.unit if fact.unit else ''}{' (' + fact.period + ')' if fact.period else ''}.")
+                value = translate(fact.value, task.language) if fact.kind == "status" else fact.value
+                unit = translate(fact.unit, task.language)
+                period = translate(fact.period, task.language) if fact.period else None
+                pieces.append(f"{label}: {value}{' ' + unit if unit else ''}{' (' + period + ')' if period else ''}.")
             else:
-                pieces.append(f"{_WORDS[task.language][block.proposition]}: {fact.label}.")
+                pieces.append(f"{_WORDS[task.language][block.proposition]}: {label}.")
         result.append({"text": " ".join(pieces), "kind": block.proposition,
                        "sources": [{"fact_id": f.id, "href": f.source} for f in selected]})
     return result

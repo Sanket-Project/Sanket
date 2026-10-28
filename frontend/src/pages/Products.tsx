@@ -22,6 +22,7 @@ import {
   Clock,
   XCircle,
   Star,
+  Trash2,
 } from "@/components/ui/icons";
 import clsx from "clsx";
 import toast from "react-hot-toast";
@@ -29,13 +30,16 @@ import { productsApi, type ProductCreateBody } from "@/api/products";
 import { skusApi } from "@/api/skus";
 import { exportApi } from "@/api/export";
 import { Button } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ProductCleanup } from "@/components/products/ProductCleanup";
 import { Input } from "@/components/ui/Input";
 import { ImportModal } from "@/components/ui/ImportModal";
 import { fmtRelative } from "@/utils/format";
+import { getErrorMessage } from "@/utils/errors";
 import type { Product, ProductStatus, IndustryCode } from "@/types/api";
 import { useProductImagesStore, getProductImage } from "@/stores/productImages";
 import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
+import { useAuthStore } from "@/stores/auth";
 import { industryAccent, industryGradient, industryDisplay } from "@/utils/colors";
 import {
   parseFile,
@@ -79,11 +83,21 @@ const STATUS_CONFIG: Record<ProductStatus, { label: string; cls: string; icon: R
 // ─────────────────────────────────────────────────────────────────────────────
 // Product Card (grid view)
 // ─────────────────────────────────────────────────────────────────────────────
-function ProductCard({ product, accent, images, skuCountMap, onClick }: {
+function ProductCard({
+  product,
+  accent,
+  images,
+  skuCountMap,
+  isSelected,
+  onToggleSelect,
+  onClick,
+}: {
   product: Product;
   accent: string;
   images: Record<string, string>;
   skuCountMap: Record<string, number>;
+  isSelected: boolean;
+  onToggleSelect: (e: React.MouseEvent) => void;
   onClick: () => void;
 }) {
   const imgUrl = getProductImage(
@@ -98,7 +112,10 @@ function ProductCard({ product, accent, images, skuCountMap, onClick }: {
   return (
     <button
       onClick={onClick}
-      className="w-full overflow-hidden rounded-2xl border border-line bg-surface text-left shadow-sm transition hover:-translate-y-0.5 hover:border-line-strong hover:shadow-md group cursor-pointer"
+      className={clsx(
+        "w-full overflow-hidden rounded-2xl border text-left shadow-sm transition hover:-translate-y-0.5 hover:border-line-strong hover:shadow-md group cursor-pointer relative",
+        isSelected ? "border-violet-500 bg-violet-50/10 ring-2 ring-violet-500/20" : "border-line bg-surface"
+      )}
     >
       {/* Product image banner */}
       <div className="relative h-44 overflow-hidden bg-surface-2">
@@ -113,9 +130,25 @@ function ProductCard({ product, accent, images, skuCountMap, onClick }: {
             {status.icon} {status.label}
           </span>
         </div>
+        {/* Selection Checkbox */}
+        <div
+          className="absolute top-2.5 right-2.5 z-10 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm p-1 rounded-md shadow"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleSelect(e);
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => {}}
+            className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500 cursor-pointer block"
+            aria-label={`Select ${product.name}`}
+          />
+        </div>
         {/* SKU count badge */}
         {skuCount > 0 && (
-          <div className="absolute top-2.5 right-2.5 bg-black/50 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
+          <div className="absolute top-2.5 right-11 bg-black/50 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
             {skuCount} SKU{skuCount !== 1 ? "s" : ""}
           </div>
         )}
@@ -166,11 +199,21 @@ function ProductCard({ product, accent, images, skuCountMap, onClick }: {
 // ─────────────────────────────────────────────────────────────────────────────
 // Product Row (list view)
 // ─────────────────────────────────────────────────────────────────────────────
-function ProductRow({ product, gradient, images, skuCountMap, onClick }: {
+function ProductRow({
+  product,
+  gradient,
+  images,
+  skuCountMap,
+  isSelected,
+  onToggleSelect,
+  onClick,
+}: {
   product: Product;
   gradient: string;
   images: Record<string, string>;
   skuCountMap: Record<string, number>;
+  isSelected: boolean;
+  onToggleSelect: (e: React.MouseEvent) => void;
   onClick: () => void;
 }) {
   const imgUrl = getProductImage(
@@ -185,8 +228,30 @@ function ProductRow({ product, gradient, images, skuCountMap, onClick }: {
   return (
     <button
       onClick={onClick}
-      className="w-full text-left flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group border border-transparent hover:border-slate-200/60 dark:hover:border-slate-700/40"
+      className={clsx(
+        "w-full text-left flex items-center gap-3 p-3 rounded-xl transition-colors group border cursor-pointer",
+        isSelected
+          ? "bg-violet-50/20 border-violet-300 dark:border-violet-700/50"
+          : "border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:border-slate-200/60 dark:hover:border-slate-700/40"
+      )}
     >
+      {/* Checkbox */}
+      <div
+        className="shrink-0 p-1"
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleSelect(e);
+        }}
+      >
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={() => {}}
+          className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500 cursor-pointer block"
+          aria-label={`Select ${product.name}`}
+        />
+      </div>
+
       {/* Colour dot */}
       <div className="h-8 w-1 rounded-full shrink-0" style={{ background: gradient }} />
 
@@ -236,6 +301,7 @@ type FilterStatus = "all" | ProductStatus;
 export const ProductsPage = () => {
   const navigate = useNavigate();
   const industry = useWorkspaceIndustry();
+  const tenantId = useAuthStore((state) => state.tenantId);
   const accent = industryAccent[industry];
   const gradient = industryGradient[industry];
   const displayName = industryDisplay[industry];
@@ -246,15 +312,28 @@ export const ProductsPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [filterCategory, setFilterCategory] = useState("all");
+  const [pageState, setPageState] = useState({ scope: "", page: 0 });
   const [addProductOpen, setAddProductOpen] = useState(false);
   const [modalTab, setModalTab] = useState<"manual" | "import">("manual");
   const [uploadFile, setUploadFile] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
+  const [confirmDeleteSelected, setConfirmDeleteSelected] = useState(false);
   const qc = useQueryClient();
   const { images, uploadImage } = useProductImagesStore();
 
-  const { data: liveProducts } = useQuery({
-    queryKey: ["products", "list"],
-    queryFn: () => productsApi.list(100, 0),
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const { data: liveProducts, isPending, isError, refetch } = useQuery({
+    queryKey: ["products", "list", tenantId, industry],
+    queryFn: () => productsApi.listAll(),
     retry: 1,
   });
 
@@ -270,6 +349,46 @@ export const ProductsPage = () => {
       setUploadFile(null);
     },
     onError: () => toast.error("Failed to create product"),
+  });
+
+  const deleteAllMutation = useMutation({
+    mutationFn: () => productsApi.deleteAll(),
+    onSuccess: (res) => {
+      toast.success(
+        res.cascaded_skus > 0
+          ? `Deleted all ${res.deleted} products and ${res.cascaded_skus} SKUs`
+          : `Deleted all ${res.deleted} products`
+      );
+      setSelectedIds(new Set());
+      setConfirmDeleteAll(false);
+      qc.invalidateQueries({ queryKey: ["products"] });
+      qc.invalidateQueries({ queryKey: ["skus"] });
+      qc.invalidateQueries({ queryKey: ["inventory"] });
+    },
+    onError: (err: unknown) => {
+      toast.error(getErrorMessage(err, "Failed to delete all products"));
+      setConfirmDeleteAll(false);
+    },
+  });
+
+  const deleteSelectedMutation = useMutation({
+    mutationFn: () => productsApi.deleteMany(Array.from(selectedIds)),
+    onSuccess: (res) => {
+      toast.success(
+        res.cascaded_skus > 0
+          ? `Deleted ${res.deleted} products and ${res.cascaded_skus} SKUs`
+          : `Deleted ${res.deleted} products`
+      );
+      setSelectedIds(new Set());
+      setConfirmDeleteSelected(false);
+      qc.invalidateQueries({ queryKey: ["products"] });
+      qc.invalidateQueries({ queryKey: ["skus"] });
+      qc.invalidateQueries({ queryKey: ["inventory"] });
+    },
+    onError: (err: unknown) => {
+      toast.error(getErrorMessage(err, "Failed to delete selected products"));
+      setConfirmDeleteSelected(false);
+    },
   });
 
   // Unique categories from current product list
@@ -303,8 +422,8 @@ export const ProductsPage = () => {
 
   // Real SKU counts per product, grouped from the live SKU list.
   const { data: liveSkus } = useQuery({
-    queryKey: ["skus", "counts-by-product"],
-    queryFn: () => skusApi.list({ limit: 1000, active_only: false }),
+    queryKey: ["skus", "counts-by-product", tenantId, industry],
+    queryFn: () => skusApi.listAll(),
     retry: 1,
   });
   const skuCountMap: Record<string, number> = useMemo(() => {
@@ -316,6 +435,12 @@ export const ProductsPage = () => {
   }, [liveSkus]);
 
   const statuses: FilterStatus[] = ["all", "active", "seasonal", "pre_launch", "clearance", "discontinued"];
+  const pageScope = JSON.stringify([tenantId, industry, query, filterStatus, filterCategory]);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / 24));
+  const page = pageState.scope === pageScope ? Math.min(pageState.page, pageCount - 1) : 0;
+  const visible = filtered.slice(page * 24, (page + 1) * 24);
+  if (isPending) return <p role="status">Loading product catalogue…</p>;
+  if (isError) return <div role="alert"><p>The product catalogue could not be loaded.</p><Button onClick={() => void refetch()}>Retry catalogue</Button></div>;
   return (
     <div className="space-y-4 animate-fade-in" data-industry={industry}>
       <ProductCleanup skus={liveSkus || []} />
@@ -364,6 +489,15 @@ export const ProductsPage = () => {
             className="btn-primary"
           >
             New Product
+          </Button>
+          <Button
+            variant="secondary"
+            icon={<Trash2 size={14} />}
+            onClick={() => setConfirmDeleteAll(true)}
+            disabled={products.length === 0}
+            className="text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40"
+          >
+            Delete All
           </Button>
         </div>
       </div>
@@ -452,6 +586,44 @@ export const ProductsPage = () => {
         </div>
       </div>
 
+      {/* ── Bulk selection bar ── */}
+      {selectedIds.size > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-violet-500/10 border border-violet-500/30 backdrop-blur-md animate-fade-in">
+          <div className="flex items-center gap-2 text-xs font-bold text-violet-700 dark:text-violet-300">
+            <span className="h-2 w-2 rounded-full bg-violet-500 animate-pulse" />
+            <span>
+              {selectedIds.size} of {products.length} product{selectedIds.size !== 1 ? "s" : ""} selected
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => setSelectedIds(new Set())}
+              className="text-xs"
+            >
+              Deselect All
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => setSelectedIds(new Set(filtered.map((p) => p.id)))}
+              className="text-xs"
+            >
+              Select Filtered ({filtered.length})
+            </Button>
+            <Button
+              size="sm"
+              icon={<Trash2 size={13} />}
+              onClick={() => setConfirmDeleteSelected(true)}
+              className="bg-rose-600 hover:bg-rose-700 text-white text-xs"
+            >
+              Delete Selected ({selectedIds.size})
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* ── Product Grid / List ── */}
       {products.length === 0 ? (
         <div className="glass rounded-2xl p-16 text-center">
@@ -467,13 +639,15 @@ export const ProductsPage = () => {
         </div>
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filtered.map((p) => (
+          {visible.map((p) => (
             <ProductCard
               key={p.id}
               product={p}
               accent={accent}
               images={images}
               skuCountMap={skuCountMap}
+              isSelected={selectedIds.has(p.id)}
+              onToggleSelect={() => toggleSelect(p.id)}
               onClick={() => navigate(`/workspace/products/${p.id}`)}
             />
           ))}
@@ -482,6 +656,29 @@ export const ProductsPage = () => {
         <div className="glass rounded-2xl overflow-hidden">
           {/* List header */}
           <div className="flex items-center gap-3 px-4 py-2.5 border-b border-slate-100 dark:border-slate-700/40 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            <div className="shrink-0 p-1">
+              <input
+                type="checkbox"
+                checked={filtered.length > 0 && filtered.every((p) => selectedIds.has(p.id))}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setSelectedIds((prev) => {
+                      const next = new Set(prev);
+                      filtered.forEach((p) => next.add(p.id));
+                      return next;
+                    });
+                  } else {
+                    setSelectedIds((prev) => {
+                      const next = new Set(prev);
+                      filtered.forEach((p) => next.delete(p.id));
+                      return next;
+                    });
+                  }
+                }}
+                className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500 cursor-pointer block"
+                aria-label="Select all products"
+              />
+            </div>
             <div className="w-1 shrink-0" />
             <div className="w-10 shrink-0" />
             <div className="flex-1">Product</div>
@@ -491,13 +688,15 @@ export const ProductsPage = () => {
             <div className="w-4 shrink-0" />
           </div>
           <div className="divide-y divide-slate-100/60 dark:divide-slate-700/30 p-2">
-            {filtered.map((p) => (
+            {visible.map((p) => (
               <ProductRow
                 key={p.id}
                 product={p}
                 gradient={gradient}
                 images={images}
                 skuCountMap={skuCountMap}
+                isSelected={selectedIds.has(p.id)}
+                onToggleSelect={() => toggleSelect(p.id)}
                 onClick={() => navigate(`/workspace/products/${p.id}`)}
               />
             ))}
@@ -507,8 +706,13 @@ export const ProductsPage = () => {
 
       {/* Count */}
       <p className="text-[11px] text-slate-400 dark:text-slate-500 text-center">
-        Showing <strong className="text-slate-600 dark:text-slate-300">{filtered.length}</strong> of <strong className="text-slate-600 dark:text-slate-300">{products.length}</strong> products
+        Showing <strong className="text-slate-600 dark:text-slate-300">{visible.length}</strong> of <strong className="text-slate-600 dark:text-slate-300">{filtered.length}</strong> matching products
       </p>
+      <nav aria-label="Product pages" className="flex items-center justify-center gap-4">
+        <Button variant="secondary" disabled={page === 0} onClick={() => setPageState({ scope: pageScope, page: page - 1 })}>Previous page</Button>
+        <span>Page {page + 1} of {pageCount}</span>
+        <Button variant="secondary" disabled={page + 1 >= pageCount} onClick={() => setPageState({ scope: pageScope, page: page + 1 })}>Next page</Button>
+      </nav>
 
       {/* ── Unified Add / Import Modal ── */}
       <ImportModal
@@ -628,6 +832,49 @@ export const ProductsPage = () => {
             </form>
           ),
         }}
+      />
+
+      {/* ── Confirm Delete All Dialog ── */}
+      <ConfirmDialog
+        open={confirmDeleteAll}
+        onClose={() => setConfirmDeleteAll(false)}
+        title="Delete All Products"
+        tone="danger"
+        loading={deleteAllMutation.isPending}
+        confirmLabel="Delete Everything"
+        message={
+          <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+            <p>
+              Are you sure you want to delete all <strong>{products.length}</strong> products in the{" "}
+              <strong>{displayName}</strong> catalogue?
+            </p>
+            <p className="text-xs text-rose-600 dark:text-rose-400 font-medium">
+              This will also permanently delete all associated SKUs. This action cannot be undone.
+            </p>
+          </div>
+        }
+        onConfirm={() => deleteAllMutation.mutate()}
+      />
+
+      {/* ── Confirm Delete Selected Dialog ── */}
+      <ConfirmDialog
+        open={confirmDeleteSelected}
+        onClose={() => setConfirmDeleteSelected(false)}
+        title="Delete Selected Products"
+        tone="danger"
+        loading={deleteSelectedMutation.isPending}
+        confirmLabel={`Delete ${selectedIds.size} Product${selectedIds.size !== 1 ? "s" : ""}`}
+        message={
+          <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+            <p>
+              Are you sure you want to delete the <strong>{selectedIds.size}</strong> selected products?
+            </p>
+            <p className="text-xs text-rose-600 dark:text-rose-400 font-medium">
+              Any child SKUs belonging to these products will also be deleted. This action cannot be undone.
+            </p>
+          </div>
+        }
+        onConfirm={() => deleteSelectedMutation.mutate()}
       />
     </div>
   );

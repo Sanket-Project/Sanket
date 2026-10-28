@@ -103,14 +103,6 @@ export const MODULES = [
       "Turns the forecast into a reorder you can approve, showing the inputs behind it — days of cover, lead time, protection window — so the recommendation can be argued with.",
   },
   {
-    key: "scenarios",
-    name: "What-if scenarios",
-    route: "/workspace/scenarios",
-    blurb: "Change an assumption, see the plan move.",
-    detail:
-      "Simulate a promotion, a lead-time slip or a price change and compare the resulting plan against the baseline before committing to it.",
-  },
-  {
     key: "inventory",
     name: "Inventory & cover",
     route: "/workspace/inventory",
@@ -127,14 +119,6 @@ export const MODULES = [
       "Alerts fire on projected cover rather than on hitting zero, and carry the drivers that produced the risk score.",
   },
   {
-    key: "accuracy",
-    name: "Forecast accuracy",
-    route: "/workspace/forecast-accuracy",
-    blurb: "Scored against what actually happened.",
-    detail:
-      "Backtested accuracy per SKU, so you can see where the engine has earned trust and where it has not. A forecast you cannot audit is a guess with a chart.",
-  },
-  {
     key: "data-quality",
     name: "Data quality",
     route: "/workspace/data-quality",
@@ -149,14 +133,6 @@ export const MODULES = [
     blurb: "Value traced back to decisions taken.",
     detail:
       "Ties working-capital and stockout impact to the specific recommendations that were approved, so the platform's value is measured rather than asserted.",
-  },
-  {
-    key: "signals",
-    name: "External signals",
-    route: "/workspace/signals",
-    blurb: "Weather, trends, macro and competitor movement.",
-    detail:
-      "Signals are ingested, validated and attached to the SKUs they plausibly affect, so a forecast change has a named cause.",
   },
   {
     key: "integrations",

@@ -117,8 +117,6 @@ export const TopBar = () => {
       if (parts[2]) list.push({ label: "Detail" });
     } else if (sub === "inventory") {
       list.push({ label: "Stock", href: "/workspace/inventory" }, { label: "Inventory" });
-    } else if (sub === "signals") {
-      list.push({ label: "Data", href: "/workspace/signals" }, { label: "Signals" });
     } else if (sub === "trends") {
       list.push({ label: "Measure", href: "/workspace/trends" }, { label: "Market Trends" });
     } else if (sub === "forecasts") {
@@ -126,16 +124,12 @@ export const TopBar = () => {
       list.push({ label: parts[2] === "hybrid" ? "Hybrid Forecasts" : "Forecasts" });
     } else if (sub === "decisions") {
       list.push({ label: "Plan", href: "/workspace/decisions" }, { label: "Decisions" });
-    } else if (sub === "scenarios") {
-      list.push({ label: "Plan", href: "/workspace/scenarios" }, { label: "Scenarios" });
     } else if (sub === "alerts") {
       list.push({ label: "Stock", href: "/workspace/inventory" }, { label: "Shortage Alerts" });
     } else if (sub === "sales-analytics") {
       list.push({ label: "Measure", href: "/workspace/sales-analytics" }, { label: "Sales Analytics" });
     } else if (sub === "financial") {
       list.push({ label: "Analytics", href: "/workspace/financial" }, { label: "Financial Impact" });
-    } else if (sub === "forecast-accuracy") {
-      list.push({ label: "Measure", href: "/workspace/forecast-accuracy" }, { label: "Forecast Accuracy" });
     } else if (sub === "roi") {
       list.push({ label: "Measure", href: "/workspace/roi" }, { label: "ROI" });
     } else if (sub === "data-quality") {

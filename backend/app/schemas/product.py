@@ -63,6 +63,31 @@ class SkuCreate(BaseModel):
     attributes: dict[str, Any] = Field(default_factory=dict)
 
 
+class SkuBulkRow(SkuCreate):
+    """One imported row: the SKU plus the product it belongs to, by code or id."""
+
+    product: str = Field(min_length=1)
+    is_active: bool = True
+
+
+class SkuBulkCreate(BaseModel):
+    # Raw rows, validated one by one so a bad row fails alone, not the whole batch.
+    rows: list[dict[str, Any]] = Field(min_length=1, max_length=500)
+
+
+class SkuBulkError(BaseModel):
+    index: int
+    sku_code: str | None
+    reason: str
+
+
+class SkuBulkResult(BaseModel):
+    created: int
+    skipped: int
+    failed: int
+    errors: list[SkuBulkError]
+
+
 class SkuUpdate(BaseModel):
     description: str | None = None
     unit_cost: Decimal | None = Field(None, ge=0)
@@ -99,3 +124,11 @@ class SkuOut(BaseModel):
     is_active: bool
     created_at: datetime
     updated_at: datetime
+
+
+class ProductBulkDelete(BaseModel):
+    product_ids: list[str] = Field(min_length=1)
+
+
+class SkuBulkDelete(BaseModel):
+    sku_ids: list[str] = Field(min_length=1)

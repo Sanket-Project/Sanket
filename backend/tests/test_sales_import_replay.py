@@ -222,3 +222,28 @@ def test_unknown_identity_mode_is_rejected():
                 identity="bogus",
             )
         )
+
+
+async def test_a_file_larger_than_the_bind_parameter_limit_imports(app_role_db, make_tenant):
+    """A two-year, six-store weekly export easily exceeds 32,767 rows — asyncpg's cap on
+    query parameters. Every per-row lookup must stay bounded by distinct SKUs, not rows."""
+    from datetime import date, timedelta
+
+    tenant = await make_tenant()
+    start = date(2025, 1, 6)
+    lines = [
+        f"KURTI-{s},{(start + timedelta(days=d)).isoformat()},1,Store {loc}"
+        for s in range(10)
+        for loc in range(10)
+        for d in range(330)
+    ]
+    assert len(lines) > 32_767
+    stats = await _import(
+        app_role_db, tenant, "sku,date,quantity,location\n" + "\n".join(lines),
+        identity="period", currency="INR",
+    )
+
+    assert stats["rows_skipped"] == 0, stats["errors"][:3]
+    totals = await _totals(app_role_db, tenant)
+    assert totals["rows"] == len(lines)
+    assert totals["units"] == len(lines)

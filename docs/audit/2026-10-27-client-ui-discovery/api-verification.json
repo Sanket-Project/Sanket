@@ -1,0 +1,110 @@
+{
+  "inventory": {
+    "status": 200,
+    "duration_ms": 88.2,
+    "body": {
+      "industry": "fashion",
+      "offset": 0,
+      "limit": 25,
+      "total_skus": 0,
+      "total_positions": 0,
+      "totals": {
+        "available_units": 0.0,
+        "inbound_units": 0.0
+      },
+      "locations": [],
+      "skus": [],
+      "levels": [],
+      "coverage": {
+        "industry": "fashion",
+        "as_of": "2026-10-26T20:20:03.693250+00:00",
+        "calendar": "W-MON-UTC",
+        "policy": {
+          "forecast_max_age_days": 14,
+          "forecast_weeks": 4,
+          "trailing_weeks": 8,
+          "min_weeks": 4,
+          "stale_stock_days": 30,
+          "low_multiplier": 1.5,
+          "excess_multiplier": 2,
+          "review_period_days": 28,
+          "transfer_suggestions": false
+        },
+        "skus": []
+      },
+      "recommendations": []
+    }
+  },
+  "company": {
+    "status": 200,
+    "duration_ms": 81.0,
+    "body": {
+      "catalogue": {
+        "product_count": 0,
+        "sku_count": 0
+      },
+      "period": {
+        "days": 28,
+        "start": "2026-09-29",
+        "end": "2026-10-26",
+        "previous_start": "2026-09-01"
+      },
+      "sales": {
+        "status": "no_history",
+        "current_units": null,
+        "previous_units": null,
+        "change_pct": null,
+        "observations": 0,
+        "as_of": null,
+        "series": [],
+        "leaders": []
+      },
+      "external": {
+        "status": "no_matches",
+        "as_of": null,
+        "items": []
+      }
+    }
+  },
+  "district": {
+    "status": 200,
+    "duration_ms": 76.2,
+    "body": {
+      "catalogue": {
+        "product_count": 0,
+        "sku_count": 0
+      },
+      "period": {
+        "days": 28,
+        "start": "2026-09-29",
+        "end": "2026-10-26",
+        "previous_start": "2026-09-01"
+      },
+      "sales": {
+        "status": "unmapped_geography",
+        "current_units": null,
+        "previous_units": null,
+        "change_pct": null,
+        "observations": 0,
+        "as_of": null,
+        "series": [],
+        "leaders": []
+      },
+      "external": {
+        "status": "no_matches",
+        "as_of": null,
+        "items": []
+      }
+    }
+  },
+  "catalogue": {
+    "status": 200,
+    "duration_ms": 49.2,
+    "body": {
+      "items": [],
+      "total": 0,
+      "limit": 30,
+      "offset": 0
+    }
+  }
+}

@@ -1,0 +1,1 @@
+schema_version,source_system,transaction_id,order_id,order_line_id,transaction_at,sku_code,location_code,fulfillment_location_code,channel_code,quantity_sold,returns,unit_price_ex_tax,mrp_incl_tax,discount_ex_tax,tax_code,tax_rate_pct,tax_amount,currency,order_status,invoice_number,place_of_supply_state_code,payment_method,payment_reference,payment_amount

@@ -55,6 +55,8 @@ dependencies = [
 
     # Async job queue (durable background forecast runs)
     "arq>=0.26.0",
+    # Unicode management PDFs, including Indic text shaping
+    "reportlab[shaping]>=4.4.0",
 ]
 
 [project.optional-dependencies]

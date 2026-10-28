@@ -179,6 +179,15 @@ Motion is slow and eased, never bouncy. Standard easing is
 
 ## Principles
 
+0. **Understand at a glance.** Across dashboards, forecasts, sales analytics,
+   inventory, SKUs, and products, present real data beautifully and explain it
+   simply enough that a five-year-old could understand what is happening.
+   Lead with the meaning, use plain-language labels, and show units, dates,
+   and comparison context beside the numbers. Use clear visual comparisons
+   and progressive disclosure for detail. Simplicity must preserve accuracy:
+   never turn missing data into zero or invent a signal. Show branch-wise
+   sales only when the source identifies branches; otherwise omit that section.
+
 1. **Instrument, not ornament.** Every element should earn its place by carrying
    information or aiding a decision.
 2. **One accent, applied sparingly.** Restraint is the brand.

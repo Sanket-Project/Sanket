@@ -1,0 +1,5 @@
+Stop guessing demand. SANKET turns sales history, inventory ledgers, and live market signals into per-SKU predictive intelligence for global supply chains — from zero-shot foundation forecasts to approved replenishment decisions.
+
+Explore SANKET: Fashion · Consumer Electronics · Pharmaceuticals (GxP / 21 CFR Part 11)
+https://github.com/latent-spaces/brag
+#SupplyChain #DemandForecasting #AI #MachineLearning #SaaS #FinTech

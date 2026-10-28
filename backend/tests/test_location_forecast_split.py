@@ -1,6 +1,7 @@
 """A completed SKU run splits consistently across its recorded locations."""
 from __future__ import annotations
 import json
+import asyncio
 import uuid
 from collections import defaultdict
 from datetime import UTC, date, datetime, timedelta
@@ -184,3 +185,118 @@ async def test_missing_sales_do_not_claim_zero_unassigned_share(db_session, app_
         summary = await split_run_by_location(s, tenant_id=tenant, industry='fashion', run_id=run, now=NOW)
     assert summary.unassigned_share is None
     assert summary.excluded[0]['reason'] == 'No sales history for this SKU or its category'
+
+
+async def test_empty_location_split_is_completed_once(db_session, app_role_db, make_tenant):
+    """No eligible location is a completed, auditable result, not pending work."""
+    tenant = await make_tenant()
+    sku = await _sku(db_session, tenant)
+    run_id = await _forecast(db_session, tenant, sku, completed=NOW, weekly_p50=10)
+    await db_session.commit()
+    async with app_role_db.session(str(tenant)) as session:
+        run = await session.get(ForecastRun, run_id)
+        first = await ensure_location_split(
+            session, tenant_id=tenant, industry="fashion", run=run, now=NOW,
+        )
+        second = await ensure_location_split(
+            session, tenant_id=tenant, industry="fashion", run=run, now=NOW,
+        )
+        metrics = await session.scalar(text("SELECT metrics FROM forecast_runs WHERE id = :r"),
+                                       {"r": str(run_id)})
+    assert first is not None and first.series == 0
+    assert second is None
+    assert metrics["location_split_completed_at"]
+
+
+async def test_location_output_insert_buffers_are_bounded(
+    db_session, app_role_db, make_tenant, monkeypatch,
+):
+    """Flush output while producing it, rather than retaining the location expansion."""
+    from app.models.location import LocationForecastResult
+    from sqlalchemy.sql.dml import Insert
+
+    tenant = await make_tenant()
+    sku = await _sku(db_session, tenant)
+    # One SKU expanded across 300 real location codes produces 2,400 rows.
+    for i in range(300):
+        await _weekly_sales(db_session, tenant, sku, 1, weeks=WINDOW[:1], location=f"store-{i}")
+    run_id = await _forecast(db_session, tenant, sku, completed=NOW, weekly_p50=300)
+    await db_session.commit()
+    lengths = []
+    async with app_role_db.session(str(tenant)) as session:
+        original_execute = session.execute
+
+        async def record_execute(statement, params=None, **kwargs):
+            if isinstance(statement, Insert) and statement.table.name == LocationForecastResult.__tablename__:
+                lengths.append(len(params))
+            return await original_execute(statement, params, **kwargs)
+
+        monkeypatch.setattr(session, "execute", record_execute)
+        await split_run_by_location(
+            session, tenant_id=tenant, industry="fashion", run_id=run_id, now=NOW,
+        )
+    assert sum(lengths) == 2400
+    assert max(lengths) <= 1000
+
+
+async def test_concurrent_empty_split_repairs_do_not_repeat_work(
+    db_session, app_role_db, make_tenant, monkeypatch,
+):
+    from app.services import location_forecast
+
+    tenant = await make_tenant()
+    sku = await _sku(db_session, tenant)
+    run_id = await _forecast(db_session, tenant, sku, completed=NOW, weekly_p50=10)
+    await db_session.commit()
+    calls = 0
+    original_split = location_forecast.split_run_by_location
+
+    async def slow_split(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        await asyncio.sleep(0.2)
+        return await original_split(*args, **kwargs)
+
+    monkeypatch.setattr(location_forecast, "split_run_by_location", slow_split)
+
+    async def repair():
+        async with app_role_db.session(str(tenant)) as session:
+            run = await session.get(ForecastRun, run_id)
+            return await ensure_location_split(
+                session, tenant_id=tenant, industry="fashion", run=run, now=NOW,
+            )
+
+    results = await asyncio.gather(repair(), repair())
+    assert calls == 1
+    assert sum(result is None for result in results) == 1
+
+
+async def test_legacy_split_rows_are_marked_complete_without_recomputing(
+    db_session, app_role_db, make_tenant, monkeypatch,
+):
+    from app.services import location_forecast
+
+    tenant = await make_tenant()
+    sku = await _sku(db_session, tenant)
+    await _weekly_sales(db_session, tenant, sku, 5, weeks=WINDOW, location="alwal")
+    run_id = await _forecast(db_session, tenant, sku, completed=NOW, weekly_p50=5)
+    await split_run_by_location(db_session, tenant_id=tenant, industry="fashion", run_id=run_id, now=NOW)
+    await db_session.execute(text(
+        "UPDATE forecast_runs SET metrics=metrics - 'location_split_completed_at' WHERE id=:r"
+    ), {"r": str(run_id)})
+    await db_session.commit()
+
+    async def unexpected_recompute(*args, **kwargs):
+        pytest.fail("A legacy persisted split must not be recomputed")
+
+    monkeypatch.setattr(location_forecast, "split_run_by_location", unexpected_recompute)
+    async with app_role_db.session(str(tenant)) as session:
+        run = await session.get(ForecastRun, run_id)
+        result = await ensure_location_split(
+            session, tenant_id=tenant, industry="fashion", run=run, now=NOW,
+        )
+        metrics = await session.scalar(text("SELECT metrics FROM forecast_runs WHERE id=:r"),
+                                       {"r": str(run_id)})
+    assert result is None
+    assert metrics.get("location_split_completed_at")
+    assert metrics["location_series"] == 1

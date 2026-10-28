@@ -188,3 +188,15 @@ describe("Sidebar search copy (deep audit F16)", () => {
     expect(search.className).toMatch(/lg:text-white/);
   });
 });
+
+describe("Sidebar feature visibility", () => {
+  beforeEach(() => setViewport(true));
+
+  it("does not expose retired planning and measurement tabs", () => {
+    renderHarness();
+
+    expect(screen.queryByRole("link", { name: "Scenarios" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Forecast Accuracy" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "External Signals" })).not.toBeInTheDocument();
+  });
+});

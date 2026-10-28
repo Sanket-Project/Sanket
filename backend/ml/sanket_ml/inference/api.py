@@ -28,6 +28,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from sanket_ml.config import MLSettings, get_ml_settings
 from sanket_ml.data.calendar import current_week_start
+from sanket_ml.inference.guard import TenantInferenceBusyError
 from sanket_ml.inference.service import InferenceService
 from sanket_ml.inference.throttle import ThrottleRejectionError, build_throttle
 from sanket_ml.inference.zero_shot import (
@@ -48,6 +49,8 @@ class ForecastRequest(BaseModel):
     industry: str = Field(pattern=r"^(fashion|electronics|pharma|agrocenter|hardware)$")
     horizon: int = Field(ge=1, le=104)
     artifact_path: str | None = None
+    # Stable queue request identity, persisted for crash-safe retries.
+    refresh_id: uuid.UUID | None = None
 
     # Zero-shot controls (only used if no trained artifact is found, or when
     # the caller forces the zero-shot path).
@@ -261,11 +264,23 @@ def create_app() -> FastAPI:
         # the event loop and serialise everything anyway).
         try:
             async with throttle.slot(str(req.tenant_id)):
-                return await _forecast_inner(req)
+                return await run_in_threadpool(_guarded, req, _forecast_inner)
         except ThrottleRejectionError as exc:
             raise _reject(exc) from exc
 
-    async def _forecast_inner(req: ForecastRequest) -> ForecastResponse:
+    def _guarded(req, compute) -> ForecastResponse:
+        try:
+            with service.tenant_slot(req.tenant_id):
+                refresh_id = getattr(req, "refresh_id", None)
+                if refresh_id is not None:
+                    saved = service.find_refresh(req.tenant_id, refresh_id)
+                    if saved is not None:
+                        return ForecastResponse.model_validate(saved)
+                return compute(req)
+        except TenantInferenceBusyError as exc:
+            raise HTTPException(status_code=409, detail=str(exc), headers={"Retry-After": "5"}) from exc
+
+    def _forecast_inner(req: ForecastRequest) -> ForecastResponse:
         # 1. Try trained artifact unless the caller forces zero-shot (a backtest
         #    always does: an artifact may have been fit on the weeks it predicts)
         artifact_dir: Path | None = None
@@ -281,8 +296,9 @@ def create_app() -> FastAPI:
                 artifact=str(artifact_dir),
             )
             try:
-                result = await run_in_threadpool(
-                    service.forecast, req.tenant_id, req.industry, artifact_dir, req.horizon
+                result = service.forecast(
+                    req.tenant_id, req.industry, artifact_dir, req.horizon,
+                    run_metadata={"refresh_id": str(req.refresh_id)} if req.refresh_id else None,
                 )
             except FileNotFoundError as exc:
                 # Artifact dir exists but ensemble.joblib is missing — log and
@@ -318,16 +334,14 @@ def create_app() -> FastAPI:
             ),
         )
         try:
-            zs = await run_in_threadpool(
-                lambda: zero_shot.forecast(
-                    tenant_id=req.tenant_id,
-                    industry=req.industry,
-                    horizon=req.horizon,
-                    model=req.zero_shot_model,
-                    series_context=None if req.history_end else req.series_context,
-                    num_samples=req.num_samples,
-                    history_end=req.history_end,
-                )
+            zs = zero_shot.forecast(
+                tenant_id=req.tenant_id,
+                industry=req.industry,
+                horizon=req.horizon,
+                model=req.zero_shot_model,
+                series_context=None if req.history_end else req.series_context,
+                num_samples=req.num_samples,
+                history_end=req.history_end,
             )
         except ValueError as exc:
             # No history at all → genuinely cannot forecast. 422 surfaces in UI cleanly.
@@ -349,6 +363,7 @@ def create_app() -> FastAPI:
                 model_stack=[zs.source_model],
                 run_metadata={
                     "mode": "backtest" if req.history_end else "zero_shot",
+                    **({"refresh_id": str(req.refresh_id)} if req.refresh_id else {}),
                     "model": zs.source_model,
                     "context_source": zs.context_source,
                     "n_series": zs.n_series,
@@ -357,10 +372,8 @@ def create_app() -> FastAPI:
                 },
             )
         except Exception as exc:
-            # Persistence failure is not fatal — return the forecast anyway with
-            # a synthetic run_id so the client still gets results.
             log.warning("forecast.zero_shot.persist_failed", error=str(exc))
-            run_id = uuid.uuid4()
+            raise HTTPException(status_code=503, detail="Forecast persistence failed") from exc
 
         return _zero_shot_response(run_id, zs)
 
@@ -369,21 +382,19 @@ def create_app() -> FastAPI:
     async def zero_shot_endpoint(req: ZeroShotForecastRequest) -> ForecastResponse:
         try:
             async with throttle.slot(str(req.tenant_id)):
-                return await _zero_shot_inner(req)
+                return await run_in_threadpool(_guarded, req, _zero_shot_inner)
         except ThrottleRejectionError as exc:
             raise _reject(exc) from exc
 
-    async def _zero_shot_inner(req: ZeroShotForecastRequest) -> ForecastResponse:
+    def _zero_shot_inner(req: ZeroShotForecastRequest) -> ForecastResponse:
         try:
-            zs = await run_in_threadpool(
-                lambda: zero_shot.forecast(
-                    tenant_id=req.tenant_id,
-                    industry=req.industry,
-                    horizon=req.horizon,
-                    model=req.model,
-                    series_context=req.series_context,
-                    num_samples=req.num_samples,
-                )
+            zs = zero_shot.forecast(
+                tenant_id=req.tenant_id,
+                industry=req.industry,
+                horizon=req.horizon,
+                model=req.model,
+                series_context=req.series_context,
+                num_samples=req.num_samples,
             )
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
@@ -410,7 +421,7 @@ def create_app() -> FastAPI:
             )
         except Exception as exc:
             log.warning("forecast.zero_shot.persist_failed", error=str(exc))
-            run_id = uuid.uuid4()
+            raise HTTPException(status_code=503, detail="Forecast persistence failed") from exc
 
         return _zero_shot_response(run_id, zs)
 

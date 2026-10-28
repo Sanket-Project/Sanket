@@ -185,6 +185,13 @@ class Settings(BaseSettings):
     trusted_proxy_count: int = 1
 
     # ── Real-time / Redis ────────────────────────────────────────────────────
+    # Operator-controlled TLS email transport; unavailable until configured.
+    smtp_host: str = ""
+    smtp_port: int = Field(default=587, ge=1, le=65535)
+    smtp_sender: str = ""
+    smtp_username: str = ""
+    smtp_password: SecretStr | None = None
+
     redis_url: str | None = None  # e.g. redis://redis:6379/0; None = in-process only
 
     # AI is gated separately by workspace flags and sharing policy. No startup calls.
@@ -332,6 +339,10 @@ class Settings(BaseSettings):
     ml_api_timeout_s: float = 120.0
     #: Guard on SKUs per forecast run / decision refresh; fits a 25k-SKU tenant.
     forecast_max_skus: int = 30000
+    forecast_freshness_s: int = Field(default=86400, ge=1)
+    # Worker budgets are independent of the browser and legacy synchronous API.
+    forecast_job_timeout_s: int = Field(default=21600, ge=600)
+    forecast_ml_timeout_s: float = Field(default=21000, ge=60)
 
     @field_validator("allowed_origins", mode="before")
     @classmethod

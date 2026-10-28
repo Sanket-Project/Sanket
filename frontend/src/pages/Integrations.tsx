@@ -608,7 +608,7 @@ export const IntegrationsPage = () => {
         open={selected !== null}
         onClose={() => setSelected(null)}
         title={selected?.name}
-        size={isPush || isFile ? "lg" : "md"}
+        size={isFile ? "wide" : isPush ? "lg" : "md"}
       >
         {selected && (
           <div className="space-y-4">

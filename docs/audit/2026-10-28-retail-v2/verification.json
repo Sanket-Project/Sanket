@@ -1,0 +1,144 @@
+{
+  "scope": "Document/CSV asset verification only; not V2 application tests",
+  "checks_passed": 439,
+  "failed": 0,
+  "template_count": 8,
+  "sample_file_count": 8,
+  "dictionary_fields": 145,
+  "synthetic_roll_forward": {
+    "net_sales_ex_tax": "900.00",
+    "net_cogs_assuming_confirmed_original_unit_cost_600": "600.00",
+    "gross_profit": "300.00",
+    "kurti_on_hand": 28,
+    "kurti_available_to_sell": 25
+  },
+  "fresh_client_footer_comparisons": [
+    {
+      "file": "stock balence Report 2026.csv",
+      "column": "Closing Bal.Qty",
+      "detail_sum": "38419.0000",
+      "footer_control": "38419.00",
+      "delta": "0.0000"
+    },
+    {
+      "file": "stock balence Report 2026.csv",
+      "column": "Closing Bal.Val",
+      "detail_sum": "18878893.7800",
+      "footer_control": "18878893.78",
+      "delta": "0.0000"
+    },
+    {
+      "file": "Sales Data 2026.xlsx",
+      "column": "Sales Qty",
+      "detail_sum": "2683",
+      "footer_control": "2683",
+      "delta": "0"
+    },
+    {
+      "file": "Sales Data 2026.xlsx",
+      "column": "Sales Amount",
+      "detail_sum": "2640989",
+      "footer_control": "2640989",
+      "delta": "0"
+    },
+    {
+      "file": "Sales Data 2026.xlsx",
+      "column": "Return Qty",
+      "detail_sum": "40",
+      "footer_control": "40",
+      "delta": "0"
+    },
+    {
+      "file": "Sales Data 2026.xlsx",
+      "column": "Return Amount",
+      "detail_sum": "59055",
+      "footer_control": "59055",
+      "delta": "0"
+    },
+    {
+      "file": "Sales Data 2026.xlsx",
+      "column": "Net Qty",
+      "detail_sum": "2643",
+      "footer_control": "2643",
+      "delta": "0"
+    },
+    {
+      "file": "Sales Data 2026.xlsx",
+      "column": "Net Amount",
+      "detail_sum": "2581934",
+      "footer_control": "2581934",
+      "delta": "0"
+    },
+    {
+      "file": "Gross Profit Data 2026.xlsx",
+      "column": "Sales Qty",
+      "detail_sum": "28923",
+      "footer_control": "28923",
+      "delta": "0"
+    },
+    {
+      "file": "Gross Profit Data 2026.xlsx",
+      "column": "Net Sales Value",
+      "detail_sum": "27576336.00",
+      "footer_control": "27576336",
+      "delta": "0.00"
+    },
+    {
+      "file": "Gross Profit Data 2026.xlsx",
+      "column": "Sale Value (Without Tax)",
+      "detail_sum": "25803542.35",
+      "footer_control": "25803542.35",
+      "delta": "0.00"
+    },
+    {
+      "file": "Gross Profit Data 2026.xlsx",
+      "column": "Cost of Goods (With Tax)",
+      "detail_sum": "17873453.0864",
+      "footer_control": "17873453.09",
+      "delta": "-0.0036"
+    },
+    {
+      "file": "Gross Profit Data 2026.xlsx",
+      "column": "Cost of Goods (Without Tax)",
+      "detail_sum": "16048611.1470",
+      "footer_control": "16048611.15",
+      "delta": "-0.0030"
+    },
+    {
+      "file": "Gross Profit Data 2026.xlsx",
+      "column": "Gross Profit Amount",
+      "detail_sum": "9754931.2030",
+      "footer_control": "9754931.2",
+      "delta": "0.0030"
+    },
+    {
+      "file": "Purchasr Report 2026.xlsx",
+      "column": "Quantity",
+      "detail_sum": "28311",
+      "footer_control": "28311",
+      "delta": "0"
+    },
+    {
+      "file": "Purchasr Report 2026.xlsx",
+      "column": "Disc. Amount",
+      "detail_sum": "925999.05",
+      "footer_control": "925999.05",
+      "delta": "0.00"
+    },
+    {
+      "file": "Purchasr Report 2026.xlsx",
+      "column": "Tax Amount",
+      "detail_sum": "1023825.26",
+      "footer_control": "1023825.26",
+      "delta": "0.00"
+    },
+    {
+      "file": "Purchasr Report 2026.xlsx",
+      "column": "Net Amount",
+      "detail_sum": "18882379.57",
+      "footer_control": "18882379.57",
+      "delta": "0.00"
+    }
+  ],
+  "repository_checks": "See CHECKS.md for separately executed repository test results."
+}

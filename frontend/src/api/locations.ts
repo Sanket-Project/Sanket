@@ -35,12 +35,12 @@ export interface LocationForecast {
   run_id: string | null;
   degraded: boolean;
   unassigned_share: number | null;
-  locations: { location_id: string; code: string; name: string; p10: number[]; p50: number[]; p90: number[] }[];
+  locations: { location_id: string; code: string; name: string; forecast_dates?: string[]; p10: number[]; p50: number[]; p90: number[] }[];
   reason: string | null;
 }
 
 export const locationsApi = {
-  forecast: (skuId: string) => apiClient.get<LocationForecast>("/locations/forecast", { params: { sku_id: skuId } }).then((r) => r.data),
+  forecast: (skuId: string, runId?: string) => apiClient.get<LocationForecast>("/locations/forecast", { params: { sku_id: skuId, ...(runId ? { run_id: runId } : {}) } }).then((r) => r.data),
   list: () => apiClient.get<LocationsResponse>("/locations").then((r) => r.data),
   update: (id: string, patch: LocationPatch) =>
     apiClient

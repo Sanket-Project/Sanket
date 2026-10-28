@@ -48,6 +48,16 @@ const renderPage = () =>
     </QueryClientProvider>,
   );
 
+it("keeps accepted-order details usable when frozen planning inputs are incomplete", async () => {
+  api.list.mockResolvedValue(listOf([decision({ status: "accepted", accepted_units: 60, inputs: { unit_cost: 40, lead_time_days: 14 } })]));
+  const { container } = renderPage();
+  fireEvent.click(await screen.findByRole("button", { name: /show working/i }));
+  expect(screen.getByText(/Some saved planning inputs are unavailable/)).toBeInTheDocument();
+  expect(container).not.toHaveTextContent("NaN");
+  expect(screen.getByRole("button", { name: "Prepare supplier draft" })).toBeInTheDocument();
+  expect(api.accept).not.toHaveBeenCalled();
+});
+
 it("offers a scoped AI explanation inside the saved decision details", async () => {
   api.list.mockResolvedValue(listOf([decision()]));
   renderPage();

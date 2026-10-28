@@ -1,0 +1,19 @@
+{
+  "audit_date_india": "2026-10-25",
+  "repository_commit": "3dba120ac51074ba6ba26ec09817126663d40b43",
+  "production_source_changed": false,
+  "frontend_typecheck": {"command":"npm run typecheck","exit_code":0},
+  "frontend_lint": {"command":"npm run lint","exit_code":0,"errors":0,"warnings":27},
+  "frontend_tests": {"command":"npm test","exit_code":0,"files_passed":17,"tests_passed":92},
+  "frontend_build": {"command":"npm run build","exit_code":0,"warning":"Chunks larger than 500 kB"},
+  "backend_tests": {"command":"uv run pytest","exit_code":1,"passed":371,"failed":1,"warnings":164,"seconds":1648.11,"failure":"tests/test_external_signals.py::test_regional_demand_connector_fetch","actual":"assert 0 > 5; regional samples were empty"},
+  "regional_isolated_rerun": {"exit_code":0,"passed":1,"seconds":7.83,"interpretation":"Does not erase full-suite failure; suite interaction remains unresolved"},
+  "entitlement_diagnostic": {"passed":18,"warnings":37,"seconds":313.55},
+  "ml_tests": {"command":".venv/Scripts/python.exe -m pytest -q (backend/ml)","exit_code":0,"passed":34,"warnings":1,"seconds":8.21},
+  "http_observations":205,
+  "quantile_rows_validated":192,
+  "websocket":{"correct_tenant_handshake":true,"ping_pong":true,"sales_event_fanout_tested":false},
+  "forecast_evaluation":{"synthetic_only":true,"sku_count":6,"withheld_points":48,"calendar_aligned_by_horizon_not_raw_dates":true,"clean_wape_pct":8.54,"last_value_wape_pct":12.36,"duplicate_import_wape_pct":97.45,"p10_p90_coverage_pct":81.25},
+  "not_verified":["Real Swecha forecast quality","Production deployment","Concurrent load","Real payment processing","Live client connector sync","WhatsApp delivery","Complete accessibility compliance","Unmodified repository Playwright suite"],
+  "source_fixes_applied":false
+}

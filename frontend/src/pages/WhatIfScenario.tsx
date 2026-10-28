@@ -23,6 +23,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ScenarioAssistant } from "@/components/ai/ScenarioAssistant";
 import { useFormattedCurrency } from "@/hooks/useFormattedCurrency";
 import { getErrorMessage } from "@/utils/errors";
 import {
@@ -76,6 +77,7 @@ export const WhatIfScenarioPage = () => {
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [lastSuccessfulLevers, setLastSuccessfulLevers] = useState<ScenarioLevers | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [explainAI, setExplainAI] = useState(false);
   const hasStartedRecommendedRun = useRef(false);
 
   const { data: presets } = useQuery({
@@ -103,9 +105,15 @@ export const WhatIfScenarioPage = () => {
   const runScenario = run.mutate;
 
   useEffect(() => {
-    if (hasStartedRecommendedRun.current) return;
-    hasStartedRecommendedRun.current = true;
-    runScenario(RECOMMENDED_SCENARIO);
+    // Dispatch after the committed effect mount. StrictMode's initial cleanup
+    // otherwise detaches the mutation observer while its request is in flight,
+    // leaving the observer pending even though onSuccess receives the result.
+    const initialRun = window.setTimeout(() => {
+      if (hasStartedRecommendedRun.current) return;
+      hasStartedRecommendedRun.current = true;
+      runScenario(RECOMMENDED_SCENARIO);
+    }, 0);
+    return () => window.clearTimeout(initialRun);
   }, [runScenario]);
 
   const set = <K extends keyof ScenarioLevers>(key: K, value: ScenarioLevers[K]) => {
@@ -149,11 +157,22 @@ export const WhatIfScenarioPage = () => {
           <Button variant="ghost" icon={<RotateCcw size={15} />} onClick={reset}>
             Reset
           </Button>
-          <Button icon={<Play size={15} />} loading={run.isPending} onClick={() => run.mutate(levers)}>
+          <Button icon={<Play size={15} />} loading={run.isPending} onClick={() => run.mutate({ ...levers, explain_ai: explainAI })}>
             Run simulation
           </Button>
         </div>
       </div>
+
+      <label className="flex items-center gap-2 text-sm text-content-subtle"><input type="checkbox" checked={explainAI} onChange={(e) => setExplainAI(e.target.checked)} />Include an AI explanation of engine results</label>
+      {result?.ai_explanation && <aside className="space-y-2 rounded-xl border border-line bg-surface p-4 text-sm" aria-label="Scenario explanation">
+        {result.ai_explanation.state === "success" ? <><p className="text-xs text-content-subtle">AI-generated · based on simulation engine results</p>{result.ai_explanation.blocks.map((block, i) => <p key={i}>{block.text} <a href="/workspace/scenarios" className="text-accent underline">Source: simulation</a></p>)}</> : <p role="status">AI explanation unavailable. The engine results remain available below.</p>}
+      </aside>}
+
+      <ScenarioAssistant onApply={(assumptions) => {
+        setLevers((current) => ({ ...DEFAULT_LEVERS, horizon_weeks: current.horizon_weeks,
+          review_weeks: current.review_weeks, ...assumptions, preset: null, name: "Reviewed assumptions" }));
+        setError(null);
+      }} />
 
       {/* Presets — the questions people actually ask */}
       {presets && (

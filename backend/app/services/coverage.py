@@ -47,6 +47,7 @@ from app.services.planning_inputs import (
     is_run_fresh,
     stock_is_stale,
 )
+from app.services.period_projection import period_rate, rate_reason
 
 FORECAST_WEEKS = 4
 TRAILING_WEEKS = 8
@@ -93,7 +94,8 @@ def _trailing_mean(weeks: dict[date, float], last_week: date) -> tuple[float | N
 
 
 async def coverage(
-    session: AsyncSession, *, tenant_id: uuid.UUID, industry: str, now: datetime | None = None
+    session: AsyncSession, *, tenant_id: uuid.UUID, industry: str, now: datetime | None = None,
+    sku_ids: list[uuid.UUID] | None = None,
 ) -> dict[str, Any]:
     now = now or datetime.now(UTC)
     ind = IndustryCode(industry)
@@ -105,22 +107,24 @@ async def coverage(
 
     stock_rows = (
         await session.execute(
-            select(InventoryLevel, Sku.sku_code, Sku.lead_time_days)
+            select(InventoryLevel, Sku.sku_code, Sku.lead_time_days, Sku.attributes)
             .join(Sku, Sku.id == InventoryLevel.sku_id)
-            .where(InventoryLevel.tenant_id == tenant_id, InventoryLevel.industry == ind)
+            .where(InventoryLevel.tenant_id == tenant_id, InventoryLevel.industry == ind,
+                   *([InventoryLevel.sku_id.in_(sku_ids)] if sku_ids is not None else []))
         )
     ).all()
     if not stock_rows:
         return _envelope(now, [], review_days)
-    sku_ids = list({lvl.sku_id for lvl, _, _ in stock_rows})
+    sku_ids = list({lvl.sku_id for lvl, _, _, _ in stock_rows})
     transfer_rows = (await session.execute(text(
         "SELECT r.sku_id, src.code, dest.code AS destination, r.recommended_units AS units "
         "FROM recommendations r JOIN locations src ON src.id = r.source_location_id "
         "JOIN locations dest ON dest.id = r.location_id "
         "WHERE r.tenant_id = :t AND r.kind = 'transfer' AND r.status = 'open' "
+        "AND r.sku_id = ANY(CAST(:sku_ids AS uuid[])) "
         "AND (r.expires_at IS NULL OR r.expires_at > :now) "
         "ORDER BY r.recommended_units DESC, dest.code"
-    ), {"t": str(tenant_id), "now": now})).all()
+    ), {"t": str(tenant_id), "now": now, "sku_ids": sku_ids})).all()
     open_transfers: dict[tuple[uuid.UUID, str], dict] = {}
     for row in transfer_rows:
         open_transfers.setdefault((row.sku_id, row.code), {"units": row.units, "destination": row.destination})
@@ -155,9 +159,10 @@ async def coverage(
             "SELECT f.sku_id, l.code, avg(f.p50) AS p50 FROM location_forecast_results f "
             "JOIN locations l ON l.id = f.location_id "
             "WHERE f.tenant_id = :t AND f.run_id = :r AND f.forecast_date >= :w "
+            "AND f.sku_id = ANY(CAST(:sku_ids AS uuid[])) "
             "AND f.forecast_date < :w4 GROUP BY f.sku_id, l.code"
         ), {"t": str(tenant_id), "r": str(run.id), "w": this_week,
-            "w4": this_week + timedelta(weeks=FORECAST_WEEKS)})).all()
+            "w4": this_week + timedelta(weeks=FORECAST_WEEKS), "sku_ids": sku_ids})).all()
         loc_forecast_weekly = {(r.sku_id, r.code): float(r.p50) for r in loc_rows}
 
     # Trailing complete weeks of actuals, per SKU and per (SKU, location).
@@ -186,14 +191,14 @@ async def coverage(
             loc_weeks[(r.sku_id, r.loc)][wk] += float(r.units or 0)
 
     by_sku: dict[uuid.UUID, list] = defaultdict(list)
-    meta: dict[uuid.UUID, tuple[str, int | None]] = {}
-    for lvl, code, lead in stock_rows:
+    meta: dict[uuid.UUID, tuple[str, int | None, dict]] = {}
+    for lvl, code, lead, attrs in stock_rows:
         by_sku[lvl.sku_id].append(lvl)
-        meta[lvl.sku_id] = (code, lead)
+        meta[lvl.sku_id] = (code, lead, attrs)
 
     out = []
     for sku_id, levels in by_sku.items():
-        code, lead_raw = meta[sku_id]
+        code, lead_raw, attrs = meta[sku_id]
         lead = int(lead_raw) if lead_raw is not None else DEFAULT_LEAD_TIME_DAYS
 
         if sku_id in forecast_weekly:
@@ -209,6 +214,10 @@ async def coverage(
                 else f"No demand basis: no forecast from the last {FORECAST_MAX_AGE_DAYS} days and "
                 f"only {observed} of the last {TRAILING_WEEKS} weeks have sales."
             )
+            average = period_rate(attrs, now)
+            if basis is None and average:
+                weekly, basis = average["weekly_units"], "period_average"
+                demand_reason = rate_reason(average)
 
         stale = [lvl for lvl in levels if stock_is_stale(lvl.as_of, now)]
         available = sum(float(lvl.available_units) for lvl in levels)
@@ -242,6 +251,9 @@ async def coverage(
             if key in loc_forecast_weekly:
                 loc_weekly = loc_forecast_weekly[key]
                 demand_basis = "forecast"
+            local_average = period_rate(attrs, now, lvl.location)
+            if loc_weekly is None and local_average:
+                loc_weekly, demand_basis = local_average["weekly_units"], "period_average"
             loc_stale = lvl in stale
             if loc_weekly is None:
                 loc_cover, loc_status = None, None
@@ -258,6 +270,7 @@ async def coverage(
                 loc_reason = (
                     f"Mean P50 of the next {FORECAST_WEEKS} location forecast weeks."
                     if demand_basis == "forecast" else
+                    rate_reason(local_average) if demand_basis == "period_average" else
                     f"Location sales: {loc_weekly:g} units a week over {loc_observed} week(s)."
                 )
             locations.append(
@@ -275,7 +288,7 @@ async def coverage(
                     "location_demand": {
                         "weekly_units": loc_weekly,
                         "weeks_observed": loc_observed,
-                        "basis": "location_sales" if loc_weekly is not None else None,
+                        "basis": "period_average" if demand_basis == "period_average" else "location_sales" if loc_weekly is not None else None,
                     },
                     "cover_days": loc_cover,
                     "status": loc_status,

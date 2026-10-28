@@ -11,6 +11,9 @@ const FEATURE_LABELS: Record<string, string> = {
   data_quality: "Data-quality explanations", product_cleanup: "Product cleanup suggestions",
   decision_explanation: "Decision explanations", alert_explanation: "Alert and anomaly explanations",
   planning_brief: "Planning brief summary", industry_advice: "Industry advice",
+  weekly_summary: "Weekly email summaries", roi_report: "ROI report summaries", supplier_draft: "Supplier draft summaries",
+  scenario_interpretation: "Natural-language scenarios", scenario_explanation: "Scenario result explanations",
+  data_qa_plan: "Read-only data questions", data_qa_answer: "Source-linked data answers",
 };
 
 export function AISettings() {

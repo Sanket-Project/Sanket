@@ -228,6 +228,7 @@ def main() -> int:
                     "127.0.0.1",
                     "--port",
                     str(args.api_port),
+                    "--reload",
                 ],
                 f"http://127.0.0.1:{args.api_port}/health",
             ),

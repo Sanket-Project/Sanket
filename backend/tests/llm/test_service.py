@@ -142,25 +142,39 @@ async def test_accounting_before_dispatch_blocks(ai_redis):
         await ai.aclose()
 
 
-async def test_deadline_and_cancellation_no_retry(ai_redis):
+@pytest.mark.parametrize("admission_delay", [0, 0.04])
+async def test_deadline_and_cancellation_no_retry(ai_redis, admission_delay):
     calls = []
+    dispatched = asyncio.Event()
     async def handler(request):
         calls.append(request)
-        await asyncio.sleep(1)
+        dispatched.set()
+        await asyncio.sleep(10)
         return httpx.Response(200, json=envelope())
-    ai, _, _ = service(ai_redis, handler, config=settings(llm_deadline_s=0.08))
+    ai, policies, _ = service(ai_redis, handler, config=settings(llm_deadline_s=0.5))
     try:
         start = asyncio.get_running_loop().time()
         result = await ai.run(context(), TASK)
         assert result.reason == "timeout"
         assert len(calls) == 1
-        assert asyncio.get_running_loop().time() - start < 0.2
+        assert asyncio.get_running_loop().time() - start < 1.0
+        async def load_policy(ctx):
+            await asyncio.sleep(admission_delay)
+            return Policy(True, True, "headers_only")
+        policies.load.side_effect = load_policy
+        # Cancellation during dispatch is a different contract from cancellation
+        # during admission. Wait for dispatch instead of assuming Redis and policy
+        # checks finish within 20 ms on every machine.
+        dispatched.clear()
+        ai.settings = ai.settings.model_copy(update={"llm_deadline_s": 2})
         ctx = context()
         task = asyncio.create_task(ai.run(ctx, TASK))
-        await asyncio.sleep(0.02)
-        task.cancel()
-        with pytest.raises(asyncio.CancelledError):
-            await task
+        try:
+            await asyncio.wait_for(dispatched.wait(), timeout=1)
+        finally:
+            task.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await task
         assert len(calls) == 2
     finally:
         await ai.aclose()

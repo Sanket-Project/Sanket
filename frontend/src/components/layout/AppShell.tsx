@@ -6,6 +6,7 @@ import { useSidebarStore } from "@/stores/sidebar";
 import { SubscriptionGate } from "@/components/auth/SubscriptionGate";
 import { SetupBanner } from "@/components/onboarding/SetupBanner";
 import { ScrollManager } from "@/components/layout/ScrollManager";
+import { DataChat } from "@/components/ai/DataChat";
 
 export const AppShell = () => {
   const industry = useWorkspaceIndustry();
@@ -43,6 +44,7 @@ export const AppShell = () => {
           <div className="mx-auto w-full max-w-[1480px]">
             <SetupBanner />
             <SubscriptionGate>
+              <DataChat />
               <Outlet />
             </SubscriptionGate>
           </div>

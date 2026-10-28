@@ -1,0 +1,112 @@
+[
+  {
+    "file": "Sales Data 2026.xlsx",
+    "sheet": "Sheet1",
+    "sheet_state": "visible",
+    "rows": 131,
+    "headers": [
+      "Company Name",
+      "Voucher Date",
+      "Type",
+      "Total Sales Bill",
+      "Sales Qty",
+      "Sales Amount",
+      "Total Return Bill",
+      "Return Qty",
+      "Return Amount",
+      "Total Net Bill",
+      "Net Qty",
+      "Net Amount",
+      "CARD",
+      "Cash",
+      "Credit Note",
+      "E-Wallet",
+      "Payment Pendig"
+    ],
+    "date_columns_in_detail": {
+      "B": 121
+    },
+    "date_examples": {
+      "B": "2026-10-01 00:00:00"
+    },
+    "hidden_columns": [],
+    "hidden_rows": 0,
+    "formula_cells": 0,
+    "has_sku_column": false,
+    "has_dated_sku_rows": false
+  },
+  {
+    "file": "Gross Profit Data 2026.xlsx",
+    "sheet": "Sheet1",
+    "sheet_state": "visible",
+    "rows": 15534,
+    "headers": [
+      "Company Name",
+      "Stock No",
+      "Item Description",
+      "Brand",
+      "Sales Qty",
+      "Net Sales Value",
+      "Sale Value (Without Tax)",
+      "Cost of Goods (With Tax)",
+      "Cost of Goods (Without Tax)",
+      "Gross Profit Amount",
+      "Gross Profit % (Based on Cost)",
+      "Gross Profit % (Based on Sale)"
+    ],
+    "date_columns_in_detail": {},
+    "date_examples": {},
+    "hidden_columns": [],
+    "hidden_rows": 0,
+    "formula_cells": 0,
+    "has_sku_column": true,
+    "has_dated_sku_rows": false
+  },
+  {
+    "file": "Purchasr Report 2026.xlsx",
+    "sheet": "Sheet1",
+    "sheet_state": "visible",
+    "rows": 269,
+    "headers": [
+      "Voucher Type",
+      "Voucher Date",
+      "Voucher Number",
+      "Party Name",
+      "Quantity",
+      "Disc. Amount",
+      "Tax Amount",
+      "Net Amount"
+    ],
+    "date_columns_in_detail": {
+      "B": 266
+    },
+    "date_examples": {
+      "B": "03-01-2026 02:53:55 PM"
+    },
+    "hidden_columns": [],
+    "hidden_rows": 0,
+    "formula_cells": 0,
+    "has_sku_column": false,
+    "has_dated_sku_rows": false
+  },
+  {
+    "file": "stock balence Report 2026.csv",
+    "rows": 16520,
+    "headers": [
+      "Company Name",
+      "Stock No",
+      "Item Description",
+      "Category",
+      "Brand",
+      "Style No",
+      "Sub Category",
+      "Cost Price",
+      "Retail Price",
+      "Closing Bal.Qty",
+      "Closing Bal.Val"
+    ],
+    "has_sku_column": true,
+    "has_date_column": false,
+    "has_dated_sku_rows": false
+  }
+]

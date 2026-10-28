@@ -1,0 +1,1 @@
+id,sku_code,severity,status,risk_score,coverage_days,p10_demand,p50_demand,p90_demand,trend_score,title,message,fired_at,acknowledged_at,resolved_at

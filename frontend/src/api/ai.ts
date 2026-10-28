@@ -27,7 +27,7 @@ export interface CleanupResult {
 export const aiApi = {
   settings: () => apiClient.get<AISettingsValue>("/ai/settings").then((r) => r.data),
   saveSettings: (body: AISettingsValue) => apiClient.put<AISettingsValue>("/ai/settings", body).then((r) => r.data),
-  summary: (feature: SummaryFeature, entityId?: string, connector?: string, runId?: string) => apiClient.post<SummaryResult>(`/ai/summary/${feature}`, { entity_id: entityId || null, ...(connector ? { connector } : {}), ...(runId ? { run_id: runId } : {}) }).then((r) => r.data),
+  summary: (feature: SummaryFeature, entityId?: string, connector?: string, runId?: string, language = "en") => apiClient.post<SummaryResult>(`/ai/summary/${feature}`, { entity_id: entityId || null, language, ...(connector ? { connector } : {}), ...(runId ? { run_id: runId } : {}) }).then((r) => r.data),
   cleanup: (skuIds: string[]) => apiClient.post<CleanupResult>("/ai/product-cleanup", { sku_ids: skuIds }).then((r) => r.data),
   applyCleanup: (changes: CleanupChange[], confirm: boolean) => apiClient.post<{ applied: boolean; changes: (CleanupChange & { before: unknown })[] }>("/ai/product-cleanup/confirm", { changes, confirm }).then((r) => r.data),
   importFormats: () => apiClient.get<{ id: string; kind: string; fingerprint: string; revision: number; disabled: boolean }[]>("/ai/import-formats").then((r) => r.data),

@@ -141,9 +141,17 @@ def _digest(**kw) -> digest_svc.DailyDigest:
     return digest_svc.DailyDigest(**{**defaults, **kw})
 
 
-def test_empty_digest_renders_an_all_clear():
+def test_empty_queue_does_not_claim_stockout_risk_was_measured():
+    body = digest_svc.render_text(_digest(empty_reason="No purchase recommendations above the confidence threshold today."))
+    assert "No purchase recommendations above the confidence threshold today." in body
+    assert "no stockout risks" not in body
+    assert "Nothing needs your attention" not in body
+    assert "coverage" in body.lower()
+
+
+def test_empty_digest_reports_only_what_is_recorded():
     body = digest_svc.render_text(_digest())
-    assert "Nothing needs your attention" in body
+    assert "No purchase recommendations or open alerts are recorded." in body
     assert "Sharma Distributors" in body
 
 

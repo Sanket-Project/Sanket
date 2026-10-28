@@ -1,0 +1,6 @@
+id,external_id,name,brand,category,subcategory,status,industry,created_at,updated_at
+315fcf36-7df0-44bd-b01e-d23ef5f5eca4,__imported__,Imported items,,Imported,,active,fashion,2026-10-25 17:23:20.446749+00:00,2026-10-25 17:23:20.446749+00:00
+9323e691-8bc5-4d33-af2c-e4332b8a8a32,audit-palazzo,Printed palazzo,Synthetic fashion audit,Palazzo,,active,fashion,2026-10-25 17:23:20.329037+00:00,2026-10-25 17:23:20.329037+00:00
+bc949a60-3a7a-41fe-a727-6489d18e0fdb,audit-leggings,Cotton leggings,Synthetic fashion audit,Leggings,,active,fashion,2026-10-25 17:23:20.255562+00:00,2026-10-25 17:23:20.255562+00:00
+1332da28-a90a-4354-ac34-7f7d0ed26d83,audit-gowns,Festive gown,Synthetic fashion audit,Gowns,,active,fashion,2026-10-25 17:23:20.145870+00:00,2026-10-25 17:23:20.145870+00:00
+62798ff3-7998-4e85-a9c4-013ed0933140,audit-kurtis,Straight cut kurti,Synthetic fashion audit,Kurtis,,active,fashion,2026-10-25 17:23:20.027501+00:00,2026-10-25 17:23:20.027501+00:00

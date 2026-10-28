@@ -1,0 +1,3184 @@
+{
+  "synthetic": true,
+  "training": {
+    "provider": "csv_upload",
+    "kind": "sales",
+    "rows_total": 1064,
+    "rows_imported": 0,
+    "rows_skipped": 0,
+    "products_created": 0,
+    "skus_created": 0,
+    "inventory_rows": 0,
+    "sales_rows": 0,
+    "rows_inserted": 0,
+    "rows_unchanged": 1064,
+    "rows_updated": 0,
+    "identity_mode": "period",
+    "warnings": [],
+    "errors": []
+  },
+  "replay": {
+    "provider": "csv_upload",
+    "kind": "sales",
+    "rows_total": 1064,
+    "rows_imported": 0,
+    "rows_skipped": 0,
+    "products_created": 0,
+    "skus_created": 0,
+    "inventory_rows": 0,
+    "sales_rows": 0,
+    "rows_inserted": 0,
+    "rows_unchanged": 1064,
+    "rows_updated": 0,
+    "identity_mode": "period",
+    "warnings": [],
+    "errors": []
+  },
+  "heldout": {
+    "provider": "csv_upload",
+    "kind": "sales",
+    "rows_total": 96,
+    "rows_imported": 0,
+    "rows_skipped": 0,
+    "products_created": 0,
+    "skus_created": 0,
+    "inventory_rows": 0,
+    "sales_rows": 0,
+    "rows_inserted": 0,
+    "rows_unchanged": 96,
+    "rows_updated": 0,
+    "identity_mode": "period",
+    "warnings": [],
+    "errors": []
+  },
+  "forecast": {
+    "run_id": "ba91e4f4-0518-4e2a-802e-feb2cb15fc89",
+    "n_predictions": 72,
+    "source": "chronos_zero_shot",
+    "context_source": "database",
+    "n_series": 6,
+    "rows": [
+      {
+        "sku_id": "0f8cd05e-c218-4ed5-b3a4-120e352a090f",
+        "forecast_date": "2026-10-26",
+        "p10": 36.04005432128906,
+        "p50": 38.92329406738281,
+        "p90": 43.07510757446289
+      },
+      {
+        "sku_id": "0f8cd05e-c218-4ed5-b3a4-120e352a090f",
+        "forecast_date": "2026-11-02",
+        "p10": 36.04005432128906,
+        "p50": 38.92329406738281,
+        "p90": 44.113059997558594
+      },
+      {
+        "sku_id": "0f8cd05e-c218-4ed5-b3a4-120e352a090f",
+        "forecast_date": "2026-11-09",
+        "p10": 35.92472457885742,
+        "p50": 40.076576232910156,
+        "p90": 44.113059997558594
+      },
+      {
+        "sku_id": "0f8cd05e-c218-4ed5-b3a4-120e352a090f",
+        "forecast_date": "2026-11-16",
+        "p10": 36.905033111572266,
+        "p50": 40.076576232910156,
+        "p90": 44.113059997558594
+      },
+      {
+        "sku_id": "0f8cd05e-c218-4ed5-b3a4-120e352a090f",
+        "forecast_date": "2026-11-23",
+        "p10": 34.88677215576172,
+        "p50": 40.076576232910156,
+        "p90": 44.113059997558594
+      },
+      {
+        "sku_id": "0f8cd05e-c218-4ed5-b3a4-120e352a090f",
+        "forecast_date": "2026-11-30",
+        "p10": 36.04005432128906,
+        "p50": 40.076576232910156,
+        "p90": 44.113059997558594
+      },
+      {
+        "sku_id": "0f8cd05e-c218-4ed5-b3a4-120e352a090f",
+        "forecast_date": "2026-12-07",
+        "p10": 36.04005432128906,
+        "p50": 40.076576232910156,
+        "p90": 44.113059997558594
+      },
+      {
+        "sku_id": "0f8cd05e-c218-4ed5-b3a4-120e352a090f",
+        "forecast_date": "2026-12-14",
+        "p10": 34.88677215576172,
+        "p50": 38.92329406738281,
+        "p90": 44.113059997558594
+      },
+      {
+        "sku_id": "0f8cd05e-c218-4ed5-b3a4-120e352a090f",
+        "forecast_date": "2026-12-21",
+        "p10": 36.04005432128906,
+        "p50": 40.076576232910156,
+        "p90": 44.97800064086914
+      },
+      {
+        "sku_id": "0f8cd05e-c218-4ed5-b3a4-120e352a090f",
+        "forecast_date": "2026-12-28",
+        "p10": 36.04005432128906,
+        "p50": 40.076576232910156,
+        "p90": 44.113059997558594
+      },
+      {
+        "sku_id": "0f8cd05e-c218-4ed5-b3a4-120e352a090f",
+        "forecast_date": "2027-01-04",
+        "p10": 34.88677215576172,
+        "p50": 40.076576232910156,
+        "p90": 44.199554443359375
+      },
+      {
+        "sku_id": "0f8cd05e-c218-4ed5-b3a4-120e352a090f",
+        "forecast_date": "2027-01-11",
+        "p10": 36.04005432128906,
+        "p50": 40.076576232910156,
+        "p90": 44.97800064086914
+      },
+      {
+        "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+        "forecast_date": "2026-10-26",
+        "p10": 64.0763931274414,
+        "p50": 68.01402282714844,
+        "p90": 71.98749542236328
+      },
+      {
+        "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+        "forecast_date": "2026-11-02",
+        "p10": 61.928585052490234,
+        "p50": 66.94013977050781,
+        "p90": 72.38124084472656
+      },
+      {
+        "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+        "forecast_date": "2026-11-09",
+        "p10": 61.212650299072266,
+        "p50": 68.55098724365234,
+        "p90": 73.0614242553711
+      },
+      {
+        "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+        "forecast_date": "2026-11-16",
+        "p10": 60.13872146606445,
+        "p50": 67.47708129882812,
+        "p90": 73.41937255859375
+      },
+      {
+        "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+        "forecast_date": "2026-11-23",
+        "p10": 61.82119369506836,
+        "p50": 66.94013977050781,
+        "p90": 73.38357543945312
+      },
+      {
+        "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+        "forecast_date": "2026-11-30",
+        "p10": 60.85466003417969,
+        "p50": 66.94013977050781,
+        "p90": 73.0614242553711
+      },
+      {
+        "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+        "forecast_date": "2026-12-07",
+        "p10": 61.176849365234375,
+        "p50": 66.94013977050781,
+        "p90": 73.09722137451172
+      },
+      {
+        "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+        "forecast_date": "2026-12-14",
+        "p10": 60.102928161621094,
+        "p50": 67.29811096191406,
+        "p90": 73.38357543945312
+      },
+      {
+        "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+        "forecast_date": "2026-12-21",
+        "p10": 60.78306579589844,
+        "p50": 68.01402282714844,
+        "p90": 74.49330139160156
+      },
+      {
+        "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+        "forecast_date": "2026-12-28",
+        "p10": 60.13872146606445,
+        "p50": 68.90895080566406,
+        "p90": 74.45750427246094
+      },
+      {
+        "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+        "forecast_date": "2027-01-04",
+        "p10": 58.95744705200195,
+        "p50": 68.7299575805664,
+        "p90": 75.1734390258789
+      },
+      {
+        "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+        "forecast_date": "2027-01-11",
+        "p10": 58.95744705200195,
+        "p50": 67.11911010742188,
+        "p90": 74.85124206542969
+      },
+      {
+        "sku_id": "55097d94-027a-4974-a51b-8326266b8db0",
+        "forecast_date": "2026-10-26",
+        "p10": 19.007335662841797,
+        "p50": 22.939882278442383,
+        "p90": 25.741832733154297
+      },
+      {
+        "sku_id": "55097d94-027a-4974-a51b-8326266b8db0",
+        "forecast_date": "2026-11-02",
+        "p10": 18.024198532104492,
+        "p50": 20.973608016967773,
+        "p90": 25.741832733154297
+      },
+      {
+        "sku_id": "55097d94-027a-4974-a51b-8326266b8db0",
+        "forecast_date": "2026-11-09",
+        "p10": 18.024198532104492,
+        "p50": 21.46517562866211,
+        "p90": 25.070022583007812
+      },
+      {
+        "sku_id": "55097d94-027a-4974-a51b-8326266b8db0",
+        "forecast_date": "2026-11-16",
+        "p10": 18.024198532104492,
+        "p50": 21.956745147705078,
+        "p90": 24.922542572021484
+      },
+      {
+        "sku_id": "55097d94-027a-4974-a51b-8326266b8db0",
+        "forecast_date": "2026-11-23",
+        "p10": 18.024198532104492,
+        "p50": 20.973608016967773,
+        "p90": 23.923019409179688
+      },
+      {
+        "sku_id": "55097d94-027a-4974-a51b-8326266b8db0",
+        "forecast_date": "2026-11-30",
+        "p10": 18.92540740966797,
+        "p50": 20.973608016967773,
+        "p90": 23.93940544128418
+      },
+      {
+        "sku_id": "55097d94-027a-4974-a51b-8326266b8db0",
+        "forecast_date": "2026-12-07",
+        "p10": 18.024198532104492,
+        "p50": 20.973608016967773,
+        "p90": 25.070022583007812
+      },
+      {
+        "sku_id": "55097d94-027a-4974-a51b-8326266b8db0",
+        "forecast_date": "2026-12-14",
+        "p10": 18.909021377563477,
+        "p50": 20.973608016967773,
+        "p90": 25.070022583007812
+      },
+      {
+        "sku_id": "55097d94-027a-4974-a51b-8326266b8db0",
+        "forecast_date": "2026-12-21",
+        "p10": 18.024198532104492,
+        "p50": 20.973608016967773,
+        "p90": 23.923019409179688
+      },
+      {
+        "sku_id": "55097d94-027a-4974-a51b-8326266b8db0",
+        "forecast_date": "2026-12-28",
+        "p10": 18.46660041809082,
+        "p50": 20.973608016967773,
+        "p90": 25.070022583007812
+      },
+      {
+        "sku_id": "55097d94-027a-4974-a51b-8326266b8db0",
+        "forecast_date": "2027-01-04",
+        "p10": 18.909021377563477,
+        "p50": 21.956745147705078,
+        "p90": 25.070022583007812
+      },
+      {
+        "sku_id": "55097d94-027a-4974-a51b-8326266b8db0",
+        "forecast_date": "2027-01-11",
+        "p10": 18.024198532104492,
+        "p50": 19.99047088623047,
+        "p90": 23.923019409179688
+      },
+      {
+        "sku_id": "7dbcf261-5c9f-4b40-b6cc-bb6c3e7191b5",
+        "forecast_date": "2026-10-26",
+        "p10": 49.14195251464844,
+        "p50": 54.579795837402344,
+        "p90": 60.017642974853516
+      },
+      {
+        "sku_id": "7dbcf261-5c9f-4b40-b6cc-bb6c3e7191b5",
+        "forecast_date": "2026-11-02",
+        "p10": 51.15593719482422,
+        "p50": 55.989620208740234,
+        "p90": 60.017642974853516
+      },
+      {
+        "sku_id": "7dbcf261-5c9f-4b40-b6cc-bb6c3e7191b5",
+        "forecast_date": "2026-11-09",
+        "p10": 49.94755554199219,
+        "p50": 55.18401336669922,
+        "p90": 60.017642974853516
+      },
+      {
+        "sku_id": "7dbcf261-5c9f-4b40-b6cc-bb6c3e7191b5",
+        "forecast_date": "2026-11-16",
+        "p10": 51.15593719482422,
+        "p50": 55.18401336669922,
+        "p90": 60.017642974853516
+      },
+      {
+        "sku_id": "7dbcf261-5c9f-4b40-b6cc-bb6c3e7191b5",
+        "forecast_date": "2026-11-23",
+        "p10": 50.67259979248047,
+        "p50": 55.18401336669922,
+        "p90": 60.017642974853516
+      },
+      {
+        "sku_id": "7dbcf261-5c9f-4b40-b6cc-bb6c3e7191b5",
+        "forecast_date": "2026-11-30",
+        "p10": 51.15593719482422,
+        "p50": 55.989620208740234,
+        "p90": 60.05792236328125
+      },
+      {
+        "sku_id": "7dbcf261-5c9f-4b40-b6cc-bb6c3e7191b5",
+        "forecast_date": "2026-12-07",
+        "p10": 49.94755554199219,
+        "p50": 55.18401336669922,
+        "p90": 60.863525390625
+      },
+      {
+        "sku_id": "7dbcf261-5c9f-4b40-b6cc-bb6c3e7191b5",
+        "forecast_date": "2026-12-14",
+        "p10": 49.86699676513672,
+        "p50": 55.18401336669922,
+        "p90": 59.2523193359375
+      },
+      {
+        "sku_id": "7dbcf261-5c9f-4b40-b6cc-bb6c3e7191b5",
+        "forecast_date": "2026-12-21",
+        "p10": 49.94755554199219,
+        "p50": 55.18401336669922,
+        "p90": 60.017642974853516
+      },
+      {
+        "sku_id": "7dbcf261-5c9f-4b40-b6cc-bb6c3e7191b5",
+        "forecast_date": "2026-12-28",
+        "p10": 51.15593719482422,
+        "p50": 54.781211853027344,
+        "p90": 60.017642974853516
+      },
+      {
+        "sku_id": "7dbcf261-5c9f-4b40-b6cc-bb6c3e7191b5",
+        "forecast_date": "2027-01-04",
+        "p10": 51.035099029541016,
+        "p50": 55.18401336669922,
+        "p90": 61.30658721923828
+      },
+      {
+        "sku_id": "7dbcf261-5c9f-4b40-b6cc-bb6c3e7191b5",
+        "forecast_date": "2027-01-11",
+        "p10": 49.86699676513672,
+        "p50": 55.18401336669922,
+        "p90": 60.82324981689453
+      },
+      {
+        "sku_id": "8531f9c9-8cbc-453a-b19a-2592d0e1c228",
+        "forecast_date": "2026-10-26",
+        "p10": 18.0622615814209,
+        "p50": 22.97626304626465,
+        "p90": 26.960580825805664
+      },
+      {
+        "sku_id": "8531f9c9-8cbc-453a-b19a-2592d0e1c228",
+        "forecast_date": "2026-11-02",
+        "p10": 20.054428100585938,
+        "p50": 22.97626304626465,
+        "p90": 28.0230655670166
+      },
+      {
+        "sku_id": "8531f9c9-8cbc-453a-b19a-2592d0e1c228",
+        "forecast_date": "2026-11-09",
+        "p10": 20.054428100585938,
+        "p50": 24.968412399291992,
+        "p90": 30.015233993530273
+      },
+      {
+        "sku_id": "8531f9c9-8cbc-453a-b19a-2592d0e1c228",
+        "forecast_date": "2026-11-16",
+        "p10": 20.984094619750977,
+        "p50": 26.03089714050293,
+        "p90": 30.015233993530273
+      },
+      {
+        "sku_id": "8531f9c9-8cbc-453a-b19a-2592d0e1c228",
+        "forecast_date": "2026-11-23",
+        "p10": 20.984094619750977,
+        "p50": 26.960580825805664,
+        "p90": 31.170684814453125
+      },
+      {
+        "sku_id": "8531f9c9-8cbc-453a-b19a-2592d0e1c228",
+        "forecast_date": "2026-11-30",
+        "p10": 22.046579360961914,
+        "p50": 28.0230655670166,
+        "p90": 32.93706512451172
+      },
+      {
+        "sku_id": "8531f9c9-8cbc-453a-b19a-2592d0e1c228",
+        "forecast_date": "2026-12-07",
+        "p10": 22.97626304626465,
+        "p50": 28.0230655670166,
+        "p90": 32.95034408569336
+      },
+      {
+        "sku_id": "8531f9c9-8cbc-453a-b19a-2592d0e1c228",
+        "forecast_date": "2026-12-14",
+        "p10": 21.940330505371094,
+        "p50": 28.0230655670166,
+        "p90": 32.93706512451172
+      },
+      {
+        "sku_id": "8531f9c9-8cbc-453a-b19a-2592d0e1c228",
+        "forecast_date": "2026-12-21",
+        "p10": 20.984094619750977,
+        "p50": 28.952749252319336,
+        "p90": 32.93706512451172
+      },
+      {
+        "sku_id": "8531f9c9-8cbc-453a-b19a-2592d0e1c228",
+        "forecast_date": "2026-12-28",
+        "p10": 22.046579360961914,
+        "p50": 28.288686752319336,
+        "p90": 32.93706512451172
+      },
+      {
+        "sku_id": "8531f9c9-8cbc-453a-b19a-2592d0e1c228",
+        "forecast_date": "2027-01-04",
+        "p10": 20.984094619750977,
+        "p50": 28.0230655670166,
+        "p90": 30.94489860534668
+      },
+      {
+        "sku_id": "8531f9c9-8cbc-453a-b19a-2592d0e1c228",
+        "forecast_date": "2027-01-11",
+        "p10": 18.991943359375,
+        "p50": 26.960580825805664,
+        "p90": 30.108200073242188
+      },
+      {
+        "sku_id": "a78d316b-9b20-4b0f-aa44-47474de34c41",
+        "forecast_date": "2026-10-26",
+        "p10": 0,
+        "p50": 0,
+        "p90": 18.016862869262695
+      },
+      {
+        "sku_id": "a78d316b-9b20-4b0f-aa44-47474de34c41",
+        "forecast_date": "2026-11-02",
+        "p10": 0,
+        "p50": 0,
+        "p90": 31.169174194335938
+      },
+      {
+        "sku_id": "a78d316b-9b20-4b0f-aa44-47474de34c41",
+        "forecast_date": "2026-11-09",
+        "p10": 0,
+        "p50": 0,
+        "p90": 18.404918670654297
+      },
+      {
+        "sku_id": "a78d316b-9b20-4b0f-aa44-47474de34c41",
+        "forecast_date": "2026-11-16",
+        "p10": 0,
+        "p50": 0,
+        "p90": 22.13995361328125
+      },
+      {
+        "sku_id": "a78d316b-9b20-4b0f-aa44-47474de34c41",
+        "forecast_date": "2026-11-23",
+        "p10": 0,
+        "p50": 0,
+        "p90": 30.005008697509766
+      },
+      {
+        "sku_id": "a78d316b-9b20-4b0f-aa44-47474de34c41",
+        "forecast_date": "2026-11-30",
+        "p10": 0,
+        "p50": 0,
+        "p90": 17.143739700317383
+      },
+      {
+        "sku_id": "a78d316b-9b20-4b0f-aa44-47474de34c41",
+        "forecast_date": "2026-12-07",
+        "p10": 0,
+        "p50": 0,
+        "p90": 32.20167541503906
+      },
+      {
+        "sku_id": "a78d316b-9b20-4b0f-aa44-47474de34c41",
+        "forecast_date": "2026-12-14",
+        "p10": 0,
+        "p50": 0,
+        "p90": 18.404918670654297
+      },
+      {
+        "sku_id": "a78d316b-9b20-4b0f-aa44-47474de34c41",
+        "forecast_date": "2026-12-21",
+        "p10": 0,
+        "p50": 0,
+        "p90": 26.124454498291016
+      },
+      {
+        "sku_id": "a78d316b-9b20-4b0f-aa44-47474de34c41",
+        "forecast_date": "2026-12-28",
+        "p10": 0,
+        "p50": 0,
+        "p90": 19.090946197509766
+      },
+      {
+        "sku_id": "a78d316b-9b20-4b0f-aa44-47474de34c41",
+        "forecast_date": "2027-01-04",
+        "p10": 0,
+        "p50": 0,
+        "p90": 19.12559700012207
+      },
+      {
+        "sku_id": "a78d316b-9b20-4b0f-aa44-47474de34c41",
+        "forecast_date": "2027-01-11",
+        "p10": 0,
+        "p50": 0,
+        "p90": 22.06372833251953
+      }
+    ],
+    "calendar": "W-MON-UTC",
+    "history_end": "2026-10-26",
+    "first_forecast_week": "2026-10-26",
+    "omitted": [
+      {
+        "sku_id": "07e1c571-bc33-4894-bdf5-94f9d27c82b4",
+        "reason": "no_sales_history",
+        "observations": 0
+      }
+    ]
+  },
+  "backtest": {
+    "run_id": "e3ee9122-a6df-4ed4-8384-8c6c861caaff",
+    "n_predictions": 48,
+    "source": "chronos_zero_shot",
+    "context_source": "database",
+    "n_series": 6,
+    "rows": [
+      {
+        "sku_id": "0f8cd05e-c218-4ed5-b3a4-120e352a090f",
+        "forecast_date": "2026-08-31",
+        "p10": 35.1376838684082,
+        "p50": 38.91377639770508,
+        "p90": 42.94927215576172
+      },
+      {
+        "sku_id": "0f8cd05e-c218-4ed5-b3a4-120e352a090f",
+        "forecast_date": "2026-09-07",
+        "p10": 34.87824249267578,
+        "p50": 38.91377639770508,
+        "p90": 42.94927215576172
+      },
+      {
+        "sku_id": "0f8cd05e-c218-4ed5-b3a4-120e352a090f",
+        "forecast_date": "2026-09-14",
+        "p10": 34.87824249267578,
+        "p50": 38.049007415771484,
+        "p90": 42.084503173828125
+      },
+      {
+        "sku_id": "0f8cd05e-c218-4ed5-b3a4-120e352a090f",
+        "forecast_date": "2026-09-21",
+        "p10": 34.791770935058594,
+        "p50": 38.049007415771484,
+        "p90": 42.084503173828125
+      },
+      {
+        "sku_id": "0f8cd05e-c218-4ed5-b3a4-120e352a090f",
+        "forecast_date": "2026-09-28",
+        "p10": 34.87824249267578,
+        "p50": 38.91377639770508,
+        "p90": 42.94927215576172
+      },
+      {
+        "sku_id": "0f8cd05e-c218-4ed5-b3a4-120e352a090f",
+        "forecast_date": "2026-10-05",
+        "p10": 34.87824249267578,
+        "p50": 38.91377639770508,
+        "p90": 42.94927215576172
+      },
+      {
+        "sku_id": "0f8cd05e-c218-4ed5-b3a4-120e352a090f",
+        "forecast_date": "2026-10-12",
+        "p10": 35.91593933105469,
+        "p50": 38.91377639770508,
+        "p90": 44.188743591308594
+      },
+      {
+        "sku_id": "0f8cd05e-c218-4ed5-b3a4-120e352a090f",
+        "forecast_date": "2026-10-19",
+        "p10": 36.0312385559082,
+        "p50": 38.049007415771484,
+        "p90": 43.064571380615234
+      },
+      {
+        "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+        "forecast_date": "2026-08-31",
+        "p10": 61.08385467529297,
+        "p50": 64.83192443847656,
+        "p90": 68.58003997802734
+      },
+      {
+        "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+        "forecast_date": "2026-09-07",
+        "p10": 59.09162521362305,
+        "p50": 64.83192443847656,
+        "p90": 68.58003997802734
+      },
+      {
+        "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+        "forecast_date": "2026-09-14",
+        "p10": 60.1046028137207,
+        "p50": 64.83192443847656,
+        "p90": 69.89694213867188
+      },
+      {
+        "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+        "forecast_date": "2026-09-21",
+        "p10": 59.395503997802734,
+        "p50": 64.83192443847656,
+        "p90": 70.90995788574219
+      },
+      {
+        "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+        "forecast_date": "2026-09-28",
+        "p10": 59.09162521362305,
+        "p50": 65.8449478149414,
+        "p90": 70.26839447021484
+      },
+      {
+        "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+        "forecast_date": "2026-10-05",
+        "p10": 59.09162521362305,
+        "p50": 65.33843994140625,
+        "p90": 71.92293548583984
+      },
+      {
+        "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+        "forecast_date": "2026-10-12",
+        "p10": 58.99032211303711,
+        "p50": 64.83192443847656,
+        "p90": 71.31513977050781
+      },
+      {
+        "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+        "forecast_date": "2026-10-19",
+        "p10": 58.99032211303711,
+        "p50": 65.8449478149414,
+        "p90": 71.95670318603516
+      },
+      {
+        "sku_id": "55097d94-027a-4974-a51b-8326266b8db0",
+        "forecast_date": "2026-08-31",
+        "p10": 20.22727394104004,
+        "p50": 22.021638870239258,
+        "p90": 24.142227172851562
+      },
+      {
+        "sku_id": "55097d94-027a-4974-a51b-8326266b8db0",
+        "forecast_date": "2026-09-07",
+        "p10": 20.374074935913086,
+        "p50": 22.021638870239258,
+        "p90": 24.957853317260742
+      },
+      {
+        "sku_id": "55097d94-027a-4974-a51b-8326266b8db0",
+        "forecast_date": "2026-09-14",
+        "p10": 18.922290802001953,
+        "p50": 22.021638870239258,
+        "p90": 24.321672439575195
+      },
+      {
+        "sku_id": "55097d94-027a-4974-a51b-8326266b8db0",
+        "forecast_date": "2026-09-21",
+        "p10": 18.759157180786133,
+        "p50": 22.021638870239258,
+        "p90": 24.142227172851562
+      },
+      {
+        "sku_id": "55097d94-027a-4974-a51b-8326266b8db0",
+        "forecast_date": "2026-09-28",
+        "p10": 18.922290802001953,
+        "p50": 21.042879104614258,
+        "p90": 23.669179916381836
+      },
+      {
+        "sku_id": "55097d94-027a-4974-a51b-8326266b8db0",
+        "forecast_date": "2026-10-05",
+        "p10": 17.89461326599121,
+        "p50": 21.042879104614258,
+        "p90": 24.484786987304688
+      },
+      {
+        "sku_id": "55097d94-027a-4974-a51b-8326266b8db0",
+        "forecast_date": "2026-10-12",
+        "p10": 18.922290802001953,
+        "p50": 22.021638870239258,
+        "p90": 25.18621253967285
+      },
+      {
+        "sku_id": "55097d94-027a-4974-a51b-8326266b8db0",
+        "forecast_date": "2026-10-19",
+        "p10": 18.057727813720703,
+        "p50": 22.021638870239258,
+        "p90": 25.023101806640625
+      },
+      {
+        "sku_id": "7dbcf261-5c9f-4b40-b6cc-bb6c3e7191b5",
+        "forecast_date": "2026-08-31",
+        "p10": 51.05746078491211,
+        "p50": 55.8818359375,
+        "p90": 63.19873046875
+      },
+      {
+        "sku_id": "7dbcf261-5c9f-4b40-b6cc-bb6c3e7191b5",
+        "forecast_date": "2026-09-07",
+        "p10": 49.0473518371582,
+        "p50": 55.8818359375,
+        "p90": 61.188568115234375
+      },
+      {
+        "sku_id": "7dbcf261-5c9f-4b40-b6cc-bb6c3e7191b5",
+        "forecast_date": "2026-09-14",
+        "p10": 51.05746078491211,
+        "p50": 55.077781677246094,
+        "p90": 62.0328254699707
+      },
+      {
+        "sku_id": "7dbcf261-5c9f-4b40-b6cc-bb6c3e7191b5",
+        "forecast_date": "2026-09-21",
+        "p10": 49.770999908447266,
+        "p50": 56.68586349487305,
+        "p90": 61.10816192626953
+      },
+      {
+        "sku_id": "7dbcf261-5c9f-4b40-b6cc-bb6c3e7191b5",
+        "forecast_date": "2026-09-28",
+        "p10": 51.01726150512695,
+        "p50": 55.077781677246094,
+        "p90": 62.0328254699707
+      },
+      {
+        "sku_id": "7dbcf261-5c9f-4b40-b6cc-bb6c3e7191b5",
+        "forecast_date": "2026-10-05",
+        "p10": 49.770999908447266,
+        "p50": 55.077781677246094,
+        "p90": 63.118324279785156
+      },
+      {
+        "sku_id": "7dbcf261-5c9f-4b40-b6cc-bb6c3e7191b5",
+        "forecast_date": "2026-10-12",
+        "p10": 51.05746078491211,
+        "p50": 55.8818359375,
+        "p90": 61.10816192626953
+      },
+      {
+        "sku_id": "7dbcf261-5c9f-4b40-b6cc-bb6c3e7191b5",
+        "forecast_date": "2026-10-19",
+        "p10": 49.0473518371582,
+        "p50": 55.47980880737305,
+        "p90": 61.10816192626953
+      },
+      {
+        "sku_id": "8531f9c9-8cbc-453a-b19a-2592d0e1c228",
+        "forecast_date": "2026-08-31",
+        "p10": 7.951718330383301,
+        "p50": 9.939656257629395,
+        "p90": 14.048052787780762
+      },
+      {
+        "sku_id": "8531f9c9-8cbc-453a-b19a-2592d0e1c228",
+        "forecast_date": "2026-09-07",
+        "p10": 7.951718330383301,
+        "p50": 10.999885559082031,
+        "p90": 16.035974502563477
+      },
+      {
+        "sku_id": "8531f9c9-8cbc-453a-b19a-2592d0e1c228",
+        "forecast_date": "2026-09-14",
+        "p10": 9.011964797973633,
+        "p50": 12.722766876220703,
+        "p90": 16.963682174682617
+      },
+      {
+        "sku_id": "8531f9c9-8cbc-453a-b19a-2592d0e1c228",
+        "forecast_date": "2026-09-21",
+        "p10": 7.951718330383301,
+        "p50": 14.048052787780762,
+        "p90": 18.95162010192871
+      },
+      {
+        "sku_id": "8531f9c9-8cbc-453a-b19a-2592d0e1c228",
+        "forecast_date": "2026-09-28",
+        "p10": 8.905940055847168,
+        "p50": 14.975744247436523,
+        "p90": 20.011850357055664
+      },
+      {
+        "sku_id": "8531f9c9-8cbc-453a-b19a-2592d0e1c228",
+        "forecast_date": "2026-10-05",
+        "p10": 9.011964797973633,
+        "p50": 16.963682174682617,
+        "p90": 23.15277099609375
+      },
+      {
+        "sku_id": "8531f9c9-8cbc-453a-b19a-2592d0e1c228",
+        "forecast_date": "2026-10-12",
+        "p10": 9.011964797973633,
+        "p50": 18.95162010192871,
+        "p90": 25.975629806518555
+      },
+      {
+        "sku_id": "8531f9c9-8cbc-453a-b19a-2592d0e1c228",
+        "forecast_date": "2026-10-19",
+        "p10": 9.846887588500977,
+        "p50": 20.939542770385742,
+        "p90": 27.035877227783203
+      },
+      {
+        "sku_id": "a78d316b-9b20-4b0f-aa44-47474de34c41",
+        "forecast_date": "2026-08-31",
+        "p10": 0,
+        "p50": 0,
+        "p90": 29.1120548248291
+      },
+      {
+        "sku_id": "a78d316b-9b20-4b0f-aa44-47474de34c41",
+        "forecast_date": "2026-09-07",
+        "p10": 0,
+        "p50": 0,
+        "p90": 31.99286651611328
+      },
+      {
+        "sku_id": "a78d316b-9b20-4b0f-aa44-47474de34c41",
+        "forecast_date": "2026-09-14",
+        "p10": 0,
+        "p50": 0,
+        "p90": 34.05847930908203
+      },
+      {
+        "sku_id": "a78d316b-9b20-4b0f-aa44-47474de34c41",
+        "forecast_date": "2026-09-21",
+        "p10": 0,
+        "p50": 0,
+        "p90": 31.067138671875
+      },
+      {
+        "sku_id": "a78d316b-9b20-4b0f-aa44-47474de34c41",
+        "forecast_date": "2026-09-28",
+        "p10": 0,
+        "p50": 0,
+        "p90": 31.985958099365234
+      },
+      {
+        "sku_id": "a78d316b-9b20-4b0f-aa44-47474de34c41",
+        "forecast_date": "2026-10-05",
+        "p10": 0,
+        "p50": 0,
+        "p90": 27.509302139282227
+      },
+      {
+        "sku_id": "a78d316b-9b20-4b0f-aa44-47474de34c41",
+        "forecast_date": "2026-10-12",
+        "p10": 0,
+        "p50": 0,
+        "p90": 32.21393585205078
+      },
+      {
+        "sku_id": "a78d316b-9b20-4b0f-aa44-47474de34c41",
+        "forecast_date": "2026-10-19",
+        "p10": 0,
+        "p50": 0,
+        "p90": 30.051603317260742
+      }
+    ],
+    "calendar": "W-MON-UTC",
+    "history_end": "2026-08-31",
+    "first_forecast_week": "2026-08-31",
+    "omitted": [
+      {
+        "sku_id": "07e1c571-bc33-4894-bdf5-94f9d27c82b4",
+        "reason": "no_sales_history",
+        "observations": 0
+      }
+    ],
+    "independentlyComputedWape": 7.627192828504942,
+    "scored": {
+      "run_id": "e3ee9122-a6df-4ed4-8384-8c6c861caaff",
+      "cutoff": "2026-08-31",
+      "completed_at": "2026-10-26T04:45:06.590748+00:00",
+      "points": 48,
+      "skus": 6,
+      "wape": 7.63,
+      "bias_pct": -3.05,
+      "mape": 9.36,
+      "coverage_p10_p90": 85.42
+    }
+  },
+  "coverage": {
+    "industry": "fashion",
+    "as_of": "2026-10-26T04:45:07.673545+00:00",
+    "calendar": "W-MON-UTC",
+    "policy": {
+      "forecast_max_age_days": 14,
+      "forecast_weeks": 4,
+      "trailing_weeks": 8,
+      "min_weeks": 4,
+      "stale_stock_days": 30,
+      "low_multiplier": 1.5,
+      "transfer_suggestions": false
+    },
+    "skus": [
+      {
+        "sku_id": "8531f9c9-8cbc-453a-b19a-2592d0e1c228",
+        "sku_code": "GOWN-M",
+        "lead_time_days": 14,
+        "lead_time_assumed": false,
+        "demand": {
+          "basis": "forecast",
+          "weekly_units": 24.02,
+          "run_id": "55de04cd-c9d0-4bf4-a47b-3411af8128b2",
+          "reason": "Mean P50 of the next 4 forecast weeks."
+        },
+        "sku_wide": {
+          "available_units": 13,
+          "inbound_units": 0,
+          "cover_days": 3.8,
+          "status": "critical",
+          "reason": "Cover is SKU-wide (all locations pooled): 13 available / 24.02 units a week."
+        },
+        "locations": [
+          {
+            "location": "Alwal",
+            "available_units": 12,
+            "on_hand_units": 12,
+            "inbound_units": 0,
+            "as_of": "2026-10-26T04:17:45.162579+00:00",
+            "stock_stale": false,
+            "location_demand": {
+              "weekly_units": 4.38,
+              "weeks_observed": 8,
+              "basis": "location_sales"
+            },
+            "cover_days": 19.2,
+            "status": "low",
+            "reason": "Location sales: 4.38 units a week over 8 week(s)."
+          },
+          {
+            "location": "Boduppal",
+            "available_units": 1,
+            "on_hand_units": 1,
+            "inbound_units": 0,
+            "as_of": "2026-10-26T04:17:45.162579+00:00",
+            "stock_stale": false,
+            "location_demand": {
+              "weekly_units": 11,
+              "weeks_observed": 8,
+              "basis": "location_sales"
+            },
+            "cover_days": 0.6,
+            "status": "critical",
+            "reason": "Location sales: 11 units a week over 8 week(s)."
+          }
+        ]
+      },
+      {
+        "sku_id": "a78d316b-9b20-4b0f-aa44-47474de34c41",
+        "sku_code": "GOWN-XL",
+        "lead_time_days": 14,
+        "lead_time_assumed": false,
+        "demand": {
+          "basis": "forecast",
+          "weekly_units": 0,
+          "run_id": "55de04cd-c9d0-4bf4-a47b-3411af8128b2",
+          "reason": "Mean P50 of the next 4 forecast weeks."
+        },
+        "sku_wide": {
+          "available_units": 13,
+          "inbound_units": 0,
+          "cover_days": null,
+          "status": "healthy",
+          "reason": "No sales expected over the window."
+        },
+        "locations": [
+          {
+            "location": "Alwal",
+            "available_units": 12,
+            "on_hand_units": 12,
+            "inbound_units": 0,
+            "as_of": "2026-10-26T04:17:45.162579+00:00",
+            "stock_stale": false,
+            "location_demand": {
+              "weekly_units": 0.75,
+              "weeks_observed": 8,
+              "basis": "location_sales"
+            },
+            "cover_days": 112,
+            "status": "healthy",
+            "reason": "Location sales: 0.75 units a week over 8 week(s)."
+          },
+          {
+            "location": "Boduppal",
+            "available_units": 1,
+            "on_hand_units": 1,
+            "inbound_units": 0,
+            "as_of": "2026-10-26T04:17:45.162579+00:00",
+            "stock_stale": false,
+            "location_demand": {
+              "weekly_units": 1.62,
+              "weeks_observed": 8,
+              "basis": "location_sales"
+            },
+            "cover_days": 4.3,
+            "status": "critical",
+            "reason": "Location sales: 1.62 units a week over 8 week(s)."
+          }
+        ]
+      },
+      {
+        "sku_id": "0f8cd05e-c218-4ed5-b3a4-120e352a090f",
+        "sku_code": "KURTI-M",
+        "lead_time_days": 14,
+        "lead_time_assumed": false,
+        "demand": {
+          "basis": "forecast",
+          "weekly_units": 39.68,
+          "run_id": "55de04cd-c9d0-4bf4-a47b-3411af8128b2",
+          "reason": "Mean P50 of the next 4 forecast weeks."
+        },
+        "sku_wide": {
+          "available_units": 13,
+          "inbound_units": 0,
+          "cover_days": 2.3,
+          "status": "critical",
+          "reason": "Cover is SKU-wide (all locations pooled): 13 available / 39.68 units a week."
+        },
+        "locations": [
+          {
+            "location": "Alwal",
+            "available_units": 12,
+            "on_hand_units": 12,
+            "inbound_units": 0,
+            "as_of": "2026-10-26T04:17:45.162579+00:00",
+            "stock_stale": false,
+            "location_demand": {
+              "weekly_units": 12.38,
+              "weeks_observed": 8,
+              "basis": "location_sales"
+            },
+            "cover_days": 6.8,
+            "status": "critical",
+            "reason": "Location sales: 12.38 units a week over 8 week(s)."
+          },
+          {
+            "location": "Boduppal",
+            "available_units": 1,
+            "on_hand_units": 1,
+            "inbound_units": 0,
+            "as_of": "2026-10-26T04:17:45.162579+00:00",
+            "stock_stale": false,
+            "location_demand": {
+              "weekly_units": 28.62,
+              "weeks_observed": 8,
+              "basis": "location_sales"
+            },
+            "cover_days": 0.2,
+            "status": "critical",
+            "reason": "Location sales: 28.62 units a week over 8 week(s)."
+          }
+        ]
+      },
+      {
+        "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+        "sku_code": "KURTI-XL",
+        "lead_time_days": 14,
+        "lead_time_assumed": false,
+        "demand": {
+          "basis": "forecast",
+          "weekly_units": 67.43,
+          "run_id": "55de04cd-c9d0-4bf4-a47b-3411af8128b2",
+          "reason": "Mean P50 of the next 4 forecast weeks."
+        },
+        "sku_wide": {
+          "available_units": 13,
+          "inbound_units": 0,
+          "cover_days": 1.3,
+          "status": "critical",
+          "reason": "Cover is SKU-wide (all locations pooled): 13 available / 67.43 units a week."
+        },
+        "locations": [
+          {
+            "location": "Alwal",
+            "available_units": 12,
+            "on_hand_units": 12,
+            "inbound_units": 0,
+            "as_of": "2026-10-26T04:17:45.162579+00:00",
+            "stock_stale": false,
+            "location_demand": {
+              "weekly_units": 19.88,
+              "weeks_observed": 8,
+              "basis": "location_sales"
+            },
+            "cover_days": 4.2,
+            "status": "critical",
+            "reason": "Location sales: 19.88 units a week over 8 week(s)."
+          },
+          {
+            "location": "Boduppal",
+            "available_units": 1,
+            "on_hand_units": 1,
+            "inbound_units": 0,
+            "as_of": "2026-10-26T04:17:45.162579+00:00",
+            "stock_stale": false,
+            "location_demand": {
+              "weekly_units": 46,
+              "weeks_observed": 8,
+              "basis": "location_sales"
+            },
+            "cover_days": 0.2,
+            "status": "critical",
+            "reason": "Location sales: 46 units a week over 8 week(s)."
+          }
+        ]
+      },
+      {
+        "sku_id": "7dbcf261-5c9f-4b40-b6cc-bb6c3e7191b5",
+        "sku_code": "LEGGING-M",
+        "lead_time_days": 14,
+        "lead_time_assumed": false,
+        "demand": {
+          "basis": "forecast",
+          "weekly_units": 55.18,
+          "run_id": "55de04cd-c9d0-4bf4-a47b-3411af8128b2",
+          "reason": "Mean P50 of the next 4 forecast weeks."
+        },
+        "sku_wide": {
+          "available_units": 13,
+          "inbound_units": 0,
+          "cover_days": 1.6,
+          "status": "critical",
+          "reason": "Cover is SKU-wide (all locations pooled): 13 available / 55.18 units a week."
+        },
+        "locations": [
+          {
+            "location": "Alwal",
+            "available_units": 12,
+            "on_hand_units": 12,
+            "inbound_units": 0,
+            "as_of": "2026-10-26T04:17:45.162579+00:00",
+            "stock_stale": false,
+            "location_demand": {
+              "weekly_units": 16.5,
+              "weeks_observed": 8,
+              "basis": "location_sales"
+            },
+            "cover_days": 5.1,
+            "status": "critical",
+            "reason": "Location sales: 16.5 units a week over 8 week(s)."
+          },
+          {
+            "location": "Boduppal",
+            "available_units": 1,
+            "on_hand_units": 1,
+            "inbound_units": 0,
+            "as_of": "2026-10-26T04:17:45.162579+00:00",
+            "stock_stale": false,
+            "location_demand": {
+              "weekly_units": 38.62,
+              "weeks_observed": 8,
+              "basis": "location_sales"
+            },
+            "cover_days": 0.2,
+            "status": "critical",
+            "reason": "Location sales: 38.62 units a week over 8 week(s)."
+          }
+        ]
+      },
+      {
+        "sku_id": "55097d94-027a-4974-a51b-8326266b8db0",
+        "sku_code": "PALAZZO-XL",
+        "lead_time_days": 14,
+        "lead_time_assumed": false,
+        "demand": {
+          "basis": "forecast",
+          "weekly_units": 21.96,
+          "run_id": "55de04cd-c9d0-4bf4-a47b-3411af8128b2",
+          "reason": "Mean P50 of the next 4 forecast weeks."
+        },
+        "sku_wide": {
+          "available_units": 13,
+          "inbound_units": 0,
+          "cover_days": 4.1,
+          "status": "critical",
+          "reason": "Cover is SKU-wide (all locations pooled): 13 available / 21.96 units a week."
+        },
+        "locations": [
+          {
+            "location": "Alwal",
+            "available_units": 12,
+            "on_hand_units": 12,
+            "inbound_units": 0,
+            "as_of": "2026-10-26T04:17:45.162579+00:00",
+            "stock_stale": false,
+            "location_demand": {
+              "weekly_units": 6.5,
+              "weeks_observed": 8,
+              "basis": "location_sales"
+            },
+            "cover_days": 12.9,
+            "status": "critical",
+            "reason": "Location sales: 6.5 units a week over 8 week(s)."
+          },
+          {
+            "location": "Boduppal",
+            "available_units": 1,
+            "on_hand_units": 1,
+            "inbound_units": 0,
+            "as_of": "2026-10-26T04:17:45.162579+00:00",
+            "stock_stale": false,
+            "location_demand": {
+              "weekly_units": 16,
+              "weeks_observed": 8,
+              "basis": "location_sales"
+            },
+            "cover_days": 0.4,
+            "status": "critical",
+            "reason": "Location sales: 16 units a week over 8 week(s)."
+          }
+        ]
+      },
+      {
+        "sku_id": "07e1c571-bc33-4894-bdf5-94f9d27c82b4",
+        "sku_code": "UNSOLD-5XL",
+        "lead_time_days": 14,
+        "lead_time_assumed": false,
+        "demand": {
+          "basis": null,
+          "weekly_units": null,
+          "run_id": null,
+          "reason": "No demand basis: no forecast from the last 14 days and only 0 of the last 8 weeks have sales."
+        },
+        "sku_wide": {
+          "available_units": 13,
+          "inbound_units": 0,
+          "cover_days": null,
+          "status": "unknown",
+          "reason": "No demand basis: no forecast from the last 14 days and only 0 of the last 8 weeks have sales."
+        },
+        "locations": [
+          {
+            "location": "Alwal",
+            "available_units": 12,
+            "on_hand_units": 12,
+            "inbound_units": 0,
+            "as_of": "2026-10-26T04:17:45.162579+00:00",
+            "stock_stale": false,
+            "location_demand": {
+              "weekly_units": null,
+              "weeks_observed": 0,
+              "basis": null
+            },
+            "cover_days": null,
+            "status": null,
+            "reason": "Cover is SKU-wide (all locations pooled) — fewer than 4 of the last 8 weeks have sales recorded at Alwal."
+          },
+          {
+            "location": "Boduppal",
+            "available_units": 1,
+            "on_hand_units": 1,
+            "inbound_units": 0,
+            "as_of": "2026-10-26T04:17:45.162579+00:00",
+            "stock_stale": false,
+            "location_demand": {
+              "weekly_units": null,
+              "weeks_observed": 0,
+              "basis": null
+            },
+            "cover_days": null,
+            "status": null,
+            "reason": "Cover is SKU-wide (all locations pooled) — fewer than 4 of the last 8 weeks have sales recorded at Boduppal."
+          }
+        ]
+      }
+    ]
+  },
+  "decisions": {
+    "industry": "fashion",
+    "generated": 12,
+    "skus_evaluated": 6,
+    "run_id": "55de04cd-c9d0-4bf4-a47b-3411af8128b2",
+    "decisions": [
+      {
+        "id": "01907e8c-eb31-40e0-9dd1-c0b9c2e8364c",
+        "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+        "sku_code": "KURTI-XL",
+        "kind": "purchase_order",
+        "status": "open",
+        "urgency": "critical",
+        "headline": "Raise a purchase order for 414 units",
+        "recommended_units": 414,
+        "baseline_units": 426,
+        "accepted_units": null,
+        "confidence": 92,
+        "confidence_band": "high",
+        "currency": "INR",
+        "unit_cost": 630,
+        "unit_price": 1050,
+        "reasons": [
+          {
+            "code": "protection_window",
+            "text": "Supplier lead time is 14 days and you review orders every 28 days, so this order has to cover 42 days of demand",
+            "impact_units": null
+          },
+          {
+            "code": "forecast_demand",
+            "text": "Forecast demand over that window is 404 units",
+            "impact_units": 403.6095
+          },
+          {
+            "code": "service_level",
+            "text": "Your 97% service-level target adds 21 units of safety stock",
+            "impact_units": 20.532380946607468
+          },
+          {
+            "code": "current_position",
+            "text": "You already hold 13 available",
+            "impact_units": -13
+          },
+          {
+            "code": "moq_rounding",
+            "text": "Rounded up from 411 to meet the supplier MOQ of 6",
+            "impact_units": 2.8581190533924996
+          },
+          {
+            "code": "carrying_cost",
+            "text": "Carrying this order for 42 days costs about INR 7,503 at a 25% annual holding rate",
+            "impact_units": null
+          }
+        ],
+        "economics": {
+          "currency": "INR",
+          "capital_committed": 260820,
+          "baseline_capital": 268380,
+          "working_capital_released": 7560,
+          "holding_cost_over_window": 7503.04,
+          "revenue_protected": 410139.98,
+          "units_at_risk_without_order": 390.6
+        },
+        "inputs": {
+          "lead_time_days": 14,
+          "review_period_days": 28,
+          "protection_days": 42,
+          "service_level": 0.97,
+          "z": 1.8808,
+          "demand_p50_over_window": 403.61,
+          "demand_p90_over_window": 435.83,
+          "sigma_over_window": 10.92,
+          "safety_stock_units": 20.53,
+          "order_up_to": 424.14,
+          "on_hand_units": 13,
+          "reserved_units": 0,
+          "inbound_units": 0,
+          "position_units": 13,
+          "days_of_cover": 1.3,
+          "moq": 6,
+          "unit_cost": 630,
+          "unit_price": 1050,
+          "forecast_horizon_weeks": 12,
+          "holding_cost_pct": 0.25
+        },
+        "linked_alert_id": null,
+        "created_at": "2026-10-26T04:45:08.739648+00:00",
+        "decided_at": null,
+        "expires_at": "2026-11-09T04:45:08.864401+00:00"
+      },
+      {
+        "id": "9d2c43cd-709a-4e2f-af75-8580e0bb89b4",
+        "sku_id": "8531f9c9-8cbc-453a-b19a-2592d0e1c228",
+        "sku_code": "GOWN-M",
+        "kind": "purchase_order",
+        "status": "open",
+        "urgency": "critical",
+        "headline": "Raise a purchase order for 156 units",
+        "recommended_units": 156,
+        "baseline_units": 162,
+        "accepted_units": null,
+        "confidence": 92,
+        "confidence_band": "high",
+        "currency": "INR",
+        "unit_cost": 1250,
+        "unit_price": 2200,
+        "reasons": [
+          {
+            "code": "protection_window",
+            "text": "Supplier lead time is 14 days and you review orders every 28 days, so this order has to cover 42 days of demand",
+            "impact_units": null
+          },
+          {
+            "code": "forecast_demand",
+            "text": "Forecast demand over that window is 151 units",
+            "impact_units": 151.0722
+          },
+          {
+            "code": "service_level",
+            "text": "Your 97% service-level target adds 15 units of safety stock",
+            "impact_units": 14.738335326804089
+          },
+          {
+            "code": "current_position",
+            "text": "You already hold 13 available",
+            "impact_units": -13
+          },
+          {
+            "code": "moq_rounding",
+            "text": "Rounded up from 153 to meet the supplier MOQ of 6",
+            "impact_units": 3.189464673195914
+          },
+          {
+            "code": "demand_trend",
+            "text": "Weekly demand is trending up 49% versus the trailing average",
+            "impact_units": null
+          },
+          {
+            "code": "carrying_cost",
+            "text": "Carrying this order for 42 days costs about INR 5,610 at a 25% annual holding rate",
+            "impact_units": null
+          }
+        ],
+        "economics": {
+          "currency": "INR",
+          "capital_committed": 195000,
+          "baseline_capital": 202500,
+          "working_capital_released": 7500,
+          "holding_cost_over_window": 5609.59,
+          "revenue_protected": 303758.84,
+          "units_at_risk_without_order": 138.1
+        },
+        "inputs": {
+          "lead_time_days": 14,
+          "review_period_days": 28,
+          "protection_days": 42,
+          "service_level": 0.97,
+          "z": 1.8808,
+          "demand_p50_over_window": 151.07,
+          "demand_p90_over_window": 174.67,
+          "sigma_over_window": 7.84,
+          "safety_stock_units": 14.74,
+          "order_up_to": 165.81,
+          "on_hand_units": 13,
+          "reserved_units": 0,
+          "inbound_units": 0,
+          "position_units": 13,
+          "days_of_cover": 3.8,
+          "moq": 6,
+          "unit_cost": 1250,
+          "unit_price": 2200,
+          "forecast_horizon_weeks": 12,
+          "holding_cost_pct": 0.25
+        },
+        "linked_alert_id": null,
+        "created_at": "2026-10-26T04:45:08.739648+00:00",
+        "decided_at": null,
+        "expires_at": "2026-11-09T04:45:08.864401+00:00"
+      },
+      {
+        "id": "1289cb28-5b68-40a1-9d85-83757e199958",
+        "sku_id": "0f8cd05e-c218-4ed5-b3a4-120e352a090f",
+        "sku_code": "KURTI-M",
+        "kind": "purchase_order",
+        "status": "open",
+        "urgency": "critical",
+        "headline": "Raise a purchase order for 240 units",
+        "recommended_units": 240,
+        "baseline_units": 252,
+        "accepted_units": null,
+        "confidence": 92,
+        "confidence_band": "high",
+        "currency": "INR",
+        "unit_cost": 600,
+        "unit_price": 1000,
+        "reasons": [
+          {
+            "code": "protection_window",
+            "text": "Supplier lead time is 14 days and you review orders every 28 days, so this order has to cover 42 days of demand",
+            "impact_units": null
+          },
+          {
+            "code": "forecast_demand",
+            "text": "Forecast demand over that window is 237 units",
+            "impact_units": 236.56719999999996
+          },
+          {
+            "code": "service_level",
+            "text": "Your 97% service-level target adds 15 units of safety stock",
+            "impact_units": 14.863441464507897
+          },
+          {
+            "code": "current_position",
+            "text": "You already hold 13 available",
+            "impact_units": -13
+          },
+          {
+            "code": "moq_rounding",
+            "text": "Rounded up from 238 to meet the supplier MOQ of 6",
+            "impact_units": 1.5693585354921424
+          },
+          {
+            "code": "carrying_cost",
+            "text": "Carrying this order for 42 days costs about INR 4,142 at a 25% annual holding rate",
+            "impact_units": null
+          }
+        ],
+        "economics": {
+          "currency": "INR",
+          "capital_committed": 144000,
+          "baseline_capital": 151200,
+          "working_capital_released": 7200,
+          "holding_cost_over_window": 4142.47,
+          "revenue_protected": 223567.2,
+          "units_at_risk_without_order": 223.6
+        },
+        "inputs": {
+          "lead_time_days": 14,
+          "review_period_days": 28,
+          "protection_days": 42,
+          "service_level": 0.97,
+          "z": 1.8808,
+          "demand_p50_over_window": 236.57,
+          "demand_p90_over_window": 263.35,
+          "sigma_over_window": 7.9,
+          "safety_stock_units": 14.86,
+          "order_up_to": 251.43,
+          "on_hand_units": 13,
+          "reserved_units": 0,
+          "inbound_units": 0,
+          "position_units": 13,
+          "days_of_cover": 2.3,
+          "moq": 6,
+          "unit_cost": 600,
+          "unit_price": 1000,
+          "forecast_horizon_weeks": 12,
+          "holding_cost_pct": 0.25
+        },
+        "linked_alert_id": null,
+        "created_at": "2026-10-26T04:45:08.739648+00:00",
+        "decided_at": null,
+        "expires_at": "2026-11-09T04:45:08.864401+00:00"
+      },
+      {
+        "id": "91c5af68-bcf9-4a4e-be91-49e91d02ec40",
+        "sku_id": "7dbcf261-5c9f-4b40-b6cc-bb6c3e7191b5",
+        "sku_code": "LEGGING-M",
+        "kind": "purchase_order",
+        "status": "open",
+        "urgency": "critical",
+        "headline": "Raise a purchase order for 342 units",
+        "recommended_units": 342,
+        "baseline_units": 354,
+        "accepted_units": null,
+        "confidence": 92,
+        "confidence_band": "high",
+        "currency": "INR",
+        "unit_cost": 260,
+        "unit_price": 499,
+        "reasons": [
+          {
+            "code": "protection_window",
+            "text": "Supplier lead time is 14 days and you review orders every 28 days, so this order has to cover 42 days of demand",
+            "impact_units": null
+          },
+          {
+            "code": "forecast_demand",
+            "text": "Forecast demand over that window is 332 units",
+            "impact_units": 331.90959999999995
+          },
+          {
+            "code": "service_level",
+            "text": "Your 97% service-level target adds 19 units of safety stock",
+            "impact_units": 18.936971928246365
+          },
+          {
+            "code": "current_position",
+            "text": "You already hold 13 available",
+            "impact_units": -13
+          },
+          {
+            "code": "moq_rounding",
+            "text": "Rounded up from 338 to meet the supplier MOQ of 6",
+            "impact_units": 4.153428071753694
+          },
+          {
+            "code": "carrying_cost",
+            "text": "Carrying this order for 42 days costs about INR 2,558 at a 25% annual holding rate",
+            "impact_units": null
+          }
+        ],
+        "economics": {
+          "currency": "INR",
+          "capital_committed": 88920,
+          "baseline_capital": 92040,
+          "working_capital_released": 3120,
+          "holding_cost_over_window": 2557.97,
+          "revenue_protected": 159135.89,
+          "units_at_risk_without_order": 318.9
+        },
+        "inputs": {
+          "lead_time_days": 14,
+          "review_period_days": 28,
+          "protection_days": 42,
+          "service_level": 0.97,
+          "z": 1.8808,
+          "demand_p50_over_window": 331.91,
+          "demand_p90_over_window": 362.76,
+          "sigma_over_window": 10.07,
+          "safety_stock_units": 18.94,
+          "order_up_to": 350.85,
+          "on_hand_units": 13,
+          "reserved_units": 0,
+          "inbound_units": 0,
+          "position_units": 13,
+          "days_of_cover": 1.6,
+          "moq": 6,
+          "unit_cost": 260,
+          "unit_price": 499,
+          "forecast_horizon_weeks": 12,
+          "holding_cost_pct": 0.25
+        },
+        "linked_alert_id": null,
+        "created_at": "2026-10-26T04:45:08.739648+00:00",
+        "decided_at": null,
+        "expires_at": "2026-11-09T04:45:08.864401+00:00"
+      },
+      {
+        "id": "607ba5fe-5c71-441a-9654-80c35f1a2b05",
+        "sku_id": "55097d94-027a-4974-a51b-8326266b8db0",
+        "sku_code": "PALAZZO-XL",
+        "kind": "purchase_order",
+        "status": "open",
+        "urgency": "critical",
+        "headline": "Raise a purchase order for 132 units",
+        "recommended_units": 132,
+        "baseline_units": 138,
+        "accepted_units": null,
+        "confidence": 65,
+        "confidence_band": "moderate",
+        "currency": "INR",
+        "unit_cost": 430,
+        "unit_price": 799,
+        "reasons": [
+          {
+            "code": "protection_window",
+            "text": "Supplier lead time is 14 days and you review orders every 28 days, so this order has to cover 42 days of demand",
+            "impact_units": null
+          },
+          {
+            "code": "forecast_demand",
+            "text": "Forecast demand over that window is 131 units",
+            "impact_units": 130.7571
+          },
+          {
+            "code": "service_level",
+            "text": "Your 97% service-level target adds 12 units of safety stock",
+            "impact_units": 12.244550903330829
+          },
+          {
+            "code": "current_position",
+            "text": "You already hold 13 available",
+            "impact_units": -13
+          },
+          {
+            "code": "moq_rounding",
+            "text": "Rounded up from 130 to meet the supplier MOQ of 6",
+            "impact_units": 1.998349096669159
+          },
+          {
+            "code": "carrying_cost",
+            "text": "Carrying this order for 42 days costs about INR 1,633 at a 25% annual holding rate",
+            "impact_units": null
+          }
+        ],
+        "economics": {
+          "currency": "INR",
+          "capital_committed": 56760,
+          "baseline_capital": 59340,
+          "working_capital_released": 2580,
+          "holding_cost_over_window": 1632.82,
+          "revenue_protected": 94087.92,
+          "units_at_risk_without_order": 117.8
+        },
+        "inputs": {
+          "lead_time_days": 14,
+          "review_period_days": 28,
+          "protection_days": 42,
+          "service_level": 0.97,
+          "z": 1.8808,
+          "demand_p50_over_window": 130.76,
+          "demand_p90_over_window": 149.73,
+          "sigma_over_window": 6.51,
+          "safety_stock_units": 12.24,
+          "order_up_to": 143,
+          "on_hand_units": 13,
+          "reserved_units": 0,
+          "inbound_units": 0,
+          "position_units": 13,
+          "days_of_cover": 4.1,
+          "moq": 6,
+          "unit_cost": 430,
+          "unit_price": 799,
+          "forecast_horizon_weeks": 12,
+          "holding_cost_pct": 0.25
+        },
+        "linked_alert_id": null,
+        "created_at": "2026-10-26T04:45:08.739648+00:00",
+        "decided_at": null,
+        "expires_at": "2026-11-09T04:45:08.864401+00:00"
+      },
+      {
+        "id": "c0631f4f-64da-4fad-8a12-5e5f67779c4d",
+        "sku_id": "0f8cd05e-c218-4ed5-b3a4-120e352a090f",
+        "sku_code": "KURTI-M",
+        "kind": "safety_stock_update",
+        "status": "open",
+        "urgency": "low",
+        "headline": "Raise safety stock from 0 to 15 units",
+        "recommended_units": 15,
+        "baseline_units": 0,
+        "accepted_units": null,
+        "confidence": 92,
+        "confidence_band": "high",
+        "currency": "INR",
+        "unit_cost": 600,
+        "unit_price": 1000,
+        "reasons": [
+          {
+            "code": "service_level_math",
+            "text": "A 97% service level over a 42-day protection window needs 15 units of buffer (z=1.88 × σ=8)",
+            "impact_units": 14.863441464507897
+          },
+          {
+            "code": "current_setting",
+            "text": "The SKU is currently configured for 0 units, which under-protects it",
+            "impact_units": null
+          }
+        ],
+        "economics": {
+          "currency": "INR",
+          "capital_delta": 8918.06
+        },
+        "inputs": {
+          "lead_time_days": 14,
+          "review_period_days": 28,
+          "protection_days": 42,
+          "service_level": 0.97,
+          "z": 1.8808,
+          "demand_p50_over_window": 236.57,
+          "demand_p90_over_window": 263.35,
+          "sigma_over_window": 7.9,
+          "safety_stock_units": 14.86,
+          "order_up_to": 251.43,
+          "on_hand_units": 13,
+          "reserved_units": 0,
+          "inbound_units": 0,
+          "position_units": 13,
+          "days_of_cover": 2.3,
+          "moq": 6,
+          "unit_cost": 600,
+          "unit_price": 1000,
+          "forecast_horizon_weeks": 12,
+          "holding_cost_pct": 0.25
+        },
+        "linked_alert_id": null,
+        "created_at": "2026-10-26T04:45:08.739648+00:00",
+        "decided_at": null,
+        "expires_at": "2026-11-09T04:45:08.864401+00:00"
+      },
+      {
+        "id": "9b79cd5e-85dd-4d53-bde5-eb8e9ba6b5cc",
+        "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+        "sku_code": "KURTI-XL",
+        "kind": "safety_stock_update",
+        "status": "open",
+        "urgency": "low",
+        "headline": "Raise safety stock from 0 to 21 units",
+        "recommended_units": 21,
+        "baseline_units": 0,
+        "accepted_units": null,
+        "confidence": 92,
+        "confidence_band": "high",
+        "currency": "INR",
+        "unit_cost": 630,
+        "unit_price": 1050,
+        "reasons": [
+          {
+            "code": "service_level_math",
+            "text": "A 97% service level over a 42-day protection window needs 21 units of buffer (z=1.88 × σ=11)",
+            "impact_units": 20.532380946607468
+          },
+          {
+            "code": "current_setting",
+            "text": "The SKU is currently configured for 0 units, which under-protects it",
+            "impact_units": null
+          }
+        ],
+        "economics": {
+          "currency": "INR",
+          "capital_delta": 12935.4
+        },
+        "inputs": {
+          "lead_time_days": 14,
+          "review_period_days": 28,
+          "protection_days": 42,
+          "service_level": 0.97,
+          "z": 1.8808,
+          "demand_p50_over_window": 403.61,
+          "demand_p90_over_window": 435.83,
+          "sigma_over_window": 10.92,
+          "safety_stock_units": 20.53,
+          "order_up_to": 424.14,
+          "on_hand_units": 13,
+          "reserved_units": 0,
+          "inbound_units": 0,
+          "position_units": 13,
+          "days_of_cover": 1.3,
+          "moq": 6,
+          "unit_cost": 630,
+          "unit_price": 1050,
+          "forecast_horizon_weeks": 12,
+          "holding_cost_pct": 0.25
+        },
+        "linked_alert_id": null,
+        "created_at": "2026-10-26T04:45:08.739648+00:00",
+        "decided_at": null,
+        "expires_at": "2026-11-09T04:45:08.864401+00:00"
+      },
+      {
+        "id": "088f7aae-1715-423a-aaa3-ea92d6f7aa6d",
+        "sku_id": "8531f9c9-8cbc-453a-b19a-2592d0e1c228",
+        "sku_code": "GOWN-M",
+        "kind": "safety_stock_update",
+        "status": "open",
+        "urgency": "low",
+        "headline": "Raise safety stock from 0 to 15 units",
+        "recommended_units": 15,
+        "baseline_units": 0,
+        "accepted_units": null,
+        "confidence": 92,
+        "confidence_band": "high",
+        "currency": "INR",
+        "unit_cost": 1250,
+        "unit_price": 2200,
+        "reasons": [
+          {
+            "code": "service_level_math",
+            "text": "A 97% service level over a 42-day protection window needs 15 units of buffer (z=1.88 × σ=8)",
+            "impact_units": 14.738335326804089
+          },
+          {
+            "code": "current_setting",
+            "text": "The SKU is currently configured for 0 units, which under-protects it",
+            "impact_units": null
+          }
+        ],
+        "economics": {
+          "currency": "INR",
+          "capital_delta": 18422.92
+        },
+        "inputs": {
+          "lead_time_days": 14,
+          "review_period_days": 28,
+          "protection_days": 42,
+          "service_level": 0.97,
+          "z": 1.8808,
+          "demand_p50_over_window": 151.07,
+          "demand_p90_over_window": 174.67,
+          "sigma_over_window": 7.84,
+          "safety_stock_units": 14.74,
+          "order_up_to": 165.81,
+          "on_hand_units": 13,
+          "reserved_units": 0,
+          "inbound_units": 0,
+          "position_units": 13,
+          "days_of_cover": 3.8,
+          "moq": 6,
+          "unit_cost": 1250,
+          "unit_price": 2200,
+          "forecast_horizon_weeks": 12,
+          "holding_cost_pct": 0.25
+        },
+        "linked_alert_id": null,
+        "created_at": "2026-10-26T04:45:08.739648+00:00",
+        "decided_at": null,
+        "expires_at": "2026-11-09T04:45:08.864401+00:00"
+      },
+      {
+        "id": "cb6371cd-5a52-454b-96c5-f08136af5913",
+        "sku_id": "a78d316b-9b20-4b0f-aa44-47474de34c41",
+        "sku_code": "GOWN-XL",
+        "kind": "purchase_order",
+        "status": "open",
+        "urgency": "low",
+        "headline": "Raise a purchase order for 30 units",
+        "recommended_units": 30,
+        "baseline_units": 126,
+        "accepted_units": null,
+        "confidence": 60,
+        "confidence_band": "moderate",
+        "currency": "INR",
+        "unit_cost": 1350,
+        "unit_price": 2300,
+        "reasons": [
+          {
+            "code": "protection_window",
+            "text": "Supplier lead time is 14 days and you review orders every 28 days, so this order has to cover 42 days of demand",
+            "impact_units": null
+          },
+          {
+            "code": "forecast_demand",
+            "text": "Forecast demand over that window is 0 units",
+            "impact_units": 0
+          },
+          {
+            "code": "service_level",
+            "text": "Your 97% service-level target adds 41 units of safety stock",
+            "impact_units": 41.167185359265055
+          },
+          {
+            "code": "current_position",
+            "text": "You already hold 13 available",
+            "impact_units": -13
+          },
+          {
+            "code": "moq_rounding",
+            "text": "Rounded up from 28 to meet the supplier MOQ of 6",
+            "impact_units": 1.832814640734945
+          },
+          {
+            "code": "demand_trend",
+            "text": "Weekly demand is trending down 100% versus the trailing average",
+            "impact_units": null
+          },
+          {
+            "code": "carrying_cost",
+            "text": "Carrying this order for 42 days costs about INR 1,165 at a 25% annual holding rate",
+            "impact_units": null
+          }
+        ],
+        "economics": {
+          "currency": "INR",
+          "capital_committed": 40500,
+          "baseline_capital": 170100,
+          "working_capital_released": 129600,
+          "holding_cost_over_window": 1165.07,
+          "revenue_protected": 0,
+          "units_at_risk_without_order": 0
+        },
+        "inputs": {
+          "lead_time_days": 14,
+          "review_period_days": 28,
+          "protection_days": 42,
+          "service_level": 0.97,
+          "z": 1.8808,
+          "demand_p50_over_window": 0,
+          "demand_p90_over_window": 135.12,
+          "sigma_over_window": 21.89,
+          "safety_stock_units": 41.17,
+          "order_up_to": 41.17,
+          "on_hand_units": 13,
+          "reserved_units": 0,
+          "inbound_units": 0,
+          "position_units": 13,
+          "days_of_cover": null,
+          "moq": 6,
+          "unit_cost": 1350,
+          "unit_price": 2300,
+          "forecast_horizon_weeks": 12,
+          "holding_cost_pct": 0.25
+        },
+        "linked_alert_id": null,
+        "created_at": "2026-10-26T04:45:08.739648+00:00",
+        "decided_at": null,
+        "expires_at": "2026-11-09T04:45:08.864401+00:00"
+      },
+      {
+        "id": "618e1a71-0426-44fb-b11b-032ad1b0d091",
+        "sku_id": "a78d316b-9b20-4b0f-aa44-47474de34c41",
+        "sku_code": "GOWN-XL",
+        "kind": "safety_stock_update",
+        "status": "open",
+        "urgency": "low",
+        "headline": "Raise safety stock from 0 to 41 units",
+        "recommended_units": 41,
+        "baseline_units": 0,
+        "accepted_units": null,
+        "confidence": 60,
+        "confidence_band": "moderate",
+        "currency": "INR",
+        "unit_cost": 1350,
+        "unit_price": 2300,
+        "reasons": [
+          {
+            "code": "service_level_math",
+            "text": "A 97% service level over a 42-day protection window needs 41 units of buffer (z=1.88 × σ=22)",
+            "impact_units": 41.167185359265055
+          },
+          {
+            "code": "current_setting",
+            "text": "The SKU is currently configured for 0 units, which under-protects it",
+            "impact_units": null
+          }
+        ],
+        "economics": {
+          "currency": "INR",
+          "capital_delta": 55575.7
+        },
+        "inputs": {
+          "lead_time_days": 14,
+          "review_period_days": 28,
+          "protection_days": 42,
+          "service_level": 0.97,
+          "z": 1.8808,
+          "demand_p50_over_window": 0,
+          "demand_p90_over_window": 135.12,
+          "sigma_over_window": 21.89,
+          "safety_stock_units": 41.17,
+          "order_up_to": 41.17,
+          "on_hand_units": 13,
+          "reserved_units": 0,
+          "inbound_units": 0,
+          "position_units": 13,
+          "days_of_cover": null,
+          "moq": 6,
+          "unit_cost": 1350,
+          "unit_price": 2300,
+          "forecast_horizon_weeks": 12,
+          "holding_cost_pct": 0.25
+        },
+        "linked_alert_id": null,
+        "created_at": "2026-10-26T04:45:08.739648+00:00",
+        "decided_at": null,
+        "expires_at": "2026-11-09T04:45:08.864401+00:00"
+      },
+      {
+        "id": "73525b35-244b-46fd-8872-b8da8992e2c9",
+        "sku_id": "7dbcf261-5c9f-4b40-b6cc-bb6c3e7191b5",
+        "sku_code": "LEGGING-M",
+        "kind": "safety_stock_update",
+        "status": "open",
+        "urgency": "low",
+        "headline": "Raise safety stock from 0 to 19 units",
+        "recommended_units": 19,
+        "baseline_units": 0,
+        "accepted_units": null,
+        "confidence": 92,
+        "confidence_band": "high",
+        "currency": "INR",
+        "unit_cost": 260,
+        "unit_price": 499,
+        "reasons": [
+          {
+            "code": "service_level_math",
+            "text": "A 97% service level over a 42-day protection window needs 19 units of buffer (z=1.88 × σ=10)",
+            "impact_units": 18.936971928246365
+          },
+          {
+            "code": "current_setting",
+            "text": "The SKU is currently configured for 0 units, which under-protects it",
+            "impact_units": null
+          }
+        ],
+        "economics": {
+          "currency": "INR",
+          "capital_delta": 4923.61
+        },
+        "inputs": {
+          "lead_time_days": 14,
+          "review_period_days": 28,
+          "protection_days": 42,
+          "service_level": 0.97,
+          "z": 1.8808,
+          "demand_p50_over_window": 331.91,
+          "demand_p90_over_window": 362.76,
+          "sigma_over_window": 10.07,
+          "safety_stock_units": 18.94,
+          "order_up_to": 350.85,
+          "on_hand_units": 13,
+          "reserved_units": 0,
+          "inbound_units": 0,
+          "position_units": 13,
+          "days_of_cover": 1.6,
+          "moq": 6,
+          "unit_cost": 260,
+          "unit_price": 499,
+          "forecast_horizon_weeks": 12,
+          "holding_cost_pct": 0.25
+        },
+        "linked_alert_id": null,
+        "created_at": "2026-10-26T04:45:08.739648+00:00",
+        "decided_at": null,
+        "expires_at": "2026-11-09T04:45:08.864401+00:00"
+      },
+      {
+        "id": "65e9b6fb-0cb2-4e5f-af3b-9a4b45c0c980",
+        "sku_id": "55097d94-027a-4974-a51b-8326266b8db0",
+        "sku_code": "PALAZZO-XL",
+        "kind": "safety_stock_update",
+        "status": "open",
+        "urgency": "low",
+        "headline": "Raise safety stock from 0 to 12 units",
+        "recommended_units": 12,
+        "baseline_units": 0,
+        "accepted_units": null,
+        "confidence": 65,
+        "confidence_band": "moderate",
+        "currency": "INR",
+        "unit_cost": 430,
+        "unit_price": 799,
+        "reasons": [
+          {
+            "code": "service_level_math",
+            "text": "A 97% service level over a 42-day protection window needs 12 units of buffer (z=1.88 × σ=7)",
+            "impact_units": 12.244550903330829
+          },
+          {
+            "code": "current_setting",
+            "text": "The SKU is currently configured for 0 units, which under-protects it",
+            "impact_units": null
+          }
+        ],
+        "economics": {
+          "currency": "INR",
+          "capital_delta": 5265.16
+        },
+        "inputs": {
+          "lead_time_days": 14,
+          "review_period_days": 28,
+          "protection_days": 42,
+          "service_level": 0.97,
+          "z": 1.8808,
+          "demand_p50_over_window": 130.76,
+          "demand_p90_over_window": 149.73,
+          "sigma_over_window": 6.51,
+          "safety_stock_units": 12.24,
+          "order_up_to": 143,
+          "on_hand_units": 13,
+          "reserved_units": 0,
+          "inbound_units": 0,
+          "position_units": 13,
+          "days_of_cover": 4.1,
+          "moq": 6,
+          "unit_cost": 430,
+          "unit_price": 799,
+          "forecast_horizon_weeks": 12,
+          "holding_cost_pct": 0.25
+        },
+        "linked_alert_id": null,
+        "created_at": "2026-10-26T04:45:08.739648+00:00",
+        "decided_at": null,
+        "expires_at": "2026-11-09T04:45:08.864401+00:00"
+      }
+    ],
+    "totals": {
+      "purchase_orders": 6,
+      "units_to_order": 1314,
+      "capital_committed": 786000,
+      "working_capital_released_vs_baseline": 157560,
+      "revenue_protected": 1190689.83,
+      "critical": 5,
+      "currency": "INR"
+    }
+  },
+  "accepted": {
+    "id": "01907e8c-eb31-40e0-9dd1-c0b9c2e8364c",
+    "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+    "sku_code": null,
+    "kind": "purchase_order",
+    "status": "accepted",
+    "urgency": "critical",
+    "headline": "Raise a purchase order for 414 units",
+    "recommended_units": 414,
+    "baseline_units": 426,
+    "accepted_units": 414,
+    "confidence": 92,
+    "confidence_band": "high",
+    "currency": "INR",
+    "unit_cost": 630,
+    "unit_price": 1050,
+    "reasons": [
+      {
+        "code": "protection_window",
+        "text": "Supplier lead time is 14 days and you review orders every 28 days, so this order has to cover 42 days of demand",
+        "impact_units": null
+      },
+      {
+        "code": "forecast_demand",
+        "text": "Forecast demand over that window is 404 units",
+        "impact_units": 403.6095
+      },
+      {
+        "code": "service_level",
+        "text": "Your 97% service-level target adds 21 units of safety stock",
+        "impact_units": 20.532380946607468
+      },
+      {
+        "code": "current_position",
+        "text": "You already hold 13 available",
+        "impact_units": -13
+      },
+      {
+        "code": "moq_rounding",
+        "text": "Rounded up from 411 to meet the supplier MOQ of 6",
+        "impact_units": 2.8581190533924996
+      },
+      {
+        "code": "carrying_cost",
+        "text": "Carrying this order for 42 days costs about INR 7,503 at a 25% annual holding rate",
+        "impact_units": null
+      }
+    ],
+    "economics": {
+      "currency": "INR",
+      "baseline_capital": 268380,
+      "capital_committed": 260820,
+      "revenue_protected": 410139.98,
+      "holding_cost_over_window": 7503.04,
+      "working_capital_released": 7560,
+      "units_at_risk_without_order": 390.6
+    },
+    "inputs": {
+      "z": 1.8808,
+      "moq": 6,
+      "unit_cost": 630,
+      "unit_price": 1050,
+      "order_up_to": 424.14,
+      "days_of_cover": 1.3,
+      "inbound_units": 0,
+      "on_hand_units": 13,
+      "service_level": 0.97,
+      "lead_time_days": 14,
+      "position_units": 13,
+      "reserved_units": 0,
+      "protection_days": 42,
+      "holding_cost_pct": 0.25,
+      "sigma_over_window": 10.92,
+      "review_period_days": 28,
+      "safety_stock_units": 20.53,
+      "demand_p50_over_window": 403.61,
+      "demand_p90_over_window": 435.83,
+      "forecast_horizon_weeks": 12
+    },
+    "linked_alert_id": null,
+    "created_at": "2026-10-26T04:45:08.739648+00:00",
+    "decided_at": "2026-10-26T04:45:09.320616+00:00",
+    "expires_at": "2026-11-09T04:45:08.864401+00:00"
+  },
+  "scenario": {
+    "scenario": {
+      "name": "Sales +30%",
+      "demand_shock_pct": 30,
+      "price_change_pct": 0,
+      "price_elasticity": -1.2,
+      "lead_time_delta_days": 0,
+      "cost_change_pct": 0,
+      "supplier_outage_weeks": 0,
+      "supplier_outage_sku_ids": [],
+      "service_level": null,
+      "ramp_weeks": 4
+    },
+    "config": {
+      "horizon_weeks": 26,
+      "review_weeks": 4,
+      "holding_cost_pct": 0.25,
+      "service_level": 0.97
+    },
+    "baseline": {
+      "currency": "INR",
+      "skus": 6,
+      "demand_units": 5452,
+      "shipped_units": 5100,
+      "short_units": 352,
+      "fill_rate": 0.9354,
+      "skus_stocking_out": 5,
+      "revenue": 5206570.04,
+      "gross_margin": 2207076.05,
+      "lost_revenue": 344264.19,
+      "avg_inventory_units": 661,
+      "peak_inventory_units": 1191,
+      "units_ordered": 5394,
+      "purchase_spend": 3210240,
+      "holding_cost": 53760.56
+    },
+    "result": {
+      "currency": "INR",
+      "skus": 6,
+      "demand_units": 6994,
+      "shipped_units": 6594,
+      "short_units": 399,
+      "fill_rate": 0.9429,
+      "skus_stocking_out": 5,
+      "revenue": 6731311.61,
+      "gross_margin": 2853317.15,
+      "lost_revenue": 391188.47,
+      "avg_inventory_units": 843,
+      "peak_inventory_units": 1468,
+      "units_ordered": 7002,
+      "purchase_spend": 4171860,
+      "holding_cost": 68661.72
+    },
+    "impact": {
+      "fill_rate_pts": 0.75,
+      "revenue": 1524741.57,
+      "gross_margin": 646241.1,
+      "lost_revenue": 46924.28,
+      "purchase_spend": 961620,
+      "avg_inventory_units": 182,
+      "skus_stocking_out": 0
+    },
+    "by_sku": [
+      {
+        "sku_id": "a78d316b-9b20-4b0f-aa44-47474de34c41",
+        "sku_code": "GOWN-XL",
+        "baseline": {
+          "sku_id": "a78d316b-9b20-4b0f-aa44-47474de34c41",
+          "sku_code": "GOWN-XL",
+          "demand_units": 0,
+          "shipped_units": 0,
+          "short_units": 0,
+          "fill_rate": 1,
+          "weeks_stocked_out": 0,
+          "first_stockout_week": null,
+          "avg_inventory_units": 47.2,
+          "peak_inventory_units": 55,
+          "ordered_units": 42,
+          "revenue": 0,
+          "gross_margin": 0,
+          "order_cost": 56700,
+          "holding_cost": 7957.21
+        },
+        "scenario": {
+          "sku_id": "a78d316b-9b20-4b0f-aa44-47474de34c41",
+          "sku_code": "GOWN-XL",
+          "demand_units": 0,
+          "shipped_units": 0,
+          "short_units": 0,
+          "fill_rate": 1,
+          "weeks_stocked_out": 0,
+          "first_stockout_week": null,
+          "avg_inventory_units": 61,
+          "peak_inventory_units": 73,
+          "ordered_units": 60,
+          "revenue": 0,
+          "gross_margin": 0,
+          "order_cost": 81000,
+          "holding_cost": 10293.75
+        },
+        "delta": {
+          "fill_rate": 0,
+          "short_units": 0,
+          "revenue": 0,
+          "gross_margin": 0,
+          "units_ordered": 18,
+          "purchase_spend": 24300,
+          "avg_inventory_units": 13.8
+        },
+        "weekly": {
+          "demand": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "on_hand": [
+            13,
+            13,
+            55,
+            55,
+            55,
+            55,
+            55,
+            55,
+            55,
+            55,
+            61,
+            61,
+            61,
+            61,
+            73,
+            73,
+            73,
+            73,
+            73,
+            73,
+            73,
+            73,
+            73,
+            73,
+            73,
+            73
+          ],
+          "baseline_on_hand": [
+            13,
+            13,
+            43,
+            43,
+            43,
+            43,
+            43,
+            43,
+            43,
+            43,
+            49,
+            49,
+            49,
+            49,
+            55,
+            55,
+            55,
+            55,
+            55,
+            55,
+            55,
+            55,
+            55,
+            55,
+            55,
+            55
+          ]
+        }
+      },
+      {
+        "sku_id": "55097d94-027a-4974-a51b-8326266b8db0",
+        "sku_code": "PALAZZO-XL",
+        "baseline": {
+          "sku_id": "55097d94-027a-4974-a51b-8326266b8db0",
+          "sku_code": "PALAZZO-XL",
+          "demand_units": 550.2,
+          "shipped_units": 519.3,
+          "short_units": 30.9,
+          "fill_rate": 0.9438,
+          "weeks_stocked_out": 2,
+          "first_stockout_week": 0,
+          "avg_inventory_units": 64.6,
+          "peak_inventory_units": 122,
+          "ordered_units": 540,
+          "revenue": 414933.24,
+          "gross_margin": 191627.49,
+          "order_cost": 232200,
+          "holding_cost": 3473.25
+        },
+        "scenario": {
+          "sku_id": "55097d94-027a-4974-a51b-8326266b8db0",
+          "sku_code": "PALAZZO-XL",
+          "demand_units": 705.4,
+          "shipped_units": 669.6,
+          "short_units": 35.9,
+          "fill_rate": 0.9492,
+          "weeks_stocked_out": 2,
+          "first_stockout_week": 0,
+          "avg_inventory_units": 83.2,
+          "peak_inventory_units": 153.1,
+          "ordered_units": 702,
+          "revenue": 534981.36,
+          "gross_margin": 247068.99,
+          "order_cost": 301860,
+          "holding_cost": 4472.9
+        },
+        "delta": {
+          "fill_rate": 0.0054,
+          "short_units": 4.9,
+          "revenue": 120048.12,
+          "gross_margin": 55441.5,
+          "units_ordered": 162,
+          "purchase_spend": 69660,
+          "avg_inventory_units": 18.6
+        },
+        "weekly": {
+          "demand": [
+            23.6,
+            25.3,
+            26.9,
+            28.5,
+            28.5,
+            27.3,
+            27.3,
+            27.3,
+            27.3,
+            27.3,
+            27.3,
+            27.3,
+            27.3,
+            27.3,
+            27.3,
+            27.3,
+            27.3,
+            27.3,
+            27.3,
+            27.3,
+            27.3,
+            27.3,
+            27.3,
+            27.3,
+            27.3,
+            27.3
+          ],
+          "on_hand": [
+            0,
+            0,
+            153.1,
+            124.6,
+            96,
+            68.7,
+            131.5,
+            104.2,
+            77,
+            49.7,
+            124.4,
+            97.2,
+            69.9,
+            42.6,
+            123.4,
+            96.1,
+            68.8,
+            41.6,
+            128.3,
+            101,
+            73.8,
+            46.5,
+            127.2,
+            100,
+            72.7,
+            45.4
+          ],
+          "baseline_on_hand": [
+            0,
+            0,
+            122,
+            100.1,
+            78.1,
+            57.2,
+            102.2,
+            81.2,
+            60.2,
+            39.3,
+            96.3,
+            75.3,
+            54.3,
+            33.4,
+            96.4,
+            75.4,
+            54.4,
+            33.5,
+            96.5,
+            75.5,
+            54.6,
+            33.6,
+            96.6,
+            75.6,
+            54.7,
+            33.7
+          ]
+        }
+      },
+      {
+        "sku_id": "7dbcf261-5c9f-4b40-b6cc-bb6c3e7191b5",
+        "sku_code": "LEGGING-M",
+        "baseline": {
+          "sku_id": "7dbcf261-5c9f-4b40-b6cc-bb6c3e7191b5",
+          "sku_code": "LEGGING-M",
+          "demand_units": 1426.1,
+          "shipped_units": 1328.8,
+          "short_units": 97.4,
+          "fill_rate": 0.9317,
+          "weeks_stocked_out": 2,
+          "first_stockout_week": 0,
+          "avg_inventory_units": 154.9,
+          "peak_inventory_units": 298.8,
+          "ordered_units": 1392,
+          "revenue": 663049.14,
+          "gross_margin": 317572.64,
+          "order_cost": 361920,
+          "holding_cost": 5034.55
+        },
+        "scenario": {
+          "sku_id": "7dbcf261-5c9f-4b40-b6cc-bb6c3e7191b5",
+          "sku_code": "LEGGING-M",
+          "demand_units": 1829.1,
+          "shipped_units": 1719.3,
+          "short_units": 109.8,
+          "fill_rate": 0.94,
+          "weeks_stocked_out": 2,
+          "first_stockout_week": 0,
+          "avg_inventory_units": 198.3,
+          "peak_inventory_units": 364.4,
+          "ordered_units": 1806,
+          "revenue": 857952.53,
+          "gross_margin": 410923.15,
+          "order_cost": 469560,
+          "holding_cost": 6444.07
+        },
+        "delta": {
+          "fill_rate": 0.0083,
+          "short_units": 12.4,
+          "revenue": 194903.38,
+          "gross_margin": 93350.52,
+          "units_ordered": 414,
+          "purchase_spend": 107640,
+          "avg_inventory_units": 43.4
+        },
+        "weekly": {
+          "demand": [
+            59.3,
+            63.5,
+            67.6,
+            71.7,
+            72.3,
+            72.3,
+            71.7,
+            71.2,
+            71.7,
+            71.7,
+            71.7,
+            71,
+            71,
+            71,
+            71,
+            71,
+            71,
+            71,
+            71,
+            71,
+            71,
+            71,
+            71,
+            71,
+            71,
+            71
+          ],
+          "on_hand": [
+            0,
+            0,
+            364.4,
+            292.7,
+            220.4,
+            148.1,
+            316.4,
+            245.2,
+            173.4,
+            101.7,
+            312,
+            241,
+            170.1,
+            99.1,
+            310.1,
+            239.2,
+            168.2,
+            97.3,
+            314.3,
+            243.4,
+            172.4,
+            101.5,
+            312.5,
+            241.6,
+            170.6,
+            99.7
+          ],
+          "baseline_on_hand": [
+            0,
+            0,
+            298.8,
+            243.6,
+            188,
+            132.5,
+            239.3,
+            184.5,
+            129.3,
+            74.1,
+            240.9,
+            186.4,
+            131.8,
+            77.2,
+            238.6,
+            184,
+            129.5,
+            74.9,
+            242.3,
+            187.7,
+            133.1,
+            78.6,
+            240,
+            185.4,
+            130.8,
+            76.2
+          ]
+        }
+      },
+      {
+        "sku_id": "0f8cd05e-c218-4ed5-b3a4-120e352a090f",
+        "sku_code": "KURTI-M",
+        "baseline": {
+          "sku_id": "0f8cd05e-c218-4ed5-b3a4-120e352a090f",
+          "sku_code": "KURTI-M",
+          "demand_units": 1036.9,
+          "shipped_units": 969.8,
+          "short_units": 67.2,
+          "fill_rate": 0.9352,
+          "weeks_stocked_out": 2,
+          "first_stockout_week": 0,
+          "avg_inventory_units": 114.9,
+          "peak_inventory_units": 212.4,
+          "ordered_units": 1014,
+          "revenue": 969792.7,
+          "gross_margin": 387917.08,
+          "order_cost": 608400,
+          "holding_cost": 8616.7
+        },
+        "scenario": {
+          "sku_id": "0f8cd05e-c218-4ed5-b3a4-120e352a090f",
+          "sku_code": "KURTI-M",
+          "demand_units": 1330,
+          "shipped_units": 1253.9,
+          "short_units": 76.2,
+          "fill_rate": 0.9427,
+          "weeks_stocked_out": 2,
+          "first_stockout_week": 0,
+          "avg_inventory_units": 146.3,
+          "peak_inventory_units": 263.4,
+          "ordered_units": 1314,
+          "revenue": 1253857.2,
+          "gross_margin": 501542.88,
+          "order_cost": 788400,
+          "holding_cost": 10971.41
+        },
+        "delta": {
+          "fill_rate": 0.0075,
+          "short_units": 9,
+          "revenue": 284064.5,
+          "gross_margin": 113625.8,
+          "units_ordered": 300,
+          "purchase_spend": 180000,
+          "avg_inventory_units": 31.4
+        },
+        "weekly": {
+          "demand": [
+            43.1,
+            46.1,
+            48.6,
+            50.6,
+            50.6,
+            50.6,
+            52.1,
+            52.1,
+            52.1,
+            50.6,
+            52.1,
+            52.1,
+            52.1,
+            52.1,
+            52.1,
+            52.1,
+            52.1,
+            52.1,
+            52.1,
+            52.1,
+            52.1,
+            52.1,
+            52.1,
+            52.1,
+            52.1,
+            52.1
+          ],
+          "on_hand": [
+            0,
+            0,
+            263.4,
+            212.8,
+            162.2,
+            111.6,
+            227.5,
+            175.4,
+            123.3,
+            72.7,
+            230.6,
+            178.5,
+            126.4,
+            74.3,
+            232.2,
+            180.1,
+            128,
+            75.9,
+            233.8,
+            181.7,
+            129.6,
+            77.5,
+            229.4,
+            177.3,
+            125.2,
+            73.1
+          ],
+          "baseline_on_hand": [
+            0,
+            0,
+            212.4,
+            173.4,
+            134.5,
+            95.6,
+            175.5,
+            135.4,
+            95.4,
+            56.4,
+            178.4,
+            138.3,
+            98.2,
+            58.1,
+            180,
+            140,
+            99.9,
+            59.8,
+            181.7,
+            141.7,
+            101.6,
+            61.5,
+            177.4,
+            137.4,
+            97.3,
+            57.2
+          ]
+        }
+      },
+      {
+        "sku_id": "8531f9c9-8cbc-453a-b19a-2592d0e1c228",
+        "sku_code": "GOWN-M",
+        "baseline": {
+          "sku_id": "8531f9c9-8cbc-453a-b19a-2592d0e1c228",
+          "sku_code": "GOWN-M",
+          "demand_units": 697.5,
+          "shipped_units": 663.4,
+          "short_units": 34,
+          "fill_rate": 0.9512,
+          "weeks_stocked_out": 2,
+          "first_stockout_week": 0,
+          "avg_inventory_units": 86.2,
+          "peak_inventory_units": 144,
+          "ordered_units": 702,
+          "revenue": 1459569.98,
+          "gross_margin": 630268.85,
+          "order_cost": 877500,
+          "holding_cost": 13472.99
+        },
+        "scenario": {
+          "sku_id": "8531f9c9-8cbc-453a-b19a-2592d0e1c228",
+          "sku_code": "GOWN-M",
+          "demand_units": 896.1,
+          "shipped_units": 856.8,
+          "short_units": 39.3,
+          "fill_rate": 0.9561,
+          "weeks_stocked_out": 2,
+          "first_stockout_week": 0,
+          "avg_inventory_units": 110.4,
+          "peak_inventory_units": 174.6,
+          "ordered_units": 912,
+          "revenue": 1884894.59,
+          "gross_margin": 813931.75,
+          "order_cost": 1140000,
+          "holding_cost": 17255.7
+        },
+        "delta": {
+          "fill_rate": 0.0049,
+          "short_units": 5.3,
+          "revenue": 425324.61,
+          "gross_margin": 183662.9,
+          "units_ordered": 210,
+          "purchase_spend": 262500,
+          "avg_inventory_units": 24.2
+        },
+        "weekly": {
+          "demand": [
+            24.7,
+            27.6,
+            29.4,
+            32.5,
+            35,
+            36.4,
+            36.4,
+            37.6,
+            37.6,
+            36.4,
+            36.4,
+            35,
+            35,
+            35,
+            35,
+            35,
+            35,
+            35,
+            35,
+            35,
+            35,
+            35,
+            35,
+            35,
+            35,
+            35
+          ],
+          "on_hand": [
+            0,
+            0,
+            174.6,
+            142,
+            107,
+            70.5,
+            172.1,
+            134.5,
+            96.8,
+            60.4,
+            174,
+            138.9,
+            103.9,
+            68.8,
+            171.8,
+            136.7,
+            101.7,
+            66.6,
+            169.6,
+            134.5,
+            99.5,
+            64.4,
+            173.4,
+            138.3,
+            103.3,
+            68.2
+          ],
+          "baseline_on_hand": [
+            0,
+            0,
+            144,
+            118.9,
+            92,
+            63.9,
+            131.9,
+            103,
+            74,
+            46,
+            132,
+            105,
+            78,
+            51.1,
+            132.1,
+            105.2,
+            78.2,
+            51.2,
+            132.3,
+            105.3,
+            78.4,
+            51.4,
+            132.4,
+            105.5,
+            78.5,
+            51.6
+          ]
+        }
+      },
+      {
+        "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+        "sku_code": "KURTI-XL",
+        "baseline": {
+          "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+          "sku_code": "KURTI-XL",
+          "demand_units": 1741.2,
+          "shipped_units": 1618.3,
+          "short_units": 122.8,
+          "fill_rate": 0.9294,
+          "weeks_stocked_out": 2,
+          "first_stockout_week": 0,
+          "avg_inventory_units": 193.1,
+          "peak_inventory_units": 359.1,
+          "ordered_units": 1704,
+          "revenue": 1699224.98,
+          "gross_margin": 679689.99,
+          "order_cost": 1073520,
+          "holding_cost": 15205.85
+        },
+        "scenario": {
+          "sku_id": "1aa6d56d-e86e-4218-ab43-62a9d329417d",
+          "sku_code": "KURTI-XL",
+          "demand_units": 2233,
+          "shipped_units": 2094.9,
+          "short_units": 138.1,
+          "fill_rate": 0.9381,
+          "weeks_stocked_out": 2,
+          "first_stockout_week": 0,
+          "avg_inventory_units": 244.1,
+          "peak_inventory_units": 440,
+          "ordered_units": 2208,
+          "revenue": 2199625.93,
+          "gross_margin": 879850.37,
+          "order_cost": 1391040,
+          "holding_cost": 19223.9
+        },
+        "delta": {
+          "fill_rate": 0.0087,
+          "short_units": 15.3,
+          "revenue": 500400.96,
+          "gross_margin": 200160.38,
+          "units_ordered": 504,
+          "purchase_spend": 317520,
+          "avg_inventory_units": 51
+        },
+        "weekly": {
+          "demand": [
+            73.1,
+            78,
+            82,
+            87,
+            87,
+            87,
+            87,
+            87,
+            85.6,
+            86.8,
+            87,
+            87,
+            87,
+            87,
+            87,
+            87,
+            87,
+            87,
+            87,
+            87,
+            87,
+            87,
+            87,
+            87,
+            87,
+            87
+          ],
+          "on_hand": [
+            0,
+            0,
+            440,
+            353,
+            266,
+            178.9,
+            379.9,
+            292.9,
+            207.3,
+            120.5,
+            387.5,
+            300.4,
+            213.4,
+            126.4,
+            387.4,
+            300.3,
+            213.3,
+            126.3,
+            387.3,
+            300.3,
+            213.2,
+            126.2,
+            387.2,
+            300.2,
+            213.1,
+            126.1
+          ],
+          "baseline_on_hand": [
+            0,
+            0,
+            359.1,
+            292.1,
+            225.2,
+            158.2,
+            295.3,
+            228.4,
+            162.5,
+            95.7,
+            298.8,
+            231.9,
+            164.9,
+            98,
+            301,
+            234.1,
+            167.2,
+            100.2,
+            303.3,
+            236.3,
+            169.4,
+            102.5,
+            299.5,
+            232.6,
+            165.6,
+            98.7
+          ]
+        }
+      }
+    ],
+    "run_id": "55de04cd-c9d0-4bf4-a47b-3411af8128b2",
+    "skus_simulated": 6,
+    "stock_coverage": {
+      "skus_with_recorded_stock": 6,
+      "skus_total": 6
+    }
+  },
+  "export": {
+    "filename": "sanket_forecast_fashion.xlsx",
+    "rows": 73,
+    "headers": [
+      null,
+      "SKU ID",
+      "SKU Code",
+      "Week start (Mon, UTC)",
+      "Week end (Sun)",
+      "P10",
+      "P50 (Median)",
+      "P90",
+      "Model"
+    ]
+  }
+}

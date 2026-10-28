@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.services.inventory import InventorySnapshot, resolve_on_hand
+from app.services.inventory import InventorySnapshot, aggregate_inventory_rows, resolve_on_hand
 
 
 def _snap(on_hand, reserved=0.0, inbound=0.0):
@@ -63,3 +63,18 @@ def test_fallback_negative_safety_stock_floors_at_zero():
 def test_snapshot_available_property():
     assert _snap(100, reserved=30).available_units == 70.0
     assert _snap(10, reserved=40).available_units == 0.0
+
+
+def test_aggregate_inventory_rows_clubs_duplicate_sku_location_positions():
+    rows = aggregate_inventory_rows(
+        [
+            {"sku_id": "sku-1", "location": "warehouse-a", "on_hand_units": 10, "inbound_units": 4, "reserved_units": 1},
+            {"sku_id": "sku-1", "location": "warehouse-a", "on_hand_units": 7, "inbound_units": 2, "reserved_units": 3},
+            {"sku_id": "sku-1", "location": "warehouse-b", "on_hand_units": 5, "inbound_units": 0, "reserved_units": 0},
+        ]
+    )
+
+    assert aggregate_inventory_rows(rows) == [
+        {"sku_id": "sku-1", "location": "warehouse-a", "on_hand_units": 17, "inbound_units": 6, "reserved_units": 4},
+        {"sku_id": "sku-1", "location": "warehouse-b", "on_hand_units": 5, "inbound_units": 0, "reserved_units": 0},
+    ]

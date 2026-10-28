@@ -1,0 +1,545 @@
+
+ RUN  v2.1.9 C:/Users/admin/Desktop/Prisma/frontend
+
+stderr | src/pages/Inventory.test.tsx > shows one SKU row with store attention, not duplicated SKU rows
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+stderr | src/pages/Forecasts.test.tsx > defaults to an available average-sales projection without starting Chronos
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/Inventory.test.tsx (16 tests) 4188ms
+   ✓ shows one SKU row with store attention, not duplicated SKU rows 373ms
+   ✓ labels period-average cover as an estimate rather than a model forecast 702ms
+   ✓ expands store details with honest shortage guidance and no pooled-as-store cover 398ms
+   ✓ keeps pagination usable when attention filters find no rows on this page 346ms
+   ✓ imports a SKU beyond the first catalogue page and refreshes its coverage 444ms
+   ✓ closes a parsed stock import when the tenant changes 442ms
+   ✓ uses the paired theme foreground for filled controls in dark mode 303ms
+ ✓ src/pages/Forecasts.test.tsx (12 tests) 9344ms
+   ✓ defaults to an available average-sales projection without starting Chronos 571ms
+   ✓ shows a selected SKU's location forecast and degraded warning 880ms
+   ✓ Forecasts page (audit F04, F08) > shows the model actually used and every SKU, without invented claims 656ms
+   ✓ Forecasts page (audit F04, F08) > pages through more SKUs than fit on one screen 649ms
+   ✓ shows persisted age and actual horizon while a different horizon refreshes 787ms
+   ✓ returns to the latest run's first page after a refresh completes during pagination 4368ms
+   ✓ keeps pagination usable when the saved run is newer than an old completed refresh 580ms
+ ✓ src/hooks/usePersistedForecast.test.tsx (15 tests) 4789ms
+   ✓ polls the accepted job until the newly persisted result replaces the old run 3101ms
+stderr | src/components/dashboard/PlanningBriefDashboard.test.tsx > PlanningBriefDashboard > charts weekly actuals against the weekly forecast, labelled per week
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/components/dashboard/PlanningBriefDashboard.test.tsx (15 tests) 3194ms
+   ✓ PlanningBriefDashboard > charts weekly actuals against the weekly forecast, labelled per week 603ms
+   ✓ PlanningBriefDashboard > shows what the confidence and warning figures are made of 748ms
+stderr | src/pages/CompanyTrends.test.tsx > Company Trend Analysis > keeps company sales distinct from catalogue-matched relative external interest
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/CompanyTrends.test.tsx (11 tests) 4272ms
+   ✓ Company Trend Analysis > keeps company sales distinct from catalogue-matched relative external interest 704ms
+   ✓ Company Trend Analysis > offers Hyderabad and all Telangana districts without inventing district interest 1532ms
+   ✓ Company Trend Analysis > searches uploaded catalogue options remotely and requests the selected SKU 782ms
+   ✓ Company Trend Analysis > queues market collection explicitly, then refreshes the saved company evidence 319ms
+stderr | src/pages/Decisions.test.tsx > keeps accepted-order details usable when frozen planning inputs are incomplete
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/Decisions.test.tsx (10 tests) 1816ms
+   ✓ keeps accepted-order details usable when frozen planning inputs are incomplete 671ms
+ ✓ src/components/ui/SearchableSelect.test.tsx (7 tests) 2051ms
+   ✓ SearchableSelect > uses viewport space when main is content-sized rather than a scroll container 565ms
+   ✓ SearchableSelect > has a labelled combobox and filters options without changing selection 430ms
+stderr | src/components/layout/Sidebar.test.tsx > Sidebar mobile drawer > keeps closed navigation out of the keyboard and accessibility trees
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/components/layout/Sidebar.test.tsx (10 tests) 2048ms
+   ✓ Sidebar mobile drawer > keeps closed navigation out of the keyboard and accessibility trees 333ms
+   ✓ Sidebar mobile drawer > moves focus into the drawer and makes the page behind it inert 465ms
+ ✓ src/components/integrations/ImportUploader.test.tsx (7 tests) 2653ms
+   ✓ shows confidence and saved reuse but requires an explicit import 744ms
+   ✓ preserves a manually selected header when requesting table suggestions 778ms
+   ✓ clears a price-currency choice when the workspace changes 374ms
+stderr | src/pages/WhatIfScenario.test.tsx > Scenario simulator (deep audit F3, F6, F7, F12) > requests an optional explanation only when the user runs a reviewed scenario
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/WhatIfScenario.test.tsx (7 tests) 2745ms
+   ✓ Scenario simulator (deep audit F3, F6, F7, F12) > requests an optional explanation only when the user runs a reviewed scenario 878ms
+   ✓ Scenario simulator (deep audit F3, F6, F7, F12) > applies interpreted demand without retaining an unrelated preset outage 988ms
+stderr | src/pages/ForecastAccuracy.test.tsx > Forecast accuracy (audit F02) > reports a failed accuracy request instead of empty readiness
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/ForecastAccuracy.test.tsx (6 tests) 1585ms
+   ✓ Forecast accuracy (audit F02) > offers an explanation for a flagged SKU without running a backtest 341ms
+   ✓ Forecast accuracy (audit F02) > runs a backtest only from a past Monday 855ms
+ ✓ src/components/integrations/SmartImport.test.tsx (5 tests) 1775ms
+   ✓ plans several files and shows one card per file 650ms
+   ✓ imports a file with the user's edits 519ms
+   ✓ refreshes the preview after a transform is switched off 374ms
+ ✓ src/components/ai/Interactive.test.tsx (6 tests) 3436ms
+   ✓ interactive AI review boundaries > requires reviewing and applying assumptions; interpretation never applies or simulates 1231ms
+   ✓ interactive AI review boundaries > clears scenario interpretation when workspace changes 505ms
+   ✓ interactive AI review boundaries > keeps chat only in the current identity and renders every safe citation 421ms
+   ✓ interactive AI review boundaries > allows cancellation and never exposes an unsafe source URL 388ms
+   ✓ interactive AI review boundaries > explains disabled instead of hiding the cause 438ms
+   ✓ interactive AI review boundaries > explains policy_blocked instead of hiding the cause 445ms
+ ✓ src/components/ai/AISummary.test.tsx (6 tests) 871ms
+   ✓ labels generated content and links evidence without interpreting HTML 432ms
+ ✓ src/components/ai/ManagementArtifacts.test.tsx (4 tests) 1828ms
+   ✓ requires preview and explicit report-email confirmation 1193ms
+   ✓ does not send a supplier email when a draft is generated or edited 449ms
+ ✓ src/api/skus.test.ts (5 tests) 53ms
+stderr | src/pages/SalesAnalytics.test.tsx > Sales analytics currency (audit F03) > shows an INR total as the same INR total, not 83x larger
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/SalesAnalytics.test.tsx (3 tests) 1121ms
+   ✓ Sales analytics currency (audit F03) > shows an INR total as the same INR total, not 83x larger 604ms
+   ✓ Sales analytics currency (audit F03) > shows a recoverable report error instead of claiming missing reports are zero sales 300ms
+ ✓ src/pages/Integrations.test.tsx (4 tests) 1467ms
+   ✓ integrations > uses the shared sheet and confidence review for enhanced analysis 887ms
+   ✓ integrations > sends period identity when totals are selected and reports unchanged rows 566ms
+stderr | src/pages/ROIDashboard.test.tsx > ROI dashboard (audit F10) > labels approval figures as estimates and realised savings as not measurable
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/ROIDashboard.test.tsx (2 tests) 456ms
+   ✓ ROI dashboard (audit F10) > labels approval figures as estimates and realised savings as not measurable 367ms
+ ✓ src/components/charts/AverageSalesProjection.test.tsx (3 tests) 1091ms
+   ✓ labels the constant projection and incomplete coverage without invented confidence 659ms
+   ✓ changes horizon and search and pages on the server 370ms
+ ✓ src/components/auth/IdentityQueryProvider.test.tsx (4 tests) 238ms
+ ✓ src/components/ai/AISettings.test.tsx (4 tests) 652ms
+   ✓ requires explicit permissions and sends only the reviewed settings 504ms
+stderr | src/pages/Login.test.tsx > invitation-only sign in > submits credentials and opens the workspace
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/onboarding/StepData.test.tsx (2 tests) 889ms
+   ✓ offers period totals during onboarding and reports a replay honestly 761ms
+ ✓ src/pages/Login.test.tsx (5 tests) 2607ms
+   ✓ invitation-only sign in > submits credentials and opens the workspace 1612ms
+   ✓ invitation-only sign in > shows credential errors and keeps password-manager support 966ms
+ ✓ src/components/settings/NetworkCard.test.tsx (4 tests) 644ms
+   ✓ lists editable network fields with only warehouse parent choices 390ms
+ ✓ src/hooks/useFormattedCurrency.test.ts (6 tests) 86ms
+ ✓ src/pages/LandingPage.test.tsx (6 tests) 8ms
+ ✓ src/pages/TrendAnalysis.test.tsx (5 tests) 432ms
+   ✓ TrendScoreGauge evidence (audit F05) > never reads zero samples as stable demand or high agreement 310ms
+stderr | src/pages/FinancialImpact.test.tsx > Financial impact currency (audit F03) > shows rupee exposure in rupees, not dollars
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/FinancialImpact.test.tsx (2 tests) 373ms
+ ✓ src/utils/forecastPresentation.test.ts (8 tests) 8ms
+ ✓ src/components/charts/ForecastChart.test.tsx (6 tests) 219ms
+ ✓ src/components/dashboard/WhatsAppStatus.test.tsx (6 tests) 84ms
+ ✓ src/utils/errors.test.ts (8 tests) 6ms
+ ✓ src/styles/typography-contract.test.ts (3 tests) 264ms
+ ✓ src/api/planningKeys.test.ts (4 tests) 11ms
+ ✓ src/pages/landing/content.test.ts (6 tests) 7ms
+ ✓ src/stores/auth.test.ts (4 tests) 4ms
+ ✓ src/utils/uploadSummary.test.ts (4 tests) 8ms
+ ✓ src/components/ai/CommunicationPreferences.test.tsx (1 test) 352ms
+   ✓ loads persisted language and only opts in after saving, showing unavailable delivery honestly 351ms
+ ✓ src/utils/format.test.ts (9 tests) 26ms
+ ✓ src/components/products/ProductCleanup.test.tsx (1 test) 537ms
+   ✓ requires preview and explicit confirmation before changing a product 535ms
+ ✓ src/components/dashboard/ClientReports.test.tsx (1 test) 401ms
+   ✓ ClientReports > separates source periods, stores and supplier totals and discloses forecast limitations 398ms
+ ✓ src/pages/landing/sections/ConnectorGrid.test.tsx (5 tests) 856ms
+   ✓ ConnectorGrid > filters by free-text search 454ms
+stderr | src/components/layout/ScrollManager.test.tsx > ScrollManager > opens a newly visited page at the top
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/components/layout/ScrollManager.test.tsx (3 tests) 77ms
+ ✓ src/components/layout/WorkspaceIndustryBadge.test.tsx (3 tests) 172ms
+ ✓ src/pages/landing/typography.test.ts (5 tests) 8ms
+stderr | src/pages/DataQuality.test.tsx > binds confirmed fixes to the reviewed preview token
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/DataQuality.test.tsx (1 test) 490ms
+   ✓ binds confirmed fixes to the reviewed preview token 488ms
+ ✓ src/styles/trend-control-tokens.test.ts (2 tests) 337ms
+ ✓ src/stores/productImages.test.ts (19 tests) 11ms
+ ✓ src/components/layout/CurrencyMenu.test.tsx (3 tests) 538ms
+ ✓ src/components/auth/IndustryRoute.test.tsx (3 tests) 62ms
+ ✓ src/pages/landing/sections/ModuleGrid.test.tsx (3 tests) 635ms
+ ❯ review/V2Upload.review.test.tsx (1 test | 1 failed) 1323ms
+   × confirms a valid V2 preview when the user presses Import 1322ms
+     → expected "spy" to be called with arguments: [ …(2) ]
+
+Received: 
+
+
+
+Number of calls: 0
+
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"space-y-3 text-sm"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-center gap-3 rounded-xl border border-line-strong bg-surface-2 px-4 py-3"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-file-spreadsheet shrink-0 text-accent"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"18"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"18"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M14 2v4a2 2 0 0 0 2 2h4"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M8 13h2"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M14 13h2"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M8 17h2"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M14 17h2"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"min-w-0 flex-1"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"truncate text-sm font-medium text-content"[39m
+            [36m>[39m
+              [0msales.csv[0m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"font-mono text-xs text-content-subtle"[39m
+            [36m>[39m
+              [0m0.0[0m
+              [0m KB[0m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<button[39m
+            [33maria-label[39m=[32m"Remove file"[39m
+            [33mclass[39m=[32m"rounded-lg p-1.5 text-content-subtle tactile-press hover:bg-surface-3 hover:text-content"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-x"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"16"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"16"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M18 6 6 18"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"m6 6 12 12"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</button>[39m
+        [36m</div>[39m
+        [36m<section[39m
+          [33maria-label[39m=[32m"V2 preview"[39m
+          [33mclass[39m=[32m"space-y-2 rounded-xl border border-line bg-surface-2 p-3"[39m
+        [36m>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"font-medium"[39m
+          [36m>[39m
+            [0mretail_v2.0.sales[0m
+            [0m · [0m
+            [0m1[0m
+            [0m rows[0m
+          [36m</p>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-xs"[39m
+          [36m>[39m
+            [0mTenant references and financial controls passed preview.[0m
+          [36m</p>[39m
+        [36m</section>[39m
+        [36m<details[39m
+          [33mclass[39m=[32m"rounded-xl border border-line p-3 text-xs"[39m
+        [36m>[39m
+          [36m<summary>[39m
+            [0mChoose sheet and header rows manually[0m
+          [36m</summary>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"mt-2 grid gap-2 sm:grid-cols-3"[39m
+          [36m>[39m
+            [36m<label>[39m
+              [0mSheet[0m
+              [36m<input[39m
+                [33mclass[39m=[32m"input"[39m
+                [33mvalue[39m=[32m"CSV"[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label>[39m
+              [0mFirst header row[0m
+              [36m<input[39m
+                [33mclass[39m=[32m"input"[39m
+                [33mmin[39m=[32m"1"[39m
+                [33mtype[39m=[32m"number"[39m
+                [33mvalue[39m=[32m"1"[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label>[39m
+              [0mLast header row[0m
+              [36m<input[39m
+                [33mclass[39m=[32m"input"[39m
+                [33mmin[39m=[32m"1"[39m
+                [33mtype[39m=[32m"number"[39m
+                [33mvalue[39m=[32m"1"[39m
+              [36m/>[39m
+            [36m</label>[39m
+          [36m</div>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"btn-secondary px-3 py-1.5 text-xs"[39m
+          [36m>[39m
+            [0mAnalyze selected rows[0m
+          [36m</button>[39m
+        [36m</details>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"btn-secondary px-3 py-1.5 text-xs"[39m
+        [36m>[39m
+          [0mImport[0m
+        [36m</button>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ✓ src/pages/landing/sections/IndustryTabs.test.tsx (3 tests) 425ms
+stderr | src/pages/ShortageAlerts.test.tsx > offers an optional explanation while retaining the original risk and acknowledgment
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/ShortageAlerts.test.tsx (1 test) 294ms
+ ✓ src/components/signals/TrendPanel.test.tsx (2 tests) 113ms
+ ✓ src/utils/integrationGroups.test.ts (2 tests) 5ms
+ ✓ src/pages/landing/sections/ForecastEngine.test.tsx (2 tests) 56ms
+stderr | src/pages/DirectAccess.test.tsx > does not expose public signup even through an old signup URL
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/DirectAccess.test.tsx (2 tests) 417ms
+ ✓ src/components/ai/OnboardingHelper.test.tsx (1 test) 612ms
+   ✓ asks for catalog-grounded setup help without sending credentials 610ms
+ ✓ src/components/ai/ImportFormats.test.tsx (1 test) 266ms
+ ✓ src/components/ui/Skeleton.test.tsx (4 tests) 112ms
+ ✓ src/components/ai/AISettingsSmartImport.test.tsx (1 test) 136ms
+ ✓ src/pages/landing/sections/SignalGrid.test.tsx (2 tests) 337ms
+ ✓ src/utils/indiaRegions.test.ts (1 test) 8ms
+ ✓ src/components/ui/Modal.test.tsx (1 test) 191ms
+ ✓ src/config.test.ts (1 test) 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  review/V2Upload.review.test.tsx > confirms a valid V2 preview when the user presses Import
+AssertionError: expected "spy" to be called with arguments: [ …(2) ]
+
+Received: 
+
+
+
+Number of calls: 0
+
+
+Ignored nodes: comments, script, style
+<html>
+  <head />
+  <body>
+    <div>
+      <div
+        class="space-y-3 text-sm"
+      >
+        <div
+          class="flex items-center gap-3 rounded-xl border border-line-strong bg-surface-2 px-4 py-3"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-file-spreadsheet shrink-0 text-accent"
+            fill="none"
+            height="18"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="18"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"
+            />
+            <path
+              d="M14 2v4a2 2 0 0 0 2 2h4"
+            />
+            <path
+              d="M8 13h2"
+            />
+            <path
+              d="M14 13h2"
+            />
+            <path
+              d="M8 17h2"
+            />
+            <path
+              d="M14 17h2"
+            />
+          </svg>
+          <div
+            class="min-w-0 flex-1"
+          >
+            <div
+              class="truncate text-sm font-medium text-content"
+            >
+              sales.csv
+            </div>
+            <div
+              class="font-mono text-xs text-content-subtle"
+            >
+              0.0
+               KB
+            </div>
+          </div>
+          <button
+            aria-label="Remove file"
+            class="rounded-lg p-1.5 text-content-subtle tactile-press hover:bg-surface-3 hover:text-content"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-x"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M18 6 6 18"
+              />
+              <path
+                d="m6 6 12 12"
+              />
+            </svg>
+          </button>
+        </div>
+        <section
+          aria-label="V2 preview"
+          class="space-y-2 rounded-xl border border-line bg-surface-2 p-3"
+        >
+          <p
+            class="font-medium"
+          >
+            retail_v2.0.sales
+             · 
+            1
+             rows
+          </p>
+          <p
+            class="text-xs"
+          >
+            Tenant references and financial controls passed preview.
+          </p>
+        </section>
+        <details
+          class="rounded-xl border border-line p-3 text-xs"
+        >
+          <summary>
+            Choose sheet and header rows manually
+          </summary>
+          <div
+            class="mt-2 grid gap-2 sm:grid-cols-3"
+          >
+            <label>
+              Sheet
+              <input
+                class="input"
+                value="CSV"
+              />
+            </label>
+            <label>
+              First header row
+              <input
+                class="input"
+                min="1"
+                type="number"
+                value="1"
+              />
+            </label>
+            <label>
+              Last header row
+              <input
+                class="input"
+                min="1"
+                type="number"
+                value="1"
+              />
+            </label>
+          </div>
+          <button
+            class="btn-secondary px-3 py-1.5 text-xs"
+          >
+            Analyze selected rows
+          </button>
+        </details>
+        <button
+          class="btn-secondary px-3 py-1.5 text-xs"
+        >
+          Import
+        </button>
+      </div>
+    </div>
+  </body>
+</html>
+ ❯ review/V2Upload.review.test.tsx:25:43
+     23|   expect(button).toBeEnabled();
+     24|   await user.click(button);
+     25|   await waitFor(()=>expect(api.v2Confirm).toHaveBeenCalledWith(file,"r…
+       |                                           ^
+     26| });
+     27| 
+ ❯ runWithExpensiveErrorDiagnosticsDisabled node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed | 66 passed (67)
+      Tests  1 failed | 324 passed (325)
+   Start at  11:41:06
+   Duration  195.79s (transform 6.15s, setup 34.71s, collect 114.17s, tests 66.13s, environment 120.73s, prepare 16.58s)
+

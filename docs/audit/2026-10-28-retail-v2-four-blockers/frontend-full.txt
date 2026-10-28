@@ -1,0 +1,2284 @@
+
+> sanket-frontend@0.1.0 test
+> vitest run
+
+
+ RUN  v2.1.9 C:/Users/admin/Desktop/Prisma/frontend
+
+stderr | src/pages/Inventory.test.tsx > shows one SKU row with store attention, not duplicated SKU rows
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+stderr | src/pages/Forecasts.test.tsx > defaults to an available average-sales projection without starting Chronos
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ❯ src/pages/Inventory.test.tsx (17 tests | 1 failed) 6852ms
+   ✓ shows one SKU row with store attention, not duplicated SKU rows 470ms
+   ✓ labels period-average cover as an estimate rather than a model forecast 633ms
+   ✓ expands store details with honest shortage guidance and no pooled-as-store cover 388ms
+   × keeps pagination usable when attention filters find no rows on this page 1373ms
+     → Unable to find an element with the text: /No matching SKUs in this result set/. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"space-y-5"[39m
+    [36m>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"flex flex-col justify-between gap-4 rounded-2xl border border-line bg-surface p-5 xl:flex-row xl:items-center"[39m
+      [36m>[39m
+        [36m<div>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[var(--accent)]"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33mclass[39m=[32m"lucide lucide-warehouse"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"15"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"15"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M22 8.35V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.35A2 2 0 0 1 3.26 6.5l8-3.2a2 2 0 0 1 1.48 0l8 3.2A2 2 0 0 1 22 8.35Z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M6 18h12"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M6 14h12"[39m
+              [36m/>[39m
+              [36m<rect[39m
+                [33mheight[39m=[32m"12"[39m
+                [33mwidth[39m=[32m"12"[39m
+                [33mx[39m=[32m"6"[39m
+                [33my[39m=[32m"10"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+            [0mStock overview[0m
+          [36m</p>[39m
+          [36m<h1[39m
+            [33mclass[39m=[32m"mt-2 font-heading text-2xl font-semibold text-content"[39m
+          [36m>[39m
+            [0mInventory[0m
+          [36m</h1>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"mt-1 max-w-lg text-sm text-content-muted"[39m
+          [36m>[39m
+            [0mSee what you have, where it is, and which stores need attention.[0m
+          [36m</p>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex flex-wrap gap-2"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-content transition hover:bg-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:opacity-40"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"flex items-center gap-2"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33mclass[39m=[32m"lucide lucide-refresh-cw"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"14"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"14"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M21 3v5h-5"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M8 16H3v5"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0mRefresh[0m
+            [36m</span>[39m
+          [36m</button>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-content transition hover:bg-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:opacity-40"[39m
+          [36m>[39m
+            [0mExport CSV[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-content transition hover:bg-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:opacity-40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 flex items-center gap-1.5"[39m
+            [33mdisabled[39m=[32m""[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33mheight[39m=[32m"14px"[39m
+              [33mrole[39m=[32m"presentation"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"14px"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<g[39m
+                [33mtransform[39m=[32m"translate(3 2)"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M14.191,0s-.543,6.735-.858,9.572a2.238,2.238,0,0,1-2.358,2.174c-2.609.047-5.221.05-7.829-.005A2.214,2.214,0,0,1,.857,9.579C.54,6.717,0,0,0,0"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-miterlimit[39m=[32m"10"[39m
+                  [33mstroke-width[39m=[32m"1.5px"[39m
+                  [33mtransform[39m=[32m"translate(2.134 7.468)"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M16.958.5H0"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-miterlimit[39m=[32m"10"[39m
+                  [33mstroke-width[39m=[32m"1.5px"[39m
+                  [33mtransform[39m=[32m"translate(0.75 3.74)"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M10.423,3.489A1.648,1.648,0,0,1,8.808,2.165L8.565.949A1.28,1.28,0,0,0,7.328,0H3.1A1.28,1.28,0,0,0,1.858.949L1.615,2.165A1.648,1.648,0,0,1,0,3.489"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-miterlimit[39m=[32m"10"[39m
+                  [33mstroke-width[39m=[32m"1.5px"[39m
+                  [33mtransform[39m=[32m"translate(4.018 0.751)"[39m
+                [36m/>[39m
+              [36m</g>[39m
+            [36m</svg>[39m
+            [0m Clear stock[0m
+          [36m</button>[39m
+        [36m</div>[39m
+      [36m</header>[39m
+      [36m<section[39m
+        [33mclass[39m=[32m"rounded-2xl border border-line bg-surface p-6 sm:p-8"[39m
+      [36m>[39m
+        [36m<svg[39m
+          [33mclass[39m=[32m"lucide lucide-warehouse text-[var(--accent)]"[39m
+          [33mfill[39m=[32m"none"[39m
+          [33mheight[39m=[32m"30"[39m
+          [33mstroke[39m=[32m"currentColor"[39m
+          [33mstroke-linecap[39m=[32m"round"[39m
+          [33mstroke-linejoin[39m=[32m"round"[39m
+          [33mstroke-width[39m=[32m"2"[39m
+          [33mviewBox[39m=[32m"0 0 24 24"[39m
+          [33mwidth[39m=[32m"30"[39m
+          [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+        [36m>[39m
+          [36m<path[39m
+            [33md[39m=[32m"M22 8.35V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.35A2 2 0 0 1 3.26 6.5l8-3.2a2 2 0 0 1 1.48 0l8 3.2A2 2 0 0 1 22 8.35Z"[39m
+          [36m/>[39m
+          [36m<path[39m
+            [33md[39m=[32m"M6 18h12"[39m
+          [36m/>[39m
+          [36m<path[39m
+            [33md[39m=[32m"M6 14h12"[39m
+          [36m/>[39m
+          [36m<rect[39m
+            [33mheight[39m=[32m"12"[39m
+            [33mwidth[39m=[32m"12"[39m
+            [33mx[39m=[32m"6"[39m
+            [33my[39m=[32m"10"[39m
+          [36m/>[39m
+        [36m</svg>[39m
+        [36m<h2[39m
+          [33mclass[39m=[32m"mt-4 font-heading text-xl font-semibold"[39m
+        [36m>[39m
+          [0mBuild your stock picture[0m
+        [36m</h2>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"mt-2 max-w-xl text-sm text-content-muted"[39m
+        [36m>[39m
+          [0mStart with your catalogue, add sales history, then upload the quantities at each store. Your own data will appear here.[0m
+        [36m</p>[39m
+        [36m<ol[39m
+          [33mclass[39m=[32m"mt-6 grid gap-3 lg:grid-cols-3"[39m
+        [36m>[39m
+          [36m<li[39m
+            [33mclass[39m=[32m"rounded-xl border border-line p-4"[39m
+          [36m>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"text-xs text-content-muted"[39m
+            [36m>[39m
+              [0m01 · Catalogue[0m
+            [36m</p>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"mt-2 block font-semibold text-[var(--accent)]"[39m
+              [33mhref[39m=[32m"/workspace/products"[39m
+            [36m>[39m
+              [0mAdd products and SKUs[0m
+            [36m</a>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"mt-1 text-sm text-content-muted"[39m
+            [36m>[39m
+              [0mGive every variant a unique SKU code.[0m
+            [36m</p>[39m
+          [36m</li>[39m
+          [36m<li[39m
+            [33mclass[39m=[32m"rounded-xl border border-line p-4"[39m
+          [36m>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"text-xs text-content-muted"[39m
+            [36m>[39m
+              [0m02 · Demand[0m
+            [36m</p>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"mt-2 block font-semibold text-[var(--accent)]"[39m
+              [33mhref[39m=[32m"/workspace/integrations"[39m
+            [36m>[39m
+              [0mAdd sales history[0m
+            [36m</a>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"mt-1 text-sm text-content-muted"[39m
+            [36m>[39m
+              [0mInclude store names to calculate local stock cover.[0m
+            [36m</p>[39m
+          [36m</li>[39m
+          [36m<li[39m
+            [33mclass[39m=[32m"rounded-xl border border-line p-4"[39m
+          [36m>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"text-xs text-content-muted"[39m
+            [36m>[39m
+              [0m03 · Stock[0m
+            [36m</p>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"mt-2 flex items-center gap-2 font-semibold text-[var(--accent)]"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33mheight[39m=[32m"15px"[39m
+                [33mrole[39m=[32m"presentation"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"15px"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<g[39m
+                  [33mtransform[39m=[32m"translate(2 22) rotate(-90)"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M12.244,4.618V3.685A3.685,3.685,0,0,0,8.559,0H3.684A3.685,3.685,0,0,0,0,3.685v11.13A3.685,3.685,0,0,0,3.684,18.5H8.569a3.675,3.675,0,0,0,3.675-3.674v-.943"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-miterlimit[39m=[32m"10"[39m
+                    [33mstroke-width[39m=[32m"1.5px"[39m
+                    [33mtransform[39m=[32m"translate(0.772 0.771)"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M12.041.5H0"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-miterlimit[39m=[32m"10"[39m
+                    [33mstroke-width[39m=[32m"1.5px"[39m
+                    [33mtransform[39m=[32m"translate(7.768 9.521)"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M0,0,2.928,2.915,0,5.831"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-miterlimit[39m=[32m"10"[39m
+                    [33mstroke-width[39m=[32m"1.5px"[39m
+                    [33mtransform[39m=[32m"translate(16.881 7.106)"[39m
+                  [36m/>[39m
+                [36m</g>[39m
+              [36m</svg>[39m
+              [0mImport stock[0m
+            [36m</button>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"mt-1 text-sm text-content-muted"[39m
+            [36m>[39m
+              [0mUpload on-hand, reserved and arriving quantities.[0m
+            [36m</p>[39m
+          [36m</li>[39m
+        [36m</ol>[39m
+      [36m</section>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"space-y-5"[39m
+      [36m>[39m
+        [36m<header[39m
+          [33mclass[39m=[32m"flex flex-col justify-between gap-4 rounded-2xl border border-line bg-surface p-5 xl:flex-row xl:items-center"[39m
+        [36m>[39m
+          [36m<div>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[var(--accent)]"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33mclass[39m=[32m"lucide lucide-warehouse"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"15"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"15"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M22 8.35V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.35A2 2 0 0 1 3.26 6.5l8-3.2a2 2 0 0 1 1.48 0l8 3.2A2 2 0 0 1 22 8.35Z"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M6 18h12"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M6 14h12"[39m
+                [36m/>[39m
+                [36m<rect[39m
+                  [33mheight[39m=[32m"12"[39m
+                  [33mwidth[39m=[32m"12"[39m
+                  [33mx[39m=[32m"6"[39m
+                  [33my[39m=[32m"10"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0mStock overview[0m
+            [36m</p>[39m
+            [36m<h1[39m
+              [33mclass[39m=[32m"mt-2 font-heading text-2xl font-semibold text-content"[39m
+            [36m>[39m
+              [0mInventory[0m
+            [36m</h1>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"mt-1 max-w-lg text-sm text-content-muted"[39m
+            [36m>[39m
+              [0mSee what you have, where it is, and which stores need attention.[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex flex-wrap gap-2"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-content transition hover:bg-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:opacity-40"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"flex items-center gap-2"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33mclass[39m=[32m"lucide lucide-refresh-cw"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"14"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"14"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M21 3v5h-5"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M8 16H3v5"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [0mRefresh[0m
+              [36m</span>[39m
+            [36m</button>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-content transition hover:bg-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:opacity-40"[39m
+            [36m>[39m
+              [0mExport CSV[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-content transition hover:bg-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:opacity-40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 flex items-center gap-1.5"[39m
+              [33mdisabled[39m=[32m""[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33mheight[39m=[32m"14px"[39m
+                [33mrole[39m=[32m"presentation"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"14px"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<g[39m
+                  [33mtransform[39m=[32m"translate(3 2)"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M14.191,0s-.543,6.735-.858,9.572a2.238,2.238,0,0,1-2.358,2.174c-2.609.047-5.221.05-7.829-.005A2.214,2.214,0,0,1,.857,9.579C.54,6.717,0,0,0,0"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-miterlimit[39m=[32m"10"[39m
+                    [33mstroke-width[39m=[32m"1.5px"[39m
+                    [33mtransform[39m=[32m"translate(2.134 7.468)"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M16.958.5H0"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-miterlimit[39m=[32m"10"[39m
+                    [33mstroke-width[39m=[32m"1.5px"[39m
+                    [33mtransform[39m=[32m"translate(0.75 3.74)"[39m
+                  [36m/>[39m
+                  [36...
+   ✓ shows a saved recommendation only for its exact SKU and destination store 314ms
+   ✓ imports a SKU beyond the first catalogue page and refreshes its coverage 1255ms
+   ✓ closes a parsed stock import when the tenant changes 646ms
+ ❯ src/pages/Forecasts.test.tsx (13 tests | 1 failed) 11681ms
+   ✓ defaults to an available average-sales projection without starting Chronos 769ms
+   ✓ shows a selected SKU's location forecast and degraded warning 978ms
+   ✓ Forecasts page (audit F04, F08) > shows the model actually used and every SKU, without invented claims 511ms
+   ✓ Forecasts page (audit F04, F08) > pages through more SKUs than fit on one screen 869ms
+   × Forecasts page (audit F04, F08) > filters the forecast table by SKU without changing the saved forecast page 2819ms
+     → expected last "spy" call to have been called with [ ObjectContaining{…} ]
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"space-y-4 animate-fade-in"[39m
+        [33mdata-industry[39m=[32m"fashion"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4"[39m
+        [36m>[39m
+          [36m<div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold text-white mb-3"[39m
+              [33mstyle[39m=[32m"background: linear-gradient(135deg, #03363D 0%, #1c525a 100%);"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33mclass[39m=[32m"lucide lucide-shirt"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"18"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"18"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m [0m
+              [0mApparel & Fashion[0m
+            [36m</div>[39m
+            [36m<h1[39m
+              [33mclass[39m=[32m"text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white"[39m
+            [36m>[39m
+              [0mDemand Forecasts[0m
+            [36m</h1>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-xl leading-relaxed"[39m
+            [36m>[39m
+              [0mExpected demand by SKU, with a restrained range showing likely variation. Start with the recommendation; open settings only when you need them.[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex items-center gap-2 shrink-0"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"tactile-press flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition glass"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33mheight[39m=[32m"13px"[39m
+                [33mrole[39m=[32m"presentation"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"13px"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<g[39m
+                  [33mtransform[39m=[32m"translate(2 3)"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M12.041.5H0"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-miterlimit[39m=[32m"10"[39m
+                    [33mstroke-width[39m=[32m"1.5px"[39m
+                    [33mtransform[39m=[32m"translate(10.622 0.395) rotate(90)"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M0,0,2.928,2.916,0,5.832"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-miterlimit[39m=[32m"10"[39m
+                    [33mstroke-width[39m=[32m"1.5px"[39m
+                    [33mtransform[39m=[32m"translate(13.038 9.508) rotate(90)"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M0,4.617V3.684A3.684,3.684,0,0,1,3.685,0H8.569a3.675,3.675,0,0,1,3.675,3.675v11.14A3.685,3.685,0,0,1,8.559,18.5H3.674A3.675,3.675,0,0,1,0,14.825v-.942"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-miterlimit[39m=[32m"10"[39m
+                    [33mstroke-width[39m=[32m"1.5px"[39m
+                    [33mtransform[39m=[32m"translate(19.372 5.128) rotate(90)"[39m
+                  [36m/>[39m
+                [36m</g>[39m
+              [36m</svg>[39m
+              [0m Excel[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"tactile-press flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition glass"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33mheight[39m=[32m"13px"[39m
+                [33mrole[39m=[32m"presentation"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"13px"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<g[39m
+                  [33mtransform[39m=[32m"translate(2 3)"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M12.041.5H0"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-miterlimit[39m=[32m"10"[39m
+                    [33mstroke-width[39m=[32m"1.5px"[39m
+                    [33mtransform[39m=[32m"translate(10.622 0.395) rotate(90)"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M0,0,2.928,2.916,0,5.832"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-miterlimit[39m=[32m"10"[39m
+                    [33mstr...
+   ✓ shows persisted age and actual horizon while a different horizon refreshes 601ms
+   ✓ returns to the latest run's first page after a refresh completes during pagination 3917ms
+   ✓ keeps pagination usable when the saved run is newer than an old completed refresh 504ms
+ ❯ src/hooks/usePersistedForecast.test.tsx (15 tests | 2 failed) 4732ms
+   × reads saved results before requesting background refresh, without waiting for inference 198ms
+     → expected "spy" to be called with arguments: [ { view: 'summary', …(2) } ]
+
+Received: 
+
+  1st spy call:
+
+  Array [
+    Object {
+      "limit": 6,
+      "offset": 0,
++     "search": "",
+      "view": "summary",
+    },
+  ]
+
+
+Number of calls: 1
+
+   × requests server pages without downloading the entire catalog 105ms
+     → expected "spy" to be called with arguments: [ { view: 'skus', …(3) } ]
+
+Received: 
+
+  1st spy call:
+
+  Array [
+    Object {
+      "limit": 6,
+      "offset": 24996,
+      "run_id": "saved",
++     "search": "",
+      "view": "skus",
+    },
+  ]
+
+
+Number of calls: 1
+
+   ✓ polls the accepted job until the newly persisted result replaces the old run 3035ms
+stderr | src/components/dashboard/PlanningBriefDashboard.test.tsx > PlanningBriefDashboard > charts weekly actuals against the weekly forecast, labelled per week
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+stderr | src/pages/CompanyTrends.test.tsx > Company Trend Analysis > keeps company sales distinct from catalogue-matched relative external interest
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ❯ src/components/dashboard/PlanningBriefDashboard.test.tsx (15 tests | 4 failed) 3958ms
+   ✓ PlanningBriefDashboard > charts weekly actuals against the weekly forecast, labelled per week 894ms
+   ✓ PlanningBriefDashboard > shows what the confidence and warning figures are made of 623ms
+   × PlanningBriefDashboard > places confidence once in a labelled summary with its band and reasons 346ms
+     → expected [ <p …(1)></p>, <p …(1)></p> ] to have a length of 1 but got 2
+   × PlanningBriefDashboard > says decisions are unavailable when they fail to load, not that none are open 183ms
+     → Found multiple elements with the text: Orders due
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<p[39m
+  [33mclass[39m=[32m"text-[10px] font-semibold uppercase tracking-[0.12em] text-content-subtle"[39m
+[36m>[39m
+  [0mOrders due[0m
+[36m</p>[39m
+
+Ignored nodes: comments, script, style
+[36m<p[39m
+  [33mclass[39m=[32m"text-[10px] font-semibold uppercase tracking-[0.12em] text-content-subtle"[39m
+[36m>[39m
+  [0mOrders due[0m
+[36m</p>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"animate-fade-in space-y-3"[39m
+    [36m>[39m
+      [36m<details[39m
+        [33mclass[39m=[32m"rounded-xl border border-line bg-surface px-4 py-2"[39m
+      [36m>[39m
+        [36m<summary[39m
+          [33mclass[39m=[32m"cursor-pointer text-xs font-semibold text-content-muted"[39m
+        [36m>[39m
+          [0mAI planning summary (optional)[0m
+        [36m</summary>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"pt-2"[39m
+        [36m>[39m
+          [36m<aside[39m
+            [33maria-label[39m=[32m"AI summary"[39m
+            [33mclass[39m=[32m"space-y-2 rounded-xl border border-line bg-surface p-3 text-sm"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"btn-ghost px-3 py-1.5 text-xs"[39m
+            [36m>[39m
+              [0mGenerate AI summary[0m
+            [36m</button>[39m
+          [36m</aside>[39m
+        [36m</div>[39m
+      [36m</details>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"flex flex-col gap-3 rounded-2xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"[39m
+      [36m>[39m
+        [36m<div>[39m
+          [36m<h1[39m
+            [33mclass[39m=[32m"font-heading text-xl font-semibold tracking-tight text-content"[39m
+          [36m>[39m
+            [0mGood morning, Sanket — part of your planning brief is unavailable[0m
+          [36m</h1>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"mt-0.5 text-sm text-content-muted"[39m
+            [33mrole[39m=[32m"alert"[39m
+          [36m>[39m
+            [0mDecisions could not be loaded — the queue is unknown, not empty. Use Refresh brief to retry.[0m
+          [36m</p>[39m
+        [36m</div>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"btn-secondary px-3 py-1.5 text-xs"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"contents"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33mclass[39m=[32m"lucide lucide-refresh-cw"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"14"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"14"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M21 3v5h-5"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M8 16H3v5"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [0mRefresh brief[0m
+        [36m</button>[39m
+      [36m</header>[39m
+      [36m<section[39m
+        [33maria-label[39m=[32m"Planning metrics"[39m
+        [33mclass[39m=[32m"grid gap-3 sm:grid-cols-2 xl:grid-cols-4"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-center gap-3 py-2.5"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33mheight[39m=[32m"17px"[39m
+              [33mrole[39m=[32m"presentation"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"17px"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<g[39m
+                [33mtransform[39m=[32m"translate(2.5 1.5)"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M13.213,14.682H4.865C1.8,14.682-.554,13.574.114,9.117L.892,3.076C1.3.851,2.723,0,3.968,0H14.146c1.263,0,2.6.915,3.076,3.076L18,9.117C18.567,13.071,16.279,14.682,13.213,14.682Z"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-miterlimit[39m=[32m"10"[39m
+                  [33mstroke-width[39m=[32m"1.5px"[39m
+                  [33mtransform[39m=[32m"translate(0.801 5.318)"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M8.659,4.32A4.32,4.32,0,0,0,4.339,0h0A4.32,4.32,0,0,0,0,4.32H0"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-miterlimit[39m=[32m"10"[39m
+                  [33mstroke-width[39m=[32m"1.5px"[39m
+                  [33mtransform[39m=[32m"translate(5.492 0.778)"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M.481.458H.435"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-miterlimit[39m=[32m"10"[39m
+                  [33mstroke-width[39m=[32m"1.5px"[39m
+                  [33mtransform[39m=[32m"translate(12.316 9.144)"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M.481.458H.435"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-miterlimit[39m=[32m"10"[39m
+                  [33mstroke-width[39m=[32m"1.5px"[39m
+                  [33mtransform[39m=[32m"translate(6.485 9.144)"[39m
+                [36m/>[39m
+              [36m</g>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"min-w-0"[39m
+          [36m>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"text-[10px] font-semibold uppercase t...
+   × loads the persisted portfolio summary and age without generating on every visit 138ms
+     → expected "spy" to be called with arguments: [ { view: 'summary', …(2) } ]
+
+Received: 
+
+  1st spy call:
+
+  Array [
+    Object {
+      "limit": 6,
+      "offset": 0,
++     "search": "",
+      "view": "summary",
+    },
+  ]
+
+
+Number of calls: 1
+
+   × offers an optional grounded summary above the existing planning metrics 99ms
+     → Found multiple elements with the text: Orders due
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<p[39m
+  [33mclass[39m=[32m"text-[10px] font-semibold uppercase tracking-[0.12em] text-content-subtle"[39m
+[36m>[39m
+  [0mOrders due[0m
+[36m</p>[39m
+
+Ignored nodes: comments, script, style
+[36m<p[39m
+  [33mclass[39m=[32m"text-[10px] font-semibold uppercase tracking-[0.12em] text-content-subtle"[39m
+[36m>[39m
+  [0mOrders due[0m
+[36m</p>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"animate-fade-in space-y-3"[39m
+    [36m>[39m
+      [36m<details[39m
+        [33mclass[39m=[32m"rounded-xl border border-line bg-surface px-4 py-2"[39m
+      [36m>[39m
+        [36m<summary[39m
+          [33mclass[39m=[32m"cursor-pointer text-xs font-semibold text-content-muted"[39m
+        [36m>[39m
+          [0mAI planning summary (optional)[0m
+        [36m</summary>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"pt-2"[39m
+        [36m>[39m
+          [36m<aside[39m
+            [33maria-label[39m=[32m"AI summary"[39m
+            [33mclass[39m=[32m"space-y-2 rounded-xl border border-line bg-surface p-3 text-sm"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"btn-ghost px-3 py-1.5 text-xs"[39m
+            [36m>[39m
+              [0mGenerate AI summary[0m
+            [36m</button>[39m
+          [36m</aside>[39m
+        [36m</div>[39m
+      [36m</details>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"flex flex-col gap-3 rounded-2xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"[39m
+      [36m>[39m
+        [36m<div>[39m
+          [36m<h1[39m
+            [33mclass[39m=[32m"font-heading text-xl font-semibold tracking-tight text-content"[39m
+          [36m>[39m
+            [0mGood morning, Sanket — your planning brief is ready[0m
+          [36m</h1>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"mt-0.5 text-sm text-content-muted"[39m
+          [36m>[39m
+            [0mLoading decisions…[0m
+          [36m</p>[39m
+        [36m</div>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"btn-secondary px-3 py-1.5 text-xs"[39m
+          [33mdisabled[39m=[32m""[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"h-4 w-4 rounded-full border-2 border-current/30 border-t-current animate-spin"[39m
+          [36m/>[39m
+          [0mRefresh brief[0m
+        [36m</button>[39m
+      [36m</header>[39m
+      [36m<section[39m
+        [33maria-label[39m=[32m"Planning metrics"[39m
+        [33mclass[39m=[32m"grid gap-3 sm:grid-cols-2 xl:grid-cols-4"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-center gap-3 py-2.5"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33mheight[39m=[32m"17px"[39m
+              [33mrole[39m=[32m"presentation"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"17px"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<g[39m
+                [33mtransform[39m=[32m"translate(2.5 1.5)"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M13.213,14.682H4.865C1.8,14.682-.554,13.574.114,9.117L.892,3.076C1.3.851,2.723,0,3.968,0H14.146c1.263,0,2.6.915,3.076,3.076L18,9.117C18.567,13.071,16.279,14.682,13.213,14.682Z"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-miterlimit[39m=[32m"10"[39m
+                  [33mstroke-width[39m=[32m"1.5px"[39m
+                  [33mtransform[39m=[32m"translate(0.801 5.318)"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M8.659,4.32A4.32,4.32,0,0,0,4.339,0h0A4.32,4.32,0,0,0,0,4.32H0"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-miterlimit[39m=[32m"10"[39m
+                  [33mstroke-width[39m=[32m"1.5px"[39m
+                  [33mtransform[39m=[32m"translate(5.492 0.778)"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M.481.458H.435"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-miterlimit[39m=[32m"10"[39m
+                  [33mstroke-width[39m=[32m"1.5px"[39m
+                  [33mtransform[39m=[32m"translate(12.316 9.144)"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M.481.458H.435"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-miterlimit[39m=[32m"10"[39m
+                  [33mstroke-width[39m=[32m"1.5px"[39m
+                  [33mtransform[39m=[32m"translate(6.485 9.144)"[39m
+                [36m/>[39m
+              [36m</g>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"min-w-0"[39m
+          [36m>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"text-[10px] font-semibold uppercase tracking-[0.12em] text-content-subtle"[39m
+            [36m>[39m
+              [0mOrders due[0m
+            [36m</p>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"mt-0.5 font-mono text-lg font-semibold leading-none text-content"[39m
+            [36m>[39m
+              [0m0[0m
+            [36m</p>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"mt-0.5 text-xs text-content-muted"[39m
+            [36m>[39m
+              [0m0 units[0m
+            [36m</p>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-center gap-3 py-2.5"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33mclass[39m=[32m"lucide lucide-triangle-alert"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"17"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"r...
+   ✓ retains a generated summary when unchanged source data is polled again 311ms
+ ✓ src/pages/CompanyTrends.test.tsx (11 tests) 4914ms
+   ✓ Company Trend Analysis > keeps company sales distinct from catalogue-matched relative external interest 908ms
+   ✓ Company Trend Analysis > offers Hyderabad and all Telangana districts without inventing district interest 1488ms
+   ✓ Company Trend Analysis > searches uploaded catalogue options remotely and requests the selected SKU 939ms
+   ✓ Company Trend Analysis > clears selected client product names and IDs when the tenant changes 528ms
+stderr | src/pages/Decisions.test.tsx > keeps accepted-order details usable when frozen planning inputs are incomplete
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/components/integrations/ImportUploader.test.tsx (11 tests) 6006ms
+   ✓ confirms V2 without legacy analysis and notifies the parent, including replays 1032ms
+   ✓ shows confidence and saved reuse but requires an explicit import 527ms
+   ✓ allows human mapping edits and blocks duplicate column assignments 781ms
+   ✓ announces unavailable AI while keeping the confirmed manual mapping usable 362ms
+   ✓ previews ambiguous source dates and requires an explicit date order 492ms
+   ✓ preserves a manually selected header when requesting table suggestions 1334ms
+   ✓ clears a price-currency choice when the workspace changes 610ms
+ ✓ src/pages/Decisions.test.tsx (10 tests) 4001ms
+   ✓ keeps accepted-order details usable when frozen planning inputs are incomplete 1404ms
+   ✓ offers a scoped AI explanation inside the saved decision details 392ms
+   ✓ groups allocation and transfer lines by route and expands frozen network inputs 385ms
+   ✓ shows network setup notes after refresh 301ms
+   ✓ Decisions page (deep audit F3, F6, F8, F14) > records what it can in a bulk accept and reports the rows that were refused 510ms
+   ✓ Decisions page (deep audit F3, F6, F8, F14) > explains why SKUs were left out after a recompute 400ms
+ ✓ src/components/ui/SearchableSelect.test.tsx (7 tests) 3102ms
+   ✓ SearchableSelect > uses viewport space when main is content-sized rather than a scroll container 1062ms
+   ✓ SearchableSelect > has a labelled combobox and filters options without changing selection 431ms
+   ✓ SearchableSelect > supports keyboard selection, Escape and returns focus to the control 340ms
+   ✓ SearchableSelect > dismisses on outside click and reports remote search and missing options 362ms
+   ✓ SearchableSelect > opens above a low control without scrolling page ancestors and scrolls only its option list 470ms
+stderr | src/components/layout/Sidebar.test.tsx > Sidebar mobile drawer > keeps closed navigation out of the keyboard and accessibility trees
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/components/layout/Sidebar.test.tsx (10 tests) 3738ms
+   ✓ Sidebar mobile drawer > keeps closed navigation out of the keyboard and accessibility trees 685ms
+   ✓ Sidebar mobile drawer > moves focus into the drawer and makes the page behind it inert 1088ms
+   ✓ Sidebar mobile drawer > keeps Tab inside the open drawer 333ms
+   ✓ Sidebar mobile drawer > still skips hidden controls where checkVisibility is unavailable (older Safari) 406ms
+   ✓ Sidebar mobile drawer > closes on Escape and returns focus to the opener 359ms
+   ✓ Sidebar mobile drawer > offers a close control inside the drawer 318ms
+stderr | src/pages/ForecastAccuracy.test.tsx > Forecast accuracy (audit F02) > reports a failed accuracy request instead of empty readiness
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+stderr | src/pages/WhatIfScenario.test.tsx > Scenario simulator (deep audit F3, F6, F7, F12) > requests an optional explanation only when the user runs a reviewed scenario
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/ForecastAccuracy.test.tsx (6 tests) 1725ms
+   ✓ Forecast accuracy (audit F02) > offers an explanation for a flagged SKU without running a backtest 308ms
+   ✓ Forecast accuracy (audit F02) > runs a backtest only from a past Monday 905ms
+ ✓ src/pages/WhatIfScenario.test.tsx (7 tests) 3373ms
+   ✓ Scenario simulator (deep audit F3, F6, F7, F12) > requests an optional explanation only when the user runs a reviewed scenario 1081ms
+   ✓ Scenario simulator (deep audit F3, F6, F7, F12) > settles the initial simulation and enables reviewed runs under StrictMode 327ms
+   ✓ Scenario simulator (deep audit F3, F6, F7, F12) > applies interpreted demand without retaining an unrelated preset outage 1067ms
+   ✓ Scenario simulator (deep audit F3, F6, F7, F12) > withholds margin and spend when unit costs are unknown 450ms
+ ✓ src/components/integrations/SmartImport.test.tsx (5 tests) 4816ms
+   ✓ plans several files and shows one card per file 926ms
+   ✓ imports a file with the user's edits 1736ms
+   ✓ refreshes the preview after a transform is switched off 1117ms
+   ✓ does not offer import on unusable files or to viewers 707ms
+   ✓ shows value problems and blocks the import 326ms
+ ✓ src/components/ai/Interactive.test.tsx (6 tests) 7042ms
+   ✓ interactive AI review boundaries > requires reviewing and applying assumptions; interpretation never applies or simulates 1299ms
+   ✓ interactive AI review boundaries > clears scenario interpretation when workspace changes 1837ms
+   ✓ interactive AI review boundaries > keeps chat only in the current identity and renders every safe citation 1947ms
+   ✓ interactive AI review boundaries > allows cancellation and never exposes an unsafe source URL 936ms
+   ✓ interactive AI review boundaries > explains disabled instead of hiding the cause 581ms
+   ✓ interactive AI review boundaries > explains policy_blocked instead of hiding the cause 435ms
+ ✓ src/components/ai/AISummary.test.tsx (6 tests) 779ms
+   ✓ labels generated content and links evidence without interpreting HTML 342ms
+ ✓ src/components/ai/ManagementArtifacts.test.tsx (4 tests) 2331ms
+   ✓ requires preview and explicit report-email confirmation 1397ms
+   ✓ does not send a supplier email when a draft is generated or edited 742ms
+ ✓ src/api/skus.test.ts (5 tests) 51ms
+stderr | src/pages/SalesAnalytics.test.tsx > Sales analytics currency (audit F03) > shows an INR total as the same INR total, not 83x larger
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/SalesAnalytics.test.tsx (4 tests) 1531ms
+   ✓ Sales analytics currency (audit F03) > shows an INR total as the same INR total, not 83x larger 404ms
+   ✓ Sales analytics currency (audit F03) > shows a recoverable report error instead of claiming missing reports are zero sales 673ms
+stderr | src/pages/ROIDashboard.test.tsx > ROI dashboard (audit F10) > labels approval figures as estimates and realised savings as not measurable
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/ROIDashboard.test.tsx (2 tests) 820ms
+   ✓ ROI dashboard (audit F10) > labels approval figures as estimates and realised savings as not measurable 724ms
+ ✓ src/pages/Integrations.test.tsx (4 tests) 1678ms
+   ✓ integrations > uses the shared sheet and confidence review for enhanced analysis 850ms
+   ✓ integrations > sends period identity when totals are selected and reports unchanged rows 805ms
+ ✓ src/components/charts/AverageSalesProjection.test.tsx (3 tests) 1196ms
+   ✓ labels the constant projection and incomplete coverage without invented confidence 782ms
+   ✓ changes horizon and search and pages on the server 348ms
+ ✓ src/components/auth/IdentityQueryProvider.test.tsx (4 tests) 489ms
+   ✓ IdentityQueryProvider > does not serve account A's cached data to account B in the same industry 301ms
+ ✓ src/components/ai/AISettings.test.tsx (4 tests) 858ms
+   ✓ requires explicit permissions and sends only the reviewed settings 678ms
+stderr | src/pages/Login.test.tsx > invitation-only sign in > submits credentials and opens the workspace
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/Login.test.tsx (5 tests) 5502ms
+   ✓ invitation-only sign in > submits credentials and opens the workspace 4152ms
+   ✓ invitation-only sign in > shows credential errors and keeps password-manager support 1294ms
+ ✓ src/pages/onboarding/StepData.test.tsx (2 tests) 1400ms
+   ✓ offers period totals during onboarding and reports a replay honestly 1265ms
+ ✓ src/components/settings/NetworkCard.test.tsx (4 tests) 1045ms
+   ✓ lists editable network fields with only warehouse parent choices 714ms
+ ✓ src/hooks/useFormattedCurrency.test.ts (6 tests) 272ms
+ ✓ src/pages/LandingPage.test.tsx (6 tests) 9ms
+ ✓ src/pages/TrendAnalysis.test.tsx (5 tests) 1244ms
+   ✓ TrendScoreGauge evidence (audit F05) > never reads zero samples as stable demand or high agreement 677ms
+stderr | src/pages/FinancialImpact.test.tsx > Financial impact currency (audit F03) > shows rupee exposure in rupees, not dollars
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/FinancialImpact.test.tsx (2 tests) 1794ms
+   ✓ Financial impact currency (audit F03) > shows rupee exposure in rupees, not dollars 1581ms
+ ✓ src/utils/forecastPresentation.test.ts (8 tests) 24ms
+ ✓ src/components/dashboard/WhatsAppStatus.test.tsx (6 tests) 433ms
+   ✓ WhatsAppStatus > shows what the API reports, not a hard-coded 'enabled' 360ms
+ ✓ src/components/charts/ForecastChart.test.tsx (6 tests) 221ms
+ ✓ src/utils/errors.test.ts (8 tests) 4ms
+ ✓ src/styles/typography-contract.test.ts (3 tests) 207ms
+ ✓ src/api/planningKeys.test.ts (4 tests) 11ms
+ ✓ src/pages/landing/content.test.ts (6 tests) 7ms
+ ✓ src/stores/auth.test.ts (4 tests) 4ms
+ ✓ src/utils/uploadSummary.test.ts (4 tests) 5ms
+ ✓ src/components/ai/CommunicationPreferences.test.tsx (1 test) 279ms
+ ✓ src/utils/format.test.ts (9 tests) 19ms
+ ✓ src/components/products/ProductCleanup.test.tsx (1 test) 386ms
+   ✓ requires preview and explicit confirmation before changing a product 384ms
+ ✓ src/components/dashboard/ClientReports.test.tsx (1 test) 239ms
+ ✓ src/pages/landing/sections/ConnectorGrid.test.tsx (5 tests) 575ms
+stderr | src/components/layout/ScrollManager.test.tsx > ScrollManager > opens a newly visited page at the top
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/components/layout/ScrollManager.test.tsx (3 tests) 61ms
+ ✓ src/components/layout/WorkspaceIndustryBadge.test.tsx (3 tests) 144ms
+ ✓ src/pages/landing/typography.test.ts (5 tests) 6ms
+stderr | src/pages/DataQuality.test.tsx > binds confirmed fixes to the reviewed preview token
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/DataQuality.test.tsx (1 test) 1075ms
+   ✓ binds confirmed fixes to the reviewed preview token 1072ms
+ ✓ src/styles/trend-control-tokens.test.ts (2 tests) 1001ms
+   ✓ Trend control design tokens > generates the active tab's themed background and matching foreground in the actual palette 611ms
+   ✓ Trend control design tokens > generates CSS for every brand color utility used by the trend and dropdown controls 383ms
+ ✓ src/stores/productImages.test.ts (19 tests) 22ms
+ ✓ src/components/layout/CurrencyMenu.test.tsx (3 tests) 616ms
+ ✓ src/components/auth/IndustryRoute.test.tsx (3 tests) 40ms
+ ✓ src/pages/landing/sections/ModuleGrid.test.tsx (3 tests) 1103ms
+   ✓ ModuleGrid > lists every module 617ms
+ ✓ src/pages/landing/sections/IndustryTabs.test.tsx (3 tests) 866ms
+   ✓ IndustryTabs > shows the first industry's real horizon on load 458ms
+stderr | src/pages/ShortageAlerts.test.tsx > offers an optional explanation while retaining the original risk and acknowledgment
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/ShortageAlerts.test.tsx (1 test) 609ms
+   ✓ offers an optional explanation while retaining the original risk and acknowledgment 603ms
+ ✓ src/components/signals/TrendPanel.test.tsx (2 tests) 296ms
+ ✓ src/utils/integrationGroups.test.ts (2 tests) 23ms
+stderr | src/pages/DirectAccess.test.tsx > does not expose public signup even through an old signup URL
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/pages/DirectAccess.test.tsx (2 tests) 823ms
+   ✓ does not expose public signup even through an old signup URL 631ms
+ ✓ src/pages/landing/sections/ForecastEngine.test.tsx (2 tests) 158ms
+ ✓ src/components/ai/OnboardingHelper.test.tsx (1 test) 912ms
+   ✓ asks for catalog-grounded setup help without sending credentials 908ms
+ ✓ src/components/ai/ImportFormats.test.tsx (1 test) 535ms
+   ✓ disables only the selected reviewed format revision 528ms
+ ✓ src/components/ui/Skeleton.test.tsx (4 tests) 155ms
+ ✓ src/components/ai/AISettingsSmartImport.test.tsx (1 test) 236ms
+ ✓ src/pages/landing/sections/SignalGrid.test.tsx (2 tests) 693ms
+   ✓ SignalGrid > expands a signal to show what it feeds 537ms
+ ✓ src/components/ui/Modal.test.tsx (1 test) 463ms
+   ✓ exposes an open dialog and its controls to assistive technology 460ms
+ ✓ src/utils/indiaRegions.test.ts (1 test) 17ms
+ ✓ src/config.test.ts (1 test) 9ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/hooks/usePersistedForecast.test.tsx > reads saved results before requesting background refresh, without waiting for inference
+AssertionError: expected "spy" to be called with arguments: [ { view: 'summary', …(2) } ]
+
+Received: 
+
+  1st spy call:
+
+  Array [
+    Object {
+      "limit": 6,
+      "offset": 0,
++     "search": "",
+      "view": "summary",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/hooks/usePersistedForecast.test.tsx:25:22
+     23|   const { result } = renderHook(() => usePersistedForecast({ horizon: …
+     24|   await waitFor(() => expect(result.current.data?.run_id).toBe("saved"…
+     25|   expect(api.latest).toHaveBeenCalledWith({ view: "summary", offset: 0…
+       |                      ^
+     26|   await waitFor(() => expect(api.refresh).toHaveBeenCalledWith({ horiz…
+     27|   expect(result.current.refreshing).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  src/hooks/usePersistedForecast.test.tsx > requests server pages without downloading the entire catalog
+AssertionError: expected "spy" to be called with arguments: [ { view: 'skus', …(3) } ]
+
+Received: 
+
+  1st spy call:
+
+  Array [
+    Object {
+      "limit": 6,
+      "offset": 24996,
+      "run_id": "saved",
++     "search": "",
+      "view": "skus",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/hooks/usePersistedForecast.test.tsx:62:22
+     60|   const { result } = renderHook(() => usePersistedForecast({ horizon: …
+     61|   await waitFor(() => expect(result.current.data?.total_skus).toBe(250…
+     62|   expect(api.latest).toHaveBeenCalledWith({ view: "skus", offset: 2499…
+       |                      ^
+     63| });
+     64| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  src/pages/Forecasts.test.tsx > Forecasts page (audit F04, F08) > filters the forecast table by SKU without changing the saved forecast page
+AssertionError: expected last "spy" call to have been called with [ ObjectContaining{…} ]
+
+Ignored nodes: comments, script, style
+<html>
+  <head />
+  <body>
+    <div>
+      <div
+        class="space-y-4 animate-fade-in"
+        data-industry="fashion"
+      >
+        <div
+          class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4"
+        >
+          <div>
+            <div
+              class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold text-white mb-3"
+              style="background: linear-gradient(135deg, #03363D 0%, #1c525a 100%);"
+            >
+              <svg
+                class="lucide lucide-shirt"
+                fill="none"
+                height="18"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="18"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"
+                />
+              </svg>
+               
+              Apparel & Fashion
+            </div>
+            <h1
+              class="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white"
+            >
+              Demand Forecasts
+            </h1>
+            <p
+              class="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-xl leading-relaxed"
+            >
+              Expected demand by SKU, with a restrained range showing likely variation. Start with the recommendation; open settings only when you need them.
+            </p>
+          </div>
+          <div
+            class="flex items-center gap-2 shrink-0"
+          >
+            <button
+              class="tactile-press flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition glass"
+            >
+              <svg
+                height="13px"
+                role="presentation"
+                viewBox="0 0 24 24"
+                width="13px"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <g
+                  transform="translate(2 3)"
+                >
+                  <path
+                    d="M12.041.5H0"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-miterlimit="10"
+                    stroke-width="1.5px"
+                    transform="translate(10.622 0.395) rotate(90)"
+                  />
+                  <path
+                    d="M0,0,2.928,2.916,0,5.832"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-miterlimit="10"
+                    stroke-width="1.5px"
+                    transform="translate(13.038 9.508) rotate(90)"
+                  />
+                  <path
+                    d="M0,4.617V3.684A3.684,3.684,0,0,1,3.685,0H8.569a3.675,3.675,0,0,1,3.675,3.675v11.14A3.685,3.685,0,0,1,8.559,18.5H3.674A3.675,3.675,0,0,1,0,14.825v-.942"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-miterlimit="10"
+                    stroke-width="1.5px"
+                    transform="translate(19.372 5.128) rotate(90)"
+                  />
+                </g>
+              </svg>
+               Excel
+            </button>
+            <button
+              class="tactile-press flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition glass"
+            >
+              <svg
+                height="13px"
+                role="presentation"
+                viewBox="0 0 24 24"
+                width="13px"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <g
+                  transform="translate(2 3)"
+                >
+                  <path
+                    d="M12.041.5H0"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-miterlimit="10"
+                    stroke-width="1.5px"
+                    transform="translate(10.622 0.395) rotate(90)"
+                  />
+                  <path
+                    d="M0,0,2.928,2.916,0,5.832"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-miterlimit="10"
+                    str...
+
+- Expected
++ Received
+
+  Array [
+-   ObjectContaining {
++   Object {
++     "limit": 6,
+      "offset": 0,
+-     "search": "KURTI-7",
++     "search": "K",
++     "view": "skus",
+    },
+  ]
+
+ ❯ src/pages/Forecasts.test.tsx:159:44
+    159|   });
+    160| 
+    161|   it("lists SKUs that were not forecast and why", async () => {
+       |                                   ^
+    162|     setForecast(
+    163|       response(2, { omitted: [{ sku_id: "sku-7", reason: "no_sales_his…
+ ❯ runWithExpensiveErrorDiagnosticsDisabled node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  src/pages/Inventory.test.tsx > keeps pagination usable when attention filters find no rows on this page
+TestingLibraryElementError: Unable to find an element with the text: /No matching SKUs in this result set/. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="space-y-5"
+    >
+      <header
+        class="flex flex-col justify-between gap-4 rounded-2xl border border-line bg-surface p-5 xl:flex-row xl:items-center"
+      >
+        <div>
+          <p
+            class="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[var(--accent)]"
+          >
+            <svg
+              class="lucide lucide-warehouse"
+              fill="none"
+              height="15"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="15"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M22 8.35V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.35A2 2 0 0 1 3.26 6.5l8-3.2a2 2 0 0 1 1.48 0l8 3.2A2 2 0 0 1 22 8.35Z"
+              />
+              <path
+                d="M6 18h12"
+              />
+              <path
+                d="M6 14h12"
+              />
+              <rect
+                height="12"
+                width="12"
+                x="6"
+                y="10"
+              />
+            </svg>
+            Stock overview
+          </p>
+          <h1
+            class="mt-2 font-heading text-2xl font-semibold text-content"
+          >
+            Inventory
+          </h1>
+          <p
+            class="mt-1 max-w-lg text-sm text-content-muted"
+          >
+            See what you have, where it is, and which stores need attention.
+          </p>
+        </div>
+        <div
+          class="flex flex-wrap gap-2"
+        >
+          <button
+            class="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-content transition hover:bg-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:opacity-40"
+          >
+            <span
+              class="flex items-center gap-2"
+            >
+              <svg
+                class="lucide lucide-refresh-cw"
+                fill="none"
+                height="14"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="14"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"
+                />
+                <path
+                  d="M21 3v5h-5"
+                />
+                <path
+                  d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"
+                />
+                <path
+                  d="M8 16H3v5"
+                />
+              </svg>
+              Refresh
+            </span>
+          </button>
+          <button
+            class="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-content transition hover:bg-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:opacity-40"
+          >
+            Export CSV
+          </button>
+          <button
+            class="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-content transition hover:bg-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:opacity-40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 flex items-center gap-1.5"
+            disabled=""
+          >
+            <svg
+              height="14px"
+              role="presentation"
+              viewBox="0 0 24 24"
+              width="14px"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <g
+                transform="translate(3 2)"
+              >
+                <path
+                  d="M14.191,0s-.543,6.735-.858,9.572a2.238,2.238,0,0,1-2.358,2.174c-2.609.047-5.221.05-7.829-.005A2.214,2.214,0,0,1,.857,9.579C.54,6.717,0,0,0,0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-miterlimit="10"
+                  stroke-width="1.5px"
+                  transform="translate(2.134 7.468)"
+                />
+                <path
+                  d="M16.958.5H0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-miterlimit="10"
+                  stroke-width="1.5px"
+                  transform="translate(0.75 3.74)"
+                />
+                <path
+                  d="M10.423,3.489A1.648,1.648,0,0,1,8.808,2.165L8.565.949A1.28,1.28,0,0,0,7.328,0H3.1A1.28,1.28,0,0,0,1.858.949L1.615,2.165A1.648,1.648,0,0,1,0,3.489"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-miterlimit="10"
+                  stroke-width="1.5px"
+                  transform="translate(4.018 0.751)"
+                />
+              </g>
+            </svg>
+             Clear stock
+          </button>
+        </div>
+      </header>
+      <section
+        class="rounded-2xl border border-line bg-surface p-6 sm:p-8"
+      >
+        <svg
+          class="lucide lucide-warehouse text-[var(--accent)]"
+          fill="none"
+          height="30"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="30"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M22 8.35V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.35A2 2 0 0 1 3.26 6.5l8-3.2a2 2 0 0 1 1.48 0l8 3.2A2 2 0 0 1 22 8.35Z"
+          />
+          <path
+            d="M6 18h12"
+          />
+          <path
+            d="M6 14h12"
+          />
+          <rect
+            height="12"
+            width="12"
+            x="6"
+            y="10"
+          />
+        </svg>
+        <h2
+          class="mt-4 font-heading text-xl font-semibold"
+        >
+          Build your stock picture
+        </h2>
+        <p
+          class="mt-2 max-w-xl text-sm text-content-muted"
+        >
+          Start with your catalogue, add sales history, then upload the quantities at each store. Your own data will appear here.
+        </p>
+        <ol
+          class="mt-6 grid gap-3 lg:grid-cols-3"
+        >
+          <li
+            class="rounded-xl border border-line p-4"
+          >
+            <p
+              class="text-xs text-content-muted"
+            >
+              01 · Catalogue
+            </p>
+            <a
+              class="mt-2 block font-semibold text-[var(--accent)]"
+              href="/workspace/products"
+            >
+              Add products and SKUs
+            </a>
+            <p
+              class="mt-1 text-sm text-content-muted"
+            >
+              Give every variant a unique SKU code.
+            </p>
+          </li>
+          <li
+            class="rounded-xl border border-line p-4"
+          >
+            <p
+              class="text-xs text-content-muted"
+            >
+              02 · Demand
+            </p>
+            <a
+              class="mt-2 block font-semibold text-[var(--accent)]"
+              href="/workspace/integrations"
+            >
+              Add sales history
+            </a>
+            <p
+              class="mt-1 text-sm text-content-muted"
+            >
+              Include store names to calculate local stock cover.
+            </p>
+          </li>
+          <li
+            class="rounded-xl border border-line p-4"
+          >
+            <p
+              class="text-xs text-content-muted"
+            >
+              03 · Stock
+            </p>
+            <button
+              class="mt-2 flex items-center gap-2 font-semibold text-[var(--accent)]"
+            >
+              <svg
+                height="15px"
+                role="presentation"
+                viewBox="0 0 24 24"
+                width="15px"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <g
+                  transform="translate(2 22) rotate(-90)"
+                >
+                  <path
+                    d="M12.244,4.618V3.685A3.685,3.685,0,0,0,8.559,0H3.684A3.685,3.685,0,0,0,0,3.685v11.13A3.685,3.685,0,0,0,3.684,18.5H8.569a3.675,3.675,0,0,0,3.675-3.674v-.943"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-miterlimit="10"
+                    stroke-width="1.5px"
+                    transform="translate(0.772 0.771)"
+                  />
+                  <path
+                    d="M12.041.5H0"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-miterlimit="10"
+                    stroke-width="1.5px"
+                    transform="translate(7.768 9.521)"
+                  />
+                  <path
+                    d="M0,0,2.928,2.915,0,5.831"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-miterlimit="10"
+                    stroke-width="1.5px"
+                    transform="translate(16.881 7.106)"
+                  />
+                </g>
+              </svg>
+              Import stock
+            </button>
+            <p
+              class="mt-1 text-sm text-content-muted"
+            >
+              Upload on-hand, reserved and arriving quantities.
+            </p>
+          </li>
+        </ol>
+      </section>
+    </div>
+  </div>
+</body>
+
+Ignored nodes: comments, script, style
+<html>
+  <head />
+  <body>
+    <div>
+      <div
+        class="space-y-5"
+      >
+        <header
+          class="flex flex-col justify-between gap-4 rounded-2xl border border-line bg-surface p-5 xl:flex-row xl:items-center"
+        >
+          <div>
+            <p
+              class="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[var(--accent)]"
+            >
+              <svg
+                class="lucide lucide-warehouse"
+                fill="none"
+                height="15"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="15"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M22 8.35V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.35A2 2 0 0 1 3.26 6.5l8-3.2a2 2 0 0 1 1.48 0l8 3.2A2 2 0 0 1 22 8.35Z"
+                />
+                <path
+                  d="M6 18h12"
+                />
+                <path
+                  d="M6 14h12"
+                />
+                <rect
+                  height="12"
+                  width="12"
+                  x="6"
+                  y="10"
+                />
+              </svg>
+              Stock overview
+            </p>
+            <h1
+              class="mt-2 font-heading text-2xl font-semibold text-content"
+            >
+              Inventory
+            </h1>
+            <p
+              class="mt-1 max-w-lg text-sm text-content-muted"
+            >
+              See what you have, where it is, and which stores need attention.
+            </p>
+          </div>
+          <div
+            class="flex flex-wrap gap-2"
+          >
+            <button
+              class="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-content transition hover:bg-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:opacity-40"
+            >
+              <span
+                class="flex items-center gap-2"
+              >
+                <svg
+                  class="lucide lucide-refresh-cw"
+                  fill="none"
+                  height="14"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="14"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"
+                  />
+                  <path
+                    d="M21 3v5h-5"
+                  />
+                  <path
+                    d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"
+                  />
+                  <path
+                    d="M8 16H3v5"
+                  />
+                </svg>
+                Refresh
+              </span>
+            </button>
+            <button
+              class="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-content transition hover:bg-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:opacity-40"
+            >
+              Export CSV
+            </button>
+            <button
+              class="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-content transition hover:bg-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:opacity-40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 flex items-center gap-1.5"
+              disabled=""
+            >
+              <svg
+                height="14px"
+                role="presentation"
+                viewBox="0 0 24 24"
+                width="14px"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <g
+                  transform="translate(3 2)"
+                >
+                  <path
+                    d="M14.191,0s-.543,6.735-.858,9.572a2.238,2.238,0,0,1-2.358,2.174c-2.609.047-5.221.05-7.829-.005A2.214,2.214,0,0,1,.857,9.579C.54,6.717,0,0,0,0"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-miterlimit="10"
+                    stroke-width="1.5px"
+                    transform="translate(2.134 7.468)"
+                  />
+                  <path
+                    d="M16.958.5H0"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-miterlimit="10"
+                    stroke-width="1.5px"
+                    transform="translate(0.75 3.74)"
+                  />
+                  [36...
+ ❯ Proxy.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ src/pages/Inventory.test.tsx:80:9
+     78|   await waitFor(() => expect(api.overview).toHaveBeenLastCalledWith(ex…
+     79|     attention: "excess",
+     80|     offset: 0,
+       |         ^
+     81|   })));
+     82| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  src/components/dashboard/PlanningBriefDashboard.test.tsx > PlanningBriefDashboard > places confidence once in a labelled summary with its band and reasons
+AssertionError: expected [ <p …(1)></p>, <p …(1)></p> ] to have a length of 1 but got 2
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ src/components/dashboard/PlanningBriefDashboard.test.tsx:136:56
+    134|     expect(within(field).getByRole("link", { name: "View reasons" })).…
+    135|     expect(screen.queryByText("78% confidence")).not.toBeInTheDocument…
+    136|     expect(screen.getAllByText("Forecast confidence")).toHaveLength(1);
+       |                                                        ^
+    137|   });
+    138| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  src/components/dashboard/PlanningBriefDashboard.test.tsx > PlanningBriefDashboard > says decisions are unavailable when they fail to load, not that none are open
+TestingLibraryElementError: Found multiple elements with the text: Orders due
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+<p
+  class="text-[10px] font-semibold uppercase tracking-[0.12em] text-content-subtle"
+>
+  Orders due
+</p>
+
+Ignored nodes: comments, script, style
+<p
+  class="text-[10px] font-semibold uppercase tracking-[0.12em] text-content-subtle"
+>
+  Orders due
+</p>
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="animate-fade-in space-y-3"
+    >
+      <details
+        class="rounded-xl border border-line bg-surface px-4 py-2"
+      >
+        <summary
+          class="cursor-pointer text-xs font-semibold text-content-muted"
+        >
+          AI planning summary (optional)
+        </summary>
+        <div
+          class="pt-2"
+        >
+          <aside
+            aria-label="AI summary"
+            class="space-y-2 rounded-xl border border-line bg-surface p-3 text-sm"
+          >
+            <button
+              class="btn-ghost px-3 py-1.5 text-xs"
+            >
+              Generate AI summary
+            </button>
+          </aside>
+        </div>
+      </details>
+      <header
+        class="flex flex-col gap-3 rounded-2xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div>
+          <h1
+            class="font-heading text-xl font-semibold tracking-tight text-content"
+          >
+            Good morning, Sanket — part of your planning brief is unavailable
+          </h1>
+          <p
+            class="mt-0.5 text-sm text-content-muted"
+            role="alert"
+          >
+            Decisions could not be loaded — the queue is unknown, not empty. Use Refresh brief to retry.
+          </p>
+        </div>
+        <button
+          class="btn-secondary px-3 py-1.5 text-xs"
+        >
+          <span
+            aria-hidden="true"
+            class="contents"
+          >
+            <svg
+              class="lucide lucide-refresh-cw"
+              fill="none"
+              height="14"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="14"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"
+              />
+              <path
+                d="M21 3v5h-5"
+              />
+              <path
+                d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"
+              />
+              <path
+                d="M8 16H3v5"
+              />
+            </svg>
+          </span>
+          Refresh brief
+        </button>
+      </header>
+      <section
+        aria-label="Planning metrics"
+        class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
+      >
+        <div
+          class="flex items-center gap-3 py-2.5"
+        >
+          <span
+            class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300"
+          >
+            <svg
+              height="17px"
+              role="presentation"
+              viewBox="0 0 24 24"
+              width="17px"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <g
+                transform="translate(2.5 1.5)"
+              >
+                <path
+                  d="M13.213,14.682H4.865C1.8,14.682-.554,13.574.114,9.117L.892,3.076C1.3.851,2.723,0,3.968,0H14.146c1.263,0,2.6.915,3.076,3.076L18,9.117C18.567,13.071,16.279,14.682,13.213,14.682Z"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-miterlimit="10"
+                  stroke-width="1.5px"
+                  transform="translate(0.801 5.318)"
+                />
+                <path
+                  d="M8.659,4.32A4.32,4.32,0,0,0,4.339,0h0A4.32,4.32,0,0,0,0,4.32H0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-miterlimit="10"
+                  stroke-width="1.5px"
+                  transform="translate(5.492 0.778)"
+                />
+                <path
+                  d="M.481.458H.435"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-miterlimit="10"
+                  stroke-width="1.5px"
+                  transform="translate(12.316 9.144)"
+                />
+                <path
+                  d="M.481.458H.435"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-miterlimit="10"
+                  stroke-width="1.5px"
+                  transform="translate(6.485 9.144)"
+                />
+              </g>
+            </svg>
+          </span>
+          <div
+            class="min-w-0"
+          >
+            <p
+              class="text-[10px] font-semibold uppercase t...
+ ❯ Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getElementError node_modules/@testing-library/dom/dist/query-helpers.js:20:35
+ ❯ getMultipleElementsFoundError node_modules/@testing-library/dom/dist/query-helpers.js:23:10
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:55:13
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/dashboard/PlanningBriefDashboard.test.tsx:168:19
+    166| 
+    167|     expect(await screen.findByRole("alert")).toHaveTextContent(/decisi…
+    168|     expect(screen.getByText("Orders due").parentElement).toHaveTextCon…
+       |                   ^
+    169|     expect(screen.queryByText("No open order decision currently requir…
+    170|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+ FAIL  src/components/dashboard/PlanningBriefDashboard.test.tsx > loads the persisted portfolio summary and age without generating on every visit
+AssertionError: expected "spy" to be called with arguments: [ { view: 'summary', …(2) } ]
+
+Received: 
+
+  1st spy call:
+
+  Array [
+    Object {
+      "limit": 6,
+      "offset": 0,
++     "search": "",
+      "view": "summary",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/components/dashboard/PlanningBriefDashboard.test.tsx:212:22
+    210|   renderDashboard();
+    211|   expect(await screen.findByText(/Generated 2 hours ago/)).toBeInTheDo…
+    212|   expect(api.latest).toHaveBeenCalledWith({ view: "summary", offset: 0…
+       |                      ^
+    213|   expect(api.generate).not.toHaveBeenCalled();
+    214| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯
+
+ FAIL  src/components/dashboard/PlanningBriefDashboard.test.tsx > offers an optional grounded summary above the existing planning metrics
+TestingLibraryElementError: Found multiple elements with the text: Orders due
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+<p
+  class="text-[10px] font-semibold uppercase tracking-[0.12em] text-content-subtle"
+>
+  Orders due
+</p>
+
+Ignored nodes: comments, script, style
+<p
+  class="text-[10px] font-semibold uppercase tracking-[0.12em] text-content-subtle"
+>
+  Orders due
+</p>
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="animate-fade-in space-y-3"
+    >
+      <details
+        class="rounded-xl border border-line bg-surface px-4 py-2"
+      >
+        <summary
+          class="cursor-pointer text-xs font-semibold text-content-muted"
+        >
+          AI planning summary (optional)
+        </summary>
+        <div
+          class="pt-2"
+        >
+          <aside
+            aria-label="AI summary"
+            class="space-y-2 rounded-xl border border-line bg-surface p-3 text-sm"
+          >
+            <button
+              class="btn-ghost px-3 py-1.5 text-xs"
+            >
+              Generate AI summary
+            </button>
+          </aside>
+        </div>
+      </details>
+      <header
+        class="flex flex-col gap-3 rounded-2xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div>
+          <h1
+            class="font-heading text-xl font-semibold tracking-tight text-content"
+          >
+            Good morning, Sanket — your planning brief is ready
+          </h1>
+          <p
+            class="mt-0.5 text-sm text-content-muted"
+          >
+            Loading decisions…
+          </p>
+        </div>
+        <button
+          class="btn-secondary px-3 py-1.5 text-xs"
+          disabled=""
+        >
+          <span
+            aria-hidden="true"
+            class="h-4 w-4 rounded-full border-2 border-current/30 border-t-current animate-spin"
+          />
+          Refresh brief
+        </button>
+      </header>
+      <section
+        aria-label="Planning metrics"
+        class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
+      >
+        <div
+          class="flex items-center gap-3 py-2.5"
+        >
+          <span
+            class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300"
+          >
+            <svg
+              height="17px"
+              role="presentation"
+              viewBox="0 0 24 24"
+              width="17px"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <g
+                transform="translate(2.5 1.5)"
+              >
+                <path
+                  d="M13.213,14.682H4.865C1.8,14.682-.554,13.574.114,9.117L.892,3.076C1.3.851,2.723,0,3.968,0H14.146c1.263,0,2.6.915,3.076,3.076L18,9.117C18.567,13.071,16.279,14.682,13.213,14.682Z"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-miterlimit="10"
+                  stroke-width="1.5px"
+                  transform="translate(0.801 5.318)"
+                />
+                <path
+                  d="M8.659,4.32A4.32,4.32,0,0,0,4.339,0h0A4.32,4.32,0,0,0,0,4.32H0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-miterlimit="10"
+                  stroke-width="1.5px"
+                  transform="translate(5.492 0.778)"
+                />
+                <path
+                  d="M.481.458H.435"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-miterlimit="10"
+                  stroke-width="1.5px"
+                  transform="translate(12.316 9.144)"
+                />
+                <path
+                  d="M.481.458H.435"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-miterlimit="10"
+                  stroke-width="1.5px"
+                  transform="translate(6.485 9.144)"
+                />
+              </g>
+            </svg>
+          </span>
+          <div
+            class="min-w-0"
+          >
+            <p
+              class="text-[10px] font-semibold uppercase tracking-[0.12em] text-content-subtle"
+            >
+              Orders due
+            </p>
+            <p
+              class="mt-0.5 font-mono text-lg font-semibold leading-none text-content"
+            >
+              0
+            </p>
+            <p
+              class="mt-0.5 text-xs text-content-muted"
+            >
+              0 units
+            </p>
+          </div>
+        </div>
+        <div
+          class="flex items-center gap-3 py-2.5"
+        >
+          <span
+            class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300"
+          >
+            <svg
+              class="lucide lucide-triangle-alert"
+              fill="none"
+              height="17"
+              stroke="currentColor"
+              stroke-linecap="r...
+ ❯ Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getElementError node_modules/@testing-library/dom/dist/query-helpers.js:20:35
+ ❯ getMultipleElementsFoundError node_modules/@testing-library/dom/dist/query-helpers.js:23:10
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:55:13
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/dashboard/PlanningBriefDashboard.test.tsx:220:17
+    218|   renderDashboard();
+    219|   expect(await screen.findByRole("complementary", { name: "AI summary"…
+    220|   expect(screen.getByText("Orders due")).toBeInTheDocument();
+       |                 ^
+    221| });
+    222| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯
+
+ Test Files  4 failed | 62 passed (66)
+      Tests  8 failed | 323 passed (331)
+   Start at  12:12:00
+   Duration  273.52s (transform 8.34s, setup 50.96s, collect 167.91s, tests 99.22s, environment 157.27s, prepare 19.47s)
+

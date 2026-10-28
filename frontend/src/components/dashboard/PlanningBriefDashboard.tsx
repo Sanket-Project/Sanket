@@ -15,7 +15,7 @@ import {
   TrendingUp,
 } from "@/components/ui/icons";
 import { decisionsApi } from "@/api/decisions";
-import { forecastsApi, forecastConfidenceApi } from "@/api/forecasts";
+import { forecastConfidenceApi } from "@/api/forecasts";
 import { dataQualityApi } from "@/api/dataQuality";
 import { integrationsApi } from "@/api/integrations";
 import { salesAnalyticsApi } from "@/api/salesAnalytics";
@@ -26,10 +26,12 @@ import { getErrorMessage } from "@/utils/errors";
 import { ForecastChart } from "@/components/charts/ForecastChart";
 import { Button } from "@/components/ui/Button";
 import { useAuthStore } from "@/stores/auth";
+import { ForecastRunStatus } from "@/components/charts/ForecastRunStatus";
+import { usePersistedForecast } from "@/hooks/usePersistedForecast";
 import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 import { getProductImage, useProductImagesStore } from "@/stores/productImages";
 import { useFormattedCurrency } from "@/hooks/useFormattedCurrency";
-import type { ForecastRow, IndustryCode } from "@/types/api";
+import type { ForecastRow } from "@/types/api";
 
 /**
  * Portfolio line = sum of per-SKU P50s (exact for expectations). The band is
@@ -101,11 +103,7 @@ export const PlanningBriefDashboard = () => {
     queryKey: ["decisions", industry, "open"],
     queryFn: () => decisionsApi.list({ status: "open", limit: 20 }),
   });
-  const forecast = useQuery({
-    queryKey: ["dashboard-forecast", industry],
-    queryFn: () => forecastsApi.generate({ horizon: 12, force_zero_shot: true }),
-    retry: false,
-  });
+  const forecast = usePersistedForecast({ horizon: 12, view: "summary" });
   // Weekly, to match the weekly forecast buckets (deep audit F4).
   const history = useQuery({
     queryKey: ["dashboard-history", industry, "week"],
@@ -148,6 +146,7 @@ export const PlanningBriefDashboard = () => {
   const hasDecision = Boolean(primary);
   const totals = response?.totals;
   const portfolioConfidence = confidence.data?.portfolio_confidence ?? null;
+  const confidenceBand = portfolioConfidence == null ? null : portfolioConfidence >= 80 ? "High" : portfolioConfidence >= 60 ? "Moderate" : "Low";
   const lowConfidenceSkus = (confidence.data?.skus ?? []).filter(
     (s) => s.band === "low" || s.band === "insufficient",
   ).length;
@@ -168,19 +167,12 @@ export const PlanningBriefDashboard = () => {
   const historyRows = history.data ? weeklyHistory(history.data) : [];
   const hasHistory = historyRows.some((point) => point.actual !== null);
   const forecastRows = aggregateForecast(forecast.data?.rows ?? []);
-  const fallbackDescriptor: Record<IndustryCode, string> = {
-    fashion: "jacket",
-    electronics: "headphones",
-    pharma: "ibuprofen tablets",
-    agrocenter: "poultry feed",
-    hardware: "cement bag",
-  };
-  const productImage = getProductImage(
-    primary?.sku_id ?? "dashboard-primary",
+  const productImage = primary ? getProductImage(
+    primary.sku_id,
     industry,
     images,
-    primary?.sku_code ?? fallbackDescriptor[industry],
-  );
+    primary.sku_code ?? undefined,
+  ) : null;
   const cover = primary?.inputs?.days_of_cover;
   const revenueProtected = primary?.economics?.revenue_protected ?? 0;
   const suggestedUnits = primary?.recommended_units ?? 0;
@@ -188,7 +180,12 @@ export const PlanningBriefDashboard = () => {
 
   return (
     <div className="animate-fade-in space-y-3">
-      <AISummary feature="planning_brief" runId={forecast.data?.run_id} contextKey={JSON.stringify([industry, decisions.data, forecast.data?.run_id, quality.data, coverage.data])} />
+      <details open className="rounded-xl border border-line bg-surface px-4 py-2">
+        <summary className="cursor-pointer text-xs font-semibold text-content-muted">AI planning summary (optional)</summary>
+        <div className="pt-2">
+          <AISummary feature="planning_brief" runId={forecast.data?.run_id} contextKey={JSON.stringify([industry, decisions.data, forecast.data?.run_id, quality.data, coverage.data])} />
+        </div>
+      </details>
       <header className="flex flex-col gap-3 rounded-2xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-heading text-xl font-semibold tracking-tight text-content">
@@ -216,7 +213,7 @@ export const PlanningBriefDashboard = () => {
           // refresh together (deep audit F9).
           onClick={() => {
             void invalidatePlanningData(queryClient);
-            void forecast.refetch();
+            forecast.requestRefresh();
           }}
           loading={decisions.isFetching || forecast.isFetching || quality.isFetching || coverage.isFetching}
         >
@@ -224,33 +221,35 @@ export const PlanningBriefDashboard = () => {
         </Button>
       </header>
 
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Planning metrics">
+        <SummaryItem icon={ShoppingBag} label="Open order decisions" value={decisionsFailed ? unavailable : String(totals?.purchase_orders ?? open.length)} detail={decisionsFailed ? "Decision queue unavailable" : `${(totals?.units_to_order ?? 0).toLocaleString()} units`} />
+        <SummaryItem icon={AlertTriangle} label="Stockout risk" value={decisionsFailed ? unavailable : String(stockoutRisk)} detail="Open items at or below lead time" tone={stockoutRisk ? "danger" : "success"} />
+        <SummaryItem icon={TrendingUp} label="Confidence signal" value={portfolioConfidence == null ? unavailable : `${Math.round(portfolioConfidence)}%`} detail={confidenceBand ? `${confidenceBand}; heuristic, not accuracy` : confidence.data?.reason ?? "Not measured"} tone={confidenceBand === "Low" ? "warning" : "info"} />
+        <SummaryItem icon={Database} label="Data readiness" value={quality.isError ? unavailable : `${criticalIssues} critical`} detail={warnings == null ? "Quality report unavailable" : `${warnings} issues found`} tone={criticalIssues ? "warning" : "success"} />
+      </section>
+
       <div className="grid gap-3 xl:grid-cols-[minmax(0,1.9fr)_minmax(290px,0.95fr)]">
         <div className="min-w-0 space-y-3">
           <section className={`rounded-2xl border p-4 dark:bg-surface ${hasDecision ? "border-emerald-700/20 bg-[color-mix(in_srgb,var(--surface)_88%,#DFF4EF)]" : "border-sky-700/20 bg-[color-mix(in_srgb,var(--surface)_90%,#E7F2F5)]"}`}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex min-w-0 gap-3">
-                <img
+                {productImage && <img
                   src={productImage}
-                  alt={primary?.sku_code ? `${primary.sku_code} product` : `${industry} catalogue product`}
+                  alt={`${primary?.sku_code ?? "Recommended SKU"} product`}
                   className="h-16 w-16 shrink-0 rounded-xl border border-line bg-surface-2 object-cover"
-                />
+                />}
                 <div className="min-w-0">
                   <p className="font-mono text-xs font-semibold uppercase text-content-muted">{primary?.sku_code ?? `${industry} planning`}</p>
                   <h2 className="mt-1 font-heading text-xl font-semibold text-content">
-                    {hasDecision ? "Review the recorded stock recommendation" : "Review demand history and stock coverage"}
+                    {hasDecision ? "Review the stock recommendation" : "Review demand and stock"}
                   </h2>
                   <p className="mt-0.5 text-sm text-content-muted">
                     {hasDecision
                       ? "Based on recorded stock, demand and lead-time inputs."
-                      : "Sanket will only show an order action after it can support it with auditable inventory and lead-time inputs."}
+                      : "Add sales history and stock to prepare your next order."}
                   </p>
                 </div>
               </div>
-              {portfolioConfidence != null && portfolioConfidence > 0 && (
-                <span className="self-start rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-                  {portfolioConfidence}% confidence
-                </span>
-              )}
             </div>
 
             {hasDecision ? (
@@ -308,7 +307,7 @@ export const PlanningBriefDashboard = () => {
               {lowConfidenceSkus > 0 && <Link to="/workspace/forecasts" className="font-semibold text-amber-700 underline-offset-2 hover:underline dark:text-amber-300">{lowConfidenceSkus} low-confidence SKU{lowConfidenceSkus === 1 ? "" : "s"}</Link>}
               {criticalIssues > 0 && <Link to="/workspace/data-quality" className="font-semibold text-rose-700 underline-offset-2 hover:underline dark:text-rose-300">{criticalIssues} critical data issue{criticalIssues === 1 ? "" : "s"}</Link>}
               {leadTimeAssumed > 0 && <Link to="/workspace/inventory" className="font-semibold text-amber-700 underline-offset-2 hover:underline dark:text-amber-300">{leadTimeAssumed} SKU{leadTimeAssumed === 1 ? " uses" : "s use"} an assumed lead time</Link>}
-              <span className="text-content-subtle">Confidence is a data-quality heuristic, not measured forecast accuracy — see Forecast Accuracy for held-out results.</span>
+              <span className="text-content-subtle">Confidence is a data-quality heuristic, not a held-out accuracy score.</span>
             </div>
           </section>
 
@@ -320,7 +319,11 @@ export const PlanningBriefDashboard = () => {
               </div>
               <Link to="/workspace/forecasts" className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--accent)]">Open forecast <ArrowRight size={13} /></Link>
             </div>
-            {forecast.isError ? (
+            <ForecastRunStatus forecast={forecast.data} stale={forecast.stale} refreshing={forecast.refreshing} generating={forecast.generating} queued={forecast.refreshStatus?.status === "pending"} waitingForOtherIndustry={forecast.waitingForOtherIndustry} error={forecast.refreshError} />
+            {forecast.isError && forecastRows.length > 0 && <p role="alert" className="text-xs text-content-muted">
+              Saved forecast could not be reloaded; displaying the last saved result. {getErrorMessage(forecast.error)}
+            </p>}
+            {forecast.isError && !forecastRows.length ? (
               <p role="alert" className="py-6 text-sm text-content-muted">Forecast service unavailable. Open Forecasts to retry; no substitute prediction is shown.</p>
             ) : forecastRows.length ? (
               <ForecastChart rows={forecastRows} history={historyRows} height={180} unitLabel="units / week" />
@@ -335,7 +338,22 @@ export const PlanningBriefDashboard = () => {
               <SummaryItem icon={ShoppingBag} label="Orders due" value={decisionsFailed ? unavailable : String(totals?.purchase_orders ?? open.length)} detail={decisionsFailed ? "decisions could not be loaded" : `${(totals?.units_to_order ?? 0).toLocaleString()} units`} />
               <SummaryItem icon={PackageCheck} label="Revenue at risk (estimate)" value={decisionsFailed || totals?.revenue_protected == null ? unavailable : fmt(totals.revenue_protected)} detail={!decisionsFailed && totals && totals.revenue_protected == null ? "needs a unit price for every open order" : "covered if the open orders are placed"} tone="success" />
               <SummaryItem icon={AlertTriangle} label="Stockout approaching" value={decisionsFailed ? unavailable : String(stockoutRisk)} detail="SKUs at risk" tone="warning" />
-              <SummaryItem icon={TrendingUp} label="Forecast confidence" value={confidence.isError ? unavailable : portfolioConfidence != null ? `${portfolioConfidence}%` : "—"} detail={lowConfidenceSkus ? `${lowConfidenceSkus} SKUs low · heuristic, not accuracy` : "heuristic score, not measured accuracy"} tone="info" />
+              <div role="group" aria-label="Forecast confidence" className="flex items-start gap-3 py-3">
+                <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface-3 text-[var(--accent)]"><TrendingUp size={17} /></span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-content-muted">Forecast confidence</p>
+                  <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <p className="whitespace-nowrap font-mono text-lg font-semibold tabular-nums text-content">
+                      {confidence.isError ? unavailable : portfolioConfidence != null ? `${portfolioConfidence} / 100` : confidence.isPending ? "Checking…" : "Not scored"}
+                    </p>
+                    {!confidence.isError && confidenceBand && <span className="whitespace-nowrap text-xs font-medium text-content-muted">{confidenceBand}</span>}
+                  </div>
+                  <p className="mt-1 max-w-prose text-xs leading-relaxed text-content-subtle">
+                    {confidence.isError ? "Confidence could not be loaded. Refresh brief to retry." : portfolioConfidence == null ? confidence.data?.reason ?? "A saved forecast is needed to assess confidence." : "Data quality and forecast readiness."}
+                  </p>
+                  <Link to="/workspace/forecasts" className="mt-2 inline-flex text-xs font-semibold text-[var(--accent)] underline underline-offset-4">View reasons</Link>
+                </div>
+              </div>
               <SummaryItem icon={AlertTriangle} label="Data warnings" testId="summary-data-warnings" value={quality.isError ? unavailable : warnings == null ? "…" : String(warnings)} detail={quality.isError ? "data-quality check failed" : criticalIssues ? `${criticalIssues} critical` : "need attention"} tone={quality.isError || (warnings ?? 0) > 0 ? "danger" : "success"} />
             </div>
           </section>

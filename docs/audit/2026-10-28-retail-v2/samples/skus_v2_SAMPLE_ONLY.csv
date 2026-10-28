@@ -1,0 +1,3 @@
+schema_version,sku_code,product_code,external_sku_id,color_code,color_name,size_code,size_system,barcode,gtin,mrp_incl_tax,selling_price_incl_tax,reference_cost_ex_tax,currency,price_valid_from,status,attributes_json
+retail_v2.0.skus,DEMO-KUR-001-BLU-M,DEMO-KUR-001,DEMO-EXT-001,BLUE,Blue,M,IN_ALPHA,,,1575.00,1050.00,600.0000,INR,2026-10-01T00:00:00+05:30,active,"{""bust_cm"":96}"
+retail_v2.0.skus,DEMO-DUP-001-NAT-OS,DEMO-DUP-001,DEMO-EXT-002,NATURAL,Natural,OS,ONE_SIZE,,,525.00,420.00,200.0000,INR,2026-10-01T00:00:00+05:30,active,{}

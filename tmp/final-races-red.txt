@@ -1,0 +1,27 @@
+FF                                                                       [100%]
+================================== FAILURES ===================================
+___________ test_other_industry_can_observe_tenant_slot_until_free ____________
+tests\test_persisted_forecasts.py:264: in test_other_industry_can_observe_tenant_slot_until_free
+    assert waiting['refresh']['id'] == queued['refresh']['id']
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'NoneType' object is not subscriptable
+---------------------------- Captured stdout setup ----------------------------
+2026-10-26 23:19:50 [warning  ] config.secrets.weak            detail='METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset � third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key' note='Must be fixed before production deploy'
+2026-10-26 23:19:50 [warning  ] config.secrets.weak            detail='METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset � third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key' note='Must be fixed before production deploy'
+-------------------------- Captured stdout teardown ---------------------------
+2026-10-26 23:19:51 [info     ] database.engine.disposed
+2026-10-26 23:19:51 [info     ] database.engine.disposed
+___________ test_import_committed_after_forecast_snapshot_is_stale ____________
+tests\test_persisted_forecasts.py:287: in test_import_committed_after_forecast_snapshot_is_stale
+    assert (await read_latest(app_role_db, tenant, 'fashion'))['stale'] is True
+E   assert False is True
+---------------------------- Captured stdout setup ----------------------------
+2026-10-26 23:19:51 [warning  ] config.secrets.weak            detail='METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset � third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key' note='Must be fixed before production deploy'
+2026-10-26 23:19:51 [warning  ] config.secrets.weak            detail='METRICS_TOKEN is unset (the /metrics endpoint must be token-gated); INTEGRATION_ENCRYPTION_KEY is unset � third-party tokens would be encrypted with a key derived from JWT_SECRET; set a dedicated key' note='Must be fixed before production deploy'
+-------------------------- Captured stdout teardown ---------------------------
+2026-10-26 23:19:51 [info     ] database.engine.disposed
+2026-10-26 23:19:51 [info     ] database.engine.disposed
+=========================== short test summary info ===========================
+FAILED tests/test_persisted_forecasts.py::test_other_industry_can_observe_tenant_slot_until_free
+FAILED tests/test_persisted_forecasts.py::test_import_committed_after_forecast_snapshot_is_stale
+2 failed, 15 deselected in 24.22s

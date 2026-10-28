@@ -115,6 +115,15 @@ export interface UploadResult {
   errors: string[];
 }
 
+export interface V2Preview {
+  schema: string;
+  row_count: number;
+  headers: string[];
+  errors: { row: number; code: string; message: string }[];
+  can_confirm: boolean;
+  preview_token: string;
+}
+
 export interface UploadOptions {
   /**
    * How a re-uploaded sales row is recognised: "transaction" lines (order and
@@ -186,7 +195,7 @@ export interface PlanEvaluation {
     conflicts: number; before: Record<string, unknown>[]; after: Record<string, unknown>[];
   };
   exclusions: { row: number; reason: string }[];
-  size_codes: { code: string; count: number; suggestion: string | null }[];
+  size_codes: { code: string; count: number; suggestion: string | null; meaning?: string }[];
   missing: Partial<Record<PlanDestination, string[]>>;
   /** Values that block an import, e.g. a non-numeric quantity; named by SKU. */
   problems?: string[];
@@ -217,6 +226,22 @@ export interface PlanConfirmResult {
 const LONG_IMPORT_MS = 300_000;
 
 export const integrationsApi = {
+  v2Preview: (file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return apiClient.post<V2Preview>("/integrations/v2/preview", form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }).then((r) => r.data);
+  },
+  v2Confirm: (file: File, previewToken: string) => {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("preview_token", previewToken);
+    return apiClient.post<Record<string, unknown>>("/integrations/v2/confirm", form, {
+      headers: { "Content-Type": "multipart/form-data" },
+      timeout: LONG_IMPORT_MS,
+    }).then((r) => r.data);
+  },
   // Hub catalog
   catalog: () => apiClient.get<Catalog>("/integrations/catalog").then((r) => r.data),
   connect: (provider: string, body: GenericConnectRequest) =>

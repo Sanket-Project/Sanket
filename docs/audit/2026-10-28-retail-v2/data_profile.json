@@ -1,0 +1,872 @@
+[
+  {
+    "file": "stock balence Report 2026.csv",
+    "sheet": "CSV",
+    "detail_rows": 16519,
+    "key_column_indices_0_based": [
+      0,
+      1
+    ],
+    "duplicate_candidate_key_groups": 0,
+    "duplicate_excess_rows": 0,
+    "columns": [
+      {
+        "header": "Company Name",
+        "blank_count": 0,
+        "nonblank_distinct_count": 6,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Stock No",
+        "blank_count": 0,
+        "nonblank_distinct_count": 13783,
+        "numeric_count": 64,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Item Description",
+        "blank_count": 0,
+        "nonblank_distinct_count": 12145,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Category",
+        "blank_count": 2,
+        "nonblank_distinct_count": 29,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Brand",
+        "blank_count": 10,
+        "nonblank_distinct_count": 115,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Style No",
+        "blank_count": 2,
+        "nonblank_distinct_count": 4910,
+        "numeric_count": 11287,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 1
+      },
+      {
+        "header": "Sub Category",
+        "blank_count": 12,
+        "nonblank_distinct_count": 589,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Cost Price",
+        "blank_count": 0,
+        "nonblank_distinct_count": 2042,
+        "numeric_count": 16519,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 7870
+      },
+      {
+        "header": "Retail Price",
+        "blank_count": 0,
+        "nonblank_distinct_count": 726,
+        "numeric_count": 16519,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 17
+      },
+      {
+        "header": "Closing Bal.Qty",
+        "blank_count": 0,
+        "nonblank_distinct_count": 74,
+        "numeric_count": 16519,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0,
+        "detail_sum": "38419.0000",
+        "footer_control": "38419.00",
+        "detail_minus_footer": "0.0000"
+      },
+      {
+        "header": "Closing Bal.Val",
+        "blank_count": 0,
+        "nonblank_distinct_count": 3336,
+        "numeric_count": 16519,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 7698,
+        "detail_sum": "18878893.7800",
+        "footer_control": "18878893.78",
+        "detail_minus_footer": "0.0000"
+      }
+    ]
+  },
+  {
+    "file": "Sales Data 2026.xlsx",
+    "sheet": "Sheet1",
+    "detail_rows": 121,
+    "key_column_indices_0_based": [
+      0,
+      1
+    ],
+    "duplicate_candidate_key_groups": 0,
+    "duplicate_excess_rows": 0,
+    "columns": [
+      {
+        "header": "Company Name",
+        "blank_count": 0,
+        "nonblank_distinct_count": 5,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Voucher Date",
+        "blank_count": 0,
+        "nonblank_distinct_count": 25,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Type",
+        "blank_count": 0,
+        "nonblank_distinct_count": 1,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Total Sales Bill",
+        "blank_count": 0,
+        "nonblank_distinct_count": 22,
+        "numeric_count": 121,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Sales Qty",
+        "blank_count": 0,
+        "nonblank_distinct_count": 51,
+        "numeric_count": 121,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0,
+        "detail_sum": "2683",
+        "footer_control": "2683",
+        "detail_minus_footer": "0"
+      },
+      {
+        "header": "Sales Amount",
+        "blank_count": 0,
+        "nonblank_distinct_count": 121,
+        "numeric_count": 121,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0,
+        "detail_sum": "2640989",
+        "footer_control": "2640989",
+        "detail_minus_footer": "0"
+      },
+      {
+        "header": "Total Return Bill",
+        "blank_count": 94,
+        "nonblank_distinct_count": 2,
+        "numeric_count": 27,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Return Qty",
+        "blank_count": 94,
+        "nonblank_distinct_count": 3,
+        "numeric_count": 27,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0,
+        "detail_sum": "40",
+        "footer_control": "40",
+        "detail_minus_footer": "0"
+      },
+      {
+        "header": "Return Amount",
+        "blank_count": 94,
+        "nonblank_distinct_count": 25,
+        "numeric_count": 27,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0,
+        "detail_sum": "59055",
+        "footer_control": "59055",
+        "detail_minus_footer": "0"
+      },
+      {
+        "header": "Total Net Bill",
+        "blank_count": 0,
+        "nonblank_distinct_count": 21,
+        "numeric_count": 121,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Net Qty",
+        "blank_count": 0,
+        "nonblank_distinct_count": 47,
+        "numeric_count": 121,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0,
+        "detail_sum": "2643",
+        "footer_control": "2643",
+        "detail_minus_footer": "0"
+      },
+      {
+        "header": "Net Amount",
+        "blank_count": 0,
+        "nonblank_distinct_count": 121,
+        "numeric_count": 121,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0,
+        "detail_sum": "2581934",
+        "footer_control": "2581934",
+        "detail_minus_footer": "0"
+      },
+      {
+        "header": "CARD",
+        "blank_count": 0,
+        "nonblank_distinct_count": 72,
+        "numeric_count": 121,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Cash",
+        "blank_count": 0,
+        "nonblank_distinct_count": 93,
+        "numeric_count": 121,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Credit Note",
+        "blank_count": 0,
+        "nonblank_distinct_count": 1,
+        "numeric_count": 121,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "E-Wallet",
+        "blank_count": 0,
+        "nonblank_distinct_count": 120,
+        "numeric_count": 121,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Payment Pendig",
+        "blank_count": 0,
+        "nonblank_distinct_count": 1,
+        "numeric_count": 121,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      }
+    ]
+  },
+  {
+    "file": "Gross Profit Data 2026.xlsx",
+    "sheet": "Sheet1",
+    "detail_rows": 15524,
+    "key_column_indices_0_based": [
+      0,
+      1
+    ],
+    "duplicate_candidate_key_groups": 0,
+    "duplicate_excess_rows": 0,
+    "columns": [
+      {
+        "header": "Company Name",
+        "blank_count": 0,
+        "nonblank_distinct_count": 6,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Stock No",
+        "blank_count": 0,
+        "nonblank_distinct_count": 11508,
+        "numeric_count": 2,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Item Description",
+        "blank_count": 0,
+        "nonblank_distinct_count": 10447,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Brand",
+        "blank_count": 0,
+        "nonblank_distinct_count": 107,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Sales Qty",
+        "blank_count": 0,
+        "nonblank_distinct_count": 52,
+        "numeric_count": 15524,
+        "negative_numeric_count": 8,
+        "fractional_numeric_count": 0,
+        "detail_sum": "28923",
+        "footer_control": "28923",
+        "detail_minus_footer": "0"
+      },
+      {
+        "header": "Net Sales Value",
+        "blank_count": 0,
+        "nonblank_distinct_count": 4235,
+        "numeric_count": 15524,
+        "negative_numeric_count": 18,
+        "fractional_numeric_count": 3454,
+        "detail_sum": "27576336.00",
+        "footer_control": "27576336",
+        "detail_minus_footer": "0.00"
+      },
+      {
+        "header": "Sale Value (Without Tax)",
+        "blank_count": 0,
+        "nonblank_distinct_count": 4347,
+        "numeric_count": 15524,
+        "negative_numeric_count": 12,
+        "fractional_numeric_count": 14558,
+        "detail_sum": "25803542.35",
+        "footer_control": "25803542.35",
+        "detail_minus_footer": "0.00"
+      },
+      {
+        "header": "Cost of Goods (With Tax)",
+        "blank_count": 0,
+        "nonblank_distinct_count": 7392,
+        "numeric_count": 15524,
+        "negative_numeric_count": 8,
+        "fractional_numeric_count": 15037,
+        "detail_sum": "17873453.0864",
+        "footer_control": "17873453.09",
+        "detail_minus_footer": "-0.0036"
+      },
+      {
+        "header": "Cost of Goods (Without Tax)",
+        "blank_count": 0,
+        "nonblank_distinct_count": 2735,
+        "numeric_count": 15524,
+        "negative_numeric_count": 8,
+        "fractional_numeric_count": 6693,
+        "detail_sum": "16048611.1470",
+        "footer_control": "16048611.15",
+        "detail_minus_footer": "-0.0030"
+      },
+      {
+        "header": "Gross Profit Amount",
+        "blank_count": 0,
+        "nonblank_distinct_count": 7010,
+        "numeric_count": 15524,
+        "negative_numeric_count": 985,
+        "fractional_numeric_count": 14841,
+        "detail_sum": "9754931.2030",
+        "footer_control": "9754931.2",
+        "detail_minus_footer": "0.0030"
+      },
+      {
+        "header": "Gross Profit % (Based on Cost)",
+        "blank_count": 171,
+        "nonblank_distinct_count": 4208,
+        "numeric_count": 15353,
+        "negative_numeric_count": 972,
+        "fractional_numeric_count": 15114
+      },
+      {
+        "header": "Gross Profit % (Based on Sale)",
+        "blank_count": 167,
+        "nonblank_distinct_count": 3034,
+        "numeric_count": 15357,
+        "negative_numeric_count": 972,
+        "fractional_numeric_count": 15223
+      }
+    ]
+  },
+  {
+    "file": "Purchasr Report 2026.xlsx",
+    "sheet": "Sheet1",
+    "detail_rows": 266,
+    "key_column_indices_0_based": [
+      0,
+      2
+    ],
+    "duplicate_candidate_key_groups": 0,
+    "duplicate_excess_rows": 0,
+    "columns": [
+      {
+        "header": "Voucher Type",
+        "blank_count": 0,
+        "nonblank_distinct_count": 2,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Voucher Date",
+        "blank_count": 0,
+        "nonblank_distinct_count": 266,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Voucher Number",
+        "blank_count": 0,
+        "nonblank_distinct_count": 266,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Party Name",
+        "blank_count": 0,
+        "nonblank_distinct_count": 53,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Quantity",
+        "blank_count": 0,
+        "nonblank_distinct_count": 167,
+        "numeric_count": 266,
+        "negative_numeric_count": 29,
+        "fractional_numeric_count": 0,
+        "detail_sum": "28311",
+        "footer_control": "28311",
+        "detail_minus_footer": "0"
+      },
+      {
+        "header": "Disc. Amount",
+        "blank_count": 0,
+        "nonblank_distinct_count": 106,
+        "numeric_count": 266,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 17,
+        "detail_sum": "925999.05",
+        "footer_control": "925999.05",
+        "detail_minus_footer": "0.00"
+      },
+      {
+        "header": "Tax Amount",
+        "blank_count": 0,
+        "nonblank_distinct_count": 265,
+        "numeric_count": 266,
+        "negative_numeric_count": 29,
+        "fractional_numeric_count": 221,
+        "detail_sum": "1023825.26",
+        "footer_control": "1023825.26",
+        "detail_minus_footer": "0.00"
+      },
+      {
+        "header": "Net Amount",
+        "blank_count": 0,
+        "nonblank_distinct_count": 265,
+        "numeric_count": 266,
+        "negative_numeric_count": 29,
+        "fractional_numeric_count": 9,
+        "detail_sum": "18882379.57",
+        "footer_control": "18882379.57",
+        "detail_minus_footer": "0.00"
+      }
+    ]
+  },
+  {
+    "file": "qa_test_products_import.xlsx",
+    "sheet": "Products",
+    "detail_rows": 5,
+    "key_column_indices_0_based": [
+      0
+    ],
+    "duplicate_candidate_key_groups": 0,
+    "duplicate_excess_rows": 0,
+    "columns": [
+      {
+        "header": "name",
+        "blank_count": 0,
+        "nonblank_distinct_count": 5,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "category",
+        "blank_count": 0,
+        "nonblank_distinct_count": 4,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "subcategory",
+        "blank_count": 0,
+        "nonblank_distinct_count": 5,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "brand",
+        "blank_count": 0,
+        "nonblank_distinct_count": 1,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "external_id",
+        "blank_count": 0,
+        "nonblank_distinct_count": 5,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "lead_time",
+        "blank_count": 0,
+        "nonblank_distinct_count": 5,
+        "numeric_count": 5,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "safety_stock",
+        "blank_count": 0,
+        "nonblank_distinct_count": 5,
+        "numeric_count": 5,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "forecast_demand",
+        "blank_count": 0,
+        "nonblank_distinct_count": 5,
+        "numeric_count": 5,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "monthly_sales",
+        "blank_count": 0,
+        "nonblank_distinct_count": 5,
+        "numeric_count": 5,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      }
+    ]
+  },
+  {
+    "file": "qa_test_inventory_import.xlsx",
+    "sheet": "Inventory",
+    "detail_rows": 4,
+    "key_column_indices_0_based": [
+      0
+    ],
+    "duplicate_candidate_key_groups": 0,
+    "duplicate_excess_rows": 0,
+    "columns": [
+      {
+        "header": "sku_code",
+        "blank_count": 0,
+        "nonblank_distinct_count": 4,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "on_hand_units",
+        "blank_count": 0,
+        "nonblank_distinct_count": 4,
+        "numeric_count": 4,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "inbound_units",
+        "blank_count": 0,
+        "nonblank_distinct_count": 4,
+        "numeric_count": 4,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "reserved_units",
+        "blank_count": 0,
+        "nonblank_distinct_count": 4,
+        "numeric_count": 4,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      }
+    ]
+  },
+  {
+    "file": "Redwine_Label_Fashion_Sales_and_Inventory_Record (1).xlsx",
+    "sheet": "Sales Ledger",
+    "detail_rows": 500,
+    "key_column_indices_0_based": [
+      0,
+      2
+    ],
+    "duplicate_candidate_key_groups": 0,
+    "duplicate_excess_rows": 0,
+    "columns": [
+      {
+        "header": "Order ID",
+        "blank_count": 0,
+        "nonblank_distinct_count": 500,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Order Date",
+        "blank_count": 0,
+        "nonblank_distinct_count": 274,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "SKU",
+        "blank_count": 0,
+        "nonblank_distinct_count": 50,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Product ID",
+        "blank_count": 0,
+        "nonblank_distinct_count": 10,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Product Name",
+        "blank_count": 0,
+        "nonblank_distinct_count": 10,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Category",
+        "blank_count": 0,
+        "nonblank_distinct_count": 4,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Size",
+        "blank_count": 0,
+        "nonblank_distinct_count": 5,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Quantity Ordered",
+        "blank_count": 0,
+        "nonblank_distinct_count": 5,
+        "numeric_count": 500,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0,
+        "detail_sum": "1542"
+      },
+      {
+        "header": "Unit Retail Price",
+        "blank_count": 0,
+        "nonblank_distinct_count": 10,
+        "numeric_count": 500,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Total Revenue",
+        "blank_count": 500,
+        "nonblank_distinct_count": 0,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Unit Product Cost",
+        "blank_count": 0,
+        "nonblank_distinct_count": 10,
+        "numeric_count": 500,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Total Cost of Goods",
+        "blank_count": 500,
+        "nonblank_distinct_count": 0,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Gross Profit Contribution",
+        "blank_count": 500,
+        "nonblank_distinct_count": 0,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Fulfillment Warehouse",
+        "blank_count": 0,
+        "nonblank_distinct_count": 3,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Sales Channel",
+        "blank_count": 0,
+        "nonblank_distinct_count": 3,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      }
+    ]
+  },
+  {
+    "file": "Redwine_Label_Fashion_Sales_and_Inventory_Record (1).xlsx",
+    "sheet": "Warehouse Inventory",
+    "detail_rows": 150,
+    "key_column_indices_0_based": [
+      0,
+      5
+    ],
+    "duplicate_candidate_key_groups": 0,
+    "duplicate_excess_rows": 0,
+    "columns": [
+      {
+        "header": "SKU",
+        "blank_count": 0,
+        "nonblank_distinct_count": 50,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Product ID",
+        "blank_count": 0,
+        "nonblank_distinct_count": 10,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Product Name",
+        "blank_count": 0,
+        "nonblank_distinct_count": 10,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Category",
+        "blank_count": 0,
+        "nonblank_distinct_count": 4,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Size",
+        "blank_count": 0,
+        "nonblank_distinct_count": 5,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Warehouse Code",
+        "blank_count": 0,
+        "nonblank_distinct_count": 3,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Fulfillment City",
+        "blank_count": 0,
+        "nonblank_distinct_count": 3,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Stock On Hand (Qty)",
+        "blank_count": 0,
+        "nonblank_distinct_count": 77,
+        "numeric_count": 150,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0,
+        "detail_sum": "9928"
+      },
+      {
+        "header": "Safety/Reorder Threshold",
+        "blank_count": 0,
+        "nonblank_distinct_count": 1,
+        "numeric_count": 150,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Unit Cost (INR)",
+        "blank_count": 0,
+        "nonblank_distinct_count": 10,
+        "numeric_count": 150,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Unit Price (INR)",
+        "blank_count": 0,
+        "nonblank_distinct_count": 10,
+        "numeric_count": 150,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Total Asset Value (At Cost)",
+        "blank_count": 150,
+        "nonblank_distinct_count": 0,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      },
+      {
+        "header": "Inventory Status",
+        "blank_count": 150,
+        "nonblank_distinct_count": 0,
+        "numeric_count": 0,
+        "negative_numeric_count": 0,
+        "fractional_numeric_count": 0
+      }
+    ]
+  }
+]

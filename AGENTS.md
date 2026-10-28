@@ -186,6 +186,11 @@ These are not style preferences. Violating one is a defect.
   from `lucide-react` or `react-iconly` directly. See `frontend/DESIGN.md`.
 - **Fail honestly.** No synthetic fallback data standing in for a real signal.
   If a source is unavailable, surface that; do not fabricate a plausible number.
+- **Make data beautiful and immediately understandable.** Across dashboards,
+  forecasts, sales analytics, inventory, SKUs and products, explain what is
+  happening in language simple enough for a five-year-old. Lead with meaning,
+  show units and dates, and keep detail available without clutter. Show
+  branch-wise sales only when branches are identified in the source data.
 - Audit docs live in `docs/audit/`, strategy docs in `docs/strategy/`.
 
 ## 7. Verification commands

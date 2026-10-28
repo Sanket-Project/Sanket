@@ -1,0 +1,166 @@
+{
+  "database": "sanket_recovered_20261026",
+  "tenant": "1fea4cb5-b9f3-45fe-8801-d58c13599d00",
+  "slug": "swecha-demo",
+  "mode": "dry-run",
+  "before": {
+    "webhook_deliveries": 0,
+    "shortage_alerts": 0,
+    "recommendations": 0,
+    "forecast_accuracy_metrics": 0,
+    "data_quality_issues": 0,
+    "hybrid_forecast_runs": 0,
+    "forecast_refreshes": 12,
+    "location_forecast_results": 0,
+    "forecast_results": 0,
+    "forecast_runs": 0,
+    "historical_sales": 0,
+    "inventory_levels": 6693,
+    "pharma_batches": 0,
+    "pos_ingest": 0,
+    "supplier_lead_time_log": 0,
+    "signal_clusters": 0,
+    "external_signals": 0,
+    "trend_signals": 84,
+    "skus": 2321,
+    "products": 180,
+    "locations": 0,
+    "forecast_input_changes": 0
+  },
+  "deleted": {
+    "webhook_deliveries": 0,
+    "shortage_alerts": 0,
+    "recommendations": 0,
+    "forecast_accuracy_metrics": 0,
+    "data_quality_issues": 0,
+    "hybrid_forecast_runs": 0,
+    "forecast_refreshes": 12,
+    "location_forecast_results": 0,
+    "forecast_results": 0,
+    "forecast_runs": 0,
+    "historical_sales": 0,
+    "inventory_levels": 6693,
+    "pharma_batches": 0,
+    "pos_ingest": 0,
+    "supplier_lead_time_log": 0,
+    "signal_clusters": 0,
+    "external_signals": 0,
+    "trend_signals": 84,
+    "skus": 2321,
+    "products": 180,
+    "locations": 0,
+    "forecast_input_changes": 0
+  },
+  "after": {
+    "webhook_deliveries": 0,
+    "shortage_alerts": 0,
+    "recommendations": 0,
+    "forecast_accuracy_metrics": 0,
+    "data_quality_issues": 0,
+    "hybrid_forecast_runs": 0,
+    "forecast_refreshes": 0,
+    "location_forecast_results": 0,
+    "forecast_results": 0,
+    "forecast_runs": 0,
+    "historical_sales": 0,
+    "inventory_levels": 0,
+    "pharma_batches": 0,
+    "pos_ingest": 0,
+    "supplier_lead_time_log": 0,
+    "signal_clusters": 0,
+    "external_signals": 0,
+    "trend_signals": 0,
+    "skus": 0,
+    "products": 0,
+    "locations": 0,
+    "forecast_input_changes": 0
+  },
+  "retained": {
+    "tenants": {
+      "count": 1,
+      "digest": "3c8c5050730f7539a73b62b9b9cc7ff0c13ded0dcae2b21b9ea7b8cf29d10ae9"
+    },
+    "users": {
+      "count": 1,
+      "digest": "cf51648559d04f68f2e169e66c91c861b55b661a3640ba52c8994dd50d664ca8"
+    },
+    "refresh_tokens": {
+      "count": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "industry_profiles": {
+      "count": 1,
+      "digest": "52072faeb0062b66ec38af4f51a9fe7e4dfc64f5451a9b1c95ef1c5ce87090fc"
+    },
+    "subscriptions": {
+      "count": 1,
+      "digest": "86720757fcb2cf302e76bad15571d2c5efa7a2a76aa88572bf25e3fa63571e25"
+    },
+    "invites": {
+      "count": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "integration_connections": {
+      "count": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "webhook_endpoints": {
+      "count": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "alert_rules": {
+      "count": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "audit_log": {
+      "count": 2527,
+      "digest": "5b783ac7afe688437fdced106447bf5d0aa788bf4e72969587edcded16da425e"
+    },
+    "usage_events": {
+      "count": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "usage_rollups_daily": {
+      "count": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  },
+  "other_tenant_counts": {
+    "webhook_deliveries": 0,
+    "shortage_alerts": 0,
+    "recommendations": 0,
+    "forecast_accuracy_metrics": 0,
+    "data_quality_issues": 0,
+    "hybrid_forecast_runs": 0,
+    "forecast_refreshes": 0,
+    "location_forecast_results": 0,
+    "forecast_results": 264,
+    "forecast_runs": 5,
+    "historical_sales": 5401,
+    "inventory_levels": 16563,
+    "pharma_batches": 23,
+    "pos_ingest": 0,
+    "supplier_lead_time_log": 0,
+    "signal_clusters": 0,
+    "external_signals": 0,
+    "trend_signals": 0,
+    "skus": 13828,
+    "products": 23,
+    "locations": 0,
+    "forecast_input_changes": 1
+  },
+  "retained_unchanged": true,
+  "other_tenants_unchanged": true,
+  "rls_enforced_for_deletes": true,
+  "permissions_restored": true,
+  "loaded": {
+    "products": 12148,
+    "skus": 13783,
+    "stock_positions": 16519,
+    "locations": 6,
+    "units": "38419.00",
+    "inventory_source_value": "18878893.7800",
+    "aggregate_reports": 3,
+    "no_fabricated_sales": true
+  }
+}

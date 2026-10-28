@@ -16,7 +16,7 @@ from __future__ import annotations
 import uuid
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Literal
+from typing import Any, Literal
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,6 +25,26 @@ from app.models.enums import IndustryCode
 from app.models.inventory import InventoryLevel
 
 OnHandSource = Literal["override", "inventory", "fallback"]
+
+
+def aggregate_inventory_rows(rows: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Combine duplicate SKU/location positions within one inventory upload.
+
+    A SKU identifies a sellable variant, including its color and size. Location
+    remains part of the key so stock is never moved between warehouses while
+    duplicate rows are being clubbed.
+    """
+    grouped: dict[tuple[Any, Any], dict[str, Any]] = {}
+    for row in rows:
+        key = (row["sku_id"], row["location"])
+        current = grouped.get(key)
+        if current is None:
+            current = dict(row)
+            grouped[key] = current
+            continue
+        for field in ("on_hand_units", "inbound_units", "reserved_units"):
+            current[field] = current.get(field, 0) + row.get(field, 0)
+    return list(grouped.values())
 
 
 @dataclass(frozen=True, slots=True)

@@ -95,3 +95,43 @@ it("shows value problems and blocks the import", async () => {
   expect(card).toHaveTextContent("SKU BHAKTI-1-L: 'n/a' is not a number");
   expect(within(card).getByRole("button", { name: "Import this file" })).toBeDisabled();
 });
+
+it("shows labelled mappings, searches beyond 60 codes and filters unresolved codes", async () => {
+  api.planImport.mockResolvedValue({ files: [{ ...stock, size_codes: [
+    { code: '2X', count: 2357, suggestion: 'XXL' },
+    ...Array.from({ length: 65 }, (_, i) => ({ code: `CODE${i}`, count: 1, suggestion: null })),
+  ] }] });
+  await planThreeFiles();
+  expect(screen.getByLabelText('Size for code 2X')).toHaveValue('XXL');
+  expect(screen.getByLabelText('Size for code CODE64')).toBeInTheDocument();
+  expect(screen.getAllByText('Rows using it').length).toBe(66);
+  await userEvent.type(screen.getByRole('searchbox', { name: 'Search size codes' }), 'CODE64');
+  expect(screen.queryByLabelText('Size for code 2X')).not.toBeInTheDocument();
+  await userEvent.clear(screen.getByRole('searchbox', { name: 'Search size codes' }));
+  await userEvent.click(screen.getByLabelText('Needs review only'));
+  expect(screen.queryByLabelText('Size for code 2X')).not.toBeInTheDocument();
+  await userEvent.selectOptions(screen.getByLabelText('Size for code CODE64'), 'M');
+  expect(screen.queryByLabelText('Size for code CODE64')).not.toBeInTheDocument();
+});
+
+it("lets users clear an automatic mapping and reset it to backend detection", async () => {
+  api.planImport.mockResolvedValue({ files: [{ ...stock, size_codes: [
+    { code: '2X', count: 2357, suggestion: 'XXL', meaning: 'Letter size: XXL' },
+  ] }] });
+  const files = await planThreeFiles();
+  await userEvent.selectOptions(screen.getByLabelText('Size for code 2X'), '');
+  expect(screen.getByText('Reviewed · left blank')).toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: 'Update preview' }));
+  expect(api.previewPlan).toHaveBeenCalledWith(files[0], 'tok-1', expect.objectContaining({ size_map: { '2X': '' } }));
+});
+
+it("restores automatic detection when an override is reset", async () => {
+  api.planImport.mockResolvedValue({ files: [{ ...stock, size_codes: [
+    { code: '2X', count: 2357, suggestion: 'XXL' },
+  ] }] });
+  await planThreeFiles();
+  await userEvent.selectOptions(screen.getByLabelText('Size for code 2X'), 'M');
+  await userEvent.click(screen.getByRole('button', { name: 'Reset' }));
+  expect(screen.getByLabelText('Size for code 2X')).toHaveValue('XXL');
+  expect(screen.getByText('Automatically recognised')).toBeInTheDocument();
+});

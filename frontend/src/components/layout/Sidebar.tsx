@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   Package,
   Boxes,
-  Radio,
   LineChart,
   Settings as SettingsIcon,
   ShieldCheck,
@@ -16,7 +15,6 @@ import {
   Plug,
   BarChart3,
   Target,
-  FlaskConical,
   Award,
   Stethoscope,
   MessageCircle,
@@ -99,7 +97,6 @@ const NAV_PLAN: NavEntry[] = [
   { to: "/workspace", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/workspace/decisions", label: "Decisions", icon: Target },
   { to: "/workspace/forecasts", label: "Forecasts", icon: LineChart },
-  { to: "/workspace/scenarios", label: "Scenarios", icon: FlaskConical },
 ];
 
 const NAV_STOCK: NavEntry[] = [
@@ -113,11 +110,9 @@ const NAV_MEASURE: NavEntry[] = [
   { to: "/workspace/trends", label: "Trend Analysis", icon: TrendingUp },
   { to: "/workspace/sales-analytics", label: "Sales Analytics", icon: BarChart3 },
   { to: "/workspace/roi", label: "ROI Dashboard", icon: Award },
-  { to: "/workspace/forecast-accuracy", label: "Forecast Accuracy", icon: BarChart3 },
 ];
 
 const NAV_DATA: NavEntry[] = [
-  { to: "/workspace/signals", label: "External Signals", icon: Radio },
   { to: "/workspace/data-quality", label: "Data Quality", icon: Stethoscope },
   { to: "/workspace/integrations", label: "Integrations", icon: Plug },
   { to: "/workspace/notifications", label: "WhatsApp Digest", icon: MessageCircle },

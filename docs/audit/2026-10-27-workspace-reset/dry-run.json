@@ -1,0 +1,156 @@
+{
+  "database": "sanket_recovered_20261026",
+  "tenant": "1fea4cb5-b9f3-45fe-8801-d58c13599d00",
+  "slug": "swecha-demo",
+  "mode": "dry-run",
+  "before": {
+    "webhook_deliveries": 0,
+    "shortage_alerts": 0,
+    "recommendations": 0,
+    "forecast_accuracy_metrics": 0,
+    "data_quality_issues": 0,
+    "hybrid_forecast_runs": 0,
+    "forecast_refreshes": 3,
+    "location_forecast_results": 132624,
+    "forecast_results": 22572,
+    "forecast_runs": 9,
+    "historical_sales": 124170,
+    "inventory_levels": 1254,
+    "pharma_batches": 0,
+    "pos_ingest": 0,
+    "supplier_lead_time_log": 0,
+    "signal_clusters": 0,
+    "external_signals": 0,
+    "trend_signals": 0,
+    "skus": 209,
+    "products": 1,
+    "locations": 6,
+    "forecast_input_changes": 0
+  },
+  "deleted": {
+    "webhook_deliveries": 0,
+    "shortage_alerts": 0,
+    "recommendations": 0,
+    "forecast_accuracy_metrics": 0,
+    "data_quality_issues": 0,
+    "hybrid_forecast_runs": 0,
+    "forecast_refreshes": 3,
+    "location_forecast_results": 132624,
+    "forecast_results": 22572,
+    "forecast_runs": 9,
+    "historical_sales": 124170,
+    "inventory_levels": 1254,
+    "pharma_batches": 0,
+    "pos_ingest": 0,
+    "supplier_lead_time_log": 0,
+    "signal_clusters": 0,
+    "external_signals": 0,
+    "trend_signals": 0,
+    "skus": 209,
+    "products": 1,
+    "locations": 6,
+    "forecast_input_changes": 1
+  },
+  "after": {
+    "webhook_deliveries": 0,
+    "shortage_alerts": 0,
+    "recommendations": 0,
+    "forecast_accuracy_metrics": 0,
+    "data_quality_issues": 0,
+    "hybrid_forecast_runs": 0,
+    "forecast_refreshes": 0,
+    "location_forecast_results": 0,
+    "forecast_results": 0,
+    "forecast_runs": 0,
+    "historical_sales": 0,
+    "inventory_levels": 0,
+    "pharma_batches": 0,
+    "pos_ingest": 0,
+    "supplier_lead_time_log": 0,
+    "signal_clusters": 0,
+    "external_signals": 0,
+    "trend_signals": 0,
+    "skus": 0,
+    "products": 0,
+    "locations": 0,
+    "forecast_input_changes": 0
+  },
+  "retained": {
+    "tenants": {
+      "count": 1,
+      "digest": "3c8c5050730f7539a73b62b9b9cc7ff0c13ded0dcae2b21b9ea7b8cf29d10ae9"
+    },
+    "users": {
+      "count": 1,
+      "digest": "44b75246a9ebfe585466d9b9167840f480b4abafd6e049c538ed33106e7fb769"
+    },
+    "refresh_tokens": {
+      "count": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "industry_profiles": {
+      "count": 1,
+      "digest": "52072faeb0062b66ec38af4f51a9fe7e4dfc64f5451a9b1c95ef1c5ce87090fc"
+    },
+    "subscriptions": {
+      "count": 1,
+      "digest": "86720757fcb2cf302e76bad15571d2c5efa7a2a76aa88572bf25e3fa63571e25"
+    },
+    "invites": {
+      "count": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "integration_connections": {
+      "count": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "webhook_endpoints": {
+      "count": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "alert_rules": {
+      "count": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "audit_log": {
+      "count": 18,
+      "digest": "36503d8fb9051a688c8dcc5d06843c1e76fd23cc988a0b18b65e452a50926cad"
+    },
+    "usage_events": {
+      "count": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "usage_rollups_daily": {
+      "count": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  },
+  "other_tenant_counts": {
+    "webhook_deliveries": 0,
+    "shortage_alerts": 0,
+    "recommendations": 0,
+    "forecast_accuracy_metrics": 0,
+    "data_quality_issues": 0,
+    "hybrid_forecast_runs": 0,
+    "forecast_refreshes": 0,
+    "location_forecast_results": 0,
+    "forecast_results": 264,
+    "forecast_runs": 5,
+    "historical_sales": 5280,
+    "inventory_levels": 44,
+    "pharma_batches": 23,
+    "pos_ingest": 0,
+    "supplier_lead_time_log": 0,
+    "signal_clusters": 0,
+    "external_signals": 0,
+    "trend_signals": 0,
+    "skus": 44,
+    "products": 22,
+    "locations": 0,
+    "forecast_input_changes": 0
+  },
+  "retained_unchanged": true,
+  "other_tenants_unchanged": true,
+  "rls_enforced_for_deletes": true,
+  "permissions_restored": true
+}

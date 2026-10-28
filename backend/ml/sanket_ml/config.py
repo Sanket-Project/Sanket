@@ -96,6 +96,10 @@ class MLSettings(BaseSettings):
     # Guard on total series; batches below bound memory per prediction call.
     zero_shot_max_series: int = 30000
     zero_shot_batch_size: int = 256
+    #: Cap on series x num_samples decoded in one Chronos call. Memory scales with
+    #: this product: 209 series x 20 samples crashed a 16 GB CPU host (access
+    #: violation), 32 x 20 = 640 ran at 3.2 GB peak.
+    zero_shot_max_sample_paths: int = 640
 
     # ── Inference DoS protection / admission control ─────────────────────────
     # Forecasting is CPU-heavy and can take tens of seconds. Without bounds a

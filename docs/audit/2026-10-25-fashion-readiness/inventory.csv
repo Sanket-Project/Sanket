@@ -1,0 +1,13 @@
+sku_id,sku_code,location,on_hand_units,inbound_units,reserved_units,available_units,source,as_of
+26a108d3-30b7-499e-9cec-84c25569dce4,KURTI-M,Boduppal,30.0,0.0,0.0,30.0,synthetic_audit,2026-10-25 17:21:04.674930+00:00
+26a108d3-30b7-499e-9cec-84c25569dce4,KURTI-M,Alwal,12.0,0.0,0.0,12.0,synthetic_audit,2026-10-25 17:21:04.674930+00:00
+5579213d-8471-4557-be4a-961dda00a489,KURTI-XL,Boduppal,240.0,0.0,0.0,240.0,synthetic_audit,2026-10-25 17:21:04.674930+00:00
+5579213d-8471-4557-be4a-961dda00a489,KURTI-XL,Alwal,12.0,0.0,0.0,12.0,synthetic_audit,2026-10-25 17:21:04.674930+00:00
+c2806afd-16ed-4c2b-b96c-83ac5acc0212,GOWN-M,Boduppal,80.0,0.0,0.0,80.0,synthetic_audit,2026-10-25 17:21:04.674930+00:00
+c2806afd-16ed-4c2b-b96c-83ac5acc0212,GOWN-M,Alwal,12.0,0.0,0.0,12.0,synthetic_audit,2026-10-25 17:21:04.674930+00:00
+f13d5469-5871-474b-9279-28a3be29597a,GOWN-XL,Boduppal,190.0,0.0,0.0,190.0,synthetic_audit,2026-10-25 17:21:04.674930+00:00
+f13d5469-5871-474b-9279-28a3be29597a,GOWN-XL,Alwal,12.0,0.0,0.0,12.0,synthetic_audit,2026-10-25 17:21:04.674930+00:00
+c39c997b-21fe-4b9f-ba5f-00c5d02c1376,LEGGING-M,Boduppal,35.0,0.0,0.0,35.0,synthetic_audit,2026-10-25 17:21:04.674930+00:00
+c39c997b-21fe-4b9f-ba5f-00c5d02c1376,LEGGING-M,Alwal,12.0,0.0,0.0,12.0,synthetic_audit,2026-10-25 17:21:04.674930+00:00
+0e4ba6ff-49d8-49d4-995c-a3b0cc4306db,PALAZZO-XL,Boduppal,70.0,0.0,0.0,70.0,synthetic_audit,2026-10-25 17:21:04.674930+00:00
+0e4ba6ff-49d8-49d4-995c-a3b0cc4306db,PALAZZO-XL,Alwal,12.0,0.0,0.0,12.0,synthetic_audit,2026-10-25 17:21:04.674930+00:00

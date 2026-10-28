@@ -1,0 +1,2 @@
+schema_version,supplier_code,supplier_name,supplier_type,gstin,state_code,country_code,currency,payment_terms_days,default_lead_time_days,contact_email,phone,address,status
+retail_v2.0.suppliers,DEMO-SUP-001,DEMO ONLY Apparel Supplier,manufacturer,,36,IN,INR,30,7,demo-supplier@example.invalid,,,active

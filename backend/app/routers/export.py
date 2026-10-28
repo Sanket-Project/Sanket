@@ -5,20 +5,35 @@ from __future__ import annotations
 import csv
 import io
 from datetime import timedelta
-from typing import Any
+from typing import Any, Literal
 
 import structlog
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, Query, Request, Response
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 
 from app.core.calendar import CALENDAR
 from app.models.enums import IndustryCode
-from app.routers.industry_router import ActiveIndustry, TenantId
+from app.routers.industry_router import ActiveIndustry, TenantId, UserId
 from app.services.decision_builder import latest_completed_run
 
 log = structlog.get_logger(__name__)
 router = APIRouter(prefix="/export", tags=["export"])
+
+
+@router.get("/roi.pdf")
+async def export_roi_pdf(request: Request, ctx: ActiveIndustry, tenant_id: TenantId,
+                         user_id: UserId,
+                         window_days: int = Query(default=90, ge=7, le=730),
+                         language: Literal["en", "hi", "te", "ta"] | None = None) -> Response:
+    import asyncio
+    from app.routers.management_reports import current_report, _language
+    from app.services.management_reports import render_report_pdf
+    report = await current_report(request.app.state.db, tenant_id, user_id, ctx.code, window_days)
+    locale = await _language(request.app.state.db, tenant_id, user_id, language)
+    content = await asyncio.to_thread(render_report_pdf, report, language=locale)
+    return Response(content, media_type="application/pdf", headers={"Cache-Control": "no-store",
+        "Content-Disposition": 'attachment; filename="sanket-roi.pdf"'})
 
 
 @router.get("/forecast.xlsx")

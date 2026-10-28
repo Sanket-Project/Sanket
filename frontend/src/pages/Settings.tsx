@@ -22,6 +22,7 @@ import { industryDisplay } from "@/utils/colors";
 import { FocusProfileCard } from "@/components/settings/FocusProfileCard";
 import { NetworkCard } from "@/components/settings/NetworkCard";
 import { AISettings } from "@/components/ai/AISettings";
+import { CommunicationPreferences } from "@/components/ai/CommunicationPreferences";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -420,13 +421,6 @@ const NotificationsTab = () => {
             checked={prefs.batch_expiry}
             onChange={toggle("batch_expiry")}
           />
-          <Toggle
-            id="notif-digest"
-            label="Weekly digest"
-            description="A summary of forecast accuracy and supply signals every Monday."
-            checked={prefs.weekly_digest}
-            onChange={toggle("weekly_digest")}
-          />
         </div>
         {saved && (
           <p
@@ -507,7 +501,7 @@ export const SettingsPage = () => {
         {activeTab === "workspace" && <div className="space-y-4"><WorkspaceTab /><AISettings /></div>}
         {activeTab === "industry" && <IndustryTab />}
         {activeTab === "network" && <NetworkCard />}
-        {activeTab === "notifications" && <NotificationsTab />}
+        {activeTab === "notifications" && <div className="space-y-6"><CommunicationPreferences /><NotificationsTab /></div>}
       </div>
     </div>
   );

@@ -1,0 +1,7 @@
+id,sku_code,product_name,external_id,gtin,description,unit_cost,unit_price,currency,lead_time_days,moq,safety_stock,reorder_point,is_active
+c2806afd-16ed-4c2b-b96c-83ac5acc0212,GOWN-M,Festive gown,,,,1250.0,2200.0,INR,14,6,0,0,True
+f13d5469-5871-474b-9279-28a3be29597a,GOWN-XL,Festive gown,,,,1350.0,2300.0,INR,14,6,0,0,True
+26a108d3-30b7-499e-9cec-84c25569dce4,KURTI-M,Straight cut kurti,,,,600.0,1000.0,INR,14,6,0,0,True
+5579213d-8471-4557-be4a-961dda00a489,KURTI-XL,Straight cut kurti,,,,630.0,1050.0,INR,14,6,0,0,True
+c39c997b-21fe-4b9f-ba5f-00c5d02c1376,LEGGING-M,Cotton leggings,,,,260.0,499.0,INR,14,6,0,0,True
+0e4ba6ff-49d8-49d4-995c-a3b0cc4306db,PALAZZO-XL,Printed palazzo,,,,430.0,799.0,INR,14,6,0,0,True

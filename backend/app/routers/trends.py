@@ -9,11 +9,12 @@ POST /trends/refresh        — manually trigger the ingestion pipeline (admin o
 
 from __future__ import annotations
 
+import uuid
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, Literal
 
 import structlog
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Request
 from sqlalchemy import select
 
 from app.core.exceptions import PermissionDeniedError
@@ -25,6 +26,60 @@ from app.services.signal_evidence import signal_evidence
 
 log = structlog.get_logger(__name__)
 router = APIRouter(prefix="/trends", tags=["trends"])
+
+
+@router.get("/company/catalogue")
+async def company_catalogue_options(
+    request: Request, ctx: ActiveIndustry, tenant_id: TenantId,
+    kind: Literal["product", "sku"] = "product",
+    q: str = Query(default="", max_length=150),
+    limit: int = Query(default=30, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    product_id: uuid.UUID | None = None,
+) -> dict:
+    from app.services.company_trends import catalogue_options
+    async with request.app.state.db.session(str(tenant_id)) as session:
+        return await catalogue_options(session, tenant_id, ctx.code, kind=kind, q=q, limit=limit,
+                                       offset=offset, product_id=product_id)
+
+
+@router.get("/company")
+async def company_trend_analysis(
+    request: Request, ctx: ActiveIndustry, tenant_id: TenantId,
+    days: int = Query(default=28, ge=7, le=90),
+    product_id: uuid.UUID | None = None,
+    sku_id: uuid.UUID | None = None,
+    state: str | None = Query(default=None, max_length=100),
+    district: str | None = Query(default=None, max_length=100),
+) -> dict:
+    from app.services.company_trends import company_trends
+    async with request.app.state.db.session(str(tenant_id)) as session:
+        return await company_trends(session, tenant_id, ctx.code, days=days,
+                                    product_id=product_id, sku_id=sku_id, state=state, district=district)
+
+
+@router.post("/company/refresh", status_code=202)
+async def refresh_company_trends(
+    request: Request, background_tasks: BackgroundTasks, ctx: ActiveIndustry, tenant_id: TenantId,
+) -> dict:
+    if getattr(request.state, "role", "viewer") not in ("owner", "admin"):
+        raise PermissionDeniedError("Trend refresh requires owner or admin")
+    queue = getattr(request.app.state, "arq", None)
+    if queue is not None:
+        try:
+            # arq keeps completed results; time buckets let later sweeps run.
+            # The DB lock/freshness check handles workers spanning a bucket.
+            bucket = int(datetime.now(UTC).timestamp()) // 900
+            job = await queue.enqueue_job("run_company_trends", str(tenant_id), ctx.code,
+                                          _job_id=f"company-interest:{tenant_id}:{ctx.code}:{bucket}")
+        except Exception as exc:
+            raise HTTPException(503, "Market interest refresh queue unavailable; retry later.") from exc
+        if job is None:
+            return {"status": "skipped", "reason": "A refresh was already requested in this 15-minute window."}
+        return {"status": "queued"}
+    from app.services.company_trends import refresh_company_interest
+    background_tasks.add_task(refresh_company_interest, request.app.state.db, tenant_id, ctx.code)
+    return {"status": "queued", "execution": "local_background"}
 
 
 @router.get("/live", response_model=list[TrendSignalOut])

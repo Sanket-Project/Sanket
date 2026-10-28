@@ -1,0 +1,26 @@
+[
+  {
+    "Path": "C:\\Users\\admin\\Desktop\\Prisma\\frontend\\src\\components\\integrations\\ImportUploader.tsx",
+    "Hash": "03E96C6DB9197481D5FAFE1C1BEE4C831B246D81A6F05F1C2AE4CA0177755459"
+  },
+  {
+    "Path": "C:\\Users\\admin\\Desktop\\Prisma\\frontend\\src\\components\\integrations\\ImportUploader.test.tsx",
+    "Hash": "3F025C539A37931C7A507436AF7304B4B6A9C96096C0C28DE383E210E5582660"
+  },
+  {
+    "Path": "C:\\Users\\admin\\Desktop\\Prisma\\backend\\app\\services\\integrations\\v2\\upload.py",
+    "Hash": "0A35A7D43735698E7E590E317F5AD32EB4B414712E141514EA12F4D1C5399FFF"
+  },
+  {
+    "Path": "C:\\Users\\admin\\Desktop\\Prisma\\backend\\app\\services\\integrations\\v2\\event_registry.py",
+    "Hash": "574CBCA02311095A146EDE2FD973FA92C12D74CE9BEA20CEB0AA4106B0107458"
+  },
+  {
+    "Path": "C:\\Users\\admin\\Desktop\\Prisma\\backend\\app\\routers\\sales_analytics.py",
+    "Hash": "95E0D36FDC55964BF610E49F571A2A5B094D1456BCC328E3460F863EC2806EA4"
+  },
+  {
+    "Path": "C:\\Users\\admin\\Desktop\\Prisma\\backend\\alembic\\versions\\0038_retail_v2_dated_projections.py",
+    "Hash": "456A6F9833DC3AAE0FE6C694CE2B25D63B8785593640E45B66B37AAE066EE9B1"
+  }
+]

@@ -10,7 +10,7 @@ import json
 import uuid
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal as D
 
 from sqlalchemy import delete, func, insert, select, text
@@ -30,6 +30,7 @@ from app.services.locations import load_locations, sync_locations
 
 METHOD = "share_split_v1"
 DEGRADED_UNASSIGNED_SHARE = 0.05
+LOCATION_INSERT_BATCH_SIZE = 1000
 
 
 @dataclass
@@ -122,19 +123,24 @@ async def split_run_by_location(
                     "p90": D(str(round(lp90, 4))), "share": D(str(round(share, 6))),
                     "share_basis": blended.basis[code], "method": METHOD,
                 })
-    for start in range(0, len(rows), 5000):
-        await session.execute(insert(LocationForecastResult), rows[start : start + 5000])
+                if len(rows) >= LOCATION_INSERT_BATCH_SIZE:
+                    await session.execute(insert(LocationForecastResult), rows)
+                    rows = []
+    if rows:
+        await session.execute(insert(LocationForecastResult), rows)
 
     unassigned_share = unassigned_units / total_units if total_units > 0 else None
     summary = SplitSummary(series=series, excluded=excluded,
                            unassigned_share=round(unassigned_share, 6) if unassigned_share is not None else None,
                            degraded=unassigned_share is not None and unassigned_share > DEGRADED_UNASSIGNED_SHARE)
     await session.execute(
-        text("UPDATE forecast_runs SET metrics = metrics || CAST(:m AS jsonb) WHERE id = :r"),
-        {"r": str(run_id), "m": json.dumps({
+        text("UPDATE forecast_runs SET metrics = metrics || CAST(:m AS jsonb) "
+             "WHERE id = :r AND tenant_id = :t"),
+        {"r": str(run_id), "t": str(tenant_id), "m": json.dumps({
             "location_series": summary.series, "location_excluded": len(excluded),
             "unassigned_share": summary.unassigned_share,
-            "location_degraded": summary.degraded})},
+            "location_degraded": summary.degraded,
+            "location_split_completed_at": datetime.now(UTC).isoformat()})},
     )
     return summary
 
@@ -142,30 +148,62 @@ async def split_run_by_location(
 async def ensure_location_split(
     session: AsyncSession, *, tenant_id: uuid.UUID, industry: str, run: ForecastRun, now: datetime
 ) -> SplitSummary | None:
+    # Serialize repairs of the same saved run. Re-read metadata after acquiring
+    # the lock: the caller's ORM object may predate another worker's split.
+    await session.execute(
+        text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"),
+        {"key": f"location-split:{tenant_id}:{run.id}"},
+    )
+    metrics = await session.scalar(select(ForecastRun.metrics).where(
+        ForecastRun.id == run.id, ForecastRun.tenant_id == tenant_id))
+    if metrics and metrics.get("location_split_completed_at"):
+        return None
     exists = await session.scalar(
         select(LocationForecastResult.id).where(
             LocationForecastResult.tenant_id == tenant_id,
             LocationForecastResult.run_id == run.id).limit(1))
     if exists is not None:
+        # Older runs predate the completion marker. Their persisted rows are
+        # already authoritative; acknowledge them without rebuilding the split.
+        await session.execute(
+            text("UPDATE forecast_runs SET metrics=metrics || CAST(:m AS jsonb) "
+                 "WHERE id=:r AND tenant_id=:t"),
+            {"r": str(run.id), "t": str(tenant_id), "m": json.dumps({
+                "location_split_completed_at": datetime.now(UTC).isoformat(),
+            })},
+        )
         return None
     return await split_run_by_location(session, tenant_id=tenant_id, industry=industry,
                                        run_id=run.id, now=now)
 
 
 async def location_bands(
-    session: AsyncSession, tenant_id: uuid.UUID, run_id: uuid.UUID, now: datetime
-) -> dict[tuple[uuid.UUID, uuid.UUID], DemandBand]:
-    rows = (await session.execute(
+    session: AsyncSession, tenant_id: uuid.UUID, run_id: uuid.UUID, now: datetime,
+    *, sku_id: uuid.UUID | None = None, include_past: bool = False,
+) -> dict[tuple[uuid.UUID, uuid.UUID], LocationDemandBand]:
+    query = (
         select(LocationForecastResult.sku_id, LocationForecastResult.location_id,
-               LocationForecastResult.p10, LocationForecastResult.p50, LocationForecastResult.p90)
+               LocationForecastResult.p10, LocationForecastResult.p50, LocationForecastResult.p90,
+               LocationForecastResult.forecast_date)
         .where(LocationForecastResult.tenant_id == tenant_id,
-               LocationForecastResult.run_id == run_id,
-               LocationForecastResult.forecast_date >= current_week_start(now))
+               LocationForecastResult.run_id == run_id)
         .order_by(LocationForecastResult.sku_id, LocationForecastResult.location_id,
                   LocationForecastResult.forecast_date)
-    )).all()
-    acc: dict[tuple[uuid.UUID, uuid.UUID], tuple[list, list, list]] = {}
-    for sku_id, loc_id, p10, p50, p90 in rows:
-        b = acc.setdefault((sku_id, loc_id), ([], [], []))
+    )
+    if not include_past:
+        query = query.where(LocationForecastResult.forecast_date >= current_week_start(now))
+    if sku_id is not None:
+        query = query.where(LocationForecastResult.sku_id == sku_id)
+    rows = (await session.execute(query)).all()
+    acc: dict[tuple[uuid.UUID, uuid.UUID], tuple[list, list, list, list]] = {}
+    for sid, loc_id, p10, p50, p90, forecast_date in rows:
+        b = acc.setdefault((sid, loc_id), ([], [], [], []))
         b[0].append(float(p10)); b[1].append(float(p50)); b[2].append(float(p90))
-    return {k: DemandBand(p10=v[0], p50=v[1], p90=v[2]) for k, v in acc.items()}
+        b[3].append(forecast_date)
+    return {k: LocationDemandBand(p10=v[0], p50=v[1], p90=v[2], forecast_dates=v[3])
+            for k, v in acc.items()}
+
+
+@dataclass(frozen=True, slots=True)
+class LocationDemandBand(DemandBand):
+    forecast_dates: list[date]

@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 import structlog
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Query, Request
 from pydantic import BaseModel, Field
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from app.core.money import totals_by_currency
@@ -19,9 +19,26 @@ from app.models.inventory import InventoryLevel
 from app.models.product import Sku
 from app.routers.industry_router import ActiveIndustry, TenantId, UserId
 from app.services.coverage import coverage
+from app.services.inventory import aggregate_inventory_rows
 
 log = structlog.get_logger(__name__)
 router = APIRouter(prefix="/inventory", tags=["inventory"])
+
+
+@router.get("/overview")
+async def stock_overview(
+    request: Request, ctx: ActiveIndustry, tenant_id: TenantId,
+    offset: int = Query(default=0, ge=0), limit: int = Query(default=25, ge=1, le=100),
+    search: str = Query(default="", max_length=200), location: str = Query(default="", max_length=200),
+    attention: Literal["all", "needs", "excess", "unknown"] = Query(default="all"),
+    sort: Literal["sku", "available_asc", "available_desc", "freshness"] = Query(default="sku"),
+) -> dict[str, Any]:
+    from app.services.inventory_overview import inventory_overview
+
+    async with request.app.state.db.session(str(tenant_id)) as session:
+        return await inventory_overview(session, tenant_id=tenant_id, industry=ctx.code,
+                                        offset=offset, limit=limit, search=search, location=location,
+                                        attention=attention, sort=sort)
 
 
 # ── Current stock: ingest + read ────────────────────────────────────────────
@@ -39,6 +56,10 @@ class InventoryLevelIn(BaseModel):
 
 class InventoryUpsertRequest(BaseModel):
     items: list[InventoryLevelIn] = Field(min_length=1, max_length=500)
+
+
+class InventoryBulkDelete(BaseModel):
+    sku_ids: list[str] = Field(min_length=1)
 
 
 @router.put("/levels")
@@ -82,6 +103,7 @@ async def upsert_levels(
             }
         )
 
+    rows = aggregate_inventory_rows(rows)
     stmt = pg_insert(InventoryLevel).values(rows)
     stmt = stmt.on_conflict_do_update(
         constraint="uq_inventory_tenant_sku_loc",
@@ -99,6 +121,65 @@ async def upsert_levels(
 
     log.info("inventory.levels.upserted", tenant=str(tenant_id), industry=ctx.code, n=len(rows))
     return {"upserted": len(rows), "industry": ctx.code}
+
+
+@router.post("/levels/bulk-delete")
+async def bulk_delete_levels(
+    request: Request,
+    ctx: ActiveIndustry,
+    tenant_id: TenantId,
+    user_id: UserId,
+    body: InventoryBulkDelete,
+    _rbac: Annotated[None, require_admin],
+) -> dict[str, Any]:
+    db = request.app.state.db
+    industry = IndustryCode(ctx.code)
+    sids: list[uuid.UUID] = []
+    for raw in body.sku_ids:
+        try:
+            sids.append(uuid.UUID(raw))
+        except ValueError:
+            continue
+
+    if not sids:
+        return {"deleted": 0, "industry": ctx.code}
+
+    async with db.session(str(tenant_id)) as session:
+        result = await session.execute(
+            delete(InventoryLevel).where(
+                InventoryLevel.tenant_id == tenant_id,
+                InventoryLevel.industry == industry,
+                InventoryLevel.sku_id.in_(sids),
+            )
+        )
+        deleted = result.rowcount or 0
+
+    log.info("inventory.levels.bulk_deleted", tenant=str(tenant_id), industry=ctx.code, n=deleted)
+    return {"deleted": deleted, "industry": ctx.code}
+
+
+@router.delete("/levels/all")
+async def delete_all_levels(
+    request: Request,
+    ctx: ActiveIndustry,
+    tenant_id: TenantId,
+    user_id: UserId,
+    _rbac: Annotated[None, require_admin],
+) -> dict[str, Any]:
+    db = request.app.state.db
+    industry = IndustryCode(ctx.code)
+
+    async with db.session(str(tenant_id)) as session:
+        result = await session.execute(
+            delete(InventoryLevel).where(
+                InventoryLevel.tenant_id == tenant_id,
+                InventoryLevel.industry == industry,
+            )
+        )
+        deleted = result.rowcount or 0
+
+    log.info("inventory.levels.all_deleted", tenant=str(tenant_id), industry=ctx.code, n=deleted)
+    return {"deleted": deleted, "industry": ctx.code}
 
 
 @router.get("/coverage")

@@ -56,6 +56,15 @@ async def lifespan(fastapi_app: FastAPI) -> AsyncIterator[None]:
     db = Database(settings)
     fastapi_app.state.db = db
 
+    # Production must prove isolation before accepting requests or launching
+    # workers. A background check leaves a window of unverified access.
+    if settings.is_production:
+        try:
+            await db.assert_tenant_isolation_enforced(strict=True)
+        except Exception:
+            await db.close()
+            raise
+
     # Redis — shared client for rate limiting and WebSocket pub/sub
     redis_client = await _init_redis(settings.redis_url)
     fastapi_app.state.redis = redis_client
@@ -199,9 +208,9 @@ async def lifespan(fastapi_app: FastAPI) -> AsyncIterator[None]:
 
         async def run_db_initialization() -> None:
             try:
-                # Fail closed in production if the DB role can bypass RLS (superuser /
-                # BYPASSRLS) or FORCE RLS is missing — tenant isolation would be off.
-                await db.assert_tenant_isolation_enforced(strict=settings.is_production)
+                # Production was checked synchronously before other startup work.
+                if not settings.is_production:
+                    await db.assert_tenant_isolation_enforced(strict=False)
                 await db.check_migration_version()
                 # Self-healing backstop so a long-lived replica never runs out of
                 # range partitions between CronJob ticks (best-effort, never fatal).
@@ -212,11 +221,6 @@ async def lifespan(fastapi_app: FastAPI) -> AsyncIterator[None]:
                 log.info("startup.db_initialization.complete")
             except Exception as exc:
                 log.error("startup.db_initialization.failed", error=str(exc))
-                if settings.is_production and "tenant isolation" in str(exc):
-                    log.critical("startup.db_initialization.isolation_violated.exiting")
-                    import os
-
-                    os._exit(1)
 
         asyncio.create_task(run_db_initialization())
 
@@ -456,6 +460,13 @@ def create_app() -> FastAPI:
     from app.routers.ai import settings_router as ai_settings_router, router as ai_business_router
     app.include_router(ai_settings_router, prefix=api_prefix)
     app.include_router(ai_business_router, prefix=api_prefix, dependencies=gated)
+    from app.routers.ai_interactive import router as ai_interactive_router
+    app.include_router(ai_interactive_router, prefix=api_prefix, dependencies=gated)
+    from app.routers.communications import preferences_router, router as communications_router
+    from app.routers.management_reports import router as management_reports_router
+    app.include_router(preferences_router, prefix=api_prefix)
+    app.include_router(communications_router, prefix=api_prefix, dependencies=gated)
+    app.include_router(management_reports_router, prefix=api_prefix, dependencies=gated)
     app.include_router(auth_router, prefix=api_prefix)
     app.include_router(industry_router, prefix=api_prefix)
     app.include_router(onboarding_router, prefix=api_prefix)
