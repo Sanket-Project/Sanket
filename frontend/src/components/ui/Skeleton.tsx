@@ -35,3 +35,17 @@ export const SkeletonRow = () => (
     <div className="h-6 w-16 rounded-full bg-surface-2" />
   </div>
 );
+
+export const SkeletonChart = ({ height = 280 }: { height?: number }) => (
+  <div className="animate-pulse rounded-xl bg-surface-2" style={{ height }} />
+);
+
+export const SkeletonTable = ({ rows = 6, columns = 4 }: { rows?: number; columns?: number }) => (
+  <div className="animate-pulse space-y-2">
+    {Array.from({ length: rows }).map((_, r) => (
+      <div key={r} className="grid gap-3" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+        {Array.from({ length: columns }).map((__, c) => <div key={c} className="h-4 rounded bg-surface-2" />)}
+      </div>
+    ))}
+  </div>
+);
