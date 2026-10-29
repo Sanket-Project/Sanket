@@ -61,3 +61,20 @@ Use 120–180ms feedback and restrained 180–240ms disclosures. Respect reduced
 The source image is `C:/Users/admin/Downloads/ChatGPT Image Oct 29, 2026, 02_26_03 PM.png`. Its records, products and numbers are visual examples, not production data. Original generated planning artwork lives in `public/images/planning-hero.png`; the optimized 42KB WebP is the consumed asset. It is decorative, not a representation of a customer's actual stock. Catalog imagery must come from existing product image sources.
 
 Design-review fixtures live only in `e2e/` and are visibly labeled. The production application never imports or mounts them.
+
+## Components
+
+Use the shared kit before writing page-local UI. All live in `src/components/ui/` unless noted.
+
+| Need | Use | Notes |
+|---|---|---|
+| A KPI | `MetricTile` | `provenance` is required: recorded, estimated, forecast or heuristic. `null` shows "—" plus a reason. `KPICard` is a legacy adapter: it takes an optional `provenance` (default recorded) and bridges the legacy sentinel values "Unavailable" / "—" to the unavailable state, using `subtitle` as the reason. |
+| A table | `DataTable` (`Table`) | `sortValue` per column, `loading`, `density`, `maxHeight`, `mobile="cards"` with column `priority`, `selection` only where bulk actions exist, `caption`. |
+| Filters | `FilterBar` + `Select` / `SegmentedControl` | Native select. Segmented control for 2–5 views. |
+| Views on one page | `Tabs` | WAI-ARIA tabs; arrow keys move focus, Enter selects. |
+| Grouping without a card | `Section` | Heading, hairline divider, actions. |
+| Loading, error, unavailable | `LoadingState`, `ErrorState`, `UnavailableState`, `QueryBoundary` | Never render 0 for missing data. QueryBoundary: enabled queries only. |
+| Detail or history panel | `Drawer` | Shares focus handling with `Modal` (`useDialogFocus`). |
+| A chart | `components/charts/kit`: `ChartFrame`, `ChartTooltip`, `ChartLegend`, `AXIS_PROPS`, `GRID_PROPS`, `formatDateTick`, `formatCompact`, `formatCurrencyTick` | Tooltip order: actual, expected, lower, upper. |
+| Type | `.t-page .t-section .t-card .t-kpi .t-label .t-body .t-table` | Instead of `text-[Npx]`. |
+| Motion | `duration-fast` (140ms), `duration-base` (200ms), `ease-standard` | Reduced motion is handled globally. |
