@@ -15,8 +15,9 @@ it("compacts large numbers without inventing precision", () => {
   expect(formatCompact(999_950)).toBe("1M");
 });
 
-it("formats currency ticks compactly", () => {
-  expect(formatCurrencyTick(1_200_000, "INR")).toBe("₹1.2M");
+it("formats currency ticks compactly with the app's locale rule (INR in en-IN)", () => {
+  expect(formatCurrencyTick(1_200_000, "INR")).toBe("₹12L");
+  expect(formatCurrencyTick(1_200_000, "USD")).toBe("$1.2M");
   expect(formatCurrencyTick(950, "USD")).toBe("$950");
   expect(formatCurrencyTick(0, "INR")).toBe("₹0");
 });

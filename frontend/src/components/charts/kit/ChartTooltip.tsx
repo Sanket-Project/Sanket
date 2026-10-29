@@ -1,4 +1,6 @@
 // src/components/charts/kit/ChartTooltip.tsx
+import { fmtNumber } from "@/utils/format";
+
 /** `range` is a single series holding a `[low, high]` tuple, e.g. a P10–P90 band drawn as one Area. */
 export type TooltipSeries = { key: string; label: string; kind: "actual" | "expected" | "range" | "range-low" | "range-high" | "other"; format?: (v: number) => string };
 
@@ -17,7 +19,7 @@ const isNum = (v: unknown): v is number => typeof v === "number" && Number.isFin
 
 /** Formats one tooltip value; anything that is not a finite number (or, for a range, a pair of them) is "—". */
 function formatValue(v: unknown, s: TooltipSeries, unit?: string): string {
-  const fmt = (n: number) => (s.format ? s.format(n) : n.toLocaleString("en-IN"));
+  const fmt = (n: number) => (s.format ? s.format(n) : fmtNumber(n));
   const suffix = unit ? ` ${unit}` : "";
   if (s.kind === "range") {
     if (!Array.isArray(v) || v.length !== 2 || !isNum(v[0]) || !isNum(v[1])) return "—";

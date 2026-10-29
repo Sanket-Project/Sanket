@@ -58,3 +58,10 @@ it("dashes a malformed band value instead of printing NaN or a joined array", ()
   const rows = screen.getAllByRole("listitem").map((li) => li.textContent);
   expect(rows).toEqual(["Expected—", "Likely range—"]);
 });
+
+it("formats default tooltip numbers like the rest of the app (en-US grouping)", () => {
+  render(<ChartTooltip active unit="units"
+    series={[{ key: "p50", label: "Expected", kind: "expected" }]}
+    payload={[{ dataKey: "p50", value: 1_234_567 }]} />);
+  expect(screen.getByRole("listitem").textContent).toBe("Expected1,234,567 units");
+});

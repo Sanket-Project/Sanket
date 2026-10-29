@@ -11,8 +11,22 @@ export function formatDateTick(iso: string, granularity: "day" | "week" | "month
 
 export const formatCompact = (n: number): string => fmtCompact(n);
 
+const currencyTickCache = new Map<string, Intl.NumberFormat>();
+
+/**
+ * Pure compact currency tick, no display-currency conversion. Same locale rule as
+ * `formatPrice` (INR in en-IN, everything else en-US). Inside components prefer
+ * `useCurrencyTick`, which also honours the user's display currency and rate.
+ */
 export function formatCurrencyTick(n: number, currency: string): string {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency, notation: "compact", maximumFractionDigits: 1 }).format(n);
+  const locale = currency === "INR" ? "en-IN" : "en-US";
+  const key = `${locale}|${currency}`;
+  let fmt = currencyTickCache.get(key);
+  if (!fmt) {
+    fmt = new Intl.NumberFormat(locale, { style: "currency", currency, notation: "compact", maximumFractionDigits: 1 });
+    currencyTickCache.set(key, fmt);
+  }
+  return fmt.format(n);
 }
 
 export const GRID_PROPS = { vertical: false, stroke: "var(--border)", strokeDasharray: "0" } as const;
