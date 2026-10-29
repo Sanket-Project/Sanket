@@ -30,3 +30,38 @@ it("opens as a labelled modal dialog, traps Tab, closes on Escape and restores f
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   expect(trigger).toHaveFocus();
 });
+
+const raf = () => act(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+
+it("keeps focus in the dialog when the parent re-renders with a new onClose", async () => {
+  const Typing = () => {
+    const [open, setOpen] = useState(false);
+    const [text, setText] = useState("");
+    return (<>
+      <button onClick={() => setOpen(true)}>Open typing</button>
+      <Drawer open={open} onClose={() => setOpen(false)} title="Edit">
+        <input aria-label="Name" value={text} onChange={(e) => setText(e.target.value)} />
+      </Drawer>
+    </>);
+  };
+  render(<Typing />);
+  fireEvent.click(screen.getByRole("button", { name: "Open typing" }));
+  await raf();
+  const input = screen.getByLabelText("Name");
+  input.focus();
+  fireEvent.change(input, { target: { value: "abc" } });
+  await raf();
+  expect(screen.getByLabelText("Name")).toHaveFocus();
+  expect(document.body.style.overflow).toBe("hidden");
+});
+
+it("restores the previous body overflow on close", async () => {
+  document.body.style.overflow = "scroll";
+  render(<Harness />);
+  fireEvent.click(screen.getByRole("button", { name: "Open run history" }));
+  await raf();
+  expect(document.body.style.overflow).toBe("hidden");
+  fireEvent.keyDown(window, { key: "Escape" });
+  expect(document.body.style.overflow).toBe("scroll");
+  document.body.style.overflow = "";
+});
