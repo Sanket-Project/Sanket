@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Decision, DecisionListResponse } from "@/api/decisions";
@@ -127,6 +127,15 @@ describe("Decisions page (deep audit F3, F6, F8, F14)", () => {
     expect(screen.getAllByText("Unavailable").length).toBeGreaterThan(0);
     expect(screen.getByText(/missing unit cost/i)).toBeInTheDocument();
     expect(screen.queryByText("₹0")).not.toBeInTheDocument();
+  });
+
+  it("labels proposed orders as forecast-derived", async () => {
+    api.list.mockResolvedValue(listOf([decision()]));
+
+    renderPage();
+
+    const tile = (await screen.findByText("Orders to place")).closest("div.group") as HTMLElement;
+    expect(within(tile).getByText("Forecast")).toBeInTheDocument();
   });
 
   it("marks a decision whose lead time was assumed", async () => {

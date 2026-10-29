@@ -202,6 +202,7 @@ export const DecisionsPage = () => {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <KPICard
             label="Orders to place"
+            provenance="forecast"
             value={totals.purchase_orders}
             subtitle={`${totals.units_to_order.toLocaleString()} units`}
             icon={<Package size={16} />}
@@ -209,6 +210,7 @@ export const DecisionsPage = () => {
           />
           <KPICard
             label="Capital committed"
+            provenance="forecast"
             value={fmt(totals.capital_committed)}
             subtitle={totals.capital_committed == null ? `Needs unit cost — ${valuationNote}` : "If you accept every order"}
             tone="default"
