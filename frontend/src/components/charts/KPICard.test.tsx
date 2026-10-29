@@ -12,11 +12,18 @@ it("passes provenance through", () => {
   expect(screen.getByText("Estimated")).toBeInTheDocument();
 });
 
-it("treats the Unavailable sentinel as missing and uses the subtitle as the reason", () => {
-  render(<KPICard label="Capital" value="Unavailable" subtitle="No prices imported" />);
+it("treats the Unavailable sentinel as missing and never shows the subtitle as the reason", () => {
+  render(<KPICard label="Capital" value="Unavailable" subtitle="From the current source report" />);
   expect(screen.getByText("—")).toBeInTheDocument();
-  expect(screen.getByText("No prices imported")).toBeInTheDocument();
+  expect(screen.getByText("Not available from current data")).toBeInTheDocument();
+  expect(screen.queryByText("From the current source report")).not.toBeInTheDocument();
   expect(screen.queryByText("Unavailable")).not.toBeInTheDocument();
+});
+
+it("shows an explicit unavailableReason for a missing value", () => {
+  render(<KPICard label="Capital" value="Unavailable" subtitle="From the current source report" unavailableReason="Needs unit cost" />);
+  expect(screen.getByText("—")).toBeInTheDocument();
+  expect(screen.getByText("Needs unit cost")).toBeInTheDocument();
 });
 
 it("treats the dash sentinel as missing with the default reason", () => {

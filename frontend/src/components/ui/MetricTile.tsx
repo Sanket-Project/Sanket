@@ -39,14 +39,16 @@ interface Props {
 
 export const MetricTile = ({ label, value, unit, provenance, hint, tone = "default", icon, href, onClick, unavailableReason, className }: Props) => {
   const missing = value === null || value === undefined;
+  // Missing data must look neither healthy nor alarming.
+  const effectiveTone = missing ? "default" : tone;
   const interactive = Boolean(href || onClick);
   const body = (
     <>
       <div className="flex items-start gap-3">
-        {icon && <div className={clsx("grid h-10 w-10 shrink-0 place-items-center rounded-xl", TONE_ICON[tone])}>{icon}</div>}
+        {icon && <div className={clsx("grid h-10 w-10 shrink-0 place-items-center rounded-xl", TONE_ICON[effectiveTone])}>{icon}</div>}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            {tone !== "default" && !icon && <span aria-hidden="true" className={clsx("h-1.5 w-1.5 shrink-0 rounded-full", TONE_DOT[tone])} />}
+            {effectiveTone !== "default" && !icon && <span aria-hidden="true" className={clsx("h-1.5 w-1.5 shrink-0 rounded-full", TONE_DOT[effectiveTone])} />}
             <span className="t-label">{label}</span>
             <span className={clsx("rounded px-1.5 py-px text-[10px] font-medium", PROVENANCE_CLS[provenance])}>{PROVENANCE_LABEL[provenance]}</span>
           </div>

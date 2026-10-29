@@ -41,3 +41,13 @@ it("shows no tone dot for the default tone", () => {
   const { container } = render(<MetricTile label="At risk" value={2} provenance="recorded" />);
   expect(container.querySelector(".bg-amber-500, .bg-rose-500, .bg-emerald-500")).toBeNull();
 });
+
+it("keeps the icon chip neutral when the value is missing", () => {
+  const { container } = render(<MetricTile label="Fill rate" value={null} provenance="recorded" tone="success" icon={<span />} />);
+  expect(container.querySelector(".bg-emerald-500\\/10")).toBeNull();
+});
+
+it("shows no tone dot when the value is missing", () => {
+  const { container } = render(<MetricTile label="At risk" value={null} provenance="recorded" tone="warning" />);
+  expect(container.querySelector(".bg-amber-500")).toBeNull();
+});

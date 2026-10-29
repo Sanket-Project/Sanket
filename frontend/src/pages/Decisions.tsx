@@ -213,6 +213,7 @@ export const DecisionsPage = () => {
             provenance="forecast"
             value={fmt(totals.capital_committed)}
             subtitle={totals.capital_committed == null ? `Needs unit cost — ${valuationNote}` : "If you accept every order"}
+            unavailableReason={totals.capital_committed == null ? `Needs unit cost — ${valuationNote}` : undefined}
             tone="default"
           />
           <KPICard
@@ -220,6 +221,7 @@ export const DecisionsPage = () => {
             provenance="estimated"
             value={fmt(totals.working_capital_released_vs_baseline)}
             subtitle={totals.working_capital_released_vs_baseline == null ? "Needs unit cost for every order" : "Modeled difference versus buying P90 demand every week"}
+            unavailableReason={totals.working_capital_released_vs_baseline == null ? "Needs unit cost for every order" : undefined}
             tone="success"
           />
           <KPICard
@@ -227,6 +229,7 @@ export const DecisionsPage = () => {
             provenance="estimated"
             value={fmt(totals.revenue_protected)}
             subtitle={totals.revenue_protected == null ? "Needs unit price for every order" : "Demand your stock cannot cover today"}
+            unavailableReason={totals.revenue_protected == null ? "Needs unit price for every order" : undefined}
             tone={(totals.revenue_protected ?? 0) > 0 ? "warning" : "default"}
           />
         </div>
