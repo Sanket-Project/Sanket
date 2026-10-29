@@ -20,6 +20,9 @@ const fixture = new URLSearchParams(location.search).get("fixture");
 if (fixture === "planning") {
   const { installPlanningFixture } = await import("./planning-fixture");
   installPlanningFixture();
+} else {
+  const { installUnavailableFixture } = await import("./unavailable-fixture");
+  installUnavailableFixture();
 }
 const pageModules = import.meta.glob(["../src/pages/**/*.tsx", "!../src/pages/**/*.test.tsx"]);
 const screens: Record<string, [string, string]> = {
