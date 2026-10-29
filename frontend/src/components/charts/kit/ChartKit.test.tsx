@@ -38,3 +38,23 @@ it("swaps the plot for loading, empty and error states at a fixed height", () =>
   expect(screen.getByText("plot")).toBeInTheDocument();
   expect(screen.getByRole("figure", { name: "Demand" })).toBeInTheDocument();
 });
+
+it("renders a band tuple as one range row after the quantiles", () => {
+  render(<ChartTooltip active label="2026-11-02" unit="units"
+    series={[
+      { key: "band", label: "Likely range", kind: "range" },
+      { key: "p50", label: "Expected", kind: "expected" },
+      { key: "p90", label: "Upper (P90)", kind: "range-high" },
+    ]}
+    payload={[{ dataKey: "band", value: [10, 30] }, { dataKey: "p50", value: 0 }, { dataKey: "p90", value: 30 }]} />);
+  const rows = screen.getAllByRole("listitem").map((li) => li.textContent);
+  expect(rows).toEqual(["Expected0 units", "Likely range10–30 units", "Upper (P90)30 units"]);
+});
+
+it("dashes a malformed band value instead of printing NaN or a joined array", () => {
+  render(<ChartTooltip active unit="units"
+    series={[{ key: "band", label: "Likely range", kind: "range" }, { key: "p50", label: "Expected", kind: "expected" }]}
+    payload={[{ dataKey: "band", value: ["x"] }, { dataKey: "p50", value: [1, 2] }]} />);
+  const rows = screen.getAllByRole("listitem").map((li) => li.textContent);
+  expect(rows).toEqual(["Expected—", "Likely range—"]);
+});
