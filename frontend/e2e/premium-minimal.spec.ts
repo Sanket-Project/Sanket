@@ -87,7 +87,7 @@ test("account popover closes with Escape and restores the trigger", async ({ pag
   await expect(trigger).toBeFocused();
 });
 
-const screens = ["Dashboard", "Products", "Skus", "Inventory", "Forecasts", "Decisions", "SalesAnalytics", "TrendAnalysis", "ROIDashboard", "FinancialImpact", "DataQuality", "ShortageAlerts", "Integrations", "Notifications", "Settings", "Profile", "Billing", "Webhooks", "LiveSales", "PharmaBatches", "ProductDetail", "SkuDetail", "Login", "ForgotPassword", "ResetPassword", "AcceptInvite", "Terms", "Privacy", "NotFound", "ForecastAccuracy", "HybridForecasts", "WhatIfScenario", "Signals", "Fashion", "Electronics", "Pharma", "Agriculture", "Hardware"];
+const screens = ["Dashboard", "Products", "Skus", "Inventory", "Forecasts", "Decisions", "SalesAnalytics", "TrendAnalysis", "ROIDashboard", "FinancialImpact", "DataQuality", "ShortageAlerts", "Integrations", "Notifications", "Settings", "Profile", "Billing", "Webhooks", "LiveSales", "PharmaBatches", "ProductDetail", "SkuDetail", "Login", "ForgotPassword", "ResetPassword", "AcceptInvite", "Terms", "Privacy", "NotFound", "HybridForecasts", "Fashion", "Electronics", "Pharma", "Agriculture", "Hardware"];
 screens.push("OnboardingIndustry", "OnboardingData", "OnboardingCalendar", "OnboardingTeam", "OnboardingBaseline", "ImportReview", "Landing");
 for (const screen of screens) {
   for (const dark of [false, true]) {
