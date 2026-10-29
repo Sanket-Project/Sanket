@@ -28,3 +28,10 @@ it("selects on click", () => {
   fireEvent.click(screen.getByRole("radio", { name: "Monthly" }));
   expect(screen.getByRole("radio", { name: "Monthly" })).toBeChecked();
 });
+
+it("keeps one tab stop when value matches no option", () => {
+  render(<SegmentedControl label="Granularity" value={"nope" as never} onChange={() => {}} options={[{ value: "day", label: "Daily" }, { value: "week", label: "Weekly" }]} />);
+  expect(screen.getByRole("radio", { name: "Daily" })).toHaveAttribute("tabindex", "0");
+  expect(screen.getByRole("radio", { name: "Weekly" })).toHaveAttribute("tabindex", "-1");
+  screen.getAllByRole("radio").forEach((r) => expect(r).not.toBeChecked());
+});

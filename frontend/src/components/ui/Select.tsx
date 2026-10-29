@@ -11,7 +11,7 @@ interface Props extends Omit<SelectHTMLAttributes<HTMLSelectElement>, "size"> {
 }
 
 /** Native select for real keyboard and screen-reader behaviour, styled to the kit. */
-export const Select = forwardRef<HTMLSelectElement, Props>(function Select({ label, hint, error, options, size = "md", className, id, children, ...rest }, ref) {
+export const Select = forwardRef<HTMLSelectElement, Props>(function Select({ label, hint, error, options, size = "md", className, id, children, "aria-describedby": describedBy, ...rest }, ref) {
   const auto = useId();
   const selectId = id ?? auto;
   const hintId = hint ? `${selectId}-hint` : undefined;
@@ -21,7 +21,7 @@ export const Select = forwardRef<HTMLSelectElement, Props>(function Select({ lab
       {label && <label htmlFor={selectId} className="t-label mb-1.5 block">{label}</label>}
       <div className="relative">
         <select ref={ref} id={selectId} aria-invalid={error ? true : undefined}
-          aria-describedby={[hintId, errorId].filter(Boolean).join(" ") || undefined}
+          aria-describedby={[describedBy, hintId, errorId].filter(Boolean).join(" ") || undefined}
           className={clsx("focus-ring w-full appearance-none rounded-lg border bg-surface pl-3 pr-9 text-sm text-content transition-colors duration-fast ease-standard hover:border-line-strong disabled:opacity-60",
             size === "sm" ? "h-8" : "h-10", error ? "border-rose-500" : "border-line")}
           {...rest}>

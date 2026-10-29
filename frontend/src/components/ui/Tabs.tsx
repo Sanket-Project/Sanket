@@ -27,9 +27,9 @@ export function Tabs<V extends string>({ label, tabs, value, defaultValue, onCha
           const selected = t.value === active.value;
           return (
             <button key={t.value} ref={(el) => { refs.current[i] = el; }} type="button" role="tab" id={`${base}-tab-${t.value}`}
-              aria-selected={selected} aria-controls={`${base}-panel-${t.value}`} tabIndex={selected ? 0 : -1}
+              aria-selected={selected} aria-controls={selected ? `${base}-panel-${t.value}` : undefined} tabIndex={selected ? 0 : -1}
               onClick={() => select(t.value)} onKeyDown={(e) => onKeyDown(e, i)}
-              className={clsx("focus-ring -mb-px inline-flex items-center gap-2 whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors duration-fast ease-standard",
+              className={clsx("focus-ring focus-visible:outline-offset-[-2px] -mb-px inline-flex items-center gap-2 whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors duration-fast ease-standard",
                 selected ? "border-accent text-content" : "border-transparent text-content-muted hover:text-content")}>
               {t.label}{t.badge}
             </button>

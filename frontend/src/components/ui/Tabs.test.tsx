@@ -25,3 +25,12 @@ it("follows the WAI-ARIA tabs pattern", () => {
   fireEvent.keyDown(screen.getByRole("tab", { name: "Trending up" }), { key: "Home" });
   expect(first).toHaveFocus();
 });
+
+it("only the selected tab carries aria-controls, pointing at the panel", () => {
+  render(<Tabs label="Inventory views" tabs={[...tabs]} />);
+  const active = screen.getByRole("tab", { name: "Top at risk" });
+  const inactive = screen.getByRole("tab", { name: "Overstocked" });
+  expect(inactive).not.toHaveAttribute("aria-controls");
+  expect(screen.getByRole("tab", { name: "Trending up" })).not.toHaveAttribute("aria-controls");
+  expect(active).toHaveAttribute("aria-controls", screen.getByRole("tabpanel").id);
+});

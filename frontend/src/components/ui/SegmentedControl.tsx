@@ -11,6 +11,7 @@ interface Props<V extends string> {
 
 export function SegmentedControl<V extends string>({ label, value, onChange, options, size = "md" }: Props<V>) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
+  const activeIndex = Math.max(0, options.findIndex((o) => o.value === value));
   const move = (from: number, delta: number) => {
     const next = (from + delta + options.length) % options.length;
     onChange(options[next].value);
@@ -25,9 +26,9 @@ export function SegmentedControl<V extends string>({ label, value, onChange, opt
       {options.map((o, i) => {
         const checked = o.value === value;
         return (
-          <button key={o.value} ref={(el) => { refs.current[i] = el; }} type="button" role="radio" aria-checked={checked} tabIndex={checked ? 0 : -1}
+          <button key={o.value} ref={(el) => { refs.current[i] = el; }} type="button" role="radio" aria-checked={checked} tabIndex={i === activeIndex ? 0 : -1}
             onClick={() => onChange(o.value)} onKeyDown={(e) => onKeyDown(e, i)}
-            className={clsx("focus-ring whitespace-nowrap rounded-md font-medium transition-colors duration-fast ease-standard",
+            className={clsx("focus-ring focus-visible:outline-offset-[-2px] whitespace-nowrap rounded-md font-medium transition-colors duration-fast ease-standard",
               size === "sm" ? "px-2.5 py-1 text-xs" : "px-3 py-1.5 text-sm",
               checked ? "bg-surface text-content shadow-sm" : "text-content-muted hover:text-content")}>
             {o.label}
