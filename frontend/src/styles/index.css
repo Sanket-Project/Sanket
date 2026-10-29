@@ -257,6 +257,9 @@ h1, h2, h3, h4, h5, .font-heading, .font-display {
   border: 1px solid currentColor; animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+@keyframes drawer-in { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+.drawer-panel { animation: drawer-in var(--dur) var(--ease) both; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
   .tactile-press:active, .card-hover-premium:hover { transform: none; }

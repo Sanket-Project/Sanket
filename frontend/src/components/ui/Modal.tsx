@@ -1,7 +1,8 @@
 import { X } from "@/components/ui/icons";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import clsx from "clsx";
+import { useDialogFocus } from "./useDialogFocus";
 
 interface Props {
   open: boolean;
@@ -11,9 +12,6 @@ interface Props {
   footer?: ReactNode;
   size?: "sm" | "md" | "lg" | "xl" | "wide";
 }
-
-const FOCUSABLE =
-  'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
 
 export const Modal = ({
   open,
@@ -26,45 +24,7 @@ export const Modal = ({
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleId = useRef(`modal-title-${Math.random().toString(36).slice(2)}`);
 
-  useEffect(() => {
-    if (!open) return;
-
-    // Escape key closes
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") { onClose(); return; }
-
-      // Focus trap — Tab / Shift+Tab
-      if (e.key === "Tab" && dialogRef.current) {
-        const focusable = Array.from(
-          dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE),
-        ).filter((el) => !el.hasAttribute("disabled"));
-        if (focusable.length === 0) { e.preventDefault(); return; }
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-        if (e.shiftKey) {
-          if (document.activeElement === first) { e.preventDefault(); last.focus(); }
-        } else {
-          if (document.activeElement === last) { e.preventDefault(); first.focus(); }
-        }
-      }
-    };
-
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", onKey);
-
-    // Auto-focus first focusable element (or the dialog itself)
-    const frame = requestAnimationFrame(() => {
-      if (!dialogRef.current) return;
-      const first = dialogRef.current.querySelector<HTMLElement>(FOCUSABLE);
-      (first ?? dialogRef.current).focus();
-    });
-
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-      cancelAnimationFrame(frame);
-    };
-  }, [open, onClose]);
+  useDialogFocus(open, onClose, dialogRef);
 
   if (!open) return null;
 
