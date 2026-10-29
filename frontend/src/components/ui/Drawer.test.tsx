@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { expect, it } from "vitest";
 import { Drawer } from "./Drawer";
+import { Modal } from "./Modal";
 
 const Harness = () => {
   const [open, setOpen] = useState(false);
@@ -63,5 +64,40 @@ it("restores the previous body overflow on close", async () => {
   expect(document.body.style.overflow).toBe("hidden");
   fireEvent.keyDown(window, { key: "Escape" });
   expect(document.body.style.overflow).toBe("scroll");
+  document.body.style.overflow = "";
+});
+
+it("with a modal stacked on a drawer, Escape closes only the top surface", async () => {
+  document.body.style.overflow = "auto";
+  const Stacked = () => {
+    const [drawer, setDrawer] = useState(false);
+    const [modal, setModal] = useState(false);
+    return (<>
+      <button onClick={() => setDrawer(true)}>Open drawer</button>
+      <Drawer open={drawer} onClose={() => setDrawer(false)} title="Run history">
+        <button onClick={() => setModal(true)}>Delete run</button>
+        <Modal open={modal} onClose={() => setModal(false)} title="Confirm delete"><button>Yes</button></Modal>
+      </Drawer>
+    </>);
+  };
+  render(<Stacked />);
+  fireEvent.click(screen.getByRole("button", { name: "Open drawer" }));
+  await raf();
+  const opener = screen.getByRole("button", { name: "Delete run" });
+  opener.focus();
+  fireEvent.click(opener);
+  await raf();
+  expect(screen.getByRole("dialog", { name: "Confirm delete" })).toBeInTheDocument();
+  expect(document.body.style.overflow).toBe("hidden");
+
+  fireEvent.keyDown(window, { key: "Escape" });
+  expect(screen.queryByRole("dialog", { name: "Confirm delete" })).not.toBeInTheDocument();
+  expect(screen.getByRole("dialog", { name: "Run history" })).toBeInTheDocument();
+  expect(opener).toHaveFocus();
+  expect(document.body.style.overflow).toBe("hidden");
+
+  fireEvent.keyDown(window, { key: "Escape" });
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(document.body.style.overflow).toBe("auto");
   document.body.style.overflow = "";
 });
