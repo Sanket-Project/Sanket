@@ -68,7 +68,7 @@ Use the shared kit before writing page-local UI. All live in `src/components/ui/
 
 | Need | Use | Notes |
 |---|---|---|
-| A KPI | `MetricTile` | `provenance` is required: recorded, estimated, forecast or heuristic. `null` shows "—" plus a reason. `KPICard` is a legacy adapter: it takes an optional `provenance` (default recorded) and bridges the legacy sentinel values "Unavailable" / "—" to the unavailable state, using `subtitle` as the reason. |
+| A KPI | `MetricTile` | `provenance` is required: recorded, estimated, forecast or heuristic. `null` shows "—" plus a reason. `KPICard` (`components/charts/KPICard`) is a legacy adapter: it takes an optional `provenance` (default recorded) and bridges the legacy sentinel values "Unavailable" / "—" to the unavailable state, using `subtitle` as the reason. |
 | A table | `DataTable` (`Table`) | `sortValue` per column, `loading`, `density`, `maxHeight`, `mobile="cards"` with column `priority`, `selection` only where bulk actions exist, `caption`. |
 | Filters | `FilterBar` + `Select` / `SegmentedControl` | Native select. Segmented control for 2–5 views. |
 | Views on one page | `Tabs` | WAI-ARIA tabs; arrow keys move focus, Enter selects. |
