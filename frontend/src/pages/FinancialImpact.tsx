@@ -89,18 +89,21 @@ export const FinancialImpactPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <KPICard
           label="Revenue at Risk"
+          provenance="estimated"
           value={fmtTotal(impact?.total_revenue_at_risk, impact?.currency, impact?.totals_by_currency, "revenue_at_risk")}
           icon={<TrendingUp size={16} />}
           tone="warning"
         />
         <KPICard
           label="Excess Inventory Cost"
+          provenance="estimated"
           value={fmtTotal(impact?.total_excess_cost, impact?.currency, impact?.totals_by_currency, "excess_inventory_cost")}
           icon={<Package size={16} />}
           tone="default"
         />
         <KPICard
           label="Total Financial Impact"
+          provenance="estimated"
           value={fmtTotal(impact?.net_impact, impact?.currency, impact?.totals_by_currency, "total_impact")}
           icon={<AlertTriangle size={16} />}
           tone="danger"

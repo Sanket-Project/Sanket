@@ -31,3 +31,13 @@ it("becomes a link when given href", () => {
   render(<MemoryRouter><MetricTile label="Open decisions" value={3} provenance="recorded" href="/workspace/decisions" /></MemoryRouter>);
   expect(screen.getByRole("link", { name: /Open decisions/ })).toHaveAttribute("href", "/workspace/decisions");
 });
+
+it("shows a tone dot when a tone is set and there is no icon", () => {
+  const { container } = render(<MetricTile label="At risk" value={2} provenance="recorded" tone="warning" />);
+  expect(container.querySelector(".bg-amber-500")).not.toBeNull();
+});
+
+it("shows no tone dot for the default tone", () => {
+  const { container } = render(<MetricTile label="At risk" value={2} provenance="recorded" />);
+  expect(container.querySelector(".bg-amber-500, .bg-rose-500, .bg-emerald-500")).toBeNull();
+});

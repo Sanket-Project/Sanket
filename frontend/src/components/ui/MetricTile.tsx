@@ -21,6 +21,7 @@ const TONE_ICON = {
   warning: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
   danger: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
 };
+const TONE_DOT = { success: "bg-emerald-500", warning: "bg-amber-500", danger: "bg-rose-500" };
 
 interface Props {
   label: string;
@@ -45,6 +46,7 @@ export const MetricTile = ({ label, value, unit, provenance, hint, tone = "defau
         {icon && <div className={clsx("grid h-10 w-10 shrink-0 place-items-center rounded-xl", TONE_ICON[tone])}>{icon}</div>}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
+            {tone !== "default" && !icon && <span aria-hidden="true" className={clsx("h-1.5 w-1.5 shrink-0 rounded-full", TONE_DOT[tone])} />}
             <span className="t-label">{label}</span>
             <span className={clsx("rounded px-1.5 py-px text-[10px] font-medium", PROVENANCE_CLS[provenance])}>{PROVENANCE_LABEL[provenance]}</span>
           </div>
