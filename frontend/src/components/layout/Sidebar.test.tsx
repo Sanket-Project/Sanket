@@ -200,3 +200,17 @@ describe("Sidebar feature visibility", () => {
     expect(screen.queryByRole("link", { name: "External Signals" })).not.toBeInTheDocument();
   });
 });
+
+it("lists Hybrid Forecasts directly after Forecasts in the Plan group", () => {
+  setViewport(true);
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <MemoryRouter initialEntries={["/workspace"]}><Sidebar /></MemoryRouter>
+    </QueryClientProvider>,
+  );
+  const hrefs = screen.getAllByRole("link").map((a) => a.getAttribute("href"));
+  const forecasts = hrefs.indexOf("/workspace/forecasts");
+  expect(forecasts).toBeGreaterThan(-1);
+  expect(hrefs[forecasts + 1]).toBe("/workspace/forecasts/hybrid");
+  expect(screen.getByRole("link", { name: /Hybrid Forecasts/ })).toBeInTheDocument();
+});

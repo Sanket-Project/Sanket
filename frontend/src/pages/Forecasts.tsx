@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/ui/PageHeader";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import {
   Play,
   Download,
@@ -629,7 +630,7 @@ const ChronosForecastPage = () => {
             </p>
             <p className="text-[11px] text-content-muted dark:text-content-subtle mt-0.5">{source.detail}</p>
             <p className="text-[11px] text-content-muted dark:text-content-subtle mt-0.5">
-              {result?.source === "hybrid-trend-fused" ? "Trend-adjusted forecast from a completed Hybrid run." : "No external signals applied to this forecast — trend and signal adjustment happen only in Hybrid forecasts."}
+              {result?.source === "hybrid-trend-fused" ? "Trend-adjusted forecast from a completed Hybrid run." : <>No external signals applied to this forecast — trend and signal adjustment happen only in <Link to="/workspace/forecasts/hybrid" className="font-medium text-accent underline-offset-2 hover:underline">Hybrid forecasts</Link>.</>}
               {result?.history_end ? ` History used: complete weeks before ${result.history_end} (weeks start Monday, UTC).` : ""}
             </p>
           </div>

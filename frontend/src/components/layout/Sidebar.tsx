@@ -8,6 +8,7 @@ import {
   Package,
   Boxes,
   LineChart,
+  Layers,
   Settings as SettingsIcon,
   ShieldCheck,
   TrendingUp,
@@ -97,7 +98,8 @@ interface NavEntry {
 const NAV_PLAN: NavEntry[] = [
   { to: "/workspace", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/workspace/decisions", label: "Decisions", icon: Target },
-  { to: "/workspace/forecasts", label: "Forecasts", icon: LineChart },
+  { to: "/workspace/forecasts", label: "Forecasts", icon: LineChart, exact: true },
+  { to: "/workspace/forecasts/hybrid", label: "Hybrid Forecasts", icon: Layers },
 ];
 
 const NAV_STOCK: NavEntry[] = [

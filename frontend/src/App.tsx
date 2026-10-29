@@ -34,6 +34,9 @@ const SkusPage = lazy(() =>
 const ForecastsPage = lazy(() =>
   import("@/pages/Forecasts").then((m) => ({ default: m.ForecastsPage }))
 );
+const HybridForecastsPage = lazy(() =>
+  import("@/pages/HybridForecasts").then((m) => ({ default: m.HybridForecastsPage }))
+);
 const SettingsPage = lazy(() =>
   import("@/pages/Settings").then((m) => ({ default: m.SettingsPage }))
 );
@@ -232,7 +235,7 @@ export default function App() {
             <Route path="inventory" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><InventoryPage /></Suspense></ErrorBoundary>} />
             <Route path="trends" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><TrendAnalysisPage /></Suspense></ErrorBoundary>} />
             <Route path="forecasts" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><ForecastsPage /></Suspense></ErrorBoundary>} />
-            <Route path="forecasts/hybrid" element={<Navigate to="/workspace/forecasts" replace />} />
+            <Route path="forecasts/hybrid" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><HybridForecastsPage /></Suspense></ErrorBoundary>} />
             <Route path="alerts" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><ShortageAlertsPage /></Suspense></ErrorBoundary>} />
             <Route path="sales-analytics" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><SalesAnalyticsPage /></Suspense></ErrorBoundary>} />
             <Route path="live-sales" element={<ErrorBoundary><Suspense fallback={<PageFallback />}><LiveSalesPage /></Suspense></ErrorBoundary>} />
