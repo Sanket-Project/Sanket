@@ -1,3 +1,5 @@
+import { fmtCompact } from "@/utils/format";
+
 const DAY = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
 const MONTH = new Intl.DateTimeFormat("en-GB", { month: "short", year: "numeric", timeZone: "UTC" });
 
@@ -7,12 +9,10 @@ export function formatDateTick(iso: string, granularity: "day" | "week" | "month
   return (granularity === "month" ? MONTH : DAY).format(d);
 }
 
-export function formatCompact(n: number): string {
-  const abs = Math.abs(n);
-  const trim = (v: number) => String(Number(v.toFixed(1)));
-  if (abs >= 1_000_000) return `${trim(n / 1_000_000)}M`;
-  if (abs >= 1_000) return `${trim(n / 1_000)}k`;
-  return String(n);
+export const formatCompact = (n: number): string => fmtCompact(n);
+
+export function formatCurrencyTick(n: number, currency: string): string {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency, notation: "compact", maximumFractionDigits: 1 }).format(n);
 }
 
 export const GRID_PROPS = { vertical: false, stroke: "var(--border)", strokeDasharray: "0" } as const;
