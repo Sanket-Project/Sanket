@@ -50,6 +50,8 @@ export default {
         heading: ['"Space Grotesk"', '"IBM Plex Sans"', "sans-serif"],
         mono: ['"IBM Plex Mono"', "ui-monospace", "monospace"],
       },
+      transitionDuration: { fast: "var(--dur-fast)", base: "var(--dur)" },
+      transitionTimingFunction: { standard: "var(--ease)" },
       borderRadius: {
         xl: "var(--radius-sm)",
         "2xl": "var(--radius)",

@@ -11,6 +11,9 @@
 :root {
   color-scheme: light;
   --sidebar-w: 244px;
+  --dur-fast: 140ms;
+  --dur: 200ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
   --neutral-0: 255 255 255;
   --neutral-25: 248 250 252;
   --neutral-50: 244 248 250;
@@ -270,6 +273,18 @@ h1, h2, h3, h4, h5, .font-heading, .font-display {
     border: 1px solid var(--border);
     box-shadow: var(--shadow-sm);
   }
+
+  /* Type scale — DESIGN.md sizes. Prefer these over ad-hoc text-[Npx]. */
+  .t-page    { @apply font-heading text-[28px] font-semibold leading-tight tracking-tight text-content; }
+  .t-section { @apply font-heading text-lg font-semibold tracking-tight text-content; }
+  .t-card    { @apply font-heading text-[15px] font-semibold tracking-tight text-content; }
+  .t-kpi     { @apply font-heading text-[28px] font-semibold leading-none tracking-tight text-content tabular-nums; }
+  .t-label   { @apply text-xs font-medium text-content-muted; }
+  .t-body    { @apply text-sm leading-relaxed text-content-muted; }
+  .t-table   { @apply text-[13px] tabular-nums; }
+
+  /* One focus treatment for every kit control. */
+  .focus-ring { @apply outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent; }
   .glass {
     background: var(--surface);
     border: 1px solid var(--border);
