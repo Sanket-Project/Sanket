@@ -54,7 +54,7 @@ export const IndustryHero = ({
   icon,
   horizonWeeks,
   models,
-  healthScore = 82,
+  healthScore,
   extraBadge,
 }: Props) => {
   const theme = industryTheme(industry);
@@ -64,11 +64,11 @@ export const IndustryHero = ({
       {/* Accent top bar */}
       <div className="absolute top-0 left-0 right-0 h-1" style={{ background: theme.gradient }} />
 
-      <div className="relative flex items-center justify-between gap-6">
+      <div className="relative flex flex-wrap items-center justify-between gap-6">
         {/* Left: icon + text */}
         <div className="flex items-center gap-5 min-w-0">
           <div
-            className="h-14 w-14 rounded-2xl grid place-items-center text-white shrink-0 shadow-sm"
+            className="h-14 w-14 rounded-2xl grid place-items-center text-accent-fg shrink-0 shadow-sm"
             style={{ background: theme.gradient }}
           >
             <span className="scale-125">{icon}</span>
@@ -110,7 +110,7 @@ export const IndustryHero = ({
               {extraBadge}
             </div>
           </div>
-          <HealthRing score={healthScore} color={theme.accent} />
+          {healthScore == null ? <span className="text-xs text-content-muted">Health not measured</span> : <HealthRing score={healthScore} color={theme.accent} />}
         </div>
       </div>
     </div>

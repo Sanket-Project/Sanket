@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -97,11 +98,8 @@ export const DataQualityPage = () => {
           <div className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider text-cyan-600">
             <Sparkles size={14} /> Data quality
           </div>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">Is your data good enough?</h1>
-          <p className="mt-1 max-w-2xl text-content-subtle">
-            Bad data beats good algorithms every time. These checks run over your whole dataset and
-            tell you what to fix first.
-          </p>
+          <PageHeader title="Is your data good enough?" description={<> Bad data beats good algorithms every time. These checks run over your whole dataset and
+            tell you what to fix first. </>} />
         </div>
         <Button
           variant="secondary"

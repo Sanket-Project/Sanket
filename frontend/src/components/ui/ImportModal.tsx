@@ -73,23 +73,23 @@ interface ProgressBarProps {
 const ProgressBar = ({ done, total, accent }: ProgressBarProps) => {
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   return (
-    <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-      <div className="flex justify-between text-xs text-slate-500 font-semibold uppercase tracking-wider">
+    <div className="space-y-3 p-4 bg-surface rounded-2xl border border-line">
+      <div className="flex justify-between text-xs text-content-muted font-semibold uppercase tracking-wider">
         <span>Importing rows...</span>
         <span>
           {done} / {total}
         </span>
       </div>
-      <div className="h-3 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200">
+      <div className="h-3 bg-surface-2 rounded-full overflow-hidden p-0.5 border border-line">
         <div
           className="h-full rounded-full transition-all duration-300 shadow-sm"
           style={{
             width: `${pct}%`,
-            background: `linear-gradient(90deg, ${accent} 0%, ${accent}cc 100%)`,
+            background: accent,
           }}
         />
       </div>
-      <div className="flex justify-between items-center text-[11px] text-slate-400 font-medium">
+      <div className="flex justify-between items-center text-[11px] text-content-subtle font-medium">
         <span>{pct}% complete</span>
         <span>Please do not refresh this page</span>
       </div>
@@ -232,22 +232,22 @@ export const ImportModal = ({
       />
 
       {/* Modal Container */}
-      <div className="relative z-10 w-full max-w-4xl glass-strong rounded-3xl flex flex-col max-h-[90vh] overflow-hidden transition-all duration-300 scale-100">
+      <div className="relative z-10 w-full max-w-4xl glass-strong rounded-2xl flex flex-col max-h-[90vh] overflow-hidden transition-all duration-300 scale-100">
         
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50 gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-6 py-4 border-b border-line bg-surface/50 gap-4">
           <div className="flex items-center gap-3.5">
             <div
-              className="h-10 w-10 rounded-2xl flex items-center justify-center text-white shadow-md shadow-violet-500/10 shrink-0"
+              className="h-10 w-10 rounded-2xl flex items-center justify-center text-accent-fg shadow-md shadow-sm/10 shrink-0"
               style={{ background: gradient }}
             >
               <FileSpreadsheet size={20} />
             </div>
             <div>
-              <h2 className="font-heading text-lg font-black text-slate-900 leading-tight">
+              <h2 className="font-heading text-lg font-semibold text-content leading-tight">
                 {activeTab === "manual" ? "Add New Product" : title}
               </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-content-muted mt-0.5">
                 {activeTab === "manual" ? "Manually fill out product details" : description}
               </p>
             </div>
@@ -255,15 +255,15 @@ export const ImportModal = ({
 
           {/* Dynamic Tab Switcher (if manualEntry exists) */}
           {manualEntry && (
-            <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl shadow-inner border border-slate-200 shrink-0 select-none">
+            <div className="flex items-center gap-1 p-1 bg-surface-2 rounded-xl shadow-inner border border-line shrink-0 select-none">
               <button
                 type="button"
                 onClick={() => setActiveTab("manual")}
                 className={clsx(
                   "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer",
                   activeTab === "manual"
-                    ? "bg-white text-slate-800 shadow-sm border border-slate-200"
-                    : "text-slate-400 hover:text-slate-655"
+                    ? "bg-surface text-content shadow-sm border border-line"
+                    : "text-content-subtle hover:text-slate-655"
                 )}
               >
                 {manualEntry.label}
@@ -274,8 +274,8 @@ export const ImportModal = ({
                 className={clsx(
                   "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer",
                   activeTab === "import"
-                    ? "bg-white text-slate-800 shadow-sm border border-slate-200"
-                    : "text-slate-400 hover:text-slate-655"
+                    ? "bg-surface text-content shadow-sm border border-line"
+                    : "text-content-subtle hover:text-slate-655"
                 )}
               >
                 Bulk Import (CSV)
@@ -285,7 +285,7 @@ export const ImportModal = ({
 
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 sm:relative sm:top-0 sm:right-0 h-8 w-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            className="absolute top-4 right-4 sm:relative sm:top-0 sm:right-0 h-8 w-8 rounded-lg flex items-center justify-center text-content-subtle hover:text-content hover:bg-surface-2 transition-colors"
           >
             <X size={16} />
           </button>
@@ -295,24 +295,24 @@ export const ImportModal = ({
         <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
           
           {/* LEFT COLUMN: GUIDELINES & CONTEXT */}
-          <div className="w-full md:w-[35%] bg-slate-55 border-b md:border-b-0 md:border-r border-slate-100 p-6 overflow-y-auto space-y-6 shrink-0">
+          <div className="w-full md:w-[35%] bg-slate-55 border-b md:border-b-0 md:border-r border-line p-6 overflow-y-auto space-y-6 shrink-0">
             {activeTab === "manual" ? (
               // Manual Form Left Sidebar Guidelines
               <div className="space-y-5">
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-455">
+                  <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-slate-455">
                     <Layers size={12} style={{ color: accent }} />
                     Target Catalogue
                   </div>
-                  <h3 className="text-base font-extrabold text-slate-800">{displayName}</h3>
+                  <h3 className="text-base font-semibold text-content">{displayName}</h3>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-white border border-slate-200 space-y-3">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+                <div className="p-4 rounded-2xl bg-surface border border-line space-y-3">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-content">
                     <BookOpen size={13} style={{ color: accent }} />
                     Quick Guidelines
                   </div>
-                  <ul className="space-y-2 text-[11px] text-slate-500 leading-relaxed list-disc pl-4">
+                  <ul className="space-y-2 text-[11px] text-content-muted leading-relaxed list-disc pl-4">
                     <li>Required fields are marked with an asterisk (<span className="text-rose-500">*</span>).</li>
                     <li>Set an **External ID** to match SKU codes and link logistics data.</li>
                     <li>Choose a standard category. Clean taxonomies yield accurate forecast aggregations.</li>
@@ -322,14 +322,14 @@ export const ImportModal = ({
                 {/* Category Hints Drawer */}
                 {INDUSTRY_CATEGORY_GUIDELINES[industry] && (
                   <div className="space-y-2.5">
-                    <div className="text-[10px] font-black uppercase tracking-widest text-slate-455">
+                    <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-455">
                       Standard Categories
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {INDUSTRY_CATEGORY_GUIDELINES[industry].map((cat) => (
                         <span
                           key={cat}
-                          className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 text-xs font-semibold border border-slate-200"
+                          className="px-2.5 py-1 rounded-lg bg-surface-2 text-content-muted text-xs font-semibold border border-line"
                         >
                           {cat}
                         </span>
@@ -342,17 +342,17 @@ export const ImportModal = ({
               // CSV Import Left Sidebar Guidelines
               <div className="space-y-5">
                 {/* Template Download Card */}
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                <div className="p-4 rounded-2xl bg-surface border border-line space-y-3">
                   <div>
-                    <h4 className="text-xs font-bold text-slate-800">Need a data template?</h4>
-                    <p className="text-[11px] text-slate-400 mt-1">
+                    <h4 className="text-xs font-bold text-content">Need a data template?</h4>
+                    <p className="text-[11px] text-content-subtle mt-1">
                       Download our structured CSV spreadsheet to ensure formatting matches our parser rules.
                     </p>
                   </div>
                   <button
                     onClick={onDownloadTemplate}
                     type="button"
-                    className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-violet-600 hover:bg-slate-50 shadow-sm transition-colors cursor-pointer"
+                    className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-surface border border-line text-xs font-bold text-accent hover:bg-surface shadow-sm transition-colors cursor-pointer"
                   >
                     <Download size={13} />
                     Download template CSV
@@ -361,17 +361,17 @@ export const ImportModal = ({
 
                 {/* Expected columns with tags */}
                 <div className="space-y-2.5">
-                  <div className="text-[10px] font-black uppercase tracking-widest text-slate-455">
+                  <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-455">
                     File Columns Mapping
                   </div>
                   <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
                     {requiredColumns.map((col) => (
                       <div
                         key={col}
-                        className="flex items-center justify-between p-2 rounded-xl bg-slate-100 border border-slate-200 text-[11px] font-mono font-bold text-violet-700"
+                        className="flex items-center justify-between p-2 rounded-xl bg-surface-2 border border-line text-[11px] font-mono font-bold text-accent"
                       >
                         <span>{col}</span>
-                        <span className="text-[9px] font-sans font-extrabold uppercase px-1.5 py-0.5 rounded bg-violet-100 text-violet-700 tracking-wider">
+                        <span className="text-[9px] font-sans font-semibold uppercase px-1.5 py-0.5 rounded bg-accent-soft text-accent tracking-wider">
                           REQ
                         </span>
                       </div>
@@ -379,10 +379,10 @@ export const ImportModal = ({
                     {optionalColumns.map((col) => (
                       <div
                         key={col}
-                        className="flex items-center justify-between p-2 rounded-xl bg-slate-55 border border-slate-200 text-[11px] font-mono text-slate-500"
+                        className="flex items-center justify-between p-2 rounded-xl bg-slate-55 border border-line text-[11px] font-mono text-content-muted"
                       >
                         <span>{col}</span>
-                        <span className="text-[9px] font-sans font-bold uppercase text-slate-400">
+                        <span className="text-[9px] font-sans font-bold uppercase text-content-subtle">
                           OPT
                         </span>
                       </div>
@@ -391,8 +391,8 @@ export const ImportModal = ({
                 </div>
 
                 {tip && (
-                  <div className="flex items-start gap-2 p-3.5 rounded-xl bg-slate-100 text-[11px] text-slate-500 border border-slate-200 leading-relaxed">
-                    <Info size={14} className="shrink-0 text-slate-400 mt-0.5" />
+                  <div className="flex items-start gap-2 p-3.5 rounded-xl bg-surface-2 text-[11px] text-content-muted border border-line leading-relaxed">
+                    <Info size={14} className="shrink-0 text-content-subtle mt-0.5" />
                     <span>{tip}</span>
                   </div>
                 )}
@@ -401,7 +401,7 @@ export const ImportModal = ({
           </div>
 
           {/* RIGHT COLUMN: WORKSPACE CONTENT */}
-          <div className="flex-1 p-6 overflow-y-auto flex flex-col justify-between bg-white">
+          <div className="flex-1 p-6 overflow-y-auto flex flex-col justify-between bg-surface">
             {activeTab === "manual" ? (
               // MANUAL FORM VIEW
               <div className="space-y-4">{manualEntry?.content}</div>
@@ -422,28 +422,28 @@ export const ImportModal = ({
                       onClick={() => inputRef.current?.click()}
                       style={{
                         borderColor: dragging ? accent : undefined,
-                        boxShadow: dragging ? `0 0 0 4px ${accent}15` : undefined,
-                        background: dragging ? `${accent}0a` : undefined,
+                        boxShadow: dragging ? "0 0 0 4px var(--accent-ring)" : undefined,
+                        background: dragging ? `color-mix(in srgb, ${accent} 4%, transparent)` : undefined,
                       }}
                       className={clsx(
-                        "border-2 border-dashed rounded-3xl p-12 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all duration-300",
+                        "border-2 border-dashed rounded-2xl p-12 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all duration-300",
                         dragging
                           ? "scale-[1.01]"
-                          : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                          : "border-line hover:border-line-strong hover:bg-surface"
                       )}
                     >
-                      <div className="h-16 w-16 rounded-2xl bg-slate-100 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform duration-300">
-                        <Upload size={28} className="text-slate-400 animate-bounce" />
+                      <div className="h-16 w-16 rounded-2xl bg-surface-2 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform duration-300">
+                        <Upload size={28} className="text-content-subtle animate-bounce" />
                       </div>
                       <div className="text-center space-y-1">
-                        <h4 className="font-heading text-sm font-extrabold text-slate-800">
+                        <h4 className="font-heading text-sm font-semibold text-content">
                           {dragging ? "Release to upload" : "Upload your inventory file"}
                         </h4>
-                        <p className="text-xs text-slate-400">
-                          Drag and drop files here, or <span className="text-violet-500 font-bold hover:underline">browse files</span>
+                        <p className="text-xs text-content-subtle">
+                          Drag and drop files here, or <span className="text-accent font-bold hover:underline">browse files</span>
                         </p>
                       </div>
-                      <span className="text-[10px] uppercase font-bold tracking-wider text-slate-300 bg-slate-50 px-2.5 py-0.5 rounded border border-slate-200">
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-content-subtle bg-surface px-2.5 py-0.5 rounded border border-line">
                         CSV or Excel (.xlsx, .xls)
                       </span>
                       <input
@@ -468,11 +468,11 @@ export const ImportModal = ({
                 {phase === "preview" && parsed && validation && (
                   <div className="space-y-4">
                     {/* Header: File info */}
-                    <div className="flex items-center gap-3 rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3">
-                      <FileSpreadsheet size={20} className="text-slate-400 shrink-0" />
+                    <div className="flex items-center gap-3 rounded-2xl bg-surface border border-line px-4 py-3">
+                      <FileSpreadsheet size={20} className="text-content-subtle shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <div className="text-xs font-bold text-slate-800 truncate">{file?.name}</div>
-                        <div className="text-[10px] text-slate-400 font-medium mt-0.5">
+                        <div className="text-xs font-bold text-content truncate">{file?.name}</div>
+                        <div className="text-[10px] text-content-subtle font-medium mt-0.5">
                           {parsed.rows.length} rows detected · {validation.valid.length} valid ·{" "}
                           {validation.invalid.length} invalid
                         </div>
@@ -489,34 +489,34 @@ export const ImportModal = ({
 
                     {/* Quick Stats Grid */}
                     <div className="grid grid-cols-3 gap-3">
-                      <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3 text-center">
-                        <div className="text-xl font-heading font-black text-emerald-600">{validation.valid.length}</div>
+                      <div className="rounded-2xl bg-surface border border-line p-3 text-center">
+                        <div className="text-xl font-heading font-semibold text-emerald-600">{validation.valid.length}</div>
                         <div className="text-[10px] text-emerald-500 font-bold mt-0.5 uppercase tracking-wider">Ready</div>
                       </div>
-                      <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3 text-center">
-                        <div className="text-xl font-heading font-black text-amber-600">{validation.invalid.length}</div>
+                      <div className="rounded-2xl bg-surface border border-line p-3 text-center">
+                        <div className="text-xl font-heading font-semibold text-amber-600">{validation.invalid.length}</div>
                         <div className="text-[10px] text-amber-500 font-bold mt-0.5 uppercase tracking-wider">Skipped</div>
                       </div>
-                      <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3 text-center">
-                        <div className="text-xl font-heading font-black text-slate-700">{parsed.rows.length}</div>
-                        <div className="text-[10px] text-slate-500 font-bold mt-0.5 uppercase tracking-wider">Total</div>
+                      <div className="rounded-2xl bg-surface border border-line p-3 text-center">
+                        <div className="text-xl font-heading font-semibold text-content">{parsed.rows.length}</div>
+                        <div className="text-[10px] text-content-muted font-bold mt-0.5 uppercase tracking-wider">Total</div>
                       </div>
                     </div>
 
                     {/* Preview Table */}
                     {parsed.rows.length > 0 && (
                       <div className="space-y-1.5">
-                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <div className="text-[10px] font-semibold text-content-subtle uppercase tracking-widest">
                           Preview (First 5 Rows)
                         </div>
-                        <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+                        <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
                           <table className="w-full text-xs">
-                            <thead className="bg-slate-50 border-b border-slate-200">
+                            <thead className="bg-surface border-b border-line">
                               <tr>
                                 {parsed.headers.slice(0, 6).map((h) => (
                                   <th
                                     key={h}
-                                    className="px-3 py-2 text-left font-bold text-slate-500 font-mono tracking-tight"
+                                    className="px-3 py-2 text-left font-bold text-content-muted font-mono tracking-tight"
                                   >
                                     {h}
                                   </th>
@@ -525,10 +525,10 @@ export const ImportModal = ({
                             </thead>
                             <tbody className="divide-y divide-slate-105">
                               {parsed.rows.slice(0, 5).map((row, i) => (
-                                <tr key={i} className="hover:bg-slate-50/40">
+                                <tr key={i} className="hover:bg-surface/40">
                                   {parsed.headers.slice(0, 6).map((h) => (
-                                    <td key={h} className="px-3 py-2 text-slate-600 max-w-[120px] truncate">
-                                      {row[h] || <span className="text-slate-300">—</span>}
+                                    <td key={h} className="px-3 py-2 text-content-muted max-w-[120px] truncate">
+                                      {row[h] || <span className="text-content-subtle">—</span>}
                                     </td>
                                   ))}
                                 </tr>
@@ -541,7 +541,7 @@ export const ImportModal = ({
 
                     {/* Validation Warnings */}
                     {validation.invalid.length > 0 && (
-                      <div className="rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden">
+                      <div className="rounded-2xl border border-line bg-surface overflow-hidden">
                         <button
                           type="button"
                           onClick={() => setShowErrors((v) => !v)}
@@ -554,7 +554,7 @@ export const ImportModal = ({
                           {showErrors ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                         </button>
                         {showErrors && (
-                          <div className="px-4 pb-3 space-y-1.5 max-h-32 overflow-y-auto border-t border-slate-200 pt-2.5">
+                          <div className="px-4 pb-3 space-y-1.5 max-h-32 overflow-y-auto border-t border-line pt-2.5">
                             {validation.invalid.map((err, i) => (
                               <div key={i} className="text-[11px] text-amber-700">
                                 <span className="font-mono font-bold">Row {err.rowIndex}:</span>{" "}
@@ -588,7 +588,7 @@ export const ImportModal = ({
                     <div className="flex flex-col items-center gap-3 py-4 text-center">
                       {result.failed === 0 ? (
                         <div
-                          className="h-16 w-16 rounded-3xl flex items-center justify-center text-white animate-scale-in shadow-lg"
+                          className="h-16 w-16 rounded-2xl flex items-center justify-center text-white animate-scale-in shadow-lg"
                           style={{
                             background: `linear-gradient(135deg, #10B981 0%, #059669 100%)`,
                             boxShadow: `0 8px 20px rgba(16, 185, 129, 0.25)`,
@@ -598,7 +598,7 @@ export const ImportModal = ({
                         </div>
                       ) : (
                         <div
-                          className="h-16 w-16 rounded-3xl flex items-center justify-center text-white animate-scale-in shadow-lg"
+                          className="h-16 w-16 rounded-2xl flex items-center justify-center text-white animate-scale-in shadow-lg"
                           style={{
                             background: `linear-gradient(135deg, #F59E0B 0%, #D97706 100%)`,
                             boxShadow: `0 8px 20px rgba(245, 158, 11, 0.25)`,
@@ -608,10 +608,10 @@ export const ImportModal = ({
                         </div>
                       )}
                       <div>
-                        <h4 className="font-heading text-lg font-black text-slate-800">
+                        <h4 className="font-heading text-lg font-semibold text-content">
                           {result.failed === 0 ? "Import Complete!" : "Import Finished with Errors"}
                         </h4>
-                        <p className="text-xs text-slate-400 mt-0.5">
+                        <p className="text-xs text-content-subtle mt-0.5">
                           CSV rows processed successfully through API upsert.
                         </p>
                       </div>
@@ -619,22 +619,22 @@ export const ImportModal = ({
 
                     {/* Result breakdown grids */}
                     <div className="grid grid-cols-3 gap-3">
-                      <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3 text-center">
-                        <div className="text-xl font-heading font-black text-emerald-600">{result.created}</div>
+                      <div className="rounded-2xl bg-surface border border-line p-3 text-center">
+                        <div className="text-xl font-heading font-semibold text-emerald-600">{result.created}</div>
                         <div className="text-[10px] text-emerald-500 font-bold mt-0.5 uppercase tracking-wider">Created</div>
                       </div>
-                      <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3 text-center">
-                        <div className="text-xl font-heading font-black text-slate-500">{result.skipped}</div>
+                      <div className="rounded-2xl bg-surface border border-line p-3 text-center">
+                        <div className="text-xl font-heading font-semibold text-content-muted">{result.skipped}</div>
                         <div className="text-[10px] text-slate-455 font-bold mt-0.5 uppercase tracking-wider">Skipped</div>
                       </div>
-                      <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3 text-center">
-                        <div className="text-xl font-heading font-black text-rose-500">{result.failed}</div>
+                      <div className="rounded-2xl bg-surface border border-line p-3 text-center">
+                        <div className="text-xl font-heading font-semibold text-rose-500">{result.failed}</div>
                         <div className="text-[10px] text-rose-400 font-bold mt-0.5 uppercase tracking-wider">Failed</div>
                       </div>
                     </div>
 
                     {result.errors.length > 0 && (
-                      <div className="rounded-2xl border border-slate-205 bg-slate-50 overflow-hidden">
+                      <div className="rounded-2xl border border-slate-205 bg-surface overflow-hidden">
                         <button
                           type="button"
                           onClick={() => setShowErrors((v) => !v)}
@@ -647,7 +647,7 @@ export const ImportModal = ({
                           {showErrors ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                         </button>
                         {showErrors && (
-                          <div className="px-4 pb-3 space-y-1.5 max-h-32 overflow-y-auto border-t border-slate-200 pt-2.5">
+                          <div className="px-4 pb-3 space-y-1.5 max-h-32 overflow-y-auto border-t border-line pt-2.5">
                             {result.errors.map((err, i) => (
                               <div key={i} className="text-[11px] text-rose-700">
                                 <span className="font-mono font-bold">
@@ -668,7 +668,7 @@ export const ImportModal = ({
         </div>
 
         {/* Dynamic Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/50 shrink-0">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-line bg-surface/50 shrink-0">
           {activeTab === "manual" && manualEntry ? (
             <>
               <Button
@@ -683,11 +683,11 @@ export const ImportModal = ({
                 loading={manualEntry.isSubmitting}
                 onClick={manualEntry.onSubmit}
                 style={{
-                  background: manualEntry.isSubmitting ? undefined : `linear-gradient(135deg, ${accent} 0%, ${accent}dd 100%)`,
+                  background: manualEntry.isSubmitting ? undefined : accent,
                   borderColor: accent,
-                  boxShadow: `0 4px 14px ${accent}30`,
+                  boxShadow: "var(--shadow-sm)",
                 }}
-                className="text-white font-semibold flex items-center gap-1 cursor-pointer"
+                className="text-accent-fg font-semibold flex items-center gap-1 cursor-pointer"
               >
                 {manualEntry.submitLabel ?? "Create Product"}
                 <ArrowRight size={14} />
@@ -713,11 +713,11 @@ export const ImportModal = ({
                   disabled={!validation || validation.valid.length === 0}
                   icon={<Upload size={14} />}
                   style={{
-                    background: `linear-gradient(135deg, ${accent} 0%, ${accent}dd 100%)`,
+                    background: accent,
                     borderColor: accent,
-                    boxShadow: `0 4px 14px ${accent}30`,
+                    boxShadow: "var(--shadow-sm)",
                   }}
-                  className="text-white font-semibold flex items-center gap-1.5 cursor-pointer animate-pulse-glow"
+                  className="text-accent-fg font-semibold flex items-center gap-1.5 cursor-pointer animate-pulse-glow"
                 >
                   Import {validation?.valid.length ?? 0} rows
                 </Button>

@@ -12,6 +12,7 @@ import { Navigate, useNavigate } from "react-router-dom";
 
 import { onboardingApi } from "@/api/onboarding";
 import { Button } from "@/components/ui/Button";
+import { LogoMark } from "@/components/ui/Logo";
 import { Stepper, type StepperItem } from "@/components/ui/Stepper";
 import { useAuthStore } from "@/stores/auth";
 import type { OnboardingStateUpdate, OnboardingStepKey } from "@/types/api";
@@ -179,9 +180,7 @@ export const OnboardingPage = () => {
       <aside className="hidden w-[320px] shrink-0 flex-col justify-between border-r border-line bg-surface px-8 py-9 lg:flex">
         <div>
           <div className="mb-9 flex items-center gap-2.5">
-            <div className="grid h-9 w-9 place-items-center rounded-xl bg-accent">
-              <span className="font-heading text-lg font-bold text-accent-fg">P</span>
-            </div>
+            <LogoMark size={36} />
             <span className="font-heading text-lg font-bold tracking-tight text-content">SANKET</span>
           </div>
 

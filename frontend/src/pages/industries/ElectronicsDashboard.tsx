@@ -1,69 +1,23 @@
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Cpu,
-  AlertTriangle,
-  Boxes,
-  Tag,
-  Clock,
-  Package,
-  ShipIcon,
-} from "@/components/ui/icons";
+import { Cpu, AlertTriangle, Boxes, Tag, Clock } from "@/components/ui/icons";
 import { industryApi } from "@/api/industry";
 import { forecastsApi } from "@/api/forecasts";
 import { Card } from "@/components/ui/Card";
 import { KPICard } from "@/components/charts/KPICard";
 import { PageLoader } from "@/components/ui/Spinner";
-import { Badge } from "@/components/ui/Badge";
 import { ForecastChart } from "@/components/charts/ForecastChart";
 import { IndustryHero } from "@/components/dashboard/IndustryHero";
-import { InsightCallout } from "@/components/dashboard/InsightCallout";
 import { RankedCategories } from "@/components/dashboard/RankedCategories";
 import { fmtCompact } from "@/utils/format";
-import { industryAccent } from "@/utils/colors";
 
 
-const RISK_SIGNALS = [
-  {
-    component: "TSMC 5nm Chips",
-    risk: "High",
-    leadTime: "18 weeks",
-    tone: "danger" as const,
-  },
-  {
-    component: "Samsung OLED Panels",
-    risk: "Medium",
-    leadTime: "10 weeks",
-    tone: "warning" as const,
-  },
-  {
-    component: "Lithium Battery Cells",
-    risk: "Medium",
-    leadTime: "8 weeks",
-    tone: "warning" as const,
-  },
-  {
-    component: "Bosch MEMS Sensors",
-    risk: "Low",
-    leadTime: "4 weeks",
-    tone: "success" as const,
-  },
-];
 
-const KPI_SPARKS = {
-  skus: [1120, 1145, 1138, 1160, 1175, 1182, 1198],
-  disruptions: [4, 5, 7, 9, 8, 11, 12],
-  price: [18, 21, 19, 24, 22, 26, 28],
-  leadTime: [12, 13, 14, 16, 15, 17, 18],
-};
 
-const RISK_BADGE: Record<string, "danger" | "warning" | "success"> = {
-  High: "danger",
-  Medium: "warning",
-  Low: "success",
-};
 
 export const ElectronicsDashboard = () => {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["electronics-overview"],
     queryFn: () => industryApi.overview("electronics"),
   });
@@ -73,7 +27,8 @@ export const ElectronicsDashboard = () => {
     enabled: true,
   });
 
-  if (isLoading || !data) return <PageLoader />;
+  if (isLoading) return <PageLoader />;
+  if (!data) return <EmptyState title="Industry overview unavailable" description="The source could not be loaded. No business metrics have been inferred." action={<button className="btn-secondary" onClick={() => void refetch()}>Retry overview</button>} />;
   const k = data.kpis;
 
   return (
@@ -87,61 +42,40 @@ export const ElectronicsDashboard = () => {
         icon={<Cpu size={26} />}
         horizonWeeks={data.forecast_horizon_weeks}
         models={data.active_models}
-        healthScore={68}
-        extraBadge={
-          <span className="flex items-center gap-1 text-rose-500 font-semibold">
-            <AlertTriangle size={10} /> 3 supply risks
-          </span>
-        }
       />
 
       {/* ── Insight Callout ── */}
-      <InsightCallout
-        insight="TSMC 5nm chip shortage may constrain Smartphone production by 23% in Q3 — consider forward purchasing within 2 weeks."
-        confidence={82}
-        category="Supply Chain Risk"
-        tone="danger"
-        icon={<ShipIcon size={18} />}
-        ctaLabel="View Risk Details"
-      />
+      <Card title="Signal insight"><p className="text-sm text-content-muted">No verified signal narrative is available from this overview. Review the source before acting.</p><Link to="/workspace/trends" className="mt-3 inline-flex text-sm font-medium text-accent">Review trend evidence</Link></Card>
 
       {/* ── KPI Cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           label="Active SKUs"
-          value={fmtCompact(k.active_skus)}
+          value={k.active_skus == null ? "Unavailable" : fmtCompact(k.active_skus)}
           icon={<Boxes size={15} />}
-          delta={0.042}
-          subtitle="vs. prior month"
+          subtitle="From the current source report"
           tone="default"
-          sparkPoints={KPI_SPARKS.skus}
         />
         <KPICard
           label="Logistics Disruptions"
-          value={fmtCompact(k.logistics_disruption_signals)}
+          value={k.logistics_disruption_signals == null ? "Unavailable" : fmtCompact(k.logistics_disruption_signals)}
           icon={<AlertTriangle size={15} />}
-          delta={0.18}
-          subtitle="3 high-severity active"
+          subtitle="From the current source report"
           tone={k.logistics_disruption_signals > 5 ? "danger" : "warning"}
-          sparkPoints={KPI_SPARKS.disruptions}
         />
         <KPICard
           label="Competitor Price Moves"
-          value={fmtCompact(k.competitor_price_signals)}
+          value={k.competitor_price_signals == null ? "Unavailable" : fmtCompact(k.competitor_price_signals)}
           icon={<Tag size={15} />}
-          delta={0.12}
-          subtitle="Last 7 days"
+          subtitle="From the current source report"
           tone="warning"
-          sparkPoints={KPI_SPARKS.price}
         />
         <KPICard
           label="Avg Lead Time"
-          value="18 wks"
+          value="Unavailable"
           icon={<Clock size={15} />}
-          delta={0.09}
-          subtitle="+2wk vs. Q1 avg"
+          subtitle="From the current source report"
           tone="danger"
-          sparkPoints={KPI_SPARKS.leadTime}
         />
       </div>
 
@@ -152,7 +86,7 @@ export const ElectronicsDashboard = () => {
           title="Demand Forecast"
           description="P10/P50/P90 · Component-risk adjusted · Weekly resolution"
         >
-          <ForecastChart rows={forecastData?.rows ?? []} accent={industryAccent.electronics} />
+          <ForecastChart rows={forecastData?.rows ?? []} accent="var(--chart-forecast)" />
         </Card>
 
         <Card title="Top Product Categories" description="Active SKU distribution">
@@ -161,33 +95,7 @@ export const ElectronicsDashboard = () => {
       </div>
 
       {/* ── Component Risk Panel ── */}
-      <Card
-        title="Component Risk Radar"
-        description="Critical supply components · Risk level · Estimated lead time"
-      >
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {RISK_SIGNALS.map((r) => (
-            <div
-              key={r.component}
-              className="flex flex-col gap-2 p-3.5 rounded-xl border border-line bg-surface-2"
-            >
-              <div className="flex items-center justify-between">
-                <div className="h-8 w-8 rounded-lg bg-surface-3 text-content-muted grid place-items-center">
-                  <Package size={15} />
-                </div>
-                <Badge variant={RISK_BADGE[r.risk]}>{r.risk} Risk</Badge>
-              </div>
-              <div>
-                <p className="text-[13px] font-semibold text-content leading-snug">{r.component}</p>
-                <div className="flex items-center gap-1 mt-1 text-xs text-content-subtle tabular-figs">
-                  <Clock size={12} />
-                  <span>Lead time: {r.leadTime}</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
+      <Card title="Component Risk Radar"><EmptyState variant="subtle" title="Detailed source signals unavailable" description="Signal counts above come from the overview. Open Trend Analysis to inspect available source evidence." action={<Link to="/workspace/trends" className="btn-secondary">Open Trend Analysis</Link>} /></Card>
     </div>
   );
 };

@@ -72,22 +72,22 @@ export const ResetPasswordPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-slate-50 dark:bg-ink-900 transition-colors duration-300">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-surface dark:bg-ink-900 transition-colors duration-300">
       {/* Skip link */}
       <a
         href="#reset-password-form"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-violet-600 focus:text-white focus:rounded-lg focus:text-sm focus:font-semibold"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-accent focus:text-white focus:rounded-lg focus:text-sm focus:font-semibold"
       >
         Skip to main content
       </a>
 
       {/* Decorative orbs */}
-      <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full bg-violet-500/15 blur-3xl pointer-events-none" aria-hidden="true" />
+      <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full bg-accent/15 blur-3xl pointer-events-none" aria-hidden="true" />
       <div className="absolute bottom-1/4 right-1/4 w-72 h-72 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" aria-hidden="true" />
 
       <main
         id="reset-password-form"
-        className="relative w-full max-w-md glass-strong rounded-3xl shadow-2xl overflow-hidden bg-white/70 dark:bg-[#0d1321]/80 border border-slate-200/50 dark:border-white/10 p-10"
+        className="relative w-full max-w-md glass-strong rounded-2xl shadow-2xl overflow-hidden bg-surface/70 dark:bg-[#0d1321]/80 border border-line/50 dark:border-white/10 p-10"
         role="main"
       >
         {/* Brand */}
@@ -95,7 +95,7 @@ export const ResetPasswordPage = () => {
           <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-accent shadow-lg shadow-accent-primary/20">
             <span className="text-lg font-bold text-white font-heading">P</span>
           </div>
-          <span className="text-xl font-bold tracking-tight text-slate-800 dark:text-white font-heading">SANKET</span>
+          <span className="text-xl font-bold tracking-tight text-content dark:text-content font-heading">SANKET</span>
         </div>
 
         {done ? (
@@ -104,15 +104,15 @@ export const ResetPasswordPage = () => {
             <div className="flex justify-center">
               <CheckCircle2 size={48} className="text-emerald-500" aria-hidden="true" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-800 dark:text-white font-heading">
+            <h1 className="text-2xl font-bold text-content dark:text-content font-heading">
               Password updated
             </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-content-muted dark:text-content-subtle">
               Your password has been reset successfully. You can now sign in with your new password.
             </p>
             <Link
               to="/login"
-              className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-violet-600 dark:text-violet-400 hover:underline"
+              className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-accent dark:text-accent hover:underline"
             >
               <ArrowLeft size={14} aria-hidden="true" />
               Go to sign in
@@ -124,15 +124,15 @@ export const ResetPasswordPage = () => {
             <div className="flex justify-center">
               <XCircle size={48} className="text-rose-500" aria-hidden="true" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-800 dark:text-white font-heading">
+            <h1 className="text-2xl font-bold text-content dark:text-content font-heading">
               Invalid reset link
             </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-content-muted dark:text-content-subtle">
               This password-reset link is invalid or has already been used.
             </p>
             <Link
               to="/forgot-password"
-              className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-violet-600 dark:text-violet-400 hover:underline"
+              className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-accent dark:text-accent hover:underline"
             >
               Request a new link
             </Link>
@@ -141,10 +141,10 @@ export const ResetPasswordPage = () => {
           /* Reset form */
           <form onSubmit={onSubmit} className="space-y-5" aria-label="Reset password form" noValidate>
             <div className="space-y-1">
-              <h1 className="text-2xl font-bold text-slate-800 dark:text-white font-heading">
+              <h1 className="text-2xl font-bold text-content dark:text-content font-heading">
                 Set new password
               </h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-content-muted dark:text-content-subtle">
                 Choose a strong password of at least 8 characters.
               </p>
             </div>
@@ -167,7 +167,7 @@ export const ResetPasswordPage = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                icon={<Lock size={14} className="text-slate-400" aria-hidden="true" />}
+                icon={<Lock size={14} className="text-content-subtle" aria-hidden="true" />}
                 placeholder="Min. 8 characters"
                 required
                 autoComplete="new-password"
@@ -181,12 +181,12 @@ export const ResetPasswordPage = () => {
                       <div
                         key={i}
                         className={`flex-1 rounded-full transition-colors duration-300 ${
-                          strength.score >= i ? strength.color : "bg-slate-200 dark:bg-slate-700"
+                          strength.score >= i ? strength.color : "bg-surface-3 dark:bg-surface-2"
                         }`}
                       />
                     ))}
                   </div>
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-[10px] text-content-subtle">
                     Strength: <span className="font-semibold">{strength.label}</span>
                   </p>
                 </div>
@@ -200,7 +200,7 @@ export const ResetPasswordPage = () => {
               type="password"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
-              icon={<Lock size={14} className="text-slate-400" aria-hidden="true" />}
+              icon={<Lock size={14} className="text-content-subtle" aria-hidden="true" />}
               placeholder="Re-enter new password"
               required
               autoComplete="new-password"
@@ -222,7 +222,7 @@ export const ResetPasswordPage = () => {
             <div className="text-center">
               <Link
                 to="/login"
-                className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-violet-600 dark:hover:text-violet-400 font-medium transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs text-content-muted hover:text-accent dark:hover:text-accent font-medium transition-colors"
               >
                 <ArrowLeft size={12} aria-hidden="true" />
                 Back to sign in

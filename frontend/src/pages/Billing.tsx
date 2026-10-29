@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CreditCard, Check } from "@/components/ui/icons";
@@ -206,10 +207,7 @@ export const BillingPage = () => {
   return (
     <div className="space-y-6">
       <div className="animate-fade-in stagger-1">
-        <h1 className="text-3xl font-bold tracking-tight text-slate-800">Billing</h1>
-        <p className="text-slate-500 mt-1">
-          Manage your subscription, usage, and payment method.
-        </p>
+        <PageHeader title="Billing" description={<> Manage your subscription, usage, and payment method. </>} />
       </div>
 
       {/* Payment went through at Razorpay but we could not activate. Sticky,
@@ -237,7 +235,7 @@ export const BillingPage = () => {
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xl font-semibold text-slate-800">
+                <span className="text-xl font-semibold text-content">
                   {plans?.find((p) => p.id === sub.plan_id)?.display_name ?? sub.plan_id}
                 </span>
                 <Badge
@@ -255,7 +253,7 @@ export const BillingPage = () => {
                   <Badge variant="warning">Ends {new Date(sub.current_period_end).toLocaleDateString()}</Badge>
                 )}
               </div>
-              <div className="text-sm text-slate-500 font-medium">
+              <div className="text-sm text-content-muted font-medium">
                 Current period: {new Date(sub.current_period_start).toLocaleDateString()} →{" "}
                 {new Date(sub.current_period_end).toLocaleDateString()}
               </div>
@@ -277,7 +275,7 @@ export const BillingPage = () => {
             </div>
           </div>
         ) : (
-          <div className="text-sm text-slate-500 font-medium">
+          <div className="text-sm text-content-muted font-medium">
             No active subscription. Pick a plan below to start.
           </div>
         )}
@@ -288,20 +286,20 @@ export const BillingPage = () => {
         <Card title="Current period usage" className="animate-fade-in stagger-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {Object.entries(usage.meters).map(([meter, m]) => (
-              <div key={meter} className="p-4 rounded-xl bg-white/70 border border-slate-200/60 shadow-sm transition-all duration-200 hover:-translate-y-px hover:shadow-md">
-                <div className="text-xs uppercase tracking-wider text-slate-400 font-bold">
+              <div key={meter} className="p-4 rounded-xl bg-surface/70 border border-line/60 shadow-sm transition-all duration-200 hover:-translate-y-px hover:shadow-md">
+                <div className="text-xs uppercase tracking-wider text-content-subtle font-bold">
                   {meter.replace(/_/g, " ")}
                 </div>
                 <div className="flex items-baseline justify-between mt-1">
-                  <span className="text-2xl font-bold text-slate-800">
+                  <span className="text-2xl font-bold text-content">
                     {fmtNumber(m.used)}
                   </span>
-                  <span className="text-xs text-slate-400 font-medium">
+                  <span className="text-xs text-content-subtle font-medium">
                     {m.limit != null ? `/ ${fmtNumber(m.limit)}` : "unlimited"}
                   </span>
                 </div>
                 {m.limit != null && (
-                  <div className="mt-2 h-1.5 w-full bg-slate-200/60 rounded-full overflow-hidden">
+                  <div className="mt-2 h-1.5 w-full bg-surface-3/60 rounded-full overflow-hidden">
                     <div
                       className={
                         m.pct >= 1 ? "bg-rose-500 h-full" : m.pct >= 0.8 ? "bg-amber-500 h-full" : "bg-emerald-500 h-full"
@@ -326,8 +324,8 @@ export const BillingPage = () => {
                 key={p.id}
                 className={`relative p-6 rounded-2xl border transition-all duration-300 hover:scale-[1.01] hover:shadow-lg ${
                   isCurrent
-                    ? "border-violet-400 bg-violet-50/5 ring-4 ring-violet-500/10 shadow-sm"
-                    : "border-slate-200/90 bg-white/70 hover:border-slate-350"
+                    ? "border-accent/20 bg-accent-soft/5 ring-4 ring-accent/10 shadow-sm"
+                    : "border-line/90 bg-surface/70 hover:border-slate-350"
                 }`}
               >
                 {isCurrent && (
@@ -335,14 +333,14 @@ export const BillingPage = () => {
                     Current Plan
                   </Badge>
                 )}
-                <div className="text-lg font-bold text-slate-800 leading-tight">{p.display_name}</div>
-                <div className="text-3xl font-extrabold text-slate-800 mt-2 tracking-tight">
+                <div className="text-lg font-bold text-content leading-tight">{p.display_name}</div>
+                <div className="text-3xl font-semibold text-content mt-2 tracking-tight">
                   {p.base_price_cents > 0 ? cents(p.base_price_cents) : "Custom"}
                   {p.base_price_cents > 0 && (
-                    <span className="text-xs font-normal text-slate-400 tracking-normal font-sans ml-1">/{p.billing_interval}</span>
+                    <span className="text-xs font-normal text-content-subtle tracking-normal font-sans ml-1">/{p.billing_interval}</span>
                   )}
                 </div>
-                <ul className="mt-5 space-y-2 text-xs font-medium text-slate-500">
+                <ul className="mt-5 space-y-2 text-xs font-medium text-content-muted">
                   {Object.entries(p.included_quotas).slice(0, 5).map(([k, v]) => (
                     <li key={k} className="flex items-center gap-2">
                       <Check size={14} className="text-emerald-500 shrink-0" />
@@ -377,18 +375,18 @@ export const BillingPage = () => {
       </Card>
 
       {/* Enterprise CTA */}
-      <Card className="animate-fade-in stagger-5 border-slate-200/80 bg-gradient-to-br from-slate-50/80 to-white/80 dark:from-slate-900/60 dark:to-slate-800/60">
+      <Card className="animate-fade-in stagger-5 border-line/80 bg-gradient-to-br from-slate-50/80 to-white/80 dark:from-slate-900/60 dark:to-slate-800/60">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-lg font-bold text-slate-800 dark:text-white">Enterprise</span>
+              <span className="text-lg font-bold text-content dark:text-content">Enterprise</span>
               <Badge variant="primary" className="text-[10px] font-bold uppercase tracking-wider">Custom</Badge>
             </div>
-            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-lg">
+            <p className="text-sm text-content-muted dark:text-content-subtle max-w-lg">
               Need custom SLAs, SSO, dedicated infrastructure, GxP compliance workflows, or volume pricing?
               Our enterprise team will scope a contract around your requirements.
             </p>
-            <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+            <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-content-muted dark:text-content-subtle">
               {[
                 "Unlimited SKUs",
                 "SSO / SAML",
@@ -406,7 +404,7 @@ export const BillingPage = () => {
           </div>
           <a
             href="mailto:enterprise@sanket-supply.com?subject=Enterprise%20Enquiry"
-            className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 text-sm font-semibold transition-colors shadow-sm"
+            className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-surface-2 hover:bg-surface-2 dark:bg-surface dark:hover:bg-surface-2 text-white dark:text-content text-sm font-semibold transition-colors shadow-sm"
           >
             Contact sales
           </a>
@@ -414,13 +412,13 @@ export const BillingPage = () => {
       </Card>
 
       {/* Standard Web Checkout (One-Time / Custom Orders) */}
-      <Card title="Standard Web Checkout" className="animate-fade-in stagger-6 border-slate-200/80 bg-white/70 dark:bg-slate-900/40">
+      <Card title="Standard Web Checkout" className="animate-fade-in stagger-6 border-line/80 bg-surface/70 dark:bg-surface/40">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="text-sm font-bold text-slate-800 dark:text-white">
+            <div className="text-sm font-bold text-content dark:text-content">
               Direct Order Checkout
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xl">
+            <p className="text-xs text-content-muted dark:text-content-subtle mt-1 max-w-xl">
               Test or execute Razorpay Standard Checkout order creation and instant cryptographic signature verification directly from this workspace.
             </p>
           </div>
@@ -448,10 +446,10 @@ export const BillingPage = () => {
         onClose={() => setPickPlan(null)}
       >
         <div className="space-y-4">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-content-muted dark:text-content-subtle">
             You'll be redirected to Razorpay to complete payment.
             {pickPlan && pickPlan.base_price_cents > 0 && (
-              <> Amount: <strong className="text-slate-800 dark:text-white">{inrFmt.format(pickPlan.base_price_cents / 100)}/{pickPlan.billing_interval}</strong>.</>
+              <> Amount: <strong className="text-content dark:text-content">{inrFmt.format(pickPlan.base_price_cents / 100)}/{pickPlan.billing_interval}</strong>.</>
             )}
           </p>
           <Input
@@ -487,7 +485,7 @@ export const BillingPage = () => {
         open={showCancelConfirm}
         title="Cancel subscription?"
         message={
-          <p className="text-sm text-slate-600 dark:text-slate-400">
+          <p className="text-sm text-content-muted dark:text-content-subtle">
             Your subscription will remain active until the end of the current billing period, then cancel automatically. You can resubscribe at any time.
           </p>
         }

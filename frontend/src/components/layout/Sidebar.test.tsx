@@ -185,7 +185,7 @@ describe("Sidebar search copy (deep audit F16)", () => {
     const search = screen.getByRole("searchbox", { name: "Search navigation" });
     expect(search.className).toMatch(/(^|\s)text-content(\s|$)/);
     expect(search.className).not.toMatch(/(^|\s)text-white(\s|$)/);
-    expect(search.className).toMatch(/lg:text-white/);
+    expect(search.className).not.toMatch(/lg:text-white/);
   });
 });
 

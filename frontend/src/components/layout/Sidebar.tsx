@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
 import clsx from "clsx";
 import { LogoMark } from "../ui/Logo";
+import { WorkspaceIndustryBadge } from "./WorkspaceIndustryBadge";
 import {
   LayoutDashboard,
   Package,
@@ -52,7 +53,7 @@ const BuildStamp = () => {
     <p
       className={clsx(
         "px-4 pt-2 font-mono text-[10px] leading-none tracking-wide",
-        untrusted ? "text-amber-500/70" : "text-content-muted/60 lg:text-[#BDD9D7]/40",
+        untrusted ? "text-amber-500/70" : "text-content-muted/60",
       )}
       title={
         untrusted
@@ -139,17 +140,17 @@ function NavItem({
       className={({ isActive }) =>
         clsx(
           "group relative flex items-center rounded-xl text-sm font-medium transition-all duration-200 tactile-press",
-          collapsed ? "justify-center h-10 w-10 mx-auto" : "gap-3 px-4 py-2.5 w-full",
+          collapsed ? "justify-center h-10 w-10 mx-auto" : "gap-3 px-3 py-2.5 w-full",
           isActive
-            ? "text-[var(--accent)] bg-[var(--accent-soft)] font-semibold shadow-sm lg:text-[#BDD9D7] lg:bg-white/[0.08]"
-            : "text-content-muted hover:text-content hover:bg-surface-3 lg:text-[#BDD9D7]/70 lg:hover:text-white lg:hover:bg-white/[0.04]",
+            ? "text-[var(--accent)] bg-[var(--accent-soft)] font-semibold shadow-sm"
+            : "text-content-muted hover:text-content hover:bg-surface-3",
         )
       }
     >
       {({ isActive }) => (
         <>
           {isActive && !collapsed && (
-            <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-[#BDD9D7] shadow-[0_0_8px_rgba(189,217,215,0.6)]" aria-hidden="true" />
+            <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-accent" aria-hidden="true" />
           )}
           <Icon
             size={18}
@@ -163,7 +164,7 @@ function NavItem({
             </span>
           )}
           {collapsed && (
-            <span className="pointer-events-none absolute left-14 z-50 whitespace-nowrap rounded-lg border border-line bg-surface px-2.5 py-1.5 text-xs font-semibold text-content opacity-0 shadow-md transition-all duration-150 group-hover:translate-x-1 group-hover:opacity-100 lg:border-white/10 lg:bg-[#03363D] lg:text-[#BDD9D7]" aria-hidden="true">
+            <span className="pointer-events-none absolute left-14 z-50 whitespace-nowrap rounded-lg border border-line bg-surface px-2.5 py-1.5 text-xs font-semibold text-content opacity-0 shadow-md transition-all duration-150 group-hover:translate-x-1 group-hover:opacity-100" aria-hidden="true">
               {label}
             </span>
           )}
@@ -174,9 +175,9 @@ function NavItem({
 }
 
 function SectionLabel({ children, collapsed }: { children: string; collapsed: boolean }) {
-  if (collapsed) return <div className="my-2.5 mx-2 border-t border-line lg:border-white/10" />;
+  if (collapsed) return <div className="my-2.5 mx-2 border-t border-line" />;
   return (
-    <p className="px-4 mb-2 mt-5 text-[10px] font-bold uppercase tracking-widest text-content-subtle lg:text-[#BDD9D7]/40">
+    <p className="px-4 mb-2 mt-5 text-[10px] font-bold uppercase tracking-widest text-content-subtle">
       {children}
     </p>
   );
@@ -328,14 +329,14 @@ export const Sidebar = () => {
           mobileOpen ? "translate-x-0 shadow-lg" : "-translate-x-full",
           // Desktop floating panel mode
           "lg:relative lg:translate-x-0 lg:z-20 lg:w-[var(--sb-w)] lg:h-full",
-          "lg:rounded-2xl lg:border lg:shadow-md"
+          "lg:border-r"
         )}
         style={{ ["--sb-w" as string]: collapsed ? "72px" : "244px" }}
       >
       {/* Logo */}
       <div
         className={clsx(
-          "flex items-center border-b border-line lg:border-white/10 py-5 transition-all duration-300",
+          "flex items-center border-b border-line py-5 transition-all duration-300",
           c ? "px-3 justify-center" : "px-5 gap-3",
         )}
       >
@@ -346,8 +347,8 @@ export const Sidebar = () => {
         />
         {!c && (
           <div className="animate-slide-in flex-1 leading-none">
-            <div className="font-display font-bold text-content lg:text-[#BDD9D7] tracking-tight text-sm">SANKET</div>
-            <div className="mt-1.5 text-[9px] uppercase tracking-widest text-content-subtle lg:text-[#BDD9D7]/50 font-semibold">
+            <div className="font-display font-semibold text-content tracking-tight text-xl">SANKET</div>
+            <div className="mt-1 text-[11px] text-content-muted">
               Predictive OS
             </div>
           </div>
@@ -366,8 +367,9 @@ export const Sidebar = () => {
 
       {!c && (
         <div className="px-4 pt-4">
+          <div className="mb-3 rounded-xl border border-line p-3 shadow-sm"><WorkspaceIndustryBadge /></div>
           <label className="relative block">
-            <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-content-subtle lg:text-[#BDD9D7]/55" aria-hidden="true" />
+            <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-content-subtle" aria-hidden="true" />
             {/* Semantic tokens on the light mobile drawer; the teal-on-dark
                 treatment applies only to the desktop rail (deep audit F10). */}
             <input
@@ -377,15 +379,15 @@ export const Sidebar = () => {
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Find a page…"
               aria-label="Search navigation"
-              className="h-9 w-full rounded-xl border border-line bg-surface-2 pl-9 pr-14 text-xs text-content outline-none placeholder:text-content-muted focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)] lg:border-white/10 lg:bg-white/[0.06] lg:text-white lg:placeholder:text-[#BDD9D7]/60 lg:focus:border-[#BDD9D7]/45 lg:focus:ring-[#BDD9D7]/10"
+              className="h-9 w-full rounded-xl border border-line bg-surface-2 pl-9 pr-14 text-xs text-content outline-none placeholder:text-content-muted focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
             />
-            <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 rounded border border-line px-1.5 py-0.5 font-mono text-[9px] text-content-subtle lg:border-white/10 lg:text-[#BDD9D7]/60" aria-hidden="true">{isApplePlatform() ? "⌘K" : "Ctrl K"}</span>
+            <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 rounded border border-line px-1.5 py-0.5 font-mono text-[9px] text-content-subtle" aria-hidden="true">{isApplePlatform() ? "⌘K" : "Ctrl K"}</span>
           </label>
         </div>
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto overflow-x-hidden">
+      <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto overflow-x-hidden">
         {visibleSections.map((section) => section.entries.length > 0 && (
           <div key={section.label}>
             <SectionLabel collapsed={c}>{section.label}</SectionLabel>
@@ -395,7 +397,7 @@ export const Sidebar = () => {
           </div>
         ))}
         {!c && search.trim() && visibleSections.every((section) => section.entries.length === 0) && (
-          <p className="px-4 py-6 text-center text-xs text-content-subtle lg:text-[#BDD9D7]/60">No page matches “{search}”.</p>
+          <p className="px-4 py-6 text-center text-xs text-content-subtle">No page matches “{search}”.</p>
         )}
 
         {isPharma && (
@@ -411,14 +413,14 @@ export const Sidebar = () => {
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-line lg:border-white/10 flex flex-col gap-1.5">
+      <div className="p-4 border-t border-line flex flex-col gap-1.5">
         <NavItem entry={{ to: "/workspace/settings", label: "Settings", icon: SettingsIcon }} collapsed={c} onNavigate={closeMobile} />
 
         <button
           onClick={toggle}
           className={clsx(
-            "group relative hidden lg:flex items-center rounded-xl text-sm font-medium text-content-muted hover:text-content hover:bg-surface-3 lg:text-[#BDD9D7]/80 lg:hover:text-white lg:hover:bg-white/5 transition-all duration-150 tactile-press",
-            c ? "justify-center h-10 w-10 mx-auto" : "gap-3 px-4 py-2.5 w-full",
+            "group relative hidden lg:flex items-center rounded-xl text-sm font-medium text-content-muted hover:text-content hover:bg-surface-3 transition-all duration-150 tactile-press",
+            c ? "justify-center h-10 w-10 mx-auto" : "gap-3 px-3 py-2.5 w-full",
           )}
           title={c ? "Expand sidebar (Ctrl + /)" : "Collapse sidebar (Ctrl + /)"}
           aria-label={c ? "Expand sidebar" : "Collapse sidebar"}

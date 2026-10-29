@@ -78,7 +78,7 @@ export const Modal = ({
 
   return createPortal(
     <div
-      className={clsx("fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto bg-slate-950/40 backdrop-blur-md animate-fade-in",
+      className={clsx("fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto bg-black/30 backdrop-blur-sm animate-fade-in",
         size === "wide" ? "pt-[4dvh]" : "pt-[10vh]")}
       onClick={onClose}
     >
@@ -89,7 +89,7 @@ export const Modal = ({
         aria-labelledby={titleId.current}
         tabIndex={-1}
         className={clsx(
-          "w-full rounded-2xl p-7 animate-slide-up shadow-lg border border-line bg-surface outline-none",
+          "min-w-0 w-full rounded-[16px] p-5 sm:p-6 animate-slide-up shadow-lg border border-line bg-surface outline-none",
           sz,
         )}
         onClick={(e) => e.stopPropagation()}

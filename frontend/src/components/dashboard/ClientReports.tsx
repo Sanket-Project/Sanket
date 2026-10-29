@@ -23,14 +23,14 @@ export function ClientReports({ report }: { report: ClientReportData }) {
       <h1 className="mt-2 font-heading text-3xl font-semibold tracking-tight text-content sm:text-4xl">Your sales, at a glance</h1>
       <p className="mt-2 text-sm text-content-muted">See how much you sold and where it came from.</p>
     </header>
-    <Card className="!bg-[var(--accent)] !text-[var(--accent-fg)] !border-transparent !p-6 sm:!p-8">
-      <div className="grid items-end gap-8 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+    <Card className="sales-report-summary">
+      <div className="grid items-end gap-5 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <div>
-          <p className="text-sm opacity-80">Sales after returns</p>
-          <p className="mt-3 break-words font-heading text-4xl font-semibold tracking-tight sm:text-5xl">{money(report.sales.net_amount)}</p>
-          <p className="mt-4 text-sm opacity-80">{report.sales.period}</p>
+          <p className="text-sm text-content-muted">Sales after returns</p>
+          <p className="mt-3 break-words font-heading text-3xl font-semibold tracking-tight text-content">{money(report.sales.net_amount)}</p>
+          <p className="mt-3 text-xs text-content-muted">{report.sales.period}</p>
         </div>
-        <div className="border-t border-current/20 pt-5 md:border-l md:border-t-0 md:pl-8 md:pt-0">
+        <div className="border-t border-line pt-4 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">
           <p className="font-mono text-3xl font-semibold">{count(report.sales.net_units)}</p>
           <p className="mt-1 text-sm opacity-80">items sold, after returns</p>
           <p className="mt-4 text-xs leading-relaxed opacity-80">From your uploaded sales report. Growth is unavailable without a comparable earlier period.</p>

@@ -19,7 +19,7 @@ import {
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "@/stores/auth";
-import { WorkspaceIndustryBadge } from "@/components/layout/WorkspaceIndustryBadge";
+import { NavigationSearch } from "@/components/layout/NavigationSearch";
 import { Button } from "@/components/ui/Button";
 import { useIndustryContext } from "@/hooks/useIndustryContext";
 import { Badge } from "@/components/ui/Badge";
@@ -69,14 +69,14 @@ export const TopBar = () => {
 
   // Use a shared query key so if the ShortageAlerts page is also mounted,
   // React Query deduplicates the request and serves from the same cache entry.
-  const { data: openAlerts } = useQuery({
+  const { data: openAlerts, isPending: alertsPending, isError: alertsFailed } = useQuery({
     queryKey: ["alerts", activeIndustry, "open", "all"],
     queryFn: () => shortageAlertsApi.list({ status: "open", hours: 168, limit: 200 }),
     refetchInterval: 30_000,
     enabled: !!activeIndustry,
     select: (data) => data.slice(0, 5),
   });
-  const { data: decisionData } = useQuery({
+  const { data: decisionData, isPending: decisionsPending, isError: decisionsFailed } = useQuery({
     queryKey: ["decisions", activeIndustry, "open", "topbar"],
     queryFn: () => decisionsApi.list({ status: "open", limit: 50 }),
     staleTime: 30_000,
@@ -97,6 +97,19 @@ export const TopBar = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!showProfile && !showNotifications) return;
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      const container = showProfile ? profileRef.current : notificationRef.current;
+      setShowProfile(false);
+      setShowNotifications(false);
+      container?.querySelector<HTMLButtonElement>("button")?.focus();
+    };
+    window.addEventListener("keydown", onEscape);
+    return () => window.removeEventListener("keydown", onEscape);
+  }, [showProfile, showNotifications]);
 
   const SEVERITY_ICONS = {
     critical: <AlertOctagon size={15} className="text-rose-500 shrink-0 mt-0.5" />,
@@ -171,9 +184,9 @@ export const TopBar = () => {
     "relative h-9 w-9 grid place-items-center rounded-xl border border-line bg-surface text-content-muted hover:text-content hover:bg-surface-2 hover:border-line-strong transition-all duration-200 shadow-sm active:scale-95 shrink-0";
 
   return (
-    <header className="h-14 px-6 flex items-center justify-between relative z-30 shrink-0 transition-all duration-300 ease-in-out border-b border-line bg-surface lg:rounded-2xl lg:border lg:bg-surface/75 lg:backdrop-blur-md lg:shadow-sm lg:px-6">
+    <header className="min-h-16 px-4 py-2 flex flex-wrap items-center justify-between gap-2 relative z-30 shrink-0 border-b border-line bg-surface md:px-6 lg:px-5">
       {/* Left: workspace selector + breadcrumbs */}
-      <div className="flex items-center gap-4 min-w-0">
+      <div className="flex items-center gap-2 md:gap-4 min-w-0">
         <button
           onClick={toggleMobile}
           className="lg:hidden h-9 w-9 grid place-items-center rounded-xl border border-line bg-surface text-content-muted hover:text-content hover:bg-surface-2 transition-all duration-150 tactile-press shrink-0"
@@ -183,9 +196,9 @@ export const TopBar = () => {
         >
           <Menu size={18} aria-hidden="true" />
         </button>
-        <WorkspaceIndustryBadge />
-        <div className="h-6 w-px bg-line hidden md:block" />
-        <div className="hidden md:flex items-center gap-1.5 text-[13px] font-medium select-none min-w-0">
+        <NavigationSearch />
+        <div className="h-6 w-px bg-line hidden xl:block" />
+        <div className="hidden xl:flex items-center gap-1.5 text-[13px] font-medium select-none min-w-0">
           {getBreadcrumbs(location.pathname).map((bc, idx, arr) => (
             <div key={idx} className="flex items-center gap-1.5">
               {bc.href ? (
@@ -207,7 +220,7 @@ export const TopBar = () => {
       </div>
 
       {/* Right: controls */}
-      <div className="flex items-center gap-2.5">
+      <div className="ml-auto flex items-center gap-1.5 sm:gap-2.5">
         {/* Currency: shown as recorded unless the user sets a dated rate */}
         <CurrencyMenu />
 
@@ -242,7 +255,7 @@ export const TopBar = () => {
           </button>
 
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-line bg-surface shadow-lg overflow-hidden animate-slide-up z-50">
+            <div className="fixed left-4 right-4 top-20 sm:absolute sm:left-auto sm:top-auto sm:right-0 sm:mt-2 sm:w-80 rounded-2xl border border-line bg-surface shadow-lg overflow-hidden animate-slide-up z-50">
               <div className="px-4 py-3 border-b border-line flex items-center justify-between">
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-content-subtle">
                   System Warnings
@@ -250,7 +263,9 @@ export const TopBar = () => {
                 {warningCount > 0 && <Badge variant="warning">{warningCount} open</Badge>}
               </div>
               <div className="max-h-[300px] overflow-y-auto">
-                {openAlerts && openAlerts.length > 0 ? (
+                {alertsPending || decisionsPending ? (
+                  <p role="status" className="p-5 text-sm text-content-muted">Checking alerts…</p>
+                ) : openAlerts && openAlerts.length > 0 ? (
                   <div className="divide-y divide-line">
                     {openAlerts.map((alert) => (
                       <Link
@@ -287,6 +302,11 @@ export const TopBar = () => {
                         </div>
                       </Link>
                     ))}
+                  </div>
+                ) : alertsFailed || decisionsFailed ? (
+                  <div role="status" className="p-5 text-sm">
+                    <p className="font-semibold text-content">Alerts unavailable</p>
+                    <p className="mt-1 leading-relaxed text-content-muted">We could not check every source. Open alerts to review and retry.</p>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
@@ -325,7 +345,7 @@ export const TopBar = () => {
               setShowProfile(!showProfile);
               setShowNotifications(false);
             }}
-            className="h-9 w-9 rounded-full grid place-items-center text-white shadow-sm ring-2 ring-[var(--surface)] hover:ring-[var(--accent-ring)] transition-all duration-200 active:scale-95 shrink-0 font-semibold text-xs tracking-wider"
+            className="h-9 w-9 rounded-full grid place-items-center text-accent-fg shadow-sm ring-2 ring-[var(--surface)] hover:ring-[var(--accent-ring)] transition-all duration-200 active:scale-95 shrink-0 font-semibold text-xs tracking-wider"
             style={{ background: "var(--accent)" }}
             aria-label="Open profile menu"
             aria-expanded={showProfile}
@@ -337,7 +357,7 @@ export const TopBar = () => {
           {showProfile && (
             <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-line bg-surface shadow-lg overflow-hidden animate-slide-up z-50">
               <div className="p-4 flex flex-col items-center text-center border-b border-line">
-                <div className="h-12 w-12 rounded-full grid place-items-center text-white shadow-sm mb-2" style={{ background: "var(--accent)" }}>
+                <div className="h-12 w-12 rounded-full grid place-items-center text-accent-fg shadow-sm mb-2" style={{ background: "var(--accent)" }}>
                   <UserIcon size={20} />
                 </div>
                 <h4 className="font-heading font-semibold text-sm text-content leading-tight">

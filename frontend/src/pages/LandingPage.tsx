@@ -153,7 +153,7 @@ const LiveTicker = () => {
         </span>
         <span className="font-mono text-xs tracking-[0.2em] text-[#DEDBC8]/80 uppercase">Live activity</span>
       </div>
-      <div className="w-px h-3 bg-white/10 shrink-0" />
+      <div className="w-px h-3 bg-surface/10 shrink-0" />
       <div className="flex-1 overflow-hidden relative h-3.5">
         <AnimatePresence mode="wait">
           <motion.span
@@ -503,14 +503,14 @@ export const LandingPage = () => {
           className="flex items-center gap-1 bg-[#090F0E]/85 backdrop-blur-2xl border border-white/[0.10] rounded-full px-2 py-2 shadow-[0_10px_32px_rgba(0,0,0,0.16)]"
         >
           <span className="font-mono text-xs tracking-[0.3em] text-[#DEDBC8]/80 uppercase px-4">SANKET</span>
-          <div className="w-px h-3 bg-white/10 mx-1" />
+          <div className="w-px h-3 bg-surface/10 mx-1" />
 
           {/* Desktop section links */}
           {sectionLinks.map((l) => (
             <button
               key={l.id}
               onClick={() => goToSection(l.id)}
-              className="hidden md:inline-block px-4 py-1.5 rounded-full text-xs font-medium tracking-wide text-white/65 hover:text-white hover:bg-white/[0.05] transition-all duration-200"
+              className="hidden md:inline-block px-4 py-1.5 rounded-full text-xs font-medium tracking-wide text-white/65 hover:text-white hover:bg-surface/[0.05] transition-all duration-200"
             >
               {l.label}
             </button>
@@ -521,14 +521,14 @@ export const LandingPage = () => {
               pricing table; the other three are here. */}
           <button
             onClick={() => navigate("/login")}
-            className="hidden md:inline-block px-4 py-1.5 rounded-full text-xs font-medium tracking-wide text-white/65 hover:text-white hover:bg-white/[0.05] transition-all duration-200"
+            className="hidden md:inline-block px-4 py-1.5 rounded-full text-xs font-medium tracking-wide text-white/65 hover:text-white hover:bg-surface/[0.05] transition-all duration-200"
           >
             Sign In
           </button>
 
           <button
             onClick={() => navigate("/login?mode=signup")}
-            className="hidden md:inline-block px-4 py-1.5 rounded-full text-xs font-medium tracking-wide text-white/65 hover:text-white hover:bg-white/[0.05] transition-all duration-200"
+            className="hidden md:inline-block px-4 py-1.5 rounded-full text-xs font-medium tracking-wide text-white/65 hover:text-white hover:bg-surface/[0.05] transition-all duration-200"
           >
             Create Workspace
           </button>
@@ -546,7 +546,7 @@ export const LandingPage = () => {
             onClick={() => setMobileMenuOpen((o) => !o)}
             aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileMenuOpen}
-            className="md:hidden w-8 h-8 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/[0.06] transition-all duration-200 ml-1"
+            className="md:hidden w-8 h-8 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-surface/[0.06] transition-all duration-200 ml-1"
           >
             {mobileMenuOpen ? <X size={16} /> : <Menu size={16} />}
           </button>
@@ -566,26 +566,26 @@ export const LandingPage = () => {
                 <button
                   key={l.id}
                   onClick={() => goToSection(l.id)}
-                  className="text-left px-4 py-3 rounded-xl text-sm font-medium text-white/80 hover:text-white hover:bg-white/[0.05] transition-all duration-200"
+                  className="text-left px-4 py-3 rounded-xl text-sm font-medium text-white/80 hover:text-white hover:bg-surface/[0.05] transition-all duration-200"
                 >
                   {l.label}
                 </button>
               ))}
               <button
                 onClick={() => { setMobileMenuOpen(false); navigate("/login"); }}
-                className="text-left px-4 py-3 rounded-xl text-sm font-medium text-white/80 hover:text-white hover:bg-white/[0.05] transition-all duration-200"
+                className="text-left px-4 py-3 rounded-xl text-sm font-medium text-white/80 hover:text-white hover:bg-surface/[0.05] transition-all duration-200"
               >
                 Sign In
               </button>
               <button
                 onClick={() => { setMobileMenuOpen(false); navigate("/login?mode=signup"); }}
-                className="text-left px-4 py-3 rounded-xl text-sm font-medium text-white/80 hover:text-white hover:bg-white/[0.05] transition-all duration-200"
+                className="text-left px-4 py-3 rounded-xl text-sm font-medium text-white/80 hover:text-white hover:bg-surface/[0.05] transition-all duration-200"
               >
                 Create Workspace
               </button>
               <button
                 onClick={() => { setMobileMenuOpen(false); setModal("sandbox"); }}
-                className="text-left px-4 py-3 rounded-xl text-sm font-medium text-white/80 hover:text-white hover:bg-white/[0.05] transition-all duration-200"
+                className="text-left px-4 py-3 rounded-xl text-sm font-medium text-white/80 hover:text-white hover:bg-surface/[0.05] transition-all duration-200"
               >
                 Try Live Sandbox
               </button>
@@ -602,7 +602,7 @@ export const LandingPage = () => {
 
       {/* ══════════════════════ HERO ══════════════════════ */}
       <section id="hero" ref={heroRef} className="relative h-screen p-3 md:p-5">
-        <div className="relative h-full rounded-2xl md:rounded-3xl overflow-hidden flex flex-col justify-end">
+        <div className="relative h-full rounded-2xl md:rounded-2xl overflow-hidden flex flex-col justify-end">
           {reducedMotion ? (
             <img
               src={`${import.meta.env.BASE_URL}assets/predictive_model.png`}
@@ -875,7 +875,7 @@ export const LandingPage = () => {
                 <button onClick={() => { setModal(null); navigate("/login?mode=signup"); }} className="text-white/30 hover:text-white/60 transition-all uppercase outline-none">
                   Create Workspace
                 </button>
-                <div className="w-px h-2 bg-white/10" />
+                <div className="w-px h-2 bg-surface/10" />
                 <button onClick={() => { setModal(null); navigate("/login"); }} className="text-[#DEDBC8]/60 hover:text-[#DEDBC8] transition-all uppercase font-medium outline-none">
                   Existing customer? Sign in
                 </button>

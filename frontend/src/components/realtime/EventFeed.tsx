@@ -40,23 +40,23 @@ export const EventFeed = ({ maxEvents = 25 }: { maxEvents?: number }) => {
       description={isConnected ? "Streaming…" : "Reconnecting"}
     >
       {events.length === 0 ? (
-        <div className="text-sm text-slate-400 py-6 text-center">
+        <div className="text-sm text-content-subtle py-6 text-center">
           No events yet. Generate a forecast or validate a signal to see live updates.
         </div>
       ) : (
-        <ul className="divide-y divide-slate-100 max-h-[360px] overflow-y-auto">
+        <ul className="divide-y divide-line max-h-[360px] overflow-y-auto">
           {events.map((e) => (
             <li key={e.event_id} className="py-2.5 flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <Badge variant={EVENT_BADGE[e.type] ?? "info"}>{e.type}</Badge>
-                <div className="text-xs text-slate-500 mt-1 truncate">
+                <div className="text-xs text-content-muted mt-1 truncate">
                   {Object.entries(e.data)
                     .slice(0, 3)
                     .map(([k, v]) => `${k}=${String(v).slice(0, 30)}`)
                     .join(" · ")}
                 </div>
               </div>
-              <span className="text-[10px] text-slate-400 whitespace-nowrap">
+              <span className="text-[10px] text-content-subtle whitespace-nowrap">
                 {fmtRelative(e.occurred_at)}
               </span>
             </li>

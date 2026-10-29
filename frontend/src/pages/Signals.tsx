@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -76,8 +77,8 @@ export const SignalsPage = () => {
       header: "Source",
       render: (s) => (
         <div>
-          <div className="text-slate-700">{s.source_name}</div>
-          {s.region && <div className="text-xs text-slate-400">{s.region}</div>}
+          <div className="text-content">{s.source_name}</div>
+          {s.region && <div className="text-xs text-content-subtle">{s.region}</div>}
         </div>
       ),
     },
@@ -85,7 +86,7 @@ export const SignalsPage = () => {
       key: "effective",
       header: "Effective",
       render: (s) => (
-        <span className="text-slate-500" title={fmtDateTime(s.effective_at)}>
+        <span className="text-content-muted" title={fmtDateTime(s.effective_at)}>
           {fmtRelative(s.effective_at)}
         </span>
       ),
@@ -104,7 +105,7 @@ export const SignalsPage = () => {
             {(s.impact_weight * 100).toFixed(0)}%
           </Badge>
         ) : (
-          <span className="text-slate-400">—</span>
+          <span className="text-content-subtle">—</span>
         ),
     },
     {
@@ -145,10 +146,7 @@ export const SignalsPage = () => {
         <div className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider text-[var(--accent)]">
           <Radio size={14} /> External signals
         </div>
-        <h1 className="mt-1 text-3xl font-bold tracking-tight text-content">Demand context beyond sales</h1>
-        <p className="mt-1 max-w-2xl text-content-subtle">
-          Weather, trends, regulatory, logistics — ingested into the forecasting feature store
-        </p>
+        <PageHeader title="Demand context beyond sales" description={<> Weather, trends, regulatory, logistics — ingested into the forecasting feature store </>} />
       </div>
 
       {signals.length > 0 ? (
@@ -193,7 +191,7 @@ export const SignalsPage = () => {
         open={!!confirmValidateId}
         title="Validate signal?"
         message={
-          <p className="text-sm text-slate-600 dark:text-slate-400">
+          <p className="text-sm text-content-muted dark:text-content-subtle">
             Validating this signal marks it as confirmed and incorporates it into the next
             forecast run. This action cannot be undone.
           </p>

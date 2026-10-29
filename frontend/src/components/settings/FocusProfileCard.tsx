@@ -42,10 +42,10 @@ const TagInput = ({
 
   return (
     <div className="space-y-1.5">
-      <label htmlFor={id} className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+      <label htmlFor={id} className="text-[10px] font-bold uppercase tracking-wider text-content-subtle">
         {label}
       </label>
-      <div className="flex flex-wrap gap-1.5 rounded-xl border border-slate-200/60 dark:border-line bg-white/70 dark:bg-surface-2 p-2.5 focus-within:ring-2 focus-within:ring-violet-500/40">
+      <div className="flex flex-wrap gap-1.5 rounded-xl border border-line/60 dark:border-line bg-surface/70 dark:bg-surface-2 p-2.5 focus-within:ring-2 focus-within:ring-accent/40">
         {values.map((v) => (
           <Badge key={v} variant="primary" className="flex items-center gap-1 text-xs">
             {v}
@@ -66,7 +66,7 @@ const TagInput = ({
           onKeyDown={onKeyDown}
           onBlur={() => add(draft)}
           placeholder={values.length ? "" : placeholder}
-          className="flex-1 min-w-[8rem] bg-transparent text-sm text-content outline-none placeholder:text-slate-400"
+          className="flex-1 min-w-[8rem] bg-transparent text-sm text-content outline-none placeholder:text-content-subtle"
         />
       </div>
     </div>
@@ -124,11 +124,11 @@ export const FocusProfileCard = () => {
       description="Scope forecasts and trend signals to what your business actually sells. A rice mill might track “rice, paddy, basmati”; a farm-supply store “fertilizer, seed, pesticide”."
     >
       {isLoading ? (
-        <p className="text-sm text-slate-400">Loading…</p>
+        <p className="text-sm text-content-subtle">Loading…</p>
       ) : (
         <div className="space-y-5">
           <div className="flex items-center gap-2 text-xs text-content-subtle">
-            <Target size={14} className="text-violet-500 shrink-0" aria-hidden="true" />
+            <Target size={14} className="text-accent shrink-0" aria-hidden="true" />
             Signals matching these terms are prioritized; everything else is filtered out of your
             forecasts.
           </div>
@@ -151,7 +151,7 @@ export const FocusProfileCard = () => {
           <div className="space-y-1.5 max-w-[12rem]">
             <label
               htmlFor="focus-horizon"
-              className="text-[10px] font-bold uppercase tracking-wider text-slate-400"
+              className="text-[10px] font-bold uppercase tracking-wider text-content-subtle"
             >
               Forecast horizon (weeks)
             </label>
@@ -162,14 +162,14 @@ export const FocusProfileCard = () => {
               max={52}
               value={horizon}
               onChange={(e) => setHorizon(e.target.value)}
-              className={`w-full rounded-xl border bg-white/70 dark:bg-surface-2 px-3 py-2 text-sm text-content outline-none focus:ring-2 focus:ring-violet-500/40 ${
-                horizonValid ? "border-slate-200/60 dark:border-line" : "border-rose-400"
+              className={`w-full rounded-xl border bg-surface/70 dark:bg-surface-2 px-3 py-2 text-sm text-content outline-none focus:ring-2 focus:ring-accent/40 ${
+                horizonValid ? "border-line/60 dark:border-line" : "border-rose-400"
               }`}
             />
           </div>
 
           <div className="flex items-center justify-between gap-3 pt-1">
-            <p className="text-[11px] text-slate-400 flex items-center gap-1">
+            <p className="text-[11px] text-content-subtle flex items-center gap-1">
               <Plus size={11} aria-hidden="true" />
               {keywords.length + categories.length} focus term
               {keywords.length + categories.length === 1 ? "" : "s"}

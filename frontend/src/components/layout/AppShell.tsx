@@ -15,7 +15,7 @@ export const AppShell = () => {
   return (
     <div
       id="app-shell-root"
-      className="flex h-screen w-screen overflow-hidden relative bg-canvas lg:p-2.5 lg:gap-2.5"
+      className="flex h-dvh w-full overflow-hidden relative bg-canvas"
       data-industry={industry}
       style={{ "--sidebar-w": collapsed ? "72px" : "244px" } as React.CSSProperties}
     >
@@ -34,14 +34,14 @@ export const AppShell = () => {
       <ScrollManager />
 
       {/* Made inert while the mobile navigation drawer is open (see Sidebar). */}
-      <div id="app-main-column" className="flex-1 flex flex-col overflow-hidden h-full">
+      <div id="app-main-column" className="min-w-0 flex-1 flex flex-col overflow-hidden h-full">
         <TopBar />
         <main
           id="main-content"
           tabIndex={-1}
-          className="flex-1 overflow-y-auto pt-3 pb-5 px-1 lg:px-2 animate-fade-in relative z-10 outline-none"
+          className="min-w-0 flex-1 overflow-y-auto px-4 py-6 md:px-6 lg:px-5 lg:py-3 animate-fade-in relative z-10 outline-none"
         >
-          <div className="mx-auto w-full max-w-[1480px]">
+          <div className="workspace-page mx-auto w-full max-w-[1480px]">
             <SetupBanner />
             <SubscriptionGate>
               <DataChat />

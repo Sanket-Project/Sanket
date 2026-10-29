@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "@/components/ui/icons";
-import "@/styles/landing.css";
+import { LogoMark } from "@/components/ui/Logo";
 
 const LAST_UPDATED = "June 1, 2026";
 
@@ -18,63 +18,38 @@ const LegalShell = ({
   subtitle: string;
   sections: LegalSection[];
 }) => (
-  <div className="landing-scope">
-    <nav className="nav-scrolled">
-      <div className="nav-in">
-        <Link to="/" className="nav-logo">
-          <svg className="nav-logo-mark" viewBox="0 0 64 64" fill="none">
-            <rect width="64" height="64" rx="14" fill="#03363D" />
-            <line x1="13" y1="46" x2="51" y2="46" stroke="#BDD9D7" strokeWidth="1.8" strokeLinecap="round" opacity="0.22" />
-            <path d="M13 42 C22 42 24 23 32 21 C40 19 43 33 51 30" fill="none" stroke="#BDD9D7" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" />
-            <circle cx="32" cy="21" r="3.4" fill="#ffffff" />
-          </svg>
-          <span>SANKET</span>
-        </Link>
-        <div className="nav-cta">
-          <Link to="/" className="btn btn-ghost">
-            <ArrowLeft size={14} /> Back to home
-          </Link>
-        </div>
+  <div className="min-h-dvh bg-canvas text-content">
+    <nav aria-label="Legal navigation" className="border-b border-line bg-surface">
+      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-6 py-5">
+        <Link to="/" className="flex items-center gap-3 font-heading font-semibold"><LogoMark size={32} />SANKET</Link>
+        <Link to="/" className="inline-flex items-center gap-2 text-sm text-content-muted hover:text-accent"><ArrowLeft size={14} /> Back to home</Link>
       </div>
     </nav>
-
-    <article className="legal">
-      <header className="legal-hd">
-        <div className="eyebrow violet">Legal</div>
-        <h1 className="legal-ttl">{title}</h1>
-        <p className="legal-sub">{subtitle}</p>
-        <p className="legal-updated">Last updated: {LAST_UPDATED}</p>
+    <article className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
+      <header className="border-b border-line pb-8">
+        <p className="text-xs font-medium text-accent">Legal</p>
+        <h1 className="mt-3 font-heading text-3xl font-semibold text-content">{title}</h1>
+        <p className="mt-3 text-base leading-relaxed text-content-muted">{subtitle}</p>
+        <p className="mt-4 text-xs text-content-subtle">Last updated: {LAST_UPDATED}</p>
       </header>
-
-      <div className="legal-body">
+      <div className="mt-9 space-y-9">
         {sections.map((s, i) => (
-          <section className="legal-section" key={i}>
-            <h2 className="legal-h2">
-              <span className="legal-num">{String(i + 1).padStart(2, "0")}</span>
-              {s.heading}
+          <section key={i} aria-labelledby={`legal-section-${i}`}>
+            <h2 id={`legal-section-${i}`} className="flex items-baseline gap-3 font-heading text-lg font-semibold text-content">
+              <span className="font-mono text-xs text-accent">{String(i + 1).padStart(2, "0")}</span>{s.heading}
             </h2>
-            {s.body.map((p, j) => (
-              <p className="legal-p" key={j}>
-                {p}
-              </p>
-            ))}
+            {s.body.map((p, j) => <p className="mt-3 text-sm leading-7 text-content-muted" key={j}>{p}</p>)}
           </section>
         ))}
-
-        <div className="legal-contact">
-          <p className="legal-p">
-            Questions about this document? Contact us at{" "}
-            <a href="mailto:legal@sanket.app" className="legal-link">
-              legal@sanket.app
-            </a>{" "}
+        <footer className="rounded-2xl border border-line bg-surface p-5">
+          <p className="text-sm leading-7 text-content-muted">
+            Questions about this document? Contact us at{" "}<a href="mailto:legal@sanket.app" className="text-accent underline underline-offset-4">legal@sanket.app</a>{" "}
             or write to SANKET Technologies, Inc., 500 Howard Street, San Francisco, CA 94105.
           </p>
-          <div className="legal-xlinks">
-            <Link to="/terms" className="legal-link">Terms of Service</Link>
-            <Link to="/privacy" className="legal-link">Privacy Policy</Link>
-            <Link to="/" className="legal-link">Home</Link>
+          <div className="mt-4 flex flex-wrap gap-5 text-sm font-medium text-accent">
+            <Link to="/terms">Terms of Service</Link><Link to="/privacy">Privacy Policy</Link><Link to="/">Home</Link>
           </div>
-        </div>
+        </footer>
       </div>
     </article>
   </div>

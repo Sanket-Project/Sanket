@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -44,12 +45,7 @@ export const ProfilePage = () => {
   return (
     <div className="space-y-6 max-w-2xl">
       <div className="animate-fade-in stagger-1">
-        <h1 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-white">
-          Your Profile
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">
-          Manage your personal details and account security.
-        </p>
+        <PageHeader title="Your Profile" description={<> Manage your personal details and account security. </>} />
       </div>
 
       {/* Avatar + name edit */}
@@ -58,15 +54,15 @@ export const ProfilePage = () => {
           <div className="flex items-center gap-5">
             {/* Initials avatar */}
             <div
-              className="h-20 w-20 rounded-3xl bg-gradient-accent flex items-center justify-center shadow-xl shrink-0"
+              className="h-20 w-20 rounded-2xl bg-gradient-accent flex items-center justify-center shadow-xl shrink-0"
               aria-hidden="true"
             >
-              <span className="text-3xl font-bold text-white select-none">
+              <span className="text-3xl font-bold text-accent-fg select-none">
                 {(displayName || email || "?")[0].toUpperCase()}
               </span>
             </div>
             <div className="space-y-1 min-w-0">
-              <p className="font-bold text-slate-800 dark:text-white text-lg leading-tight truncate">
+              <p className="font-bold text-content dark:text-content text-lg leading-tight truncate">
                 {displayName || email || "—"}
               </p>
               <div className="flex flex-wrap items-center gap-2">
@@ -87,7 +83,7 @@ export const ProfilePage = () => {
             label="Display name"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            icon={<User size={14} className="text-slate-400" aria-hidden="true" />}
+            icon={<User size={14} className="text-content-subtle" aria-hidden="true" />}
             placeholder="Your full name"
           />
 
@@ -103,20 +99,20 @@ export const ProfilePage = () => {
       <Card title="Account Details" className="animate-fade-in stagger-3">
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div className="space-y-1">
-            <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            <dt className="text-[10px] font-bold uppercase tracking-wider text-content-subtle">
               Email address
             </dt>
-            <dd className="flex items-center gap-1.5 text-sm font-medium text-slate-700 dark:text-slate-200">
-              <Mail size={13} className="text-slate-400 shrink-0" aria-hidden="true" />
+            <dd className="flex items-center gap-1.5 text-sm font-medium text-content dark:text-content">
+              <Mail size={13} className="text-content-subtle shrink-0" aria-hidden="true" />
               {email ?? "—"}
             </dd>
-            <p className="text-[11px] text-slate-400">Managed by your identity provider.</p>
+            <p className="text-[11px] text-content-subtle">Managed by your identity provider.</p>
           </div>
 
           <div className="space-y-1">
-            <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Role</dt>
+            <dt className="text-[10px] font-bold uppercase tracking-wider text-content-subtle">Role</dt>
             <dd className="flex items-center gap-1.5">
-              <ShieldCheck size={13} className="text-violet-500 shrink-0" aria-hidden="true" />
+              <ShieldCheck size={13} className="text-accent shrink-0" aria-hidden="true" />
               <Badge variant="primary" className="text-[10px] uppercase tracking-wider font-bold">
                 {role ?? "—"}
               </Badge>
@@ -124,22 +120,22 @@ export const ProfilePage = () => {
           </div>
 
           <div className="space-y-1">
-            <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            <dt className="text-[10px] font-bold uppercase tracking-wider text-content-subtle">
               User ID
             </dt>
             <dd>
-              <code className="font-mono text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200/60 dark:border-slate-700">
+              <code className="font-mono text-xs text-content-muted dark:text-content-subtle bg-surface dark:bg-surface-2 px-1.5 py-0.5 rounded border border-line/60 dark:border-line">
                 {userId ?? "—"}
               </code>
             </dd>
           </div>
 
           <div className="space-y-1">
-            <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            <dt className="text-[10px] font-bold uppercase tracking-wider text-content-subtle">
               Tenant ID
             </dt>
             <dd>
-              <code className="font-mono text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200/60 dark:border-slate-700">
+              <code className="font-mono text-xs text-content-muted dark:text-content-subtle bg-surface dark:bg-surface-2 px-1.5 py-0.5 rounded border border-line/60 dark:border-line">
                 {tenantId ?? "—"}
               </code>
             </dd>
@@ -151,10 +147,10 @@ export const ProfilePage = () => {
       <Card title="Password & Security" className="animate-fade-in stagger-4">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+            <p className="text-sm font-semibold text-content dark:text-content">
               Change your password
             </p>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-content-subtle mt-0.5">
               We'll send a secure reset link to your email address.
             </p>
           </div>
@@ -180,12 +176,12 @@ export const ProfilePage = () => {
               className="flex items-center justify-between p-3 rounded-xl border border-line hover:bg-surface-2 transition-colors group"
             >
               <span className="flex items-center gap-2 text-sm font-medium text-content">
-                <span className="text-slate-400 group-hover:text-violet-500 transition-colors" aria-hidden="true">
+                <span className="text-content-subtle group-hover:text-accent transition-colors" aria-hidden="true">
                   {item.icon}
                 </span>
                 {item.label}
               </span>
-              <ArrowRight size={14} className="text-slate-400 group-hover:text-violet-500 transition-colors" aria-hidden="true" />
+              <ArrowRight size={14} className="text-content-subtle group-hover:text-accent transition-colors" aria-hidden="true" />
             </Link>
           ))}
         </div>

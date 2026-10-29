@@ -69,7 +69,7 @@ function MetricTile({ label, value, sub, icon, tone = "default" }: {
   tone?: "default" | "good" | "warn" | "bad";
 }) {
   const iconCls = {
-    default: "bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400",
+    default: "bg-accent-soft dark:bg-accent-soft/20 text-accent dark:text-accent",
     good: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400",
     warn: "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400",
     bad: "bg-rose-50 dark:bg-rose-900/20 text-rose-500 dark:text-rose-400",
@@ -80,9 +80,9 @@ function MetricTile({ label, value, sub, icon, tone = "default" }: {
       <div className={clsx("h-8 w-8 rounded-lg flex items-center justify-center mb-2.5", iconCls)}>
         {icon}
       </div>
-      <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-0.5">{label}</div>
-      <div className="text-xl font-black text-slate-900 dark:text-white">{value}</div>
-      {sub && <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">{sub}</div>}
+      <div className="text-[10px] font-bold uppercase tracking-widest text-content-subtle dark:text-content-muted mb-0.5">{label}</div>
+      <div className="text-xl font-semibold text-content dark:text-content">{value}</div>
+      {sub && <div className="text-[10px] text-content-subtle dark:text-content-muted mt-0.5">{sub}</div>}
     </div>
   );
 }
@@ -114,13 +114,13 @@ function SkuForecastChart({ rows, accent, skuCode }: { rows: ForecastRow[]; acce
             {isUp ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
             {isUp ? "+" : ""}{trendPct}% over horizon
           </div>
-          <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
-            Peak P50: <strong className="text-slate-700 dark:text-slate-200">{fmtCompact(Math.max(...p50s))}</strong> · Floor: <strong className="text-slate-700 dark:text-slate-200">{fmtCompact(Math.min(...p50s))}</strong>
+          <p className="text-[11px] text-content-subtle dark:text-content-muted mt-0.5">
+            Peak P50: <strong className="text-content dark:text-content">{fmtCompact(Math.max(...p50s))}</strong> · Floor: <strong className="text-content dark:text-content">{fmtCompact(Math.min(...p50s))}</strong>
           </p>
         </div>
         <button
           onClick={() => setExpanded(!expanded)}
-          className="h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-800/60 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+          className="h-7 w-7 rounded-lg bg-surface-2 dark:bg-surface-2/60 flex items-center justify-center text-content-subtle hover:text-content-muted dark:hover:text-content transition-colors"
         >
           {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
         </button>
@@ -170,7 +170,7 @@ function SkuForecastChart({ rows, accent, skuCode }: { rows: ForecastRow[]; acce
         {[{ color: accent, label: "P50 Expected" }, { color: "#10b981", label: "P90 Optimistic", dash: true }, { color: "#ef4444", label: "P10 Conservative", dash: true }].map(({ color, label, dash }) => (
           <div key={label} className="flex items-center gap-1.5">
             <div className="h-px w-5" style={{ background: color, borderTop: dash ? `1.5px dashed ${color}` : `2.5px solid ${color}` }} />
-            <span className="text-[9px] font-semibold text-slate-500 dark:text-slate-400">{label}</span>
+            <span className="text-[9px] font-semibold text-content-muted dark:text-content-subtle">{label}</span>
           </div>
         ))}
       </div>
@@ -275,12 +275,12 @@ export const SkuDetailPage = () => {
       <div className="flex items-center justify-between">
         <Link
           to="/workspace/skus"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-content-subtle dark:text-content-muted hover:text-content dark:hover:text-content transition-colors"
         >
           <ArrowLeft size={14} /> Back to SKUs
         </Link>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border" style={{ background: `${accent}15`, borderColor: `${accent}40`, color: accent }}>
+          <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border" style={{ background: `color-mix(in srgb, ${accent} 8%, transparent)`, borderColor: `color-mix(in srgb, ${accent} 25%, transparent)`, color: accent }}>
             {displayName}
           </span>
           <Button
@@ -288,7 +288,7 @@ export const SkuDetailPage = () => {
             size="sm"
             loading={toggle.isPending}
             onClick={() => toggle.mutate(!sku.is_active)}
-            className={clsx("font-semibold", sku.is_active ? "border border-slate-200 dark:border-slate-700" : "")}
+            className={clsx("font-semibold", sku.is_active ? "border border-line dark:border-line" : "")}
           >
             {sku.is_active ? "Deactivate" : "Activate"}
           </Button>
@@ -317,7 +317,7 @@ export const SkuDetailPage = () => {
               Permanently delete <strong className="font-mono">{sku.sku_code}</strong>? This
               removes it from the catalogue and forecasting. Historical sales records are kept.
             </p>
-            <p className="mt-2 text-xs text-slate-400">This action cannot be undone.</p>
+            <p className="mt-2 text-xs text-content-subtle">This action cannot be undone.</p>
           </>
         }
       />
@@ -330,10 +330,10 @@ export const SkuDetailPage = () => {
         <div className="p-6">
           <div className="flex flex-col md:flex-row gap-6 items-start">
             {/* Product image */}
-            <div className="relative h-36 w-36 rounded-2xl overflow-hidden bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/40 shadow-md group shrink-0">
+            <div className="relative h-36 w-36 rounded-2xl overflow-hidden bg-surface dark:bg-surface-2/60 border border-line/60 dark:border-line/40 shadow-md group shrink-0">
               <img src={imgUrl} alt={sku.sku_code} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
               <label className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer select-none text-center p-2">
-                <Camera size={18} className="mb-1 text-violet-300" />
+                <Camera size={18} className="mb-1 text-accent" />
                 <span className="text-[10px] font-bold tracking-wide uppercase">Change Photo</span>
                 <input
                   type="file"
@@ -369,30 +369,30 @@ export const SkuDetailPage = () => {
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Active
                   </span>
                 ) : (
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 px-2.5 py-1 rounded-full">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-content-subtle bg-surface-2 dark:bg-surface-2/60 border border-line dark:border-line px-2.5 py-1 rounded-full">
                     Inactive
                   </span>
                 )}
                 {sku.gtin && (
-                  <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/60 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+                  <span className="text-[10px] font-semibold text-content-muted dark:text-content-subtle bg-surface-2 dark:bg-surface-2/60 px-2 py-0.5 rounded border border-line dark:border-line">
                     GTIN {sku.gtin}
                   </span>
                 )}
                 {sku.external_id && (
-                  <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/60 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+                  <span className="text-[10px] font-semibold text-content-muted dark:text-content-subtle bg-surface-2 dark:bg-surface-2/60 px-2 py-0.5 rounded border border-line dark:border-line">
                     ext: {sku.external_id}
                   </span>
                 )}
               </div>
 
-              <h1 className="font-mono text-xl font-black text-slate-900 dark:text-white tracking-tight mb-1">{sku.sku_code}</h1>
-              <p className="text-sm font-medium text-slate-600 dark:text-slate-300 mb-4">{sku.description ?? "No description"}</p>
+              <h1 className="font-mono text-xl font-semibold text-content dark:text-content tracking-tight mb-1">{sku.sku_code}</h1>
+              <p className="text-sm font-medium text-content-muted dark:text-content-subtle mb-4">{sku.description ?? "No description"}</p>
 
               {/* Dates */}
-              <div className="flex flex-wrap gap-4 text-[11px] text-slate-400 dark:text-slate-500">
-                <span>Created <strong className="text-slate-600 dark:text-slate-300">{fmtDate(sku.created_at)}</strong></span>
-                <span>Updated <strong className="text-slate-600 dark:text-slate-300">{fmtDate(sku.updated_at)}</strong></span>
-                <span className="font-mono text-[10px] bg-slate-100 dark:bg-slate-800/60 px-2 py-0.5 rounded border border-slate-200/60 dark:border-slate-700/40 text-slate-500 dark:text-slate-400">{sku.id.slice(0, 18)}…</span>
+              <div className="flex flex-wrap gap-4 text-[11px] text-content-subtle dark:text-content-muted">
+                <span>Created <strong className="text-content-muted dark:text-content-subtle">{fmtDate(sku.created_at)}</strong></span>
+                <span>Updated <strong className="text-content-muted dark:text-content-subtle">{fmtDate(sku.updated_at)}</strong></span>
+                <span className="font-mono text-[10px] bg-surface-2 dark:bg-surface-2/60 px-2 py-0.5 rounded border border-line/60 dark:border-line/40 text-content-muted dark:text-content-subtle">{sku.id.slice(0, 18)}…</span>
               </div>
             </div>
           </div>
@@ -462,8 +462,8 @@ export const SkuDetailPage = () => {
         <div className="p-6">
           <div className="flex items-start justify-between gap-4 mb-5">
             <div>
-              <h2 className="text-base font-bold text-slate-900 dark:text-white">Demand Forecast for this SKU</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              <h2 className="text-base font-bold text-content dark:text-content">Demand Forecast for this SKU</h2>
+              <p className="text-xs text-content-muted dark:text-content-subtle mt-0.5">
                 Probabilistic forecast from the latest forecast run (the Forecasts page names the model used). Shows P10 (conservative), P50 (expected), and P90 (optimistic).
               </p>
             </div>
@@ -472,7 +472,7 @@ export const SkuDetailPage = () => {
 
           {/* Horizon selector */}
           <div className="mb-5">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-2">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-content-subtle dark:text-content-muted mb-2">
               Forecast horizon
             </div>
             <div className="flex items-center gap-2 flex-wrap">
@@ -484,13 +484,13 @@ export const SkuDetailPage = () => {
                     "relative px-4 py-1.5 rounded-xl text-xs font-bold border transition-all",
                     horizon === weeks
                       ? "text-white border-transparent shadow-sm"
-                      : "bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-300"
+                      : "bg-surface dark:bg-surface-2/60 border-line dark:border-line text-content-muted dark:text-content-subtle hover:border-line-strong"
                   )}
                   style={horizon === weeks ? { background: gradient } : {}}
                 >
                   {label}
                   {recommended && (
-                    <span className="absolute -top-1.5 -right-1.5 text-[7px] font-black bg-amber-400 text-white px-1 py-0.5 rounded-full leading-none">REC</span>
+                    <span className="absolute -top-1.5 -right-1.5 text-[7px] font-semibold bg-amber-400 text-white px-1 py-0.5 rounded-full leading-none">REC</span>
                   )}
                 </button>
               ))}
@@ -511,12 +511,12 @@ export const SkuDetailPage = () => {
             <SkuForecastChart rows={forecastRows} accent={accent} skuCode={sku.sku_code} />
           ) : (
             <div className="py-16 text-center">
-              <div className="h-14 w-14 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: `${accent}15` }}>
+              <div className="h-14 w-14 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: `color-mix(in srgb, ${accent} 8%, transparent)` }}>
                 <TrendingUp size={22} style={{ color: accent }} />
               </div>
-              <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">No forecast yet</p>
-              <p className="text-xs text-slate-400 dark:text-slate-500 max-w-xs mx-auto">
-                Select a horizon and press <strong className="text-slate-600 dark:text-slate-300">Run Forecast</strong> to generate probabilistic demand projections for this SKU.
+              <p className="text-sm font-semibold text-content dark:text-content mb-1">No forecast yet</p>
+              <p className="text-xs text-content-subtle dark:text-content-muted max-w-xs mx-auto">
+                Select a horizon and press <strong className="text-content-muted dark:text-content-subtle">Run Forecast</strong> to generate probabilistic demand projections for this SKU.
               </p>
             </div>
           )}
@@ -527,14 +527,14 @@ export const SkuDetailPage = () => {
       {Object.keys(sku.attributes).length > 0 && (
         <div className="glass rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Tag size={14} className="text-slate-400 dark:text-slate-500" />
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white">Product Attributes</h2>
+            <Tag size={14} className="text-content-subtle dark:text-content-muted" />
+            <h2 className="text-sm font-bold text-content dark:text-content">Product Attributes</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             {Object.entries(sku.attributes).map(([k, v]) => (
-              <div key={k} className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700/40">
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 capitalize">{k.replace(/_/g, " ")}</span>
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate max-w-[55%] text-right">
+              <div key={k} className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-surface dark:bg-surface-2/40 border border-line dark:border-line/40">
+                <span className="text-xs font-semibold text-content-muted dark:text-content-subtle capitalize">{k.replace(/_/g, " ")}</span>
+                <span className="text-xs font-bold text-content dark:text-content truncate max-w-[55%] text-right">
                   {typeof v === "object" ? JSON.stringify(v) : String(v)}
                 </span>
               </div>

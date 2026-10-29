@@ -263,7 +263,7 @@ ${contactName}`;
   const hasTrialHistory = !!sub;
 
   const overlayContent = (
-    <div className="absolute inset-0 z-[15] flex items-start justify-center bg-slate-950/70 dark:bg-slate-950/85 backdrop-blur-xl overflow-y-auto p-4 md:p-6 lg:pl-[calc(var(--sidebar-w)+24px)] lg:pt-[84px] lg:pr-[20px] lg:pb-[28px] select-none no-scrollbar">
+    <div className="absolute inset-0 z-[15] flex items-start justify-center bg-surface/70 dark:bg-surface/85 backdrop-blur-xl overflow-y-auto p-4 md:p-6 lg:pl-[calc(var(--sidebar-w)+24px)] lg:pt-[84px] lg:pr-[20px] lg:pb-[28px] select-none no-scrollbar">
       <style>{`
         .no-scrollbar::-webkit-scrollbar {
           display: none !important;
@@ -273,7 +273,7 @@ ${contactName}`;
           scrollbar-width: none !important;
         }
       `}</style>
-      <div className="w-full max-w-5xl rounded-3xl border border-line bg-surface shadow-2xl p-5 md:p-6 flex flex-col items-center justify-center text-center animate-fade-in my-auto">
+      <div className="w-full max-w-5xl rounded-2xl border border-line bg-surface shadow-2xl p-5 md:p-6 flex flex-col items-center justify-center text-center animate-fade-in my-auto">
 
         {/* Brand + Lock icon header */}
         <div className="flex items-center gap-2.5 mb-3">
@@ -284,7 +284,7 @@ ${contactName}`;
           </span>
         </div>
 
-        <h1 className="text-2xl md:text-[1.7rem] font-extrabold tracking-tight text-content font-heading leading-tight">
+        <h1 className="text-2xl md:text-[1.7rem] font-semibold tracking-tight text-content font-heading leading-tight">
           Activate Your SANKET Workspace
         </h1>
         <p className="text-sm text-content-muted mt-1.5 max-w-xl leading-relaxed">
@@ -329,11 +329,11 @@ ${contactName}`;
             aria-checked={billingCycle === "yearly"}
             aria-label="Toggle yearly billing"
             className={`relative w-12 h-6 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
-              billingCycle === "yearly" ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+              billingCycle === "yearly" ? "bg-emerald-500" : "bg-surface-3 dark:bg-surface-3"
             }`}
           >
             <span
-              className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-200 ${
+              className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-surface shadow-md transition-transform duration-200 ${
                 billingCycle === "yearly" ? "translate-x-6" : ""
               }`}
             />
@@ -369,7 +369,7 @@ ${contactName}`;
                 Test-drive growth forecasting tools free for 14 days. Cancel anytime.
               </p>
               <div className="mt-2.5 flex items-baseline gap-1 text-content">
-                <span className="text-2xl font-extrabold">Free</span>
+                <span className="text-2xl font-semibold">Free</span>
                 <span className="text-xs text-content-muted">then ₹4,995/mo</span>
               </div>
               <ul className="mt-2.5 space-y-1.5 text-[11px] text-content-muted font-medium">
@@ -402,7 +402,7 @@ ${contactName}`;
               </p>
               <div className="mt-2.5">
                 <div className="flex items-baseline gap-1 text-content">
-                  <span className="text-2xl font-extrabold">
+                  <span className="text-2xl font-semibold">
                     {billingCycle === "monthly" ? "₹4,995" : "₹49,950"}
                   </span>
                   <span className="text-xs text-content-muted">
@@ -447,7 +447,7 @@ ${contactName}`;
               </p>
               <div className="mt-2.5">
                 <div className="flex items-baseline gap-1 text-content">
-                  <span className="text-2xl font-extrabold">
+                  <span className="text-2xl font-semibold">
                     {billingCycle === "monthly" ? "₹14,995" : "₹149,950"}
                   </span>
                   <span className="text-xs text-content-muted">
@@ -486,7 +486,7 @@ ${contactName}`;
                 SLA guarantees, SSO, dedicated infrastructure, and GxP compliance.
               </p>
               <div className="mt-2.5 flex items-baseline gap-1 text-content">
-                <span className="text-2xl font-extrabold">Custom</span>
+                <span className="text-2xl font-semibold">Custom</span>
                 <span className="text-xs text-content-muted">pricing</span>
               </div>
               <ul className="mt-2.5 space-y-1.5 text-[11px] text-content-muted font-medium">
@@ -522,7 +522,7 @@ ${contactName}`;
 
       {/* Confirmation Modal */}
       {selectedPlan && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface/70 backdrop-blur-sm p-4">
           <div className="w-full max-w-md rounded-2xl border border-line bg-surface p-6 shadow-xl animate-scale-in text-left">
             <h2 className="text-lg font-bold text-content font-heading">
               Confirm Subscription Setup
@@ -562,7 +562,7 @@ ${contactName}`;
 
       {/* Enterprise Contact Modal */}
       {showEnterpriseModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface/70 backdrop-blur-sm p-4">
           <div className="w-full max-w-md rounded-2xl border border-line bg-surface p-6 shadow-xl animate-scale-in text-left">
             <h2 className="text-lg font-bold text-content font-heading flex items-center gap-2">
               <Shield className="text-emerald-500" size={20} />

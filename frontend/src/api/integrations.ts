@@ -110,6 +110,8 @@ export interface UploadResult {
   rows_inserted: number;
   rows_unchanged: number;
   rows_updated: number;
+  source_columns_preserved?: number;
+  analytics_readiness?: Record<string, { status: "available" | "unavailable"; label: string; reason?: string }>;
   identity_mode: "transaction" | "period" | null;
   warnings: string[];
   errors: string[];
@@ -139,6 +141,8 @@ export interface UploadOptions {
 }
 
 export interface ImportTable {
+  new_skus?: string[];
+  new_sku_count?: number;
   id: string;
   sheet: string;
   header_start: number;
@@ -162,6 +166,7 @@ export interface ImportTable {
 }
 
 export interface TableSelection {
+  allow_new_skus?: boolean;
   id: string;
   mapping: Record<string, string>;
   include_review_rows: number[];

@@ -45,13 +45,13 @@ export const PharmaBatchesPage = () => {
   if (activeIndustry !== "pharma") {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 text-center p-8">
-        <div className="h-16 w-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-          <Lock size={28} className="text-slate-400" />
+        <div className="h-16 w-16 rounded-2xl bg-surface-2 dark:bg-surface-2 flex items-center justify-center">
+          <Lock size={28} className="text-content-subtle" />
         </div>
-        <h2 className="text-xl font-bold text-slate-700 dark:text-slate-200">
+        <h2 className="text-xl font-bold text-content dark:text-content">
           Pharma industry required
         </h2>
-        <p className="text-slate-500 dark:text-slate-400 max-w-md">
+        <p className="text-content-muted dark:text-content-subtle max-w-md">
           GxP Batch management is only available when your workspace is configured for the
           Pharmaceutical industry. Switch your active industry context to access this module.
         </p>
@@ -117,11 +117,11 @@ export const PharmaBatchesPage = () => {
     <div className="space-y-6">
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3 text-slate-800">
+          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3 text-content">
             GxP Batches
             <Badge variant="success">21 CFR Part 11</Badge>
           </h1>
-          <p className="text-slate-500 mt-1">
+          <p className="text-content-muted mt-1">
             Pharma batch traceability — every action is written to the immutable audit log
           </p>
         </div>
@@ -167,12 +167,12 @@ export const PharmaBatchesPage = () => {
           </>
         }
       >
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-content-muted">
           You are about to release this batch from quarantine to <b>RELEASED</b> status. This
           action requires QA authorization and will be recorded in the GxP audit trail with
           your user ID, IP, and timestamp.
         </p>
-        <p className="text-xs text-slate-400 mt-3">
+        <p className="text-xs text-content-subtle mt-3">
           Cold-chain temperature records must be present for cold-chain batches; the server
           will reject the release otherwise.
         </p>

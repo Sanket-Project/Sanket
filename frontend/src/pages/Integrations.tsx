@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -103,7 +104,7 @@ function ConnectorLogo({ connector }: { connector: Connector }) {
   const logo = OFFICIAL_LOGOS[connector.key];
 
   return (
-    <div className="brand-logo-tile grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-line bg-white p-2 shadow-sm">
+    <div className="brand-logo-tile grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-line bg-surface p-2 shadow-sm">
       {logo && !failed ? (
         <img src={logo} alt={`${connector.name} logo`} className="h-full w-full object-contain" onError={() => setFailed(true)} />
       ) : (
@@ -141,7 +142,7 @@ function ConnectorCard({ c, onOpen }: { c: Connector; onOpen: (c: Connector) => 
   return (
     <button
       onClick={() => onOpen(c)}
-      className="text-left group rounded-2xl border border-line bg-surface hover:border-[var(--accent)]/40 hover:shadow-md transition-all p-4 flex flex-col gap-3"
+      className="text-left group rounded-2xl border border-line bg-surface hover:border-accent/40 hover:shadow-md transition-all p-4 flex flex-col gap-3"
     >
       <div className="flex items-start justify-between gap-2">
         <ConnectorLogo connector={c} />
@@ -537,11 +538,8 @@ export const IntegrationsPage = () => {
     <div className="space-y-7 animate-fade-in">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-content">Integrations Hub</h1>
-          <p className="text-sm text-content-muted mt-1">
-            Connect any data source — files, e-commerce, ERP, POS, warehouses or streams. Everything
-            normalizes into SANKET's canonical schema before forecasting.
-          </p>
+          <PageHeader title="Integrations Hub" description={<> Connect any data source — files, e-commerce, ERP, POS, warehouses or streams. Everything
+            normalizes into SANKET's canonical schema before forecasting. </>} />
         </div>
         <div className="flex gap-2">
           <Badge variant="primary">{headerStats.total} sources</Badge>

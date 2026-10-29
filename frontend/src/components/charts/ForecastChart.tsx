@@ -62,7 +62,7 @@ function ForecastTooltip({ active, payload, label }: {
 export const ForecastChart = memo(function ForecastChart({
   rows,
   history,
-  accent = "#0B7A75",
+  accent = "var(--chart-forecast)",
   height = 260,
   compact = false,
   unitLabel,
@@ -97,11 +97,12 @@ export const ForecastChart = memo(function ForecastChart({
       {!compact && (
         <div className="mb-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-content-muted" aria-hidden="true">
           {unitLabel && <span className="font-medium text-content-subtle">{unitLabel}</span>}
-          {hasActuals && <span className="inline-flex items-center gap-2"><span className="h-0.5 w-7 rounded bg-content" />Actual</span>}
+          {hasActuals && <span className="inline-flex items-center gap-2"><span className="h-0.5 w-7 rounded bg-[var(--chart-actual)]" />Actual</span>}
           {rows.length > 0 && <span className="inline-flex items-center gap-2"><span className="w-7 border-t-2 border-dashed" style={{ borderColor: accent }} />Expected</span>}
-          {rows.length > 0 && <span className="inline-flex items-center gap-2"><span className="h-3 w-7 rounded-sm" style={{ background: accent, opacity: 0.12 }} />Expected range</span>}
+          {rows.length > 0 && <span className="inline-flex items-center gap-2"><span className="h-3 w-7 rounded-sm" style={{ background: accent, opacity: 0.12 }} />80% model interval</span>}
         </div>
       )}
+      {rows.length > 0 && <details className={compact ? "sr-only" : "mb-2 text-xs text-content-subtle"}><summary className="cursor-pointer">About the model interval</summary><p className="mt-2">The P10–P90 band is nominally 80%; its coverage has not been validated for this forecast.</p></details>}
       <div aria-hidden="true">
         <ResponsiveContainer width="100%" height={height}>
           <ComposedChart data={data} margin={{ top: 8, right: 12, left: compact ? -18 : -4, bottom: 0 }}>
@@ -139,7 +140,7 @@ export const ForecastChart = memo(function ForecastChart({
             <Line
               type="linear"
               dataKey="actual"
-              stroke="var(--text)"
+              stroke="var(--chart-actual)"
               strokeWidth={2}
               dot={false}
               // A null bucket has no records: leave a gap rather than imply a value.

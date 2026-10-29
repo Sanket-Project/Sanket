@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -129,11 +130,8 @@ export const ROIDashboardPage = () => {
           <div className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider text-emerald-600">
             <Award size={14} /> Return on investment
           </div>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">Value from your decisions</h1>
-          <p className="mt-1 text-content-subtle">
-            Estimates are labelled as estimates. Nothing here is money saved until supplier orders,
-            receipts and sales confirm it.
-          </p>
+          <PageHeader title="Value from your decisions" description={<> Estimates are labelled as estimates. Nothing here is money saved until supplier orders,
+            receipts and sales confirm it. </>} />
         </div>
         <div className="flex gap-1.5">
           {WINDOWS.map((w) => (

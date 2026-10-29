@@ -4,7 +4,7 @@ import { ArrowRight, Zap } from "@/components/ui/icons";
 
 interface Props {
   insight: string;
-  confidence: number; // 0–100
+  confidence?: number; // 0–100
   category?: string;
   ctaLabel?: string;
   onCta?: () => void;
@@ -59,7 +59,7 @@ export const InsightCallout = ({
     : undefined;
 
   return (
-    <div className={clsx("rounded-[20px] border p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5 shadow-sm", t.wrap)}>
+    <div className={clsx("rounded-2xl border p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5 shadow-sm", t.wrap)}>
       {/* Icon */}
       <div
         className={clsx("shrink-0 h-11 w-11 rounded-2xl grid place-items-center shadow-sm", t.iconWrap)}

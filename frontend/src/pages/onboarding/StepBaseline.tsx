@@ -9,10 +9,9 @@ import {
 } from "@/components/ui/icons";
 import { forwardRef, useImperativeHandle, useState } from "react";
 
-import { forecastsApi } from "@/api/forecasts";
-import { hybridForecastApi } from "@/api/hybridForecast";
+import { forecastsApi, type ForecastRefresh } from "@/api/forecasts";
 import { Button } from "@/components/ui/Button";
-import type { HybridRunStatusValue } from "@/types/api";
+import { getErrorMessage } from "@/utils/errors";
 import type { StepHandle, StepProps } from "./types";
 
 export const StepBaseline = forwardRef<StepHandle, StepProps>(function StepBaseline(
@@ -30,21 +29,22 @@ export const StepBaseline = forwardRef<StepHandle, StepProps>(function StepBasel
     (health.data?.status ?? "").toLowerCase() === "healthy";
 
   const start = useMutation({
-    mutationFn: () => hybridForecastApi.create({ include_alerts: true }),
-    onSuccess: (r) => setRunId(r.run_id),
+    mutationFn: () => forecastsApi.refresh({ force_zero_shot: true }),
+    onSuccess: (r) => setRunId(r.refresh?.id ?? null),
   });
 
   const run = useQuery({
-    queryKey: ["hybrid", "run", runId],
-    queryFn: () => hybridForecastApi.get(runId as string),
+    queryKey: ["onboarding", "baseline", runId],
+    queryFn: () => forecastsApi.latest({ view: "summary", limit: 1 }),
     enabled: !!runId,
     refetchInterval: (q) => {
-      const s = q.state.data?.status as HybridRunStatusValue | undefined;
+      const s = q.state.data?.refresh?.status;
       return s === "completed" || s === "failed" ? false : 2000;
     },
   });
 
-  const status: HybridRunStatusValue | "idle" = runId ? run.data?.status ?? "pending" : "idle";
+  const status: ForecastRefresh["status"] | "idle" = start.isError || run.isError ? "failed"
+    : runId ? run.data?.refresh?.status ?? start.data?.refresh?.status ?? "pending" : "idle";
 
   useImperativeHandle(ref, () => ({
     // Finishing completes onboarding regardless of run state — an in-flight run
@@ -93,8 +93,8 @@ export const StepBaseline = forwardRef<StepHandle, StepProps>(function StepBasel
                   Generate your first baseline forecast
                 </h3>
                 <p className="mt-1 text-sm leading-relaxed text-content-subtle">
-                  We'll run a hybrid forecast across your catalog using the demand signals for your
-                  industry. This is the plan your team starts from.
+                  We'll build a baseline from your sales history. Review its input readiness and
+                  measured accuracy before using it for orders.
                 </p>
               </>
             )}
@@ -125,7 +125,8 @@ export const StepBaseline = forwardRef<StepHandle, StepProps>(function StepBasel
                   Forecast run failed
                 </h3>
                 <p className="mt-1 text-sm leading-relaxed text-content-subtle">
-                  {run.data?.error ?? "Something went wrong. You can retry now or from the workspace."}
+                  {run.data?.refresh?.error ?? getErrorMessage(run.error ?? start.error,
+                    "Something went wrong. You can retry now or from the workspace.")}
                 </p>
               </>
             )}

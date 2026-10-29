@@ -32,7 +32,7 @@ export const Badge = ({ children, variant = "default", dot, className }: Props) 
   return (
     <span
       className={clsx(
-        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold tracking-wide uppercase border leading-none",
+        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border leading-tight",
         cls,
         className,
       )}

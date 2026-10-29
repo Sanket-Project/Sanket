@@ -38,16 +38,17 @@ export function Table<T>({
     a === "right" ? "text-right" : a === "center" ? "text-center" : "text-left";
 
   return (
-    <div className={clsx("overflow-x-auto rounded-xl border border-line", className)}>
+    <div className={clsx("min-w-0 overflow-x-auto rounded-2xl border border-line bg-surface", className)}>
       <table className="w-full text-sm border-collapse">
         <thead className="sticky top-0 z-10">
           <tr className="bg-surface-2">
             {columns.map((c) => (
               <th
                 key={c.key}
+                scope="col"
                 style={c.width ? { width: c.width } : undefined}
                 className={clsx(
-                  "px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-content-subtle border-b border-line whitespace-nowrap",
+                  "px-4 py-3 text-xs font-medium text-content-muted border-b border-line whitespace-nowrap",
                   alignCls(c.align),
                 )}
               >
@@ -60,7 +61,16 @@ export function Table<T>({
           {data.map((row, i) => (
             <tr
               key={rowKey(row)}
-              onClick={() => onRowClick?.(row)}
+              tabIndex={onRowClick ? 0 : undefined}
+              onClick={(event) => {
+                if (!(event.target as HTMLElement).closest("button, a, input, select, textarea, [role='button']")) onRowClick?.(row);
+              }}
+              onKeyDown={(event) => {
+                if (event.target === event.currentTarget && onRowClick && (event.key === "Enter" || event.key === " ")) {
+                  event.preventDefault();
+                  onRowClick(row);
+                }
+              }}
               className={clsx(
                 "border-b border-line last:border-0 transition-colors duration-150",
                 i % 2 === 1 && "bg-surface-2/50",

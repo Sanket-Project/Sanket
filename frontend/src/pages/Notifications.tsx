@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
@@ -89,10 +90,7 @@ export const NotificationsPage = () => {
         <div className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider text-emerald-600">
           <MessageCircle size={14} /> WhatsApp
         </div>
-        <h1 className="mt-1 text-3xl font-bold tracking-tight">The morning digest</h1>
-        <p className="mt-1 max-w-2xl text-content-subtle">
-          One message a day with what to order and what it is worth. No dashboard required.
-        </p>
+        <PageHeader title="The morning digest" description={<> One message a day with what to order and what it is worth. No dashboard required. </>} />
       </div>
 
       {!data.delivery.configured && (

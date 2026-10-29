@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -75,7 +76,7 @@ const STATUS_CONFIG: Record<ProductStatus, { label: string; cls: string; icon: R
   active: { label: "Active", cls: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/40", icon: <CheckCircle2 size={10} /> },
   seasonal: { label: "Seasonal", cls: "text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-800/40", icon: <Clock size={10} /> },
   clearance: { label: "Clearance", cls: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/40", icon: <Tag size={10} /> },
-  pre_launch: { label: "Pre-Launch", cls: "text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-800/40", icon: <Star size={10} /> },
+  pre_launch: { label: "Pre-Launch", cls: "text-accent dark:text-accent bg-accent-soft dark:bg-accent-soft/20 border-accent/20 dark:border-accent/40", icon: <Star size={10} /> },
   discontinued: { label: "Discontinued", cls: "text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800/40", icon: <XCircle size={10} /> },
 };
 
@@ -114,7 +115,7 @@ function ProductCard({
       onClick={onClick}
       className={clsx(
         "w-full overflow-hidden rounded-2xl border text-left shadow-sm transition hover:-translate-y-0.5 hover:border-line-strong hover:shadow-md group cursor-pointer relative",
-        isSelected ? "border-violet-500 bg-violet-50/10 ring-2 ring-violet-500/20" : "border-line bg-surface"
+        isSelected ? "border-accent/20 bg-accent-soft/10 ring-2 ring-accent/20" : "border-line bg-surface"
       )}
     >
       {/* Product image banner */}
@@ -132,7 +133,7 @@ function ProductCard({
         </div>
         {/* Selection Checkbox */}
         <div
-          className="absolute top-2.5 right-2.5 z-10 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm p-1 rounded-md shadow"
+          className="absolute top-2.5 right-2.5 z-10 bg-surface/90 dark:bg-surface/90 backdrop-blur-sm p-1 rounded-md shadow"
           onClick={(e) => {
             e.stopPropagation();
             onToggleSelect(e);
@@ -142,7 +143,7 @@ function ProductCard({
             type="checkbox"
             checked={isSelected}
             onChange={() => {}}
-            className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500 cursor-pointer block"
+            className="h-4 w-4 rounded border-line-strong text-accent focus:ring-accent cursor-pointer block"
             aria-label={`Select ${product.name}`}
           />
         </div>
@@ -158,31 +159,31 @@ function ProductCard({
         {/* Brand + category */}
         <div className="flex items-center justify-between gap-2 mb-1.5">
           {product.brand && (
-            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider truncate">{product.brand}</span>
+            <span className="text-[10px] font-bold text-content-subtle dark:text-content-muted uppercase tracking-wider truncate">{product.brand}</span>
           )}
-          <span className="text-[9px] font-semibold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800/60 px-1.5 py-0.5 rounded border border-slate-200/60 dark:border-slate-700/40 shrink-0 ml-auto">
+          <span className="text-[9px] font-semibold text-content-subtle dark:text-content-muted bg-surface-2 dark:bg-surface-2/60 px-1.5 py-0.5 rounded border border-line/60 dark:border-line/40 shrink-0 ml-auto">
             {product.category}
           </span>
         </div>
 
         {/* Product name */}
-        <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-snug line-clamp-2 mb-1.5">
+        <h3 className="text-sm font-bold text-content dark:text-content leading-snug line-clamp-2 mb-1.5">
           {product.name}
         </h3>
 
         {/* Subcategory */}
         {product.subcategory && (
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 mb-3">{product.subcategory}</p>
+          <p className="text-[10px] text-content-subtle dark:text-content-muted mb-3">{product.subcategory}</p>
         )}
 
         {/* External ID + updated */}
-        <div className="flex items-center justify-between pt-2 border-t border-slate-100/80 dark:border-slate-700/40">
+        <div className="flex items-center justify-between pt-2 border-t border-line/80 dark:border-line/40">
           {product.external_id ? (
-            <span className="font-mono text-[9px] text-slate-400 dark:text-slate-500">{product.external_id}</span>
+            <span className="font-mono text-[9px] text-content-subtle dark:text-content-muted">{product.external_id}</span>
           ) : (
-            <span className="text-[9px] text-slate-300 dark:text-slate-600">—</span>
+            <span className="text-[9px] text-content-subtle dark:text-content-muted">—</span>
           )}
-          <span className="text-[9px] text-slate-400 dark:text-slate-500">{fmtRelative(product.updated_at)}</span>
+          <span className="text-[9px] text-content-subtle dark:text-content-muted">{fmtRelative(product.updated_at)}</span>
         </div>
       </div>
 
@@ -231,8 +232,8 @@ function ProductRow({
       className={clsx(
         "w-full text-left flex items-center gap-3 p-3 rounded-xl transition-colors group border cursor-pointer",
         isSelected
-          ? "bg-violet-50/20 border-violet-300 dark:border-violet-700/50"
-          : "border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:border-slate-200/60 dark:hover:border-slate-700/40"
+          ? "bg-accent-soft/20 border-accent/20 dark:border-accent/50"
+          : "border-transparent hover:bg-surface dark:hover:bg-surface-2/40 hover:border-line/60 dark:hover:border-line/40"
       )}
     >
       {/* Checkbox */}
@@ -247,7 +248,7 @@ function ProductRow({
           type="checkbox"
           checked={isSelected}
           onChange={() => {}}
-          className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500 cursor-pointer block"
+          className="h-4 w-4 rounded border-line-strong text-accent focus:ring-accent cursor-pointer block"
           aria-label={`Select ${product.name}`}
         />
       </div>
@@ -256,16 +257,16 @@ function ProductRow({
       <div className="h-8 w-1 rounded-full shrink-0" style={{ background: gradient }} />
 
       {/* Image thumbnail */}
-      <div className="h-10 w-10 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/40 shrink-0">
+      <div className="h-10 w-10 rounded-xl overflow-hidden bg-surface dark:bg-surface-2/60 border border-line/60 dark:border-line/40 shrink-0">
         <img src={imgUrl} alt={product.name} className="h-full w-full object-cover" />
       </div>
 
       {/* Name + brand + category */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
-          <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{product.name}</p>
+          <p className="text-sm font-semibold text-content dark:text-content truncate">{product.name}</p>
         </div>
-        <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
+        <p className="text-[10px] text-content-subtle dark:text-content-muted truncate">
           {product.brand && <span className="font-semibold">{product.brand} · </span>}
           {product.category}{product.subcategory && ` › ${product.subcategory}`}
         </p>
@@ -278,16 +279,16 @@ function ProductRow({
 
       {/* SKU count */}
       <div className="text-right shrink-0 w-16 hidden md:block">
-        <div className="text-sm font-bold text-slate-700 dark:text-slate-200">{skuCount}</div>
-        <div className="text-[9px] text-slate-400 dark:text-slate-500">SKUs</div>
+        <div className="text-sm font-bold text-content dark:text-content">{skuCount}</div>
+        <div className="text-[9px] text-content-subtle dark:text-content-muted">SKUs</div>
       </div>
 
       {/* Updated */}
-      <div className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 w-24 text-right hidden lg:block">
+      <div className="text-[10px] text-content-subtle dark:text-content-muted shrink-0 w-24 text-right hidden lg:block">
         {fmtRelative(product.updated_at)}
       </div>
 
-      <ChevronRight size={14} className="text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 transition-colors shrink-0" />
+      <ChevronRight size={14} className="text-content-subtle dark:text-content-muted group-hover:text-content-muted dark:group-hover:text-content-subtle transition-colors shrink-0" />
     </button>
   );
 }
@@ -448,24 +449,19 @@ export const ProductsPage = () => {
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
           <div
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold text-white mb-3"
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-medium text-accent-fg mb-3"
             style={{ background: gradient }}
           >
             {icon} {displayName}
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            Product Catalogue
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-xl leading-relaxed">
-            All products in this industry. Each product groups one or more SKUs that carry pricing, lead time, and stock parameters for forecasting.
-          </p>
+          <PageHeader title="Product Catalogue" description={<> All products in this industry. Each product groups one or more SKUs that carry pricing, lead time, and stock parameters for forecasting. </>} />
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex max-w-full flex-wrap items-center gap-2">
           <Button
             variant="secondary"
             icon={<FileSpreadsheet size={14} />}
             onClick={() => exportApi.productsCsv().catch(() => toast.error("Export failed"))}
-            className="glass border border-slate-200 dark:border-slate-700"
+            className="glass border border-line dark:border-line"
           >
             Export CSV
           </Button>
@@ -476,7 +472,7 @@ export const ProductsPage = () => {
               setAddProductOpen(true);
               setModalTab("import");
             }}
-            className="glass border border-slate-200 dark:border-slate-700"
+            className="glass border border-line dark:border-line"
           >
             Import CSV
           </Button>
@@ -515,13 +511,13 @@ export const ProductsPage = () => {
               "h-8 w-8 rounded-lg flex items-center justify-center mb-3",
               tone === "up" ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400" :
               tone === "warn" ? "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400" :
-              "bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400"
+              "bg-accent-soft dark:bg-accent-soft/20 text-accent dark:text-accent"
             )}>
               {ic}
             </div>
-            <div className="text-2xl font-black text-slate-900 dark:text-white">{value}</div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mt-0.5">{label}</div>
-            <div className="text-[10px] text-slate-400 dark:text-slate-500">{sub}</div>
+            <div className="text-2xl font-semibold text-content dark:text-content">{value}</div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-content-subtle dark:text-content-muted mt-0.5">{label}</div>
+            <div className="text-[10px] text-content-subtle dark:text-content-muted">{sub}</div>
           </div>
         ))}
       </div>
@@ -539,7 +535,7 @@ export const ProductsPage = () => {
         </div>
 
         {/* Status filter pills */}
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/60 rounded-xl p-1">
+        <div className="flex items-center gap-1 bg-surface-2 dark:bg-surface-2/60 rounded-xl p-1">
           {statuses.map((s) => (
             <button
               key={s}
@@ -547,8 +543,8 @@ export const ProductsPage = () => {
               className={clsx(
                 "px-3 py-1.5 rounded-lg text-[10px] font-bold capitalize transition-all whitespace-nowrap",
                 filterStatus === s
-                  ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-sm"
-                  : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
+                  ? "bg-surface dark:bg-surface-2 text-content dark:text-content shadow-sm"
+                  : "text-content-subtle dark:text-content-muted hover:text-content-muted dark:hover:text-content-subtle"
               )}
             >
               {s === "all" ? "All" : STATUS_CONFIG[s as ProductStatus]?.label}
@@ -558,11 +554,11 @@ export const ProductsPage = () => {
 
         {/* Category filter */}
         <div className="flex items-center gap-2">
-          <Filter size={13} className="text-slate-400 dark:text-slate-500" />
+          <Filter size={13} className="text-content-subtle dark:text-content-muted" />
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
-            className="text-xs font-semibold text-slate-600 dark:text-slate-300 bg-transparent border-none outline-none cursor-pointer"
+            className="text-xs font-semibold text-content-muted dark:text-content-subtle bg-transparent border-none outline-none cursor-pointer"
           >
             <option value="all">All categories</option>
             {categories.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -570,16 +566,16 @@ export const ProductsPage = () => {
         </div>
 
         {/* View toggle */}
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/60 rounded-xl p-1 ml-auto">
+        <div className="flex items-center gap-1 bg-surface-2 dark:bg-surface-2/60 rounded-xl p-1 ml-auto">
           <button
             onClick={() => setViewMode("grid")}
-            className={clsx("p-1.5 rounded-lg transition", viewMode === "grid" ? "bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-slate-100" : "text-slate-400 dark:text-slate-500")}
+            className={clsx("p-1.5 rounded-lg transition", viewMode === "grid" ? "bg-surface dark:bg-surface-2 shadow-sm text-content dark:text-content" : "text-content-subtle dark:text-content-muted")}
           >
             <LayoutGrid size={14} />
           </button>
           <button
             onClick={() => setViewMode("list")}
-            className={clsx("p-1.5 rounded-lg transition", viewMode === "list" ? "bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-slate-100" : "text-slate-400 dark:text-slate-500")}
+            className={clsx("p-1.5 rounded-lg transition", viewMode === "list" ? "bg-surface dark:bg-surface-2 shadow-sm text-content dark:text-content" : "text-content-subtle dark:text-content-muted")}
           >
             <List size={14} />
           </button>
@@ -588,9 +584,9 @@ export const ProductsPage = () => {
 
       {/* ── Bulk selection bar ── */}
       {selectedIds.size > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-violet-500/10 border border-violet-500/30 backdrop-blur-md animate-fade-in">
-          <div className="flex items-center gap-2 text-xs font-bold text-violet-700 dark:text-violet-300">
-            <span className="h-2 w-2 rounded-full bg-violet-500 animate-pulse" />
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-accent/10 border border-accent/30 backdrop-blur-md animate-fade-in">
+          <div className="flex items-center gap-2 text-xs font-bold text-accent dark:text-accent">
+            <span className="h-2 w-2 rounded-full bg-accent animate-pulse" />
             <span>
               {selectedIds.size} of {products.length} product{selectedIds.size !== 1 ? "s" : ""} selected
             </span>
@@ -627,15 +623,15 @@ export const ProductsPage = () => {
       {/* ── Product Grid / List ── */}
       {products.length === 0 ? (
         <div className="glass rounded-2xl p-16 text-center">
-          <Package size={32} className="mx-auto text-slate-300 dark:text-slate-600 mb-3" />
-          <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">Your Product Catalogue is Empty</p>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Import a product catalog via CSV or click "New Product" to get started.</p>
+          <Package size={32} className="mx-auto text-content-subtle dark:text-content-muted mb-3" />
+          <p className="text-sm font-semibold text-content-muted dark:text-content-subtle">Your Product Catalogue is Empty</p>
+          <p className="text-xs text-content-subtle dark:text-content-muted mt-1">Import a product catalog via CSV or click "New Product" to get started.</p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="glass rounded-2xl p-16 text-center">
-          <Package size={32} className="mx-auto text-slate-300 dark:text-slate-600 mb-3" />
-          <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">No products match your search</p>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Try adjusting your filter or search term</p>
+          <Package size={32} className="mx-auto text-content-subtle dark:text-content-muted mb-3" />
+          <p className="text-sm font-semibold text-content-muted dark:text-content-subtle">No products match your search</p>
+          <p className="text-xs text-content-subtle dark:text-content-muted mt-1">Try adjusting your filter or search term</p>
         </div>
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -655,7 +651,7 @@ export const ProductsPage = () => {
       ) : (
         <div className="glass rounded-2xl overflow-hidden">
           {/* List header */}
-          <div className="flex items-center gap-3 px-4 py-2.5 border-b border-slate-100 dark:border-slate-700/40 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+          <div className="flex items-center gap-3 px-4 py-2.5 border-b border-line dark:border-line/40 text-[10px] font-bold uppercase tracking-wider text-content-subtle dark:text-content-muted">
             <div className="shrink-0 p-1">
               <input
                 type="checkbox"
@@ -675,7 +671,7 @@ export const ProductsPage = () => {
                     });
                   }
                 }}
-                className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500 cursor-pointer block"
+                className="h-4 w-4 rounded border-line-strong text-accent focus:ring-accent cursor-pointer block"
                 aria-label="Select all products"
               />
             </div>
@@ -687,7 +683,7 @@ export const ProductsPage = () => {
             <div className="w-24 text-right hidden lg:block">Updated</div>
             <div className="w-4 shrink-0" />
           </div>
-          <div className="divide-y divide-slate-100/60 dark:divide-slate-700/30 p-2">
+          <div className="divide-y divide-line/60 dark:divide-line/30 p-2">
             {visible.map((p) => (
               <ProductRow
                 key={p.id}
@@ -705,8 +701,8 @@ export const ProductsPage = () => {
       )}
 
       {/* Count */}
-      <p className="text-[11px] text-slate-400 dark:text-slate-500 text-center">
-        Showing <strong className="text-slate-600 dark:text-slate-300">{visible.length}</strong> of <strong className="text-slate-600 dark:text-slate-300">{filtered.length}</strong> matching products
+      <p className="text-[11px] text-content-subtle dark:text-content-muted text-center">
+        Showing <strong className="text-content-muted dark:text-content-subtle">{visible.length}</strong> of <strong className="text-content-muted dark:text-content-subtle">{filtered.length}</strong> matching products
       </p>
       <nav aria-label="Product pages" className="flex items-center justify-center gap-4">
         <Button variant="secondary" disabled={page === 0} onClick={() => setPageState({ scope: pageScope, page: page - 1 })}>Previous page</Button>
@@ -771,7 +767,7 @@ export const ProductsPage = () => {
               <div className="space-y-2">
                 <span className="label">Product Image (optional)</span>
                 <div className="flex items-center gap-4">
-                  <div className="h-16 w-16 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-50 dark:bg-slate-900/60 flex items-center justify-center shadow-inner shrink-0 relative group/upload">
+                  <div className="h-16 w-16 rounded-2xl border border-line dark:border-line overflow-hidden bg-surface dark:bg-surface/60 flex items-center justify-center shadow-inner shrink-0 relative group/upload">
                     {uploadFile ? (
                       <>
                         <img src={uploadFile} alt="Preview" className="h-full w-full object-cover" />
@@ -784,13 +780,13 @@ export const ProductsPage = () => {
                         </button>
                       </>
                     ) : (
-                      <ImageIcon size={20} className="text-slate-300 dark:text-slate-600" />
+                      <ImageIcon size={20} className="text-content-subtle dark:text-content-muted" />
                     )}
                   </div>
-                  <label className="flex-1 flex flex-col items-center justify-center border border-dashed border-slate-200/80 dark:border-slate-800/60 rounded-2xl py-3 px-4 hover:border-violet-400 hover:bg-violet-50/10 transition-all duration-200 cursor-pointer select-none">
-                    <Upload size={14} className="text-violet-500 mb-1" />
-                    <span className="text-xs font-bold text-slate-705 dark:text-slate-200">Choose Image</span>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-550 mt-0.5">PNG, JPG or WEBP</span>
+                  <label className="flex-1 flex flex-col items-center justify-center border border-dashed border-line/80 dark:border-line/60 rounded-2xl py-3 px-4 hover:border-accent/20 hover:bg-accent-soft/10 transition-all duration-200 cursor-pointer select-none">
+                    <Upload size={14} className="text-accent mb-1" />
+                    <span className="text-xs font-bold text-slate-705 dark:text-content">Choose Image</span>
+                    <span className="text-[10px] text-content-subtle dark:text-slate-550 mt-0.5">PNG, JPG or WEBP</span>
                     <input
                       type="file"
                       accept="image/*"
@@ -821,7 +817,7 @@ export const ProductsPage = () => {
                   <select
                     name="category"
                     required
-                    className="input w-full bg-white dark:bg-slate-900/50"
+                    className="input w-full bg-surface dark:bg-surface/50"
                   >
                     <option value="">Select category…</option>
                     {categoryHints.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -843,7 +839,7 @@ export const ProductsPage = () => {
         loading={deleteAllMutation.isPending}
         confirmLabel="Delete Everything"
         message={
-          <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+          <div className="space-y-2 text-sm text-content-muted dark:text-content-subtle">
             <p>
               Are you sure you want to delete all <strong>{products.length}</strong> products in the{" "}
               <strong>{displayName}</strong> catalogue?
@@ -865,7 +861,7 @@ export const ProductsPage = () => {
         loading={deleteSelectedMutation.isPending}
         confirmLabel={`Delete ${selectedIds.size} Product${selectedIds.size !== 1 ? "s" : ""}`}
         message={
-          <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+          <div className="space-y-2 text-sm text-content-muted dark:text-content-subtle">
             <p>
               Are you sure you want to delete the <strong>{selectedIds.size}</strong> selected products?
             </p>

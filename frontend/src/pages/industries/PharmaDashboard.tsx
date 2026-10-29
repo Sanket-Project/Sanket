@@ -1,15 +1,7 @@
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Pill,
-  ShieldCheck,
-  AlertTriangle,
-  Boxes,
-  FileCheck2,
-  CheckCircle2,
-  Clock,
-  XCircle,
-} from "@/components/ui/icons";
+import { Pill, ShieldCheck, AlertTriangle, Boxes, FileCheck2, CheckCircle2, Clock, XCircle } from "@/components/ui/icons";
 import { industryApi } from "@/api/industry";
 import { forecastsApi } from "@/api/forecasts";
 import { pharmaApi } from "@/api/pharma";
@@ -21,7 +13,6 @@ import { IndustryHero } from "@/components/dashboard/IndustryHero";
 import { InsightCallout } from "@/components/dashboard/InsightCallout";
 import { ExpiryTimeline } from "@/components/dashboard/ExpiryTimeline";
 import { fmtCompact } from "@/utils/format";
-import { industryAccent } from "@/utils/colors";
 import type { PharmaBatchExpiring } from "@/types/api";
 
 function daysUntil(isoDate: string): number {
@@ -58,11 +49,11 @@ function buildExpiryInsight(batches: PharmaBatchExpiring[]): {
 
 export const PharmaDashboard = () => {
   const navigate = useNavigate();
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["pharma-overview"],
     queryFn: () => industryApi.overview("pharma"),
   });
-  const { data: expiring } = useQuery({
+  const { data: expiring, isError: expiryFailed, isLoading: expiryLoading } = useQuery({
     queryKey: ["pharma-expiring", 90],
     queryFn: () => pharmaApi.expiringBatches(90),
   });
@@ -72,7 +63,8 @@ export const PharmaDashboard = () => {
     enabled: true,
   });
 
-  if (isLoading || !data) return <PageLoader />;
+  if (isLoading) return <PageLoader />;
+  if (!data) return <EmptyState title="Industry overview unavailable" description="The source could not be loaded. No business metrics have been inferred." action={<button className="btn-secondary" onClick={() => void refetch()}>Retry overview</button>} />;
   const k = data.kpis;
 
   const expiryBatches = expiring?.batches ?? [];
@@ -121,7 +113,6 @@ export const PharmaDashboard = () => {
         icon={<Pill size={26} />}
         horizonWeeks={data.forecast_horizon_weeks}
         models={data.active_models}
-        healthScore={91}
         extraBadge={
           <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-semibold">
             <ShieldCheck size={10} /> GxP Audit Active
@@ -131,10 +122,10 @@ export const PharmaDashboard = () => {
 
       {/* ── Insight Callout ── */}
       <InsightCallout
-        insight={insight.message}
-        confidence={expiryBatches.length > 0 ? 96 : 100}
+        insight={expiryFailed ? "Batch expiry source unavailable. Open the batch page to retry." : expiryLoading ? "Checking batch expiry dates…" : insight.message}
+
         category="Batch Expiry"
-        tone={insight.tone}
+        tone={expiryFailed || expiryLoading ? "info" : insight.tone}
         icon={<AlertTriangle size={18} />}
         ctaLabel="View Expiry Plan"
         onCta={() => navigate("/workspace/pharma/batches")}
@@ -144,35 +135,35 @@ export const PharmaDashboard = () => {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         <KPICard
           label="Active SKUs"
-          value={fmtCompact(k.active_skus)}
+          value={k.active_skus == null ? "Unavailable" : fmtCompact(k.active_skus)}
           icon={<Boxes size={15} />}
           subtitle="Manufacturing active"
           tone="default"
         />
         <KPICard
           label="Batches Released"
-          value={fmtCompact(k.batches_released)}
+          value={k.batches_released == null ? "Unavailable" : fmtCompact(k.batches_released)}
           icon={<ShieldCheck size={15} />}
           subtitle="QA-approved"
           tone="success"
         />
         <KPICard
           label="In Quarantine"
-          value={fmtCompact(k.batches_in_quarantine)}
+          value={k.batches_in_quarantine == null ? "Unavailable" : fmtCompact(k.batches_in_quarantine)}
           icon={<FileCheck2 size={15} />}
           subtitle="Pending QA review"
           tone="warning"
         />
         <KPICard
           label="Expiring ≤ 90d"
-          value={fmtCompact(k.batches_expiring_in_90_days)}
+          value={k.batches_expiring_in_90_days == null ? "Unavailable" : fmtCompact(k.batches_expiring_in_90_days)}
           icon={<AlertTriangle size={15} />}
           subtitle={`${criticalExpiring} critical (<30d)`}
           tone={k.batches_expiring_in_90_days > 10 ? "danger" : criticalExpiring > 0 ? "warning" : "default"}
         />
         <KPICard
           label="Regulatory Signals"
-          value={fmtCompact(k.active_regulatory_signals)}
+          value={k.active_regulatory_signals == null ? "Unavailable" : fmtCompact(k.active_regulatory_signals)}
           icon={<ShieldCheck size={15} />}
           subtitle="FDA & EMA monitoring"
           tone="default"
@@ -183,10 +174,10 @@ export const PharmaDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card
           className="lg:col-span-2"
-          title="Demand Forecast — Croston + TFT Blend"
-          description="Intermittent-demand aware · 52-week horizon · Audit-trailed"
+          title="Demand forecast"
+          description="Demand estimate with a labeled model interval"
         >
-          <ForecastChart rows={forecastData?.rows ?? []} accent={industryAccent.pharma} />
+          <ForecastChart rows={forecastData?.rows ?? []} accent="var(--chart-forecast)" />
         </Card>
 
         <Card

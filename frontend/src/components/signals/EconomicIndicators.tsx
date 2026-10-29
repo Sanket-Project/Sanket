@@ -28,11 +28,11 @@ export const EconomicIndicators = ({ signals, loading }: Props) => {
   if (loading) {
     return (
       <div className="glass rounded-2xl p-6 animate-pulse">
-        <div className="h-5 w-48 bg-white/10 rounded mb-4" />
+        <div className="h-5 w-48 bg-surface/10 rounded mb-4" />
         <div className="space-y-2">
-          <div className="h-10 bg-white/5 rounded" />
-          <div className="h-10 bg-white/5 rounded" />
-          <div className="h-10 bg-white/5 rounded" />
+          <div className="h-10 bg-surface/5 rounded" />
+          <div className="h-10 bg-surface/5 rounded" />
+          <div className="h-10 bg-surface/5 rounded" />
         </div>
       </div>
     );
@@ -55,13 +55,13 @@ export const EconomicIndicators = ({ signals, loading }: Props) => {
     <div className="glass rounded-2xl p-6 shadow-lg shadow-slate-200/70">
       <div className="flex items-center gap-2 mb-4">
         <Banknote size={14} className="text-cyan-300" />
-        <h3 className="text-sm font-semibold text-slate-900 tracking-tight">
+        <h3 className="text-sm font-semibold text-content tracking-tight">
           Economic Indicators (FRED)
         </h3>
       </div>
 
       {rows.length === 0 ? (
-        <div className="text-sm text-slate-500 py-6 text-center">
+        <div className="text-sm text-content-muted py-6 text-center">
           No economic signals yet. Pipeline runs every 15 minutes.
         </div>
       ) : (
@@ -72,13 +72,13 @@ export const EconomicIndicators = ({ signals, loading }: Props) => {
             return (
               <div
                 key={s.id}
-                className="flex items-center gap-3 py-1.5 border-b border-slate-100 last:border-b-0"
+                className="flex items-center gap-3 py-1.5 border-b border-line last:border-b-0"
               >
                 {/* Arrow icon */}
                 {(() => {
                   const ArrIcon = score > 0.05 ? TrendingUp : score < -0.05 ? TrendingDown : Minus;
-                  const arrColor = score > 0.05 ? "text-emerald-500" : score < -0.05 ? "text-rose-500" : "text-slate-400";
-                  const arrBg = score > 0.05 ? "bg-emerald-50" : score < -0.05 ? "bg-rose-50" : "bg-slate-50";
+                  const arrColor = score > 0.05 ? "text-emerald-500" : score < -0.05 ? "text-rose-500" : "text-content-subtle";
+                  const arrBg = score > 0.05 ? "bg-emerald-50" : score < -0.05 ? "bg-rose-50" : "bg-surface";
                   return (
                     <div className={clsx("w-7 h-7 rounded-lg flex items-center justify-center shrink-0", arrBg)}>
                       <ArrIcon size={13} className={arrColor} />
@@ -87,17 +87,17 @@ export const EconomicIndicators = ({ signals, loading }: Props) => {
                 })()}
 
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm text-slate-800 font-medium truncate">
+                  <div className="text-sm text-content font-medium truncate">
                     {SERIES_LABEL[s.series_key] || s.series_key}
                   </div>
-                  <div className="text-[10px] text-slate-400 uppercase tracking-wider">
+                  <div className="text-[10px] text-content-subtle uppercase tracking-wider">
                     {s.series_key}
                   </div>
                 </div>
 
                 <div className="text-right shrink-0">
                   {s.raw_value !== null && (
-                    <div className="text-xs text-slate-500 tabular-nums">
+                    <div className="text-xs text-content-muted tabular-nums">
                       {Number(s.raw_value).toFixed(2)}
                     </div>
                   )}

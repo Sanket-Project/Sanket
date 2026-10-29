@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -55,7 +56,7 @@ const CopyButton = ({ text, className = "" }: { text: string; className?: string
   return (
     <button
       onClick={handleCopy}
-      className={`p-1.5 rounded-lg text-slate-400 hover:text-violet-600 hover:bg-violet-50 border border-transparent hover:border-violet-100 transition-all duration-200 active:scale-90 ${className}`}
+      className={`p-1.5 rounded-lg text-content-subtle hover:text-accent hover:bg-accent-soft border border-transparent hover:border-accent/20 transition-all duration-200 active:scale-90 ${className}`}
       title="Copy to clipboard"
     >
       {copied ? <Check size={13} /> : <Copy size={13} />}
@@ -120,15 +121,15 @@ export const WebhooksPage = () => {
       header: "Endpoint URL",
       render: (e) => (
         <div className="flex items-center gap-2 group max-w-[480px]">
-          <div className="h-8 w-8 rounded-lg bg-slate-50 border border-slate-200/60 flex items-center justify-center shrink-0 text-slate-400 group-hover:text-violet-600 transition-colors">
+          <div className="h-8 w-8 rounded-lg bg-surface border border-line/60 flex items-center justify-center shrink-0 text-content-subtle group-hover:text-accent transition-colors">
             <Server size={14} />
           </div>
           <div className="truncate flex-1">
-            <div className="font-mono text-xs text-slate-700 font-semibold truncate hover:text-slate-900">
+            <div className="font-mono text-xs text-content font-semibold truncate hover:text-content">
               {e.url}
             </div>
             {e.description && (
-              <div className="text-xs text-slate-400 mt-0.5 font-medium">{e.description}</div>
+              <div className="text-xs text-content-subtle mt-0.5 font-medium">{e.description}</div>
             )}
           </div>
           <CopyButton text={e.url} className="opacity-0 group-hover:opacity-100 shrink-0" />
@@ -146,7 +147,7 @@ export const WebhooksPage = () => {
             </Badge>
           ))}
           {e.enabled_events.length > 2 && (
-            <Badge variant="default" className="font-mono text-[9px] bg-slate-50 text-slate-500">
+            <Badge variant="default" className="font-mono text-[9px] bg-surface text-content-muted">
               +{e.enabled_events.length - 2} more
             </Badge>
           )}
@@ -173,7 +174,7 @@ export const WebhooksPage = () => {
             {e.failure_count}
           </Badge>
         ) : (
-          <span className="text-slate-400 text-xs font-semibold">0</span>
+          <span className="text-content-subtle text-xs font-semibold">0</span>
         ),
     },
     {
@@ -185,7 +186,7 @@ export const WebhooksPage = () => {
           variant="ghost"
           size="sm"
           icon={<Trash2 size={13} />}
-          className="text-slate-400 hover:text-rose-600 hover:bg-rose-50/50 border border-transparent hover:border-rose-100 transition-colors"
+          className="text-content-subtle hover:text-rose-600 hover:bg-rose-50/50 border border-transparent hover:border-rose-100 transition-colors"
           onClick={(ev) => {
             ev.stopPropagation();
             setConfirmDeleteId(e.id);
@@ -203,8 +204,8 @@ export const WebhooksPage = () => {
       header: "Event Trigger",
       render: (d) => (
         <div className="flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-violet-400 shrink-0" />
-          <span className="font-mono text-xs font-semibold text-slate-700">{d.event_type}</span>
+          <div className="h-2 w-2 rounded-full bg-accent shrink-0" />
+          <span className="font-mono text-xs font-semibold text-content">{d.event_type}</span>
         </div>
       ),
     },
@@ -217,7 +218,7 @@ export const WebhooksPage = () => {
       key: "attempts",
       header: "Attempts",
       align: "center",
-      render: (d) => <span className="font-mono text-xs font-semibold text-slate-600">{d.attempt_count}</span>,
+      render: (d) => <span className="font-mono text-xs font-semibold text-content-muted">{d.attempt_count}</span>,
     },
     {
       key: "response",
@@ -237,7 +238,7 @@ export const WebhooksPage = () => {
             HTTP {d.response_status}
           </Badge>
         ) : (
-          <span className="text-slate-400 text-xs font-medium">—</span>
+          <span className="text-content-subtle text-xs font-medium">—</span>
         ),
     },
     {
@@ -246,7 +247,7 @@ export const WebhooksPage = () => {
       render: (d) => (
         <span
           title={fmtDateTime(d.delivered_at ?? d.created_at)}
-          className="text-slate-400 text-xs font-medium"
+          className="text-content-subtle text-xs font-medium"
         >
           {fmtRelative(d.delivered_at ?? d.created_at)}
         </span>
@@ -278,16 +279,13 @@ export const WebhooksPage = () => {
   return (
     <div className="space-y-6">
       {/* Header section */}
-      <div className="flex items-center justify-between animate-fade-in stagger-1 bg-white/70 border border-slate-200/60 p-6 rounded-2xl shadow-sm backdrop-blur-md">
+      <div className="flex items-center justify-between animate-fade-in stagger-1 bg-surface/70 border border-line/60 p-6 rounded-2xl shadow-sm backdrop-blur-md">
         <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-2xl bg-violet-50 border border-violet-200/60 flex items-center justify-center text-violet-600 shadow-inner shrink-0">
+          <div className="h-12 w-12 rounded-2xl bg-accent-soft border border-accent/60 flex items-center justify-center text-accent shadow-inner shrink-0">
             <Webhook size={24} className="animate-pulse" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-800">Webhooks</h1>
-            <p className="text-slate-500 mt-0.5 text-sm">
-              Manage developer endpoint routes, monitor live telemetry, and review delivery history.
-            </p>
+            <PageHeader title="Webhooks" description={<> Manage developer endpoint routes, monitor live telemetry, and review delivery history. </>} />
           </div>
         </div>
         <Button icon={<Plus size={15} />} onClick={() => setOpenCreate(true)}>
@@ -301,7 +299,7 @@ export const WebhooksPage = () => {
         className="animate-fade-in stagger-2 shadow-sm"
         title={
           <div className="flex items-center gap-2">
-            <Server size={16} className="text-slate-400" />
+            <Server size={16} className="text-content-subtle" />
             <span>Active Integrations</span>
             <Badge variant="primary" className="ml-1 text-[9px] py-0.5 px-2">
               {endpoints?.length ?? 0}
@@ -314,7 +312,7 @@ export const WebhooksPage = () => {
           columns={endpointCols}
           rowKey={(e) => e.id}
           empty={
-            <div className="py-6 text-center text-slate-400 text-sm font-medium">
+            <div className="py-6 text-center text-content-subtle text-sm font-medium">
               No webhook endpoints configured yet.
             </div>
           }
@@ -328,10 +326,10 @@ export const WebhooksPage = () => {
         title={
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-2">
-              <Activity size={16} className="text-slate-400" />
+              <Activity size={16} className="text-content-subtle" />
               <span>Real-time Deliveries</span>
             </div>
-            <span className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1">
+            <span className="text-[10px] text-content-subtle font-semibold tracking-wider uppercase bg-surface border border-line rounded-lg px-2.5 py-1">
               Click row to inspect payload
             </span>
           </div>
@@ -346,7 +344,7 @@ export const WebhooksPage = () => {
             setActiveTab("payload");
           }}
           empty={
-            <div className="py-6 text-center text-slate-400 text-sm font-medium">
+            <div className="py-6 text-center text-content-subtle text-sm font-medium">
               No webhook deliveries recorded yet.
             </div>
           }
@@ -370,7 +368,7 @@ export const WebhooksPage = () => {
             <div className="h-7 w-7 rounded-lg bg-emerald-50 border border-emerald-200/50 flex items-center justify-center text-emerald-600">
               <Check size={14} className="stroke-[3]" />
             </div>
-            <span className="font-bold text-slate-800">Signing Secret Generated</span>
+            <span className="font-bold text-content">Signing Secret Generated</span>
           </div>
         }
         footer={
@@ -378,15 +376,15 @@ export const WebhooksPage = () => {
         }
       >
         <div className="space-y-4">
-          <p className="text-sm text-slate-600 leading-relaxed">
+          <p className="text-sm text-content-muted leading-relaxed">
             This secret signature will **only be shown once**. Copy and save it immediately to securely verify the HMAC signature header on incoming payloads.
           </p>
 
-          <div className="bg-slate-50 border border-slate-200/80 p-3 rounded-xl flex items-center justify-between gap-3 shadow-inner">
-            <span className="font-mono text-xs text-slate-800 font-semibold truncate select-all">
+          <div className="bg-surface border border-line/80 p-3 rounded-xl flex items-center justify-between gap-3 shadow-inner">
+            <span className="font-mono text-xs text-content font-semibold truncate select-all">
               {revealedSecret?.secret}
             </span>
-            <CopyButton text={revealedSecret?.secret ?? ""} className="bg-white hover:bg-violet-100 shadow-sm border border-slate-200" />
+            <CopyButton text={revealedSecret?.secret ?? ""} className="bg-surface hover:bg-accent-soft shadow-sm border border-line" />
           </div>
 
           <div className="flex gap-2.5 items-start bg-amber-50 border border-amber-200/50 p-3.5 rounded-xl text-xs text-amber-800 font-medium leading-relaxed">
@@ -406,12 +404,12 @@ export const WebhooksPage = () => {
         title={
           selectedDelivery && (
             <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-lg bg-slate-50 border border-slate-200/50 flex items-center justify-center text-slate-400">
+              <div className="h-8 w-8 rounded-lg bg-surface border border-line/50 flex items-center justify-center text-content-subtle">
                 <Code size={15} />
               </div>
               <div>
-                <span className="font-bold text-slate-800 tracking-tight text-lg">Delivery Inspector</span>
-                <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                <span className="font-bold text-content tracking-tight text-lg">Delivery Inspector</span>
+                <div className="text-[10px] text-content-subtle font-mono mt-0.5">
                   ID: {selectedDelivery.event_id}
                 </div>
               </div>
@@ -422,8 +420,8 @@ export const WebhooksPage = () => {
           selectedDelivery && (
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-1.5">
-                <Calendar size={13} className="text-slate-400" />
-                <span className="text-xs text-slate-500 font-medium">
+                <Calendar size={13} className="text-content-subtle" />
+                <span className="text-xs text-content-muted font-medium">
                   {fmtDateTime(selectedDelivery.created_at)}
                 </span>
               </div>
@@ -451,28 +449,28 @@ export const WebhooksPage = () => {
           <div className="space-y-4 animate-fade-in">
             {/* Status overview badges */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="bg-slate-50 border border-slate-200/50 p-2.5 rounded-xl">
-                <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Event Trigger</div>
-                <div className="text-xs font-mono font-bold text-slate-700 mt-1 truncate">
+              <div className="bg-surface border border-line/50 p-2.5 rounded-xl">
+                <div className="text-[10px] font-semibold text-content-subtle uppercase tracking-wider">Event Trigger</div>
+                <div className="text-xs font-mono font-bold text-content mt-1 truncate">
                   {selectedDelivery.event_type}
                 </div>
               </div>
-              <div className="bg-slate-50 border border-slate-200/50 p-2.5 rounded-xl">
-                <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Status</div>
+              <div className="bg-surface border border-line/50 p-2.5 rounded-xl">
+                <div className="text-[10px] font-semibold text-content-subtle uppercase tracking-wider">Status</div>
                 <div className="mt-1">
                   <Badge variant={STATUS_VARIANT[selectedDelivery.status]} className="text-[9px]">
                     {selectedDelivery.status}
                   </Badge>
                 </div>
               </div>
-              <div className="bg-slate-50 border border-slate-200/50 p-2.5 rounded-xl">
-                <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Attempt Count</div>
-                <div className="text-xs font-bold text-slate-700 mt-1">
+              <div className="bg-surface border border-line/50 p-2.5 rounded-xl">
+                <div className="text-[10px] font-semibold text-content-subtle uppercase tracking-wider">Attempt Count</div>
+                <div className="text-xs font-bold text-content mt-1">
                   {selectedDelivery.attempt_count} / 5
                 </div>
               </div>
-              <div className="bg-slate-50 border border-slate-200/50 p-2.5 rounded-xl">
-                <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Response Status</div>
+              <div className="bg-surface border border-line/50 p-2.5 rounded-xl">
+                <div className="text-[10px] font-semibold text-content-subtle uppercase tracking-wider">Response Status</div>
                 <div className="mt-1">
                   {selectedDelivery.response_status != null ? (
                     <Badge
@@ -482,7 +480,7 @@ export const WebhooksPage = () => {
                       HTTP {selectedDelivery.response_status}
                     </Badge>
                   ) : (
-                    <span className="text-xs font-semibold text-slate-400">NONE</span>
+                    <span className="text-xs font-semibold text-content-subtle">NONE</span>
                   )}
                 </div>
               </div>
@@ -516,22 +514,22 @@ export const WebhooksPage = () => {
                 <div className="absolute top-3 right-3 z-10">
                   <CopyButton
                     text={JSON.stringify(selectedDelivery.payload, null, 2)}
-                    className="bg-slate-800/80 border border-slate-700/80 hover:bg-slate-700/90 text-slate-300 hover:text-white backdrop-blur shadow-md"
+                    className="bg-surface-2/80 border border-line/80 hover:bg-surface-2/90 text-content-subtle hover:text-white backdrop-blur shadow-md"
                   />
                 </div>
-                <pre className="bg-slate-950 text-slate-200 font-mono text-xs p-4 rounded-xl max-h-[350px] overflow-auto border border-slate-800/90 shadow-2xl">
+                <pre className="bg-surface text-content font-mono text-xs p-4 rounded-xl max-h-[350px] overflow-auto border border-line/90 shadow-2xl">
                   {JSON.stringify(selectedDelivery.payload, null, 2)}
                 </pre>
               </div>
             ) : (
               <div className="space-y-2">
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Raw Response Body</div>
+                <div className="text-[10px] font-bold text-content-subtle uppercase tracking-widest px-1">Raw Response Body</div>
                 {selectedDelivery.response_body ? (
-                  <pre className="bg-slate-900 text-rose-300 border border-slate-800 font-mono text-xs p-4 rounded-xl max-h-[350px] overflow-auto">
+                  <pre className="bg-surface text-rose-300 border border-line font-mono text-xs p-4 rounded-xl max-h-[350px] overflow-auto">
                     {selectedDelivery.response_body}
                   </pre>
                 ) : (
-                  <div className="border border-slate-200/60 rounded-xl bg-slate-50/50 p-8 text-center text-slate-400 text-sm font-semibold">
+                  <div className="border border-line/60 rounded-xl bg-surface/50 p-8 text-center text-content-subtle text-sm font-semibold">
                     No response headers or body were received back from your webhook endpoint.
                   </div>
                 )}
@@ -545,7 +543,7 @@ export const WebhooksPage = () => {
         open={!!confirmDeleteId}
         title="Delete webhook endpoint?"
         message={
-          <p className="text-sm text-slate-600 dark:text-slate-400">
+          <p className="text-sm text-content-muted dark:text-content-subtle">
             This will permanently remove the endpoint and stop all future deliveries. In-flight
             deliveries will not be retried.
           </p>
@@ -592,10 +590,10 @@ const CreateModal = ({
       onClose={onClose}
       title={
         <div className="flex items-center gap-2.5">
-          <div className="h-8 w-8 rounded-lg bg-violet-50 border border-violet-200/50 flex items-center justify-center text-violet-600">
+          <div className="h-8 w-8 rounded-lg bg-accent-soft border border-accent/50 flex items-center justify-center text-accent">
             <Webhook size={16} />
           </div>
-          <span className="font-bold text-slate-800">Add Webhook Endpoint</span>
+          <span className="font-bold text-content">Add Webhook Endpoint</span>
         </div>
       }
       size="lg"
@@ -642,14 +640,14 @@ const CreateModal = ({
               <button
                 type="button"
                 onClick={selectAll}
-                className="text-[10px] text-violet-600 font-bold hover:text-violet-700 bg-violet-50 hover:bg-violet-100 px-2 py-1 rounded-md transition"
+                className="text-[10px] text-accent font-bold hover:text-accent bg-accent-soft hover:bg-accent-soft px-2 py-1 rounded-md transition"
               >
                 Select All
               </button>
               <button
                 type="button"
                 onClick={selectNone}
-                className="text-[10px] text-slate-500 font-bold hover:text-slate-700 bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded-md transition"
+                className="text-[10px] text-content-muted font-bold hover:text-content bg-surface-2 hover:bg-surface-3 px-2 py-1 rounded-md transition"
               >
                 Clear
               </button>
@@ -664,8 +662,8 @@ const CreateModal = ({
                   key={ev}
                   className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border cursor-pointer transition-all duration-200 hover:-translate-y-px select-none active:scale-[0.985] ${
                     isSelected
-                      ? "bg-violet-50/70 border-violet-300 text-violet-900 shadow-sm"
-                      : "bg-white border-slate-200 hover:bg-slate-50 text-slate-600"
+                      ? "bg-accent-soft/70 border-accent/20 text-accent shadow-sm"
+                      : "bg-surface border-line hover:bg-surface text-content-muted"
                   }`}
                 >
                   <input
@@ -675,7 +673,7 @@ const CreateModal = ({
                     onChange={() => toggle(ev)}
                   />
                   <div className={`h-4.5 w-4.5 rounded-md border flex items-center justify-center transition-colors ${
-                    isSelected ? "bg-violet-600 border-violet-600 text-white" : "border-slate-300 bg-white"
+                    isSelected ? "bg-accent border-accent/20 text-white" : "border-line-strong bg-surface"
                   }`}>
                     {isSelected && <Check size={12} className="stroke-[3.5]" />}
                   </div>

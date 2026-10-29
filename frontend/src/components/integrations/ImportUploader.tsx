@@ -105,6 +105,7 @@ export function ImportUploader({ kind, onImported, mode = "onboarding" }: {
     ? !selections.length ? "Select at least one table." : selections.map((selection) => {
       const table = analysis.tables!.find((t) => t.id === selection.id)!;
       return mappingError(kind, selection.mapping)
+        || (kind !== "products" && ((table.new_sku_count || 0) > 0 || selection.mapping.sku !== table.mapping.sku || selection.mapping.name !== table.mapping.name) && !selection.allow_new_skus ? "Review new SKU creation before importing." : null)
         || (kind === "sales" && (table.date_review_counts?.[selection.mapping.timestamp] || 0) > 0 && !selection.date_order ? "Select the date order before importing ambiguous dates." : null)
         || (table.review_rows.some((n) => !selection.include_review_rows.includes(n) && !selection.exclude_rows.includes(n)) ? "Review ambiguous rows before importing." : null);
     }).find(Boolean)
@@ -112,7 +113,7 @@ export function ImportUploader({ kind, onImported, mode = "onboarding" }: {
   const problem = error || validation || (v2Preview && !v2Preview.can_confirm ? "Resolve all V2 preview errors before confirming." : null);
 
   function update(id: string, patch: Partial<TableSelection>) {
-    setSelections((previous) => previous.map((s) => s.id === id ? { ...s, ...patch } : s));
+    setSelections((previous) => previous.map((s) => s.id === id ? { ...s, ...patch, ...(patch.mapping ? { allow_new_skus: false } : {}) } : s));
     setResult(null);
   }
 
@@ -192,6 +193,13 @@ export function ImportUploader({ kind, onImported, mode = "onboarding" }: {
         {table.ai_state !== "success" && table.ai_state !== "disabled" && <p role="status" className="text-xs">AI suggestions unavailable. Manual mapping is available.</p>}
         {selected && <>
           <Button size="sm" variant="ghost" onClick={() => void analyze(file, undefined, table.id)}>Suggest mapping for this table</Button>
+          {kind !== "products" && ((table.new_sku_count || 0) > 0 || selected.mapping.sku !== table.mapping.sku || selected.mapping.name !== table.mapping.name) && <fieldset className="space-y-2 rounded-xl border border-line p-3 text-xs">
+            <legend>New SKU review</legend>
+            <p>{table.new_sku_count || 0} new SKU codes detected in the suggested mapping. Check for spelling differences before creating items.</p>
+            {!!table.new_skus?.length && <details open><summary>New SKU codes{table.new_sku_count && table.new_sku_count > table.new_skus.length ? ` (first ${table.new_skus.length})` : ""}</summary><ul className="max-h-40 overflow-y-auto">{table.new_skus.map((code) => <li key={code}>{code}</li>)}</ul></details>}
+            {(selected.mapping.sku !== table.mapping.sku || selected.mapping.name !== table.mapping.name) && <p>The SKU mapping changed. Review the selected source column; new codes are checked again on import.</p>}
+            <label className="flex items-center gap-2"><input type="checkbox" checked={!!selected.allow_new_skus} onChange={(e) => update(table.id, { allow_new_skus: e.target.checked })} />Create new SKUs from the selected mapping</label>
+          </fieldset>}
           {kind === "sales" && <div className="space-y-2 text-xs"><label>Date interpretation<select className="input" aria-label={`${table.sheet}: date order`} value={selected.date_order || ""} onChange={(e) => update(table.id, { date_order: (e.target.value || undefined) as TableSelection["date_order"] })}><option value="">Use unambiguous source dates</option><option value="dmy">Day / month / year</option><option value="mdy">Month / day / year</option></select></label>
             {(table.date_reviews?.[selected.mapping.timestamp] || []).map((date) => <p key={date.row}>Row {date.row}: {date.value} → day/month: {date.dmy}; month/day: {date.mdy}</p>)}
           </div>}
@@ -217,7 +225,13 @@ export function ImportUploader({ kind, onImported, mode = "onboarding" }: {
     </fieldset>}
     {analysis?.analysis_token && <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />Remember confirmed format in this workspace after a successful import</label>}
     {problem && <p role="alert" className="rounded-xl border border-line p-3 text-sm">{problem}</p>}
-    {result && <p role="status">{describeUploadResult(result)}</p>}
+    {result && <section role="status" aria-label="Import result" className="space-y-1 rounded-xl border border-line p-3 text-xs">
+      <p>{describeUploadResult(result)}</p>
+      {!!result.source_columns_preserved && <p>{result.source_columns_preserved} row(s) include preserved source fields that SANKET does not currently analyze.</p>}
+      {result.analytics_readiness && <ul>{Object.values(result.analytics_readiness).map((metric) =>
+        <li key={metric.label}>{metric.label}: {metric.status === "available" ? "ready" : metric.reason || "unavailable"}</li>
+      )}</ul>}
+    </section>}
     {v2Result && <p role="status">V2 import complete: {String(v2Result.rows ?? 0)} rows, {String(v2Result.inserted ?? 0)} inserted, {String(v2Result.skipped ?? 0)} skipped.</p>}
     <Button size="sm" variant="secondary" onClick={() => void run()} loading={busy} disabled={(!analysis && !v2Preview) || !file || pending || busy || !!problem || role === "viewer"}>{result || v2Result ? "Re-import" : "Import"}</Button>
   </div>;

@@ -106,14 +106,14 @@ export const ForecastChangeExplanation = ({
   return (
     <section
       aria-labelledby="forecast-change-title"
-      className="glass rounded-3xl border border-violet-200/60 dark:border-violet-900/50 overflow-hidden shadow-lg shadow-violet-100/40 dark:shadow-none animate-fade-in"
+      className="glass rounded-2xl border border-accent/60 dark:border-accent/50 overflow-hidden shadow-lg shadow-sm/40 dark:shadow-none animate-fade-in"
     >
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.45fr)]">
-        <div className="p-6 lg:p-7 bg-gradient-to-br from-violet-50/80 via-white/30 to-transparent dark:from-violet-950/25 dark:via-slate-950/10 border-b lg:border-b-0 lg:border-r border-violet-100/80 dark:border-violet-900/40">
-          <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400">
+        <div className="p-6 lg:p-7 bg-gradient-to-br from-violet-50/80 via-white/30 to-transparent dark:from-violet-950/25 dark:via-slate-950/10 border-b lg:border-b-0 lg:border-r border-accent/80 dark:border-accent/40">
+          <div className="flex items-center gap-2 text-accent dark:text-accent">
             <Sparkles size={15} aria-hidden="true" />
-            <h2 id="forecast-change-title" className="text-xs font-extrabold uppercase tracking-[0.16em]">
-              Why did the forecast change?
+            <h2 id="forecast-change-title" className="text-xs font-semibold uppercase tracking-[0.16em]">
+              Trend adjustment scenario
             </h2>
           </div>
 
@@ -123,21 +123,21 @@ export const ForecastChangeExplanation = ({
                 "h-11 w-11 rounded-2xl flex items-center justify-center shrink-0",
                 direction === "up" && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/35 dark:text-emerald-300",
                 direction === "down" && "bg-rose-100 text-rose-700 dark:bg-rose-900/35 dark:text-rose-300",
-                direction === "flat" && "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
+                direction === "flat" && "bg-surface-2 text-content-muted dark:bg-surface-2 dark:text-content-subtle",
               )}
             >
               <DirectionIcon size={21} aria-hidden="true" />
             </span>
             <div>
-              <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
-                Demand expected to {direction === "up" ? "increase" : direction === "down" ? "decrease" : "stay broadly unchanged"}
+              <p className="text-sm font-semibold text-content-muted dark:text-content-subtle">
+                Assumed demand change: {direction === "up" ? "increase" : direction === "down" ? "decrease" : "broadly unchanged"}
               </p>
               <p
                 className={clsx(
-                  "text-4xl font-black tracking-tight tabular-nums",
+                  "text-4xl font-semibold tracking-tight tabular-nums",
                   direction === "up" && "text-emerald-700 dark:text-emerald-300",
                   direction === "down" && "text-rose-700 dark:text-rose-300",
-                  direction === "flat" && "text-slate-800 dark:text-slate-100",
+                  direction === "flat" && "text-content dark:text-content",
                 )}
               >
                 {signedPercent(shift)}
@@ -145,24 +145,24 @@ export const ForecastChangeExplanation = ({
             </div>
           </div>
 
-          <p className="mt-4 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-            Compared with the historical model baseline. Driver impacts are additive, so the rows reconcile to the net change above.
+          <p className="mt-4 text-xs leading-relaxed text-content-muted dark:text-content-subtle">
+            These hand-set adjustments have not been validated to improve accuracy. Their contributions add to the assumed change from the historical baseline.
           </p>
 
-          <div className="mt-5 pt-4 border-t border-violet-100/80 dark:border-violet-900/40 space-y-2.5 text-xs text-slate-500 dark:text-slate-400">
+          <div className="mt-5 pt-4 border-t border-accent/80 dark:border-accent/40 space-y-2.5 text-xs text-content-muted dark:text-content-subtle">
             <div className="flex items-center justify-between gap-3">
               <span className="flex items-center gap-1.5"><Activity size={12} aria-hidden="true" /> Uncertainty band</span>
-              <strong className="text-slate-700 dark:text-slate-200 tabular-nums">
+              <strong className="text-content dark:text-content tabular-nums">
                 {bandChange >= 0 ? "Widened " : "Narrowed "}{signedPercent(Math.abs(bandChange))}
               </strong>
             </div>
             <div className="flex items-center justify-between gap-3">
-              <span>Evidence reviewed</span>
-              <strong className="text-slate-700 dark:text-slate-200 tabular-nums">{sampleCount.toLocaleString()} signals</strong>
+              <span>Signals used</span>
+              <strong className="text-content dark:text-content tabular-nums">{sampleCount.toLocaleString()} signals</strong>
             </div>
             <div className="flex items-center justify-between gap-3">
               <span>Baseline source</span>
-              <strong className="text-slate-700 dark:text-slate-200 capitalize">{titleCase(dataSource)}</strong>
+              <strong className="text-content dark:text-content capitalize">{titleCase(dataSource)}</strong>
             </div>
           </div>
         </div>
@@ -170,16 +170,16 @@ export const ForecastChangeExplanation = ({
         <div className="p-6 lg:p-7">
           <div className="flex items-start justify-between gap-4 mb-5">
             <div>
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Forecast drivers</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Contribution to the median forecast, in percentage points</p>
+              <h3 className="text-sm font-bold text-content dark:text-content">Scenario contributions</h3>
+              <p className="text-xs text-content-muted dark:text-content-subtle mt-0.5">Assumed change in the median, in percentage points</p>
             </div>
-            <span className="hidden sm:inline-flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400 bg-slate-100/80 dark:bg-slate-800 px-2 py-1 rounded-lg">
+            <span className="hidden sm:inline-flex items-center gap-1 text-[10px] text-content-muted dark:text-content-subtle bg-surface-2/80 dark:bg-surface-2 px-2 py-1 rounded-lg">
               <Info size={11} aria-hidden="true" /> Positive lifts · negative offsets
             </span>
           </div>
 
           {drivers.length > 0 ? (
-            <ol className="space-y-4" aria-label="Forecast driver contributions">
+            <ol className="space-y-4" aria-label="Scenario contributions">
               {drivers.map((driver, index) => {
                 const positive = driver.contribution_pct > 0;
                 const negative = driver.contribution_pct < 0;
@@ -193,7 +193,7 @@ export const ForecastChangeExplanation = ({
                           "h-8 w-8 rounded-xl flex items-center justify-center shrink-0",
                           positive && "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/25 dark:text-emerald-300",
                           negative && "bg-rose-50 text-rose-700 dark:bg-rose-900/25 dark:text-rose-300",
-                          !positive && !negative && "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300",
+                          !positive && !negative && "bg-surface-2 text-content-muted dark:bg-surface-2 dark:text-content-subtle",
                         )}
                       >
                         <DriverIcon size={15} aria-hidden="true" />
@@ -201,10 +201,10 @@ export const ForecastChangeExplanation = ({
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-3">
                           <div className="min-w-0 flex items-center gap-2">
-                            <span className="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate">
+                            <span className="text-xs font-semibold text-content dark:text-content truncate">
                               {explanationDriverLabel(driver)}
                             </span>
-                            <span className="hidden sm:inline rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 shrink-0">
+                            <span className="hidden sm:inline rounded-md bg-surface-2 dark:bg-surface-2 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-content-muted dark:text-content-subtle shrink-0">
                               {sourceLabel(driver.source)}
                             </span>
                           </div>
@@ -213,15 +213,15 @@ export const ForecastChangeExplanation = ({
                               "text-xs tabular-nums shrink-0",
                               positive && "text-emerald-700 dark:text-emerald-300",
                               negative && "text-rose-700 dark:text-rose-300",
-                              !positive && !negative && "text-slate-500",
+                              !positive && !negative && "text-content-muted",
                             )}
                           >
                             {signedPoints(driver.contribution_pct)}
                           </strong>
                         </div>
-                        <div className="mt-1.5 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                        <div className="mt-1.5 h-1.5 rounded-full bg-surface-2 dark:bg-surface-2 overflow-hidden">
                           <div
-                            className={clsx("h-full rounded-full", positive ? "bg-emerald-500" : negative ? "bg-rose-500" : "bg-slate-400")}
+                            className={clsx("h-full rounded-full", positive ? "bg-emerald-500" : negative ? "bg-rose-500" : "bg-surface-3")}
                             style={{ width: `${width}%` }}
                           />
                         </div>
@@ -232,10 +232,10 @@ export const ForecastChangeExplanation = ({
               })}
             </ol>
           ) : (
-            <div className="min-h-40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center text-center px-5">
-              <Minus size={18} className="text-slate-400" aria-hidden="true" />
-              <p className="mt-2 text-sm font-semibold text-slate-700 dark:text-slate-200">No material external adjustment</p>
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Recent signals were neutral, unavailable, or offset one another.</p>
+            <div className="min-h-40 rounded-2xl border border-dashed border-line dark:border-line flex flex-col items-center justify-center text-center px-5">
+              <Minus size={18} className="text-content-subtle" aria-hidden="true" />
+              <p className="mt-2 text-sm font-semibold text-content dark:text-content">No material external adjustment</p>
+              <p className="mt-1 text-xs text-content-muted dark:text-content-subtle">Recent signals were neutral, unavailable, or offset one another.</p>
             </div>
           )}
         </div>

@@ -64,7 +64,7 @@ export function TrendScoreGauge({ score, loading, industry }: { score: TrendScor
 
       <div className="flex items-center gap-2 mb-5">
         <span className={cfg.accent}>{cfg.icon}</span>
-        <h3 className="text-sm font-bold text-slate-900 dark:text-white tracking-tight">
+        <h3 className="text-sm font-bold text-content dark:text-content tracking-tight">
           Overall Demand Trend
         </h3>
         {loading && (
@@ -79,7 +79,7 @@ export function TrendScoreGauge({ score, loading, industry }: { score: TrendScor
         <div className="relative shrink-0" style={{ width: 128, height: 128 }}>
           <svg width={128} height={128} viewBox="0 0 128 128">
             {/* Track */}
-            <circle cx={64} cy={64} r={R} fill="none" stroke="#e2e8f0" strokeWidth={STROKE} className="dark:stroke-slate-700" />
+            <circle cx={64} cy={64} r={R} fill="none" stroke="var(--border)" strokeWidth={STROKE}  />
             {/* Fill */}
             <circle
               cx={64} cy={64} r={R}
@@ -95,28 +95,28 @@ export function TrendScoreGauge({ score, loading, industry }: { score: TrendScor
           {/* Center value */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <DirIcon size={16} style={{ color: dirColor }} />
-            <span className="text-2xl font-black tabular-nums" style={{ color: dirColor }}>
+            <span className="text-2xl font-semibold tabular-nums" style={{ color: dirColor }}>
               {ready ? `${data.score >= 0 ? "+" : ""}${Math.round(data.score * 100)}` : "—"}
             </span>
-            <span className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">score</span>
+            <span className="text-[9px] text-content-subtle dark:text-content-muted font-semibold uppercase tracking-wider">score</span>
           </div>
         </div>
 
         <div className="flex-1 min-w-0 space-y-3">
           <div>
-            <p className="text-base font-bold text-slate-800 dark:text-slate-100 leading-snug">{v.text}</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{v.sub}</p>
+            <p className="text-base font-bold text-content dark:text-content leading-snug">{v.text}</p>
+            <p className="text-xs text-content-muted dark:text-content-subtle mt-0.5">{v.sub}</p>
           </div>
           <div className="flex items-center gap-3 text-xs">
             <div className="flex items-center gap-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-              <span className="text-slate-500 dark:text-slate-400">
+              <span className="text-content-muted dark:text-content-subtle">
                 {`${sampleCount.toLocaleString()} sample${sampleCount === 1 ? "" : "s"}${needs}`}
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
-              <span className="text-slate-500 dark:text-slate-400">{data.horizon_days}d horizon</span>
+              <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+              <span className="text-content-muted dark:text-content-subtle">{data.horizon_days}d horizon</span>
             </div>
           </div>
         </div>
@@ -124,24 +124,24 @@ export function TrendScoreGauge({ score, loading, industry }: { score: TrendScor
 
       {/* Agreement bar — only when there is evidence to measure it */}
       {agreement == null ? (
-        <p className="mt-5 text-[10px] text-slate-400 dark:text-slate-500">
+        <p className="mt-5 text-[10px] text-content-subtle dark:text-content-muted">
           Signal agreement is not shown: there is not enough recent signal evidence to measure it.
         </p>
       ) : (
       <div className="mt-5">
-        <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
+        <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-content-subtle dark:text-content-muted mb-1.5">
           <span>Signal agreement</span>
           <span className={agreement >= 70 ? "text-emerald-600 dark:text-emerald-400" : agreement >= 50 ? "text-amber-600 dark:text-amber-400" : "text-rose-500 dark:text-rose-400"}>
             {agreement >= 70 ? "High" : agreement >= 50 ? "Moderate" : "Low"} ({agreement}%)
           </span>
         </div>
-        <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-700/60 overflow-hidden">
+        <div className="h-2 rounded-full bg-surface-2 dark:bg-surface-2/60 overflow-hidden">
           <div
             className="h-2 rounded-full bg-[var(--accent)] transition-all duration-500"
             style={{ width: `${agreement}%` }}
           />
         </div>
-        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+        <p className="text-[10px] text-content-subtle dark:text-content-muted mt-1">
           {agreement >= 70 ? "Sources are largely aligned — high confidence" : agreement >= 50 ? "Mixed signals — treat forecasts as directional" : "Sources conflict — treat as rough estimate"}
         </p>
       </div>

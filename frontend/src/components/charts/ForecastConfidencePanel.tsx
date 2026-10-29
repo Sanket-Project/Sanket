@@ -5,6 +5,7 @@ import clsx from "clsx";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Button } from "@/components/ui/Button";
 import { forecastConfidenceApi, type ConfidenceBand, type SkuConfidence } from "@/api/forecasts";
 import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
 
@@ -34,7 +35,7 @@ export const ForecastConfidencePanel = () => {
   const industry = useWorkspaceIndustry();
   const [open, setOpen] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["forecast-confidence", industry],
     queryFn: () => forecastConfidenceApi.list(50),
     retry: false,
@@ -42,14 +43,25 @@ export const ForecastConfidencePanel = () => {
 
   if (isLoading) return null;
 
+  if (isError) return (
+    <Card padding="none">
+      <div role="alert">
+        <EmptyState variant="subtle" icon={<Gauge size={20} />}
+          title="Readiness unavailable"
+          description="We could not load the readiness scores. Try again to check your forecast inputs."
+          action={<Button size="sm" variant="secondary" loading={isFetching} onClick={() => void refetch()}>Try again</Button>} />
+      </div>
+    </Card>
+  );
+
   if (!data || data.scored === 0) {
     return (
       <Card padding="none">
         <EmptyState
           variant="subtle"
           icon={<Gauge size={20} />}
-          title="No confidence scores yet"
-          description={data?.reason ?? "Run a forecast to score how much it can be trusted."}
+          title="No readiness scores yet"
+          description={data?.reason ?? "Run a forecast to check the readiness of your inputs."}
         />
       </Card>
     );
@@ -57,12 +69,12 @@ export const ForecastConfidencePanel = () => {
 
   return (
     <Card
-      title="How much can you trust this forecast?"
-      description={`${data.scored} SKUs scored — least trustworthy first, so you know what to fix.`}
+      title="Forecast data readiness"
+      description={`${data.scored} SKUs scored — lowest readiness first. This is an input-readiness score, not a probability of being right.`}
       action={
         <div className="text-right">
           <p className={clsx("font-heading text-2xl font-bold tabular-nums", tone(data.portfolio_confidence ?? 0))}>
-            {data.portfolio_confidence}%
+            {data.portfolio_confidence}/100
           </p>
           <p className="text-[10px] font-bold uppercase tracking-widest text-content-subtle">
             Portfolio
@@ -70,6 +82,7 @@ export const ForecastConfidencePanel = () => {
         </div>
       }
     >
+      {data.skus.length < data.scored && <p className="mb-3 text-xs text-content-subtle">Showing {data.skus.length} of {data.scored} scored SKUs, lowest readiness first. Portfolio score includes all {data.scored}.</p>}
       {data.by_band && (
         <div className="mb-4 flex flex-wrap gap-2">
           {(Object.keys(BAND) as ConfidenceBand[])
@@ -117,7 +130,7 @@ function Row({ sku, open, onToggle }: { sku: SkuConfidence; open: boolean; onTog
           />
         </span>
         <span className={clsx("w-12 shrink-0 text-right text-sm font-bold tabular-nums", tone(sku.confidence))}>
-          {sku.confidence}%
+          {sku.confidence}/100
         </span>
         <Badge variant={BAND[sku.band].variant} className="hidden shrink-0 sm:inline-flex">
           {BAND[sku.band].label}

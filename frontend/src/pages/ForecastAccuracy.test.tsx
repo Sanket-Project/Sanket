@@ -45,6 +45,31 @@ const renderPage = () =>
   );
 
 describe("Forecast accuracy (audit F02)", () => {
+  it("discloses capped scoring and compares simple rules on matching cohorts", async () => {
+    api.list.mockResolvedValue(response({
+      rows: [{ sku_id: "s1", sku_code: "A", model_name: "chronos", mape: 20,wape:20,bias_pct:20,coverage_p10_p90:80,n_obs:2,computed_at:null,weeks:[] }],
+      truncated: true,
+      summary: { points:2,skus:1,wape:20,bias_pct:20,coverage_p10_p90:80,baselines: {
+        last_value: { n_obs:2,excluded_missing_history:0,wape:40,forecast_wape:20,wape_skill:0.5 },
+        seasonal_naive: { n_obs:0,excluded_missing_history:2,wape:null,forecast_wape:null,wape_skill:null },
+      } },
+    }));
+    renderPage();
+    expect(await screen.findByRole("alert")).toHaveTextContent("Accuracy covers a limited subset");
+    expect(screen.getByText("Compared with simple forecasts")).toBeInTheDocument();
+    expect(screen.getByText(/50.0% less error/)).toBeInTheDocument();
+    expect(screen.getByText(/Historical data availability has not been verified/)).toBeInTheDocument();
+    expect(screen.getByText(/No matching history/)).toBeInTheDocument();
+  });
+  it("discloses when the detail response contains only part of the scored cohort", async () => {
+    api.list.mockResolvedValue(response({
+      rows: [{ sku_id: "s1", sku_code: "A", model_name: "chronos", mape: 20,wape:20,bias_pct:20,coverage_p10_p90:80,n_obs:2,computed_at:null,weeks:[] }],
+      scope: { run_limit:60,result_limit:50000,runs_considered:2,results_considered:20,
+        runs_truncated:false,results_truncated:false,detail_rows_total:10,detail_rows_returned:1,detail_truncated:true },
+    }));
+    renderPage();
+    expect(await screen.findByText(/Showing 1 of 10 scored SKU-model rows/)).toBeInTheDocument();
+  });
   beforeEach(() => {
     api.anomalies.mockResolvedValue({ industry: "fashion", window_days: 90, sku_count: 0, anomalous_skus: [] });
     api.backtest.mockReset();
@@ -79,7 +104,7 @@ describe("Forecast accuracy (audit F02)", () => {
       rows: [{ sku_id: "s1", sku_code: "KURTI-M", model_name: "chronos_zero_shot", mape: 25, wape: 25,
         bias_pct: 25, coverage_p10_p90: 100, n_obs: 1, computed_at: null, weeks: [] }],
       summary: { points: 1, skus: 1, wape: 25, bias_pct: 25, coverage_p10_p90: 100 },
-      excluded: { ...excluded, generated_after_period_start: 1 },
+      excluded: { ...excluded, generated_after_period_start: 1, unvalidated_scenario: 2 },
     }));
 
     renderPage();
@@ -88,6 +113,7 @@ describe("Forecast accuracy (audit F02)", () => {
     expect(screen.getByText("KURTI-M")).toBeInTheDocument();
     expect(screen.getAllByText("25.0%").length).toBeGreaterThan(0);
     expect(screen.getByText(/1 forecast made after its week had begun/)).toBeInTheDocument();
+    expect(screen.getByText(/2 unvalidated scenario forecasts/)).toBeInTheDocument();
   });
 
   it("reports backtests separately and labels them as made after the fact", async () => {

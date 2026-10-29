@@ -18,13 +18,13 @@ export const Card = ({
   children,
   ...rest
 }: Props) => {
-  const padCls = { none: "p-0", sm: "p-4", md: "p-6", lg: "p-8" }[padding];
+  const padCls = { none: "p-0", sm: "p-4", md: "p-5", lg: "p-6" }[padding];
 
   return (
     <div
       {...rest}
       className={clsx(
-        "rounded-[20px] bg-surface border border-line shadow-sm hover:shadow-md hover:border-line-strong transition-all duration-200 ease-out",
+        "min-w-0 rounded-2xl bg-surface border border-line shadow-sm",
         padCls,
         className,
       )}

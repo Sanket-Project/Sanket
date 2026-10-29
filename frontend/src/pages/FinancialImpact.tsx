@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DollarSign, TrendingUp, Package, AlertTriangle, Warehouse } from "@/components/ui/icons";
@@ -46,16 +47,15 @@ export const FinancialImpactPage = () => {
     <div className="space-y-6">
       <div className="flex items-end justify-between">
         <div>
-          <div className="flex items-center gap-2 text-violet-600 text-sm font-medium uppercase tracking-wider">
+          <div className="flex items-center gap-2 text-accent text-sm font-medium uppercase tracking-wider">
             <DollarSign size={14} /> Financial Impact
           </div>
-          <h1 className="text-3xl font-bold tracking-tight mt-1">Revenue at risk & inventory costs</h1>
-          <p className="text-slate-500 mt-1">Quantifies the financial exposure of current forecast uncertainty</p>
+          <PageHeader title="Revenue at risk & inventory costs" description={<> Quantifies the financial exposure of current forecast uncertainty </>} />
         </div>
         <select
           value={horizon}
           onChange={(e) => setHorizon(Number(e.target.value))}
-          className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 bg-white"
+          className="text-sm border border-line rounded-lg px-3 py-1.5 bg-surface"
         >
           {[4, 8, 12, 26].map((w) => (
             <option key={w} value={w}>{w}w horizon</option>
@@ -112,15 +112,15 @@ export const FinancialImpactPage = () => {
         <Card title="Holding vs. stockout exposure" description="Annual cost estimate per SKU">
           <div className="grid grid-cols-3 gap-4 mb-4 text-sm">
             <div className="bg-blue-50 rounded-lg p-3">
-              <p className="text-slate-500 text-xs">Annual Holding Cost</p>
-              <p className="font-bold text-slate-800">{fmtTotal(costs.totals.annual_holding_cost, costs.currency, costs.totals_by_currency, "holding_cost_annual")}</p>
+              <p className="text-content-muted text-xs">Annual Holding Cost</p>
+              <p className="font-bold text-content">{fmtTotal(costs.totals.annual_holding_cost, costs.currency, costs.totals_by_currency, "holding_cost_annual")}</p>
             </div>
             <div className="bg-orange-50 rounded-lg p-3">
-              <p className="text-slate-500 text-xs">Stockout Exposure</p>
-              <p className="font-bold text-slate-800">{fmtTotal(costs.totals.stockout_exposure_cost, costs.currency, costs.totals_by_currency, "stockout_exposure_cost")}</p>
+              <p className="text-content-muted text-xs">Stockout Exposure</p>
+              <p className="font-bold text-content">{fmtTotal(costs.totals.stockout_exposure_cost, costs.currency, costs.totals_by_currency, "stockout_exposure_cost")}</p>
             </div>
             <div className="bg-red-50 rounded-lg p-3">
-              <p className="text-slate-500 text-xs">Combined Impact</p>
+              <p className="text-content-muted text-xs">Combined Impact</p>
               <p className="font-bold text-red-700">{fmtTotal(costs.totals.total_impact, costs.currency, costs.totals_by_currency, "total_impact")}</p>
             </div>
           </div>
@@ -128,16 +128,16 @@ export const FinancialImpactPage = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100">
+                <tr className="border-b border-line">
                   {["SKU", "On-Hand", "Source", "Safety Stock", "Holding Cost", "Excess Holding", "Stockout Risk", "Total"].map((h) => (
-                    <th key={h} className="text-left py-2 px-3 text-slate-500 font-medium text-xs">{h}</th>
+                    <th key={h} className="text-left py-2 px-3 text-content-muted font-medium text-xs">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {(costs.skus ?? []).slice(0, 20).map((sku) => (
-                  <tr key={sku.sku_id} className="border-b border-slate-50 hover:bg-slate-50/50">
-                    <td className="py-2 px-3 font-mono text-xs text-slate-700">{sku.sku_code}</td>
+                  <tr key={sku.sku_id} className="border-b border-line hover:bg-surface/50">
+                    <td className="py-2 px-3 font-mono text-xs text-content">{sku.sku_code}</td>
                     <td className="py-2 px-3 tabular-nums">{fmtCompact(sku.on_hand_units ?? sku.safety_stock)}</td>
                     <td className="py-2 px-3">
                       {sku.on_hand_source === "fallback" ? (
@@ -169,16 +169,16 @@ export const FinancialImpactPage = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100">
+                <tr className="border-b border-line">
                   {["SKU", "P50 Demand", "P90 Demand", "Unit Price", "Revenue at Risk", "Excess Cost", "Net Impact"].map((h) => (
-                    <th key={h} className="text-left py-2 px-3 text-slate-500 font-medium text-xs">{h}</th>
+                    <th key={h} className="text-left py-2 px-3 text-content-muted font-medium text-xs">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {impact.by_sku.slice(0, 20).map((row) => (
-                  <tr key={row.sku_id} className="border-b border-slate-50 hover:bg-slate-50/50">
-                    <td className="py-2 px-3 font-mono text-xs text-slate-700">{row.sku_code}</td>
+                  <tr key={row.sku_id} className="border-b border-line hover:bg-surface/50">
+                    <td className="py-2 px-3 font-mono text-xs text-content">{row.sku_code}</td>
                     <td className="py-2 px-3">{fmtCompact(row.p50_demand)}</td>
                     <td className="py-2 px-3">{fmtCompact(row.p90_demand)}</td>
                     <td className="py-2 px-3">{fmt(row.unit_price, row.currency)}</td>

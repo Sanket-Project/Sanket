@@ -48,6 +48,16 @@ const renderPage = () =>
     </QueryClientProvider>,
   );
 
+it("labels readiness as points and service levels as unvalidated targets", async () => {
+  api.list.mockResolvedValue(listOf([decision()]));
+  renderPage();
+  expect(await screen.findByText("72/100 readiness")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", {name:/show working/i}));
+  expect(screen.getByText(/target, not a measured guarantee/)).toBeInTheDocument();
+  expect(screen.getByText(/independent weekly errors/)).toBeInTheDocument();
+  expect(screen.queryByText(/lets you hit the same/)).not.toBeInTheDocument();
+});
+
 it("keeps accepted-order details usable when frozen planning inputs are incomplete", async () => {
   api.list.mockResolvedValue(listOf([decision({ status: "accepted", accepted_units: 60, inputs: { unit_cost: 40, lead_time_days: 14 } })]));
   const { container } = renderPage();

@@ -87,6 +87,8 @@ export interface ConfidenceResponse {
   /** Set when no score could be produced (e.g. no completed forecast run). */
   reason?: string;
   portfolio_confidence?: number;
+  score_kind?: "data_readiness";
+  score_basis?: string;
   by_band?: Partial<Record<ConfidenceBand, number>>;
   skus: SkuConfidence[];
 }

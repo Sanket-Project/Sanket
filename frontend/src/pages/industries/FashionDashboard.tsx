@@ -1,14 +1,7 @@
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Shirt,
-  Sparkles,
-  Radio,
-  Boxes,
-  Flame,
-  Heart,
-  Star,
-  TrendingUp,
-} from "@/components/ui/icons";
+import { Shirt, Sparkles, Radio, Boxes } from "@/components/ui/icons";
 import { industryApi } from "@/api/industry";
 import { forecastsApi } from "@/api/forecasts";
 import { useAuthStore } from "@/stores/auth";
@@ -17,45 +10,15 @@ import { KPICard } from "@/components/charts/KPICard";
 import { PageLoader } from "@/components/ui/Spinner";
 import { ForecastChart } from "@/components/charts/ForecastChart";
 import { IndustryHero } from "@/components/dashboard/IndustryHero";
-import { InsightCallout } from "@/components/dashboard/InsightCallout";
 import { RankedCategories } from "@/components/dashboard/RankedCategories";
 import { fmtCompact } from "@/utils/format";
-import { industryAccent } from "@/utils/colors";
 
 
-const TREND_SIGNALS = [
-  {
-    signal: "Quiet Luxury Aesthetic",
-    source: "Instagram + TikTok",
-    sentiment: 94,
-    velocity: "+31%",
-    icon: <Star size={13} />,
-  },
-  {
-    signal: "Y2K Revival — Denim",
-    source: "Pinterest + Runway",
-    sentiment: 88,
-    velocity: "+27%",
-    icon: <Flame size={13} />,
-  },
-  {
-    signal: "Sustainable Fabrics",
-    source: "Google Search + Press",
-    sentiment: 76,
-    velocity: "+19%",
-    icon: <Heart size={13} />,
-  },
-];
 
-const KPI_SPARKS = {
-  skus: [2100, 2140, 2155, 2178, 2190, 2215, 2242],
-  signals: [38, 42, 47, 53, 58, 64, 71],
-  sellThrough: [62, 65, 67, 70, 68, 72, 74],
-};
 
 export const FashionDashboard = () => {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["fashion-overview"],
     queryFn: () => industryApi.overview("fashion"),
   });
@@ -71,7 +34,8 @@ export const FashionDashboard = () => {
     retry: false,
   });
 
-  if (isLoading || !data) return <PageLoader />;
+  if (isLoading) return <PageLoader />;
+  if (!data) return <EmptyState title="Industry overview unavailable" description="The source could not be loaded. No business metrics have been inferred." action={<button className="btn-secondary" onClick={() => void refetch()}>Retry overview</button>} />;
   const k = data.kpis;
 
   return (
@@ -85,52 +49,33 @@ export const FashionDashboard = () => {
         icon={<Shirt size={26} />}
         horizonWeeks={data.forecast_horizon_weeks}
         models={data.active_models}
-        healthScore={84}
-        extraBadge={
-          <span className="flex items-center gap-1 text-pink-600 dark:text-pink-400 font-semibold">
-            <TrendingUp size={10} /> SS26 season active
-          </span>
-        }
       />
 
       {/* ── Insight Callout ── */}
-      <InsightCallout
-        insight="'Quiet Luxury' trend surging across Instagram & TikTok — 31% demand velocity increase for neutral-toned Women's Apparel predicted in next 3 weeks."
-        confidence={91}
-        category="Trend Signal"
-        tone="success"
-        icon={<Sparkles size={18} />}
-        ctaLabel="View Trend Details"
-      />
+      <Card title="Signal insight"><p className="text-sm text-content-muted">No verified signal narrative is available from this overview. Review the source before acting.</p><Link to="/workspace/trends" className="mt-3 inline-flex text-sm font-medium text-accent">Review trend evidence</Link></Card>
 
       {/* ── KPI Cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <KPICard
           label="Active SKUs"
-          value={fmtCompact(k.active_skus)}
+          value={k.active_skus == null ? "Unavailable" : fmtCompact(k.active_skus)}
           icon={<Boxes size={15} />}
-          delta={0.084}
-          subtitle="vs. prior season"
+          subtitle="From the current source report"
           tone="default"
-          sparkPoints={KPI_SPARKS.skus}
         />
         <KPICard
           label="Validated Trend Signals"
-          value={fmtCompact(k.validated_signals)}
+          value={k.validated_signals == null ? "Unavailable" : fmtCompact(k.validated_signals)}
           icon={<Radio size={15} />}
-          delta={0.318}
-          subtitle="3 new this week"
+          subtitle="From the current source report"
           tone="success"
-          sparkPoints={KPI_SPARKS.signals}
         />
         <KPICard
           label="Avg Sell-Through Rate"
-          value="74%"
+          value="Unavailable"
           icon={<Sparkles size={15} />}
-          delta={0.06}
-          subtitle="+6% vs. SS25 season"
+          subtitle="From the current source report"
           tone="success"
-          sparkPoints={KPI_SPARKS.sellThrough}
         />
       </div>
 
@@ -141,7 +86,7 @@ export const FashionDashboard = () => {
           title="Aggregate Sell-Through Forecast"
           description="Median forecast with 80% prediction interval · Trend-adjusted"
         >
-          <ForecastChart rows={forecastData?.rows ?? []} accent={industryAccent.fashion} />
+          <ForecastChart rows={forecastData?.rows ?? []} accent="var(--chart-forecast)" />
         </Card>
 
         <Card title="Top Trending Categories" description="Share of active SKU demand">
@@ -150,48 +95,7 @@ export const FashionDashboard = () => {
       </div>
 
       {/* ── Trend Velocity Panel ── */}
-      <Card
-        title="Trend Velocity Signals"
-        description="Real-time social & market trend signals · Sentiment score · Week-over-week velocity"
-      >
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {TREND_SIGNALS.map((tr) => (
-            <div
-              key={tr.signal}
-              className="flex flex-col gap-3 p-4 rounded-xl border border-line bg-surface-2"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div
-                  className="h-8 w-8 rounded-lg grid place-items-center shrink-0"
-                  style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
-                >
-                  {tr.icon}
-                </div>
-                <span className="font-mono text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/15 px-1.5 py-0.5 rounded-md tabular-figs">
-                  {tr.velocity}
-                </span>
-              </div>
-              <div>
-                <p className="text-[13px] font-semibold text-content leading-snug">{tr.signal}</p>
-                <p className="text-xs text-content-subtle mt-0.5">{tr.source}</p>
-              </div>
-              {/* Sentiment bar */}
-              <div>
-                <div className="flex items-center justify-between text-[11px] font-medium text-content-muted mb-1 tabular-figs">
-                  <span>Sentiment</span>
-                  <span>{tr.sentiment}%</span>
-                </div>
-                <div className="h-2 rounded-full bg-surface-3 overflow-hidden">
-                  <div
-                    className="h-2 rounded-full transition-all duration-700"
-                    style={{ width: `${tr.sentiment}%`, background: "var(--accent)" }}
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
+      <Card title="Trend Velocity Signals"><EmptyState variant="subtle" title="Detailed source signals unavailable" description="Signal counts above come from the overview. Open Trend Analysis to inspect available source evidence." action={<Link to="/workspace/trends" className="btn-secondary">Open Trend Analysis</Link>} /></Card>
     </div>
   );
 };

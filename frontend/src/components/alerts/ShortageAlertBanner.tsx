@@ -89,7 +89,7 @@ export const ShortageAlertBanner = ({
               {onAcknowledge && (
                 <button
                   onClick={() => onAcknowledge(alert.id)}
-                  className="text-[11px] px-2 py-1 rounded-md bg-white/10 hover:bg-white/15 text-white/85 transition"
+                  className="text-[11px] px-2 py-1 rounded-md bg-surface/10 hover:bg-surface/15 text-white/85 transition"
                 >
                   Acknowledge
                 </button>

@@ -118,7 +118,7 @@ export const ShortageAlertsPage = () => {
   return (
     <div className="space-y-4 animate-fade-in stagger-1" data-industry={industry}>
       {/* ── Page Header ── */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-content">
             Stock risks
@@ -172,15 +172,15 @@ export const ShortageAlertsPage = () => {
           <Card padding="sm" key={label} className={clsx("relative overflow-hidden group border", border)}>
             <div className={clsx("absolute inset-y-0 left-0 w-1 bg-gradient-to-b", bg)} />
             <div className="flex items-center gap-3.5">
-              <div className={clsx("h-10 w-10 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 flex items-center justify-center shadow-inner", color)}>
+              <div className={clsx("h-10 w-10 rounded-xl bg-surface dark:bg-surface/60 border border-line dark:border-line flex items-center justify-center shadow-inner", color)}>
                 <Icon size={20} className="group-hover:scale-110 transition-transform" />
               </div>
               <div>
-                <div className="text-[10px] uppercase font-bold tracking-widest text-slate-400 dark:text-slate-500">{label}</div>
-                <div className="text-3xl font-extrabold text-slate-800 dark:text-white leading-none mt-0.5 tracking-tight">{count}</div>
+                <div className="text-[10px] uppercase font-bold tracking-widest text-content-subtle dark:text-content-muted">{label}</div>
+                <div className="text-3xl font-semibold text-content dark:text-content leading-none mt-0.5 tracking-tight">{count}</div>
               </div>
             </div>
-            <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-3 font-medium border-t border-slate-100/50 dark:border-slate-800 pt-2.5">
+            <div className="text-[11px] text-content-subtle dark:text-content-muted mt-3 font-medium border-t border-line/50 dark:border-line pt-2.5">
               {sub}
             </div>
           </Card>
@@ -189,8 +189,8 @@ export const ShortageAlertsPage = () => {
 
       {/* ── Filters Section ── */}
       <div className="flex flex-wrap items-center gap-6 px-4 py-3 rounded-xl bg-surface border border-line animate-fade-in stagger-3">
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
+          <span className="text-[10px] font-semibold text-content-subtle dark:text-content-muted uppercase tracking-widest">
             Resolution status
           </span>
           <div className="tab-group-container inline-flex">
@@ -206,10 +206,10 @@ export const ShortageAlertsPage = () => {
           </div>
         </div>
 
-        <div className="hidden md:block w-px h-5 bg-slate-200 dark:bg-slate-800" />
+        <div className="hidden md:block w-px h-5 bg-surface-3 dark:bg-surface-2" />
 
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
+          <span className="text-[10px] font-semibold text-content-subtle dark:text-content-muted uppercase tracking-widest">
             Severity
           </span>
           <div className="tab-group-container inline-flex">
@@ -229,10 +229,10 @@ export const ShortageAlertsPage = () => {
       {/* ── Alert List Deck ── */}
       <div className="space-y-4 animate-fade-in stagger-4">
         {alerts.isPending && (
-          <Card className="border-dashed border-2 border-slate-200/80 dark:border-slate-800/80">
+          <Card className="border-dashed border-2 border-line/80 dark:border-line/80">
             <div className="text-center py-10 flex flex-col items-center justify-center">
-              <RefreshCw size={24} className="text-slate-400 animate-spin mb-3" />
-              <span className="text-sm font-semibold text-slate-500">Querying active signals database...</span>
+              <RefreshCw size={24} className="text-content-subtle animate-spin mb-3" />
+              <span className="text-sm font-semibold text-content-muted">Querying active signals database...</span>
             </div>
           </Card>
         )}
@@ -240,13 +240,13 @@ export const ShortageAlertsPage = () => {
           <DecisionRiskRow key={decision.id} decision={decision} />
         ))}
         {alerts.data && alerts.data.length === 0 && !decisionFallbackActive && !decisions.isPending && (
-          <Card className="border-dashed border-2 border-slate-200/80 dark:border-slate-800/80 shadow-none">
+          <Card className="border-dashed border-2 border-line/80 dark:border-line/80 shadow-none">
             <div className="text-center py-8 flex flex-col items-center justify-center max-w-md mx-auto">
               <div className="h-14 w-14 rounded-2xl bg-gradient-to-tr from-emerald-500/10 to-teal-500/20 flex items-center justify-center mb-4 border border-emerald-500/10 shadow-inner">
                 <CheckCircle2 className="text-emerald-500 dark:text-emerald-400" size={24} />
               </div>
-              <h3 className="text-base font-bold text-slate-800 dark:text-white mb-1.5">No stock risks need action</h3>
-              <p className="text-xs text-slate-400 dark:text-slate-400 leading-relaxed">
+              <h3 className="text-base font-bold text-content dark:text-content mb-1.5">No stock risks need action</h3>
+              <p className="text-xs text-content-subtle dark:text-content-subtle leading-relaxed">
                 Stock cover is currently ahead of supplier lead times. You can still inspect inventory coverage or review all purchase decisions.
               </p>
               <div className="mt-4 flex items-center justify-center gap-2">
@@ -270,8 +270,8 @@ export const ShortageAlertsPage = () => {
       {rules.data && rules.data.length > 0 && (
         <Card
           title={
-            <span className="flex items-center gap-2 text-slate-800 dark:text-slate-100 animate-fade-in stagger-5">
-              <Settings size={16} className="text-slate-500" />
+            <span className="flex items-center gap-2 text-content dark:text-content animate-fade-in stagger-5">
+              <Settings size={16} className="text-content-muted" />
               Alert thresholds
             </span>
           }
@@ -279,40 +279,40 @@ export const ShortageAlertsPage = () => {
           className="animate-fade-in stagger-5"
         >
           <div className="overflow-x-auto mt-3">
-            <table className="w-full text-xs text-slate-600 dark:text-slate-400">
+            <table className="w-full text-xs text-content-muted dark:text-content-subtle">
               <thead>
-                <tr className="border-b border-slate-200/60 dark:border-slate-800/80 text-slate-400 dark:text-slate-500 uppercase tracking-widest font-extrabold">
-                  <th className="text-left py-3 font-extrabold">Rule Scope</th>
-                  <th className="text-right py-3 font-extrabold">Warn Threshold</th>
-                  <th className="text-right py-3 font-extrabold">Critical Threshold</th>
-                  <th className="text-right py-3 font-extrabold">Inventory wt</th>
-                  <th className="text-right py-3 font-extrabold">P90 wt</th>
-                  <th className="text-right py-3 font-extrabold">Trend wt</th>
-                  <th className="text-right py-3 font-extrabold">Cooldown</th>
+                <tr className="border-b border-line/60 dark:border-line/80 text-content-subtle dark:text-content-muted uppercase tracking-widest font-semibold">
+                  <th className="text-left py-3 font-semibold">Rule Scope</th>
+                  <th className="text-right py-3 font-semibold">Warn Threshold</th>
+                  <th className="text-right py-3 font-semibold">Critical Threshold</th>
+                  <th className="text-right py-3 font-semibold">Inventory wt</th>
+                  <th className="text-right py-3 font-semibold">P90 wt</th>
+                  <th className="text-right py-3 font-semibold">Trend wt</th>
+                  <th className="text-right py-3 font-semibold">Cooldown</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-850">
+              <tbody className="divide-y divide-line dark:divide-slate-850">
                 {rules.data.map((r) => (
-                  <tr key={r.id} className="hover:bg-slate-50/30 dark:hover:bg-slate-900/30 transition-colors">
-                    <td className="py-3.5 font-bold text-slate-700 dark:text-slate-200">
+                  <tr key={r.id} className="hover:bg-surface/30 dark:hover:bg-surface/30 transition-colors">
+                    <td className="py-3.5 font-bold text-content dark:text-content">
                       {r.rule_name}
                     </td>
-                    <td className="text-right font-mono font-semibold text-slate-800 dark:text-white">
+                    <td className="text-right font-mono font-semibold text-content dark:text-content">
                       {Number(r.warn_coverage_days).toFixed(0)} Days
                     </td>
                     <td className="text-right font-mono font-semibold text-rose-500 dark:text-rose-400">
                       {Number(r.critical_coverage_days).toFixed(0)} Days
                     </td>
-                    <td className="text-right font-mono text-slate-500">
+                    <td className="text-right font-mono text-content-muted">
                       {(Number(r.inventory_weight) * 100).toFixed(0)}%
                     </td>
-                    <td className="text-right font-mono text-slate-500">
+                    <td className="text-right font-mono text-content-muted">
                       {(Number(r.p90_weight) * 100).toFixed(0)}%
                     </td>
-                    <td className="text-right font-mono text-slate-500">
+                    <td className="text-right font-mono text-content-muted">
                       {(Number(r.trend_weight) * 100).toFixed(0)}%
                     </td>
-                    <td className="text-right font-mono font-medium text-slate-400">
+                    <td className="text-right font-mono font-medium text-content-subtle">
                       {r.cooldown_minutes}m
                     </td>
                   </tr>
@@ -375,42 +375,42 @@ const AlertRow = ({ alert, onAck, onResolve }: RowProps) => {
       )}
     >
       <div className="flex items-start gap-4 flex-1 min-w-0">
-        <div className={clsx("h-9 w-9 rounded-xl bg-white/60 dark:bg-black/20 border border-slate-100 dark:border-slate-800/80 flex items-center justify-center shadow-inner shrink-0", meta.color)}>
+        <div className={clsx("h-9 w-9 rounded-xl bg-surface/60 dark:bg-black/20 border border-line dark:border-line/80 flex items-center justify-center shadow-inner shrink-0", meta.color)}>
           <Icon size={18} className="animate-pulse" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2.5 mb-1.5">
             <span
               className={clsx(
-                "text-[9px] uppercase tracking-widest font-extrabold px-2 py-0.5 rounded border bg-white/80 dark:bg-slate-900/80 shadow-sm",
+                "text-[9px] uppercase tracking-widest font-semibold px-2 py-0.5 rounded border bg-surface/80 dark:bg-surface/80 shadow-sm",
                 meta.color,
                 meta.border
               )}
             >
               {alert.severity}
             </span>
-            <Badge variant={STATUS_VARIANT[alert.status]} className="text-[9px] font-extrabold uppercase px-2 shadow-sm">
+            <Badge variant={STATUS_VARIANT[alert.status]} className="text-[9px] font-semibold uppercase px-2 shadow-sm">
               {alert.status}
             </Badge>
-            <span className="text-[10px] font-bold text-slate-400 bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/50 rounded px-1.5 py-0.5">
+            <span className="text-[10px] font-bold text-content-subtle bg-surface dark:bg-surface/50 border border-line dark:border-line/50 rounded px-1.5 py-0.5">
               Risk: {(alert.risk_score * 100).toFixed(0)}%
             </span>
             {alert.coverage_days !== null && (
-              <span className="text-[10px] font-bold text-slate-400 bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/50 rounded px-1.5 py-0.5">
+              <span className="text-[10px] font-bold text-content-subtle bg-surface dark:bg-surface/50 border border-line dark:border-line/50 rounded px-1.5 py-0.5">
                 {Number(alert.coverage_days).toFixed(1)}d Cover
               </span>
             )}
             {alert.trend_score !== null && (
-              <span className="text-[10px] font-bold text-slate-400 bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/50 rounded px-1.5 py-0.5">
+              <span className="text-[10px] font-bold text-content-subtle bg-surface dark:bg-surface/50 border border-line dark:border-line/50 rounded px-1.5 py-0.5">
                 Trend: {Number(alert.trend_score) >= 0 ? "+" : ""}
                 {Number(alert.trend_score).toFixed(2)}
               </span>
             )}
           </div>
-          <div className="font-bold text-slate-800 dark:text-white text-sm tracking-tight">{alert.title}</div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">{alert.message}</p>
+          <div className="font-bold text-content dark:text-content text-sm tracking-tight">{alert.title}</div>
+          <p className="text-xs text-content-muted dark:text-content-subtle mt-1 leading-relaxed">{alert.message}</p>
           <AISummary feature="alert_explanation" entityId={alert.id} contextKey={JSON.stringify(alert)} />
-          <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-400 mt-3.5">
+          <div className="flex items-center gap-1.5 text-[10px] font-semibold text-content-subtle mt-3.5">
             <Calendar size={11} />
             Fired on {fmtDateTime(alert.fired_at)}
           </div>
@@ -418,18 +418,18 @@ const AlertRow = ({ alert, onAck, onResolve }: RowProps) => {
       </div>
       
       {/* Action buttons */}
-      <div className="flex items-center sm:flex-col gap-2 shrink-0 self-end sm:self-center mt-2 sm:mt-0 w-full sm:w-auto border-t border-slate-100 dark:border-slate-800/20 sm:border-0 pt-3 sm:pt-0">
+      <div className="flex items-center sm:flex-col gap-2 shrink-0 self-end sm:self-center mt-2 sm:mt-0 w-full sm:w-auto border-t border-line dark:border-line/20 sm:border-0 pt-3 sm:pt-0">
         {alert.status === "open" && (
           <>
             <button
               onClick={onAck}
-              className="tactile-press w-full sm:w-28 text-[11px] font-bold px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-350 dark:hover:border-slate-700 transition"
+              className="tactile-press w-full sm:w-28 text-[11px] font-bold px-3 py-2 rounded-xl bg-surface dark:bg-surface border border-line dark:border-line text-content dark:text-content-subtle hover:border-slate-350 dark:hover:border-line transition"
             >
               Acknowledge
             </button>
             <button
               onClick={onResolve}
-              className="tactile-press w-full sm:w-28 text-[11px] font-bold px-3 py-2 rounded-xl bg-slate-800 text-white hover:bg-slate-700 transition"
+              className="tactile-press w-full sm:w-28 text-[11px] font-bold px-3 py-2 rounded-xl bg-surface-2 text-white hover:bg-surface-2 transition"
             >
               Resolve
             </button>
@@ -438,7 +438,7 @@ const AlertRow = ({ alert, onAck, onResolve }: RowProps) => {
         {alert.status === "acknowledged" && (
           <button
             onClick={onResolve}
-            className="tactile-press w-full sm:w-28 text-[11px] font-bold px-3 py-2 rounded-xl bg-slate-800 text-white hover:bg-slate-700 transition shrink-0"
+            className="tactile-press w-full sm:w-28 text-[11px] font-bold px-3 py-2 rounded-xl bg-surface-2 text-white hover:bg-surface-2 transition shrink-0"
           >
             Resolve
           </button>

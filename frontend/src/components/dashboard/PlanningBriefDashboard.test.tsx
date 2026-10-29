@@ -65,8 +65,8 @@ function happyPath() {
     ],
   });
   api.coverage.mockResolvedValue({ skus: [
-    { sku_id: "a", lead_time_assumed: true }, { sku_id: "b", lead_time_assumed: true },
-    { sku_id: "c", lead_time_assumed: false },
+    { sku_id: "a", lead_time_assumed: true, sku_wide: { status: "unknown", cover_days: null } }, { sku_id: "b", lead_time_assumed: true, sku_wide: { status: "unknown", cover_days: null } },
+    { sku_id: "c", lead_time_assumed: false, sku_wide: { status: "unknown", cover_days: null } },
   ] });
 }
 

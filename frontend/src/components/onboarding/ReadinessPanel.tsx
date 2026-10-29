@@ -53,7 +53,7 @@ export const ReadinessPanel = ({ compact = false }: { compact?: boolean }) => {
       </div>
 
       {data.next_action && (
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent-soft)] px-4 py-3">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent/30 bg-[var(--accent-soft)] px-4 py-3">
           <div className="min-w-0">
             <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--accent)]">
               Do this next

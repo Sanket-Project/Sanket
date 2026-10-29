@@ -7,7 +7,7 @@ export const LiveIndicator = ({ className }: { className?: string }) => {
     <span
       className={clsx(
         "inline-flex items-center gap-1.5 text-xs font-medium",
-        isConnected ? "text-emerald-600" : "text-slate-400",
+        isConnected ? "text-emerald-600" : "text-content-subtle",
         className,
       )}
       title={isConnected ? "Real-time stream connected" : "Reconnecting…"}
@@ -17,7 +17,7 @@ export const LiveIndicator = ({ className }: { className?: string }) => {
           "h-2 w-2 rounded-full",
           isConnected
             ? "bg-emerald-500 animate-pulse"
-            : "bg-slate-400",
+            : "bg-surface-3",
         )}
       />
       {isConnected ? "Live" : "Offline"}

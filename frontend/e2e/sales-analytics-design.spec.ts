@@ -4,7 +4,7 @@ import path from "node:path";
 
 // Render the real page and stylesheet in isolation. All API data below is
 // explicitly synthetic test data; no workspace or customer records are changed.
-const evidence = path.resolve("../docs/audit/2026-10-28-sales-analytics");
+const evidence = path.resolve("../docs/audit/2026-10-29-premium-minimal/sales");
 const report = {
   industry: "fashion", currency: "INR", imported_at: "2026-10-28",
   sales: { period: "1–25 October 2026", net_amount: 1248000, net_units: 2840, rows: 75, stores: [
@@ -37,16 +37,7 @@ for (const mode of ["imported", "transactions"] as const) {
           window.$RefreshReg$ = () => {};
           window.$RefreshSig$ = () => (type) => type;
           window.__vite_plugin_react_preamble_installed__ = true;
-          await import('/@vite/client');
-          await import('/src/styles/index.css');
-          const React = (await import('/node_modules/.vite/deps/react.js')).default;
-          const { createRoot } = (await import('/node_modules/.vite/deps/react-dom_client.js')).default;
-          const { QueryClient, QueryClientProvider } = await import('/node_modules/.vite/deps/@tanstack_react-query.js');
-          const { MemoryRouter } = await import('/node_modules/.vite/deps/react-router-dom.js');
-          const { useAuthStore } = await import('/src/stores/auth.ts');
-          useAuthStore.setState({ industry: 'fashion' });
-          const { SalesAnalyticsPage } = await import('/src/pages/SalesAnalytics.tsx');
-          createRoot(document.getElementById('root')).render(React.createElement(QueryClientProvider, {client:new QueryClient({defaultOptions:{queries:{retry:false}}})}, React.createElement(MemoryRouter, null, React.createElement(SalesAnalyticsPage))));
+          await import('/e2e/sales-harness.tsx');
         </script></body></html>` }));
         await page.route("**/api/v1/analytics/sales/**", route => {
           const endpoint = new URL(route.request().url()).pathname.split("/").pop();
@@ -63,11 +54,12 @@ for (const mode of ["imported", "transactions"] as const) {
         });
         await page.goto("/__sales-design-review");
         await expect(page.getByRole("heading", { name: "Your sales, at a glance" })).toBeVisible();
-        await expect(page.getByRole("region", { name: "Sales by branch" })).toBeVisible();
+        await expect(page.getByRole("region", { name: mode === "imported" ? "Sales by branch" : "Sales by location" })).toBeVisible();
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-        const hero = page.locator("main .rounded-\\[20px\\]").first();
+        const hero = mode === "imported" ? page.locator(".sales-imported > div").first() : page.locator(".sales-summary-grid > div").first();
         const colors = await hero.evaluate(element => ({ bg: getComputedStyle(element).backgroundColor, fg: getComputedStyle(element).color }));
         expect(colors.bg).not.toBe(colors.fg);
+        expect(colors.bg).toBe(dark ? "rgb(24, 42, 51)" : "rgb(255, 255, 255)");
         await page.screenshot({ path: path.join(evidence, `${mode}-${size}-${dark ? "dark" : "light"}.png`), fullPage: true });
         if (mode === "transactions") {
           await expect(page.getByText(/Sales rose 25.0% in Sep 2026/)).toBeVisible();

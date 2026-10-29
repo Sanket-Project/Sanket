@@ -88,7 +88,7 @@ const NarrativePanel = ({ isSignUp, reduceMotion }: { isSignUp: boolean; reduceM
     </div>
 
     <div className="relative my-auto max-w-xl py-12">
-      <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#BDD9D7]">
+      <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-surface/[0.06] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#BDD9D7]">
         <span className="h-1.5 w-1.5 rounded-full bg-[#BDD9D7]" />
         Secure planning access
       </div>
@@ -111,7 +111,7 @@ const NarrativePanel = ({ isSignUp, reduceMotion }: { isSignUp: boolean; reduceM
         </motion.div>
       </AnimatePresence>
 
-      <div className="mt-10 rounded-[24px] border border-white/10 bg-white/[0.055] p-5 shadow-2xl shadow-black/10 backdrop-blur-sm">
+      <div className="mt-10 rounded-[24px] border border-white/10 bg-surface/[0.055] p-5 shadow-2xl shadow-black/10 backdrop-blur-sm">
         <div className="flex items-center justify-between border-b border-white/10 pb-4">
           <div>
             <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#BDD9D7]/60">Planning flow</div>
@@ -191,7 +191,7 @@ export const LoginPage = () => {
       <a href="#login-form" className="sr-only focus:not-sr-only">Skip to main content</a>
       <NarrativePanel isSignUp={false} reduceMotion={reduceMotion} />
       <main id="login-form" className="flex min-h-screen items-center justify-center px-4 py-8 sm:px-8">
-        <section className="w-full max-w-[520px] rounded-[28px] border border-line-strong bg-surface p-6 shadow-xl sm:p-8">
+        <section className="w-full max-w-[520px] rounded-2xl border border-line-strong bg-surface p-6 shadow-xl sm:p-8">
                   <form onSubmit={onSubmit} className="space-y-4" aria-label="Sign in form">
                     <header className="mb-6">
                       <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-content-subtle">Workspace access</p>

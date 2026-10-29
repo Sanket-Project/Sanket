@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -46,7 +47,7 @@ import { getErrorMessage } from "@/utils/errors";
 import { usePersistedForecast } from "@/hooks/usePersistedForecast";
 import { ForecastRunStatus } from "@/components/charts/ForecastRunStatus";
 import { SKUS_PER_PAGE, describeSource, omissionReason } from "@/utils/forecastPresentation";
-import { industryAccent, industryDisplay, industryGradient } from "@/utils/colors";
+import { industryDisplay, industryGradient } from "@/utils/colors";
 import { fmtCompact, fmtNumber } from "@/utils/format";
 import type { ForecastRow, IndustryCode } from "@/types/api";
 import { periodProjectionApi } from "@/api/periodProjection";
@@ -133,11 +134,11 @@ function QuantileGuide({ accent }: { accent: string }) {
         {
           label: "P50 — Expected",
           badge: "Most Likely",
-          badgeCls: "border-violet-200 dark:border-violet-800/40",
-          borderCls: "border-violet-200/70 dark:border-violet-800/40",
-          bgCls: "bg-violet-50/30 dark:bg-violet-900/10",
-          icon: <Sparkles size={13} className="text-violet-500" />,
-          iconBg: "bg-violet-100 dark:bg-violet-900/40",
+          badgeCls: "border-accent/20 dark:border-accent/40",
+          borderCls: "border-accent/70 dark:border-accent/40",
+          bgCls: "bg-accent-soft/30 dark:bg-accent-soft/10",
+          icon: <Sparkles size={13} className="text-accent" />,
+          iconBg: "bg-accent-soft dark:bg-accent-soft/40",
           desc: "The median forecast — equally likely to be higher or lower. Your baseline planning number.",
           use: "Day-to-day planning",
           color: accent,
@@ -164,11 +165,11 @@ function QuantileGuide({ accent }: { accent: string }) {
               {badge}
             </span>
           </div>
-          <p className="text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">{label}</p>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">{desc}</p>
+          <p className="text-xs font-bold text-content dark:text-content mb-1">{label}</p>
+          <p className="text-[11px] text-content-muted dark:text-content-subtle leading-relaxed">{desc}</p>
           <div className="mt-3 flex items-center gap-1.5">
             <div className="h-1.5 w-1.5 rounded-full" style={{ background: color }} />
-            <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">{use}</span>
+            <span className="text-[10px] font-semibold text-content-muted dark:text-content-subtle">{use}</span>
           </div>
         </div>
       ))}
@@ -218,8 +219,8 @@ function getForecastSummary(rows: ForecastRow[]) {
   }
   return {
     badge: "Projected median broadly flat",
-    badgeCls: "bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700/40",
-    dotCls: "bg-slate-400",
+    badgeCls: "bg-surface text-content-muted border-line dark:bg-surface-2/40 dark:text-content-subtle dark:border-line/40",
+    dotCls: "bg-surface-3",
     message: "The median forecast changes little across this window. This does not establish whether stock is sufficient; review coverage and lead times in Decisions.",
   };
 }
@@ -255,7 +256,7 @@ function SkuForecastChart({
   const trendPct = ((trend / (p50Values[0] || 1)) * 100).toFixed(1);
   const isUp = trend > 0;
   const TrendIcon = trend > p50Values[0] * 0.02 ? TrendingUp : trend < -p50Values[0] * 0.02 ? TrendingDown : Minus;
-  const trendColor = isUp ? "text-emerald-600 dark:text-emerald-400" : trend < 0 ? "text-rose-500 dark:text-rose-400" : "text-slate-400";
+  const trendColor = isUp ? "text-emerald-600 dark:text-emerald-400" : trend < 0 ? "text-rose-500 dark:text-rose-400" : "text-content-subtle";
 
   const displayHeight = expanded ? 300 : 200;
   const rec = getForecastSummary(rows);
@@ -263,35 +264,35 @@ function SkuForecastChart({
   return (
     <div className="glass rounded-2xl overflow-hidden card-hover-premium">
       {/* Header */}
-      <div className="p-4 border-b border-slate-100/80 dark:border-slate-700/40">
+      <div className="p-4 border-b border-line/80 dark:border-line/40">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-mono text-[10px] font-bold bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded border border-slate-200/60 dark:border-slate-700/40">
+              <span className="font-mono text-[10px] font-bold bg-surface-2 dark:bg-surface-2/60 text-content-muted dark:text-content-subtle px-2 py-0.5 rounded border border-line/60 dark:border-line/40">
                 {skuCode || skuId}
               </span>
-              <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">
+              <span className="text-xs font-semibold text-content dark:text-content truncate">
                 {skuLabel}
               </span>
             </div>
-            <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-3 mt-1.5 text-[10px] text-content-muted dark:text-content-subtle">
               <span className="flex items-center gap-1">
-                <span className="font-semibold text-slate-700 dark:text-slate-200">{rows.length}</span> weeks
+                <span className="font-semibold text-content dark:text-content">{rows.length}</span> weeks
               </span>
               <span>·</span>
-              <span>Peak P50 <strong className="text-slate-700 dark:text-slate-200">{fmtCompact(maxP50)}</strong></span>
+              <span>Peak P50 <strong className="text-content dark:text-content">{fmtCompact(maxP50)}</strong></span>
               <span>·</span>
-              <span>Floor <strong className="text-slate-700 dark:text-slate-200">{fmtCompact(minP50)}</strong></span>
+              <span>Floor <strong className="text-content dark:text-content">{fmtCompact(minP50)}</strong></span>
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex max-w-full flex-wrap items-center gap-2">
             <div className={clsx("flex items-center gap-1 text-[10px] font-bold", trendColor)}>
               <TrendIcon size={12} />
               {isUp ? "+" : ""}{trendPct}%
             </div>
             <button
               onClick={() => setExpanded(!expanded)}
-              className="h-6 w-6 rounded-lg bg-slate-100 dark:bg-slate-800/60 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+              className="h-6 w-6 rounded-lg bg-surface-2 dark:bg-surface-2/60 flex items-center justify-center text-content-subtle hover:text-content-muted dark:hover:text-content transition-colors"
             >
               {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
             </button>
@@ -374,13 +375,13 @@ function SkuForecastChart({
       </div>
 
       {/* ── AI Buy Recommendation ── */}
-      <div className="border-t border-slate-100/80 dark:border-slate-700/40 px-4 py-3 flex items-start gap-3">
+      <div className="border-t border-line/80 dark:border-line/40 px-4 py-3 flex items-start gap-3">
         <div className={clsx("h-2 w-2 rounded-full mt-1.5 shrink-0 animate-pulse", rec.dotCls)} />
         <div className="flex-1 min-w-0">
           <span className={clsx("inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border mb-1.5", rec.badgeCls)}>
             {rec.badge}
           </span>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">{rec.message}</p>
+          <p className="text-[11px] text-content-muted dark:text-content-subtle leading-relaxed">{rec.message}</p>
         </div>
       </div>
     </div>
@@ -403,7 +404,7 @@ function SummaryCard({
 }) {
   const iconBg = tone === "up" ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400" :
     tone === "down" ? "bg-rose-50 dark:bg-rose-900/20 text-rose-500 dark:text-rose-400" :
-    "bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400";
+    "bg-accent-soft dark:bg-accent-soft/20 text-accent dark:text-accent";
 
   return (
     <div className="glass rounded-2xl p-5 card-hover-premium">
@@ -411,10 +412,10 @@ function SummaryCard({
         <div className={clsx("h-9 w-9 rounded-xl flex items-center justify-center shrink-0", iconBg)}>
           {icon}
         </div>
-        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{label}</span>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-content-subtle dark:text-content-muted">{label}</span>
       </div>
-      <div className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{value}</div>
-      <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-1 font-medium">{sub}</div>
+      <div className="text-3xl font-semibold text-content dark:text-content tracking-tight">{value}</div>
+      <div className="text-[11px] text-content-subtle dark:text-content-muted mt-1 font-medium">{sub}</div>
     </div>
   );
 }
@@ -495,7 +496,7 @@ function ForecastMethods() {
 
 const ChronosForecastPage = () => {
   const industry = useWorkspaceIndustry();
-  const accent = industryAccent[industry];
+  const accent = "var(--chart-forecast)";
   const gradient = industryGradient[industry];
   const displayName = industryDisplay[industry];
   const icon = INDUSTRY_ICONS[industry];
@@ -575,32 +576,27 @@ const ChronosForecastPage = () => {
         <div>
           {/* Industry pill */}
           <div
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold text-white mb-3"
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-medium text-accent-fg mb-3"
             style={{ background: gradient }}
           >
             {icon} {displayName}
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            Demand Forecasts
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-xl leading-relaxed">
-            Expected demand by SKU, with a restrained range showing likely variation. Start with the recommendation; open settings only when you need them.
-          </p>
+          <PageHeader title="Demand Forecasts" description={<> Expected demand by SKU, with a restrained range showing likely variation. Start with the recommendation; open settings only when you need them. </>} />
         </div>
 
         {/* Export buttons — shown when result exists */}
         {currentResult && (
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex max-w-full flex-wrap items-center gap-2">
 
             <button
               onClick={() => exportApi.forecastXlsx(industry).catch(() => toast.error("Export failed"))}
-              className="tactile-press flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition glass"
+              className="tactile-press flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border border-line dark:border-line text-content dark:text-content-subtle hover:bg-surface dark:hover:bg-surface-2 transition glass"
             >
               <Download size={13} /> Excel
             </button>
             <button
               onClick={() => exportApi.signalsCsv(industry).catch(() => toast.error("Export failed"))}
-              className="tactile-press flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition glass"
+              className="tactile-press flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border border-line dark:border-line text-content dark:text-content-subtle hover:bg-surface dark:hover:bg-surface-2 transition glass"
             >
               <Download size={13} /> Signals CSV
             </button>
@@ -623,16 +619,16 @@ const ChronosForecastPage = () => {
 
       {/* ── What produced this result (from the response, never assumed) ── */}
       {currentResult && (
-        <div className="flex items-start gap-4 p-4 rounded-2xl border bg-slate-50/80 border-slate-200/60 dark:bg-slate-800/30 dark:border-slate-700/40">
-          <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0 bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400">
+        <div className="flex items-start gap-4 p-4 rounded-2xl border bg-surface/80 border-line/60 dark:bg-surface-2/30 dark:border-line/40">
+          <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0 bg-surface-2 dark:bg-surface-2/60 text-content-muted dark:text-content-subtle">
             <Info size={18} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug">
+            <p className="text-sm font-semibold text-content dark:text-content leading-snug">
               {source.short} · Saved forecast: {actualHorizon} weeks · {displayName}
             </p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{source.detail}</p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-[11px] text-content-muted dark:text-content-subtle mt-0.5">{source.detail}</p>
+            <p className="text-[11px] text-content-muted dark:text-content-subtle mt-0.5">
               {result?.source === "hybrid-trend-fused" ? "Trend-adjusted forecast from a completed Hybrid run." : "No external signals applied to this forecast — trend and signal adjustment happen only in Hybrid forecasts."}
               {result?.history_end ? ` History used: complete weeks before ${result.history_end} (weeks start Monday, UTC).` : ""}
             </p>
@@ -650,10 +646,10 @@ const ChronosForecastPage = () => {
           {/* Horizon selector */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-content-subtle dark:text-content-muted">
                 Forecast Horizon
               </label>
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 italic">
+              <span className="text-[10px] text-content-subtle dark:text-content-muted italic">
                 {INDUSTRY_HORIZON_HINT[industry]}
               </span>
             </div>
@@ -665,14 +661,14 @@ const ChronosForecastPage = () => {
                   className={clsx(
                     "relative px-4 py-2 rounded-xl text-sm font-bold border transition-all duration-200 tactile-press",
                     horizon === weeks
-                      ? "text-white border-transparent shadow-md"
-                      : "bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600"
+                      ? "text-accent-fg border-transparent shadow-sm"
+                      : "bg-surface dark:bg-surface-2/60 border-line dark:border-line text-content-muted dark:text-content-subtle hover:border-line-strong dark:hover:border-line-strong"
                   )}
                   style={horizon === weeks ? { background: gradient } : {}}
                 >
                   {label}
                   {recommended && (
-                    <span className="absolute -top-1.5 -right-1.5 text-[8px] font-black bg-amber-400 text-white px-1 py-0.5 rounded-full leading-none">
+                    <span className="absolute -top-1.5 -right-1.5 text-[8px] font-semibold bg-amber-400 text-white px-1 py-0.5 rounded-full leading-none">
                       REC
                     </span>
                   )}
@@ -683,7 +679,7 @@ const ChronosForecastPage = () => {
 
           {/* The model this page runs, stated plainly */}
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 block mb-2">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-content-subtle dark:text-content-muted block mb-2">
               Model
             </label>
             <p className="text-xs text-content-muted max-w-xl">
@@ -718,9 +714,9 @@ const ChronosForecastPage = () => {
       {/* ── Results ── */}
       {!currentResult ? (
         <div className="glass rounded-2xl p-16 text-center">
-          <BarChart2 size={32} className="mx-auto text-slate-300 dark:text-slate-600 mb-3 animate-pulse" />
-          <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">No forecast to display</p>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Import sufficient sales history, then use Refresh forecast to generate a real forecast.</p>
+          <BarChart2 size={32} className="mx-auto text-content-subtle dark:text-content-muted mb-3 animate-pulse" />
+          <p className="text-sm font-semibold text-content-muted dark:text-content-subtle">No forecast to display</p>
+          <p className="text-xs text-content-subtle dark:text-content-muted mt-1">Import sufficient sales history, then use Refresh forecast to generate a real forecast.</p>
         </div>
       ) : (
         <div className="space-y-5">
@@ -771,11 +767,11 @@ const ChronosForecastPage = () => {
           </div>}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800/60" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 px-3">
+              <div className="h-px flex-1 bg-surface-2 dark:bg-surface-2/60" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-content-subtle dark:text-content-muted px-3">
                 Expected demand by SKU
               </span>
-              <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800/60" />
+              <div className="h-px flex-1 bg-surface-2 dark:bg-surface-2/60" />
             </div>
             <label className="mb-3 block max-w-md text-xs font-semibold text-content-muted">Search forecasts
               <input aria-label="Search forecasts" type="search" value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); setPageRun(undefined); }}

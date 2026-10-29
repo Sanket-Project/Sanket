@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useMemo, useState } from "react";
 import { AISummary } from "@/components/ai/AISummary";
 import { SupplierDraft } from "@/components/ai/SupplierDraft";
@@ -161,11 +162,8 @@ export const DecisionsPage = () => {
           <div className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider text-[var(--accent)]">
             <Target size={14} /> Decision engine
           </div>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">What to order, and why</h1>
-          <p className="mt-1 text-content-subtle">
-            Forecasts turned into purchase decisions, sized against your lead times, service level
-            and stock on hand.
-          </p>
+          <PageHeader title="What to order, and why" description={<> Forecasts turned into purchase decisions, sized against your lead times, service level
+            and stock on hand. </>} />
         </div>
         <Button
           onClick={() => refresh.mutate()}
@@ -218,7 +216,7 @@ export const DecisionsPage = () => {
           <KPICard
             label="Working capital vs. old policy (estimate)"
             value={fmt(totals.working_capital_released_vs_baseline)}
-            subtitle={totals.working_capital_released_vs_baseline == null ? "Needs unit cost for every order" : "If every order is placed as recommended, versus covering P90 the old way"}
+            subtitle={totals.working_capital_released_vs_baseline == null ? "Needs unit cost for every order" : "Modeled difference versus buying P90 demand every week"}
             tone="success"
           />
           <KPICard
@@ -399,7 +397,7 @@ function DecisionRow({
             <Badge variant={urgency.variant} dot>
               {urgency.label}
             </Badge>
-            <Badge variant={confidence.variant}>{d.confidence}% confidence</Badge>
+            <Badge variant={confidence.variant}>{d.confidence}/100 readiness</Badge>
             {d.linked_alert_id && (
               <Badge variant="danger">
                 <AlertTriangle size={11} /> Needs attention
@@ -551,7 +549,7 @@ function Working({ decision: d }: { decision: Decision }) {
     ["Forecast demand (p50) over window", `${i.demand_p50_over_window?.toLocaleString()} units`],
     ["Pessimistic demand (p90) over window", `${i.demand_p90_over_window?.toLocaleString()} units`],
     ["Demand σ over window", `${i.sigma_over_window?.toLocaleString()} units`],
-    ["Service level", `${(i.service_level * 100).toFixed(0)}% (z = ${i.z})`],
+    ["Service-level target", `${(i.service_level * 100).toFixed(0)}% (z = ${i.z})`],
     ["Safety stock", `${Math.round(i.safety_stock_units).toLocaleString()} units`],
     ["Order-up-to level", `${Math.round(i.order_up_to).toLocaleString()} units`],
     ["On hand", `${Math.round(i.on_hand_units).toLocaleString()} units`],
@@ -577,9 +575,9 @@ function Working({ decision: d }: { decision: Decision }) {
       <p className="mt-4 rounded-lg bg-surface p-3 text-xs leading-relaxed text-content-subtle">
         <span className="font-semibold text-content">Baseline comparison.</span> A spreadsheet policy
         covering p90 demand across the whole window would order{" "}
-        <strong>{d.baseline_units.toLocaleString()}</strong> units. Pooling variance across the{" "}
-        {i.protection_days} days instead lets you hit the same {(i.service_level * 100).toFixed(0)}%
-        service level with <strong>{d.recommended_units.toLocaleString()}</strong>.
+        <strong>{d.baseline_units.toLocaleString()}</strong> units. Assuming normal demand and independent weekly errors across the{" "}
+        {i.protection_days} days, the model recommends <strong>{d.recommended_units.toLocaleString()}</strong> units for a {(i.service_level * 100).toFixed(0)}% target.
+        Interval coverage has not been validated. Service level is a target, not a measured guarantee.
       </p>
     </div>
   );

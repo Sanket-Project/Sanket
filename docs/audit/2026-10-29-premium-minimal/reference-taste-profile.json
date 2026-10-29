@@ -1,0 +1,94 @@
+{
+  "profile_version": "1.0",
+  "source": {
+    "label": "User-selected SANKET dashboard reference, 29 October 2026",
+    "kind": "image",
+    "uri": "C:/Users/admin/Downloads/ChatGPT Image Oct 29, 2026, 02_26_03 PM.png",
+    "ownership": "unknown"
+  },
+  "jobs": [
+    "hierarchy",
+    "composition",
+    "spacing",
+    "typography",
+    "color",
+    "restraint"
+  ],
+  "observations": [
+    {
+      "dimension": "lighting",
+      "evidence": "Diffuse cream light and gentle plant shadows in the hero.",
+      "interpretation": "Reserve warm editorial imagery for the hero; keep analytical surfaces flat.",
+      "confidence": 0.95
+    },
+    {
+      "dimension": "palette",
+      "evidence": "White panels, navy text, deep teal buttons and mint selection.",
+      "interpretation": "Use teal as interaction identity and semantic colors only for measured state.",
+      "confidence": 0.95
+    },
+    {
+      "dimension": "texture",
+      "evidence": "Fine panel borders, matte surfaces and restrained shadows.",
+      "interpretation": "Use hierarchy and spacing rather than glossy effects or heavy elevation.",
+      "confidence": 0.95
+    },
+    {
+      "dimension": "geometry",
+      "evidence": "A 240px rail, broad analysis column, narrower context column and aligned metric strip.",
+      "interpretation": "Keep the forecast dominant; preserve useful summary context beside it.",
+      "confidence": 0.95
+    },
+    {
+      "dimension": "mood",
+      "evidence": "Calm, precise, bright enterprise analytics with compact readable data.",
+      "interpretation": "Make meaning and action visible without decorative clutter.",
+      "confidence": 0.95
+    }
+  ],
+  "signature": {
+    "visual_density": 65,
+    "contrast": 65,
+    "restraint": 90
+  },
+  "rules": [
+    {
+      "job": "composition",
+      "rule": "Use a light navigation rail, wide analytical working area and contextual summary rail.",
+      "evidence": "A 240px rail, broad analysis column, narrower context column and aligned metric strip.",
+      "strength": "high",
+      "transferable": true
+    },
+    {
+      "job": "color",
+      "rule": "White surfaces and navy text carry content; deep teal and mint communicate selection and action.",
+      "evidence": "White panels, navy text, deep teal buttons and mint selection.",
+      "strength": "high",
+      "transferable": true
+    },
+    {
+      "job": "restraint",
+      "rule": "Keep real data as the focal point and limit editorial illustration to the planning hero.",
+      "evidence": "Calm, precise, bright enterprise analytics with compact readable data.",
+      "strength": "high",
+      "transferable": true
+    }
+  ],
+  "anti_rules": [
+    "Do not copy screenshot numbers or imply real source data from the reference.",
+    "Do not invent product images, growth, confidence, branch coverage or health scores.",
+    "Do not add a workspace/industry switcher or global catalog search without supporting behavior.",
+    "Do not reproduce every page as the same arrangement of cards."
+  ],
+  "similarity_guard": {
+    "copy_risk": "low",
+    "protected_elements": [
+      "Customer product identities and screenshot data are not assets to transplant."
+    ],
+    "must_transform": [
+      "Use original generated hero artwork and existing SANKET mark.",
+      "Retain actual application routes, controls and industry semantics."
+    ]
+  },
+  "confidence": 0.95
+}

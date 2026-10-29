@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -74,7 +75,7 @@ function marginPct(s: Sku): number | null {
 }
 
 function leadToneClass(days: number | null) {
-  if (days == null) return "text-slate-400 dark:text-slate-500";
+  if (days == null) return "text-content-subtle dark:text-content-muted";
   if (days > 45) return "text-rose-600 dark:text-rose-400";
   if (days > 25) return "text-amber-600 dark:text-amber-400";
   return "text-emerald-600 dark:text-emerald-400";
@@ -121,14 +122,14 @@ function SkuCard({
       onClick={onClick}
       className={clsx(
         "w-full overflow-hidden rounded-2xl border text-left shadow-sm transition hover:-translate-y-0.5 hover:border-line-strong hover:shadow-md group cursor-pointer relative",
-        isSelected ? "border-violet-500 bg-violet-50/10 ring-2 ring-violet-500/20" : "border-line bg-surface"
+        isSelected ? "border-accent/20 bg-accent-soft/10 ring-2 ring-accent/20" : "border-line bg-surface"
       )}
     >
       <div className="relative h-36 overflow-hidden bg-surface-2">
         <img src={imgUrl} alt={sku.description ?? sku.sku_code} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.025]" />
         {/* Selection Checkbox */}
         <div
-          className="absolute top-2.5 right-2.5 z-10 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm p-1 rounded-md shadow"
+          className="absolute top-2.5 right-2.5 z-10 bg-surface/90 dark:bg-surface/90 backdrop-blur-sm p-1 rounded-md shadow"
           onClick={(e) => {
             e.stopPropagation();
             onToggleSelect(e);
@@ -138,7 +139,7 @@ function SkuCard({
             type="checkbox"
             checked={isSelected}
             onChange={() => {}}
-            className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500 cursor-pointer block"
+            className="h-4 w-4 rounded border-line-strong text-accent focus:ring-accent cursor-pointer block"
             aria-label={`Select ${sku.sku_code}`}
           />
         </div>
@@ -148,10 +149,10 @@ function SkuCard({
         {/* Header row */}
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="min-w-0">
-            <span className="font-mono text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/60 px-2 py-0.5 rounded border border-slate-200/60 dark:border-slate-700/40 block w-fit mb-1.5">
+            <span className="font-mono text-[10px] font-bold text-content-muted dark:text-content-subtle bg-surface-2 dark:bg-surface-2/60 px-2 py-0.5 rounded border border-line/60 dark:border-line/40 block w-fit mb-1.5">
               {sku.sku_code}
             </span>
-            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug line-clamp-2">{sku.description ?? "—"}</p>
+            <p className="text-sm font-semibold text-content dark:text-content leading-snug line-clamp-2">{sku.description ?? "—"}</p>
           </div>
           <div className="flex flex-col items-end gap-1.5 shrink-0">
             {sku.is_active ? (
@@ -159,7 +160,7 @@ function SkuCard({
                 <span className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" />Active
               </span>
             ) : (
-              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/40 px-2 py-0.5 rounded-full">
+              <span className="text-[9px] font-bold uppercase tracking-wider text-content-subtle dark:text-content-muted bg-surface-2 dark:bg-surface-2/40 border border-line dark:border-line/40 px-2 py-0.5 rounded-full">
                 Inactive
               </span>
             )}
@@ -169,40 +170,40 @@ function SkuCard({
         {/* Price row */}
         <div className="flex items-center justify-between mb-3">
           <div>
-            <div className="text-xl font-black text-slate-900 dark:text-white tabular-nums">
+            <div className="text-xl font-semibold text-content dark:text-content tabular-nums">
               {sku.unit_price != null ? formatPrice(Number(sku.unit_price), sku.currency) : "—"}
             </div>
-            <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">{fields.price}</div>
+            <div className="text-[10px] text-content-subtle dark:text-content-muted font-medium">{fields.price}</div>
           </div>
           {margin !== null && (
             <div className={clsx("text-right")}>
-              <div className={clsx("text-lg font-black tabular-nums", margin >= 40 ? "text-emerald-600 dark:text-emerald-400" : margin >= 20 ? "text-amber-600 dark:text-amber-400" : "text-rose-500 dark:text-rose-400")}>
+              <div className={clsx("text-lg font-semibold tabular-nums", margin >= 40 ? "text-emerald-600 dark:text-emerald-400" : margin >= 20 ? "text-amber-600 dark:text-amber-400" : "text-rose-500 dark:text-rose-400")}>
                 {margin.toFixed(1)}%
               </div>
-              <div className="text-[10px] text-slate-400 dark:text-slate-500">margin</div>
+              <div className="text-[10px] text-content-subtle dark:text-content-muted">margin</div>
             </div>
           )}
         </div>
 
         {/* Metrics strip */}
         <div className="grid grid-cols-3 gap-2 mb-3">
-          <div className="text-center bg-slate-50 dark:bg-slate-800/40 rounded-lg p-2">
+          <div className="text-center bg-surface dark:bg-surface-2/40 rounded-lg p-2">
             <div className={clsx("text-sm font-bold", leadToneClass(sku.lead_time_days))}>
               {sku.lead_time_days != null ? `${sku.lead_time_days}d` : "—"}
             </div>
-            <div className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">lead time</div>
+            <div className="text-[9px] text-content-subtle dark:text-content-muted mt-0.5">lead time</div>
           </div>
-          <div className="text-center bg-slate-50 dark:bg-slate-800/40 rounded-lg p-2">
-            <div className="text-sm font-bold text-slate-700 dark:text-slate-200">
+          <div className="text-center bg-surface dark:bg-surface-2/40 rounded-lg p-2">
+            <div className="text-sm font-bold text-content dark:text-content">
               {fmtNumber(sku.moq)}
             </div>
-            <div className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">{fields.moq}</div>
+            <div className="text-[9px] text-content-subtle dark:text-content-muted mt-0.5">{fields.moq}</div>
           </div>
-          <div className="text-center bg-slate-50 dark:bg-slate-800/40 rounded-lg p-2">
-            <div className="text-sm font-bold text-slate-700 dark:text-slate-200">
+          <div className="text-center bg-surface dark:bg-surface-2/40 rounded-lg p-2">
+            <div className="text-sm font-bold text-content dark:text-content">
               {fmtNumber(sku.safety_stock)}
             </div>
-            <div className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">safety</div>
+            <div className="text-[9px] text-content-subtle dark:text-content-muted mt-0.5">safety</div>
           </div>
         </div>
 
@@ -211,7 +212,7 @@ function SkuCard({
           <span className={clsx("text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border", healthCls)}>
             {health.label}
           </span>
-          <span className="text-[10px] text-slate-400 dark:text-slate-500">{fmtRelative(sku.updated_at)}</span>
+          <span className="text-[10px] text-content-subtle dark:text-content-muted">{fmtRelative(sku.updated_at)}</span>
         </div>
       </div>
 
@@ -256,8 +257,8 @@ function SkuRow({
       className={clsx(
         "w-full text-left flex items-center gap-4 p-3.5 rounded-xl transition-colors group border cursor-pointer",
         isSelected
-          ? "bg-violet-50/20 border-violet-300 dark:border-violet-700/50"
-          : "border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:border-slate-200/60 dark:hover:border-slate-700/40"
+          ? "bg-accent-soft/20 border-accent/20 dark:border-accent/50"
+          : "border-transparent hover:bg-surface dark:hover:bg-surface-2/40 hover:border-line/60 dark:hover:border-line/40"
       )}
     >
       {/* Checkbox */}
@@ -272,7 +273,7 @@ function SkuRow({
           type="checkbox"
           checked={isSelected}
           onChange={() => {}}
-          className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500 cursor-pointer block"
+          className="h-4 w-4 rounded border-line-strong text-accent focus:ring-accent cursor-pointer block"
           aria-label={`Select ${sku.sku_code}`}
         />
       </div>
@@ -283,22 +284,22 @@ function SkuRow({
       {/* SKU code + name */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
-          <span className="font-mono text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/60 px-1.5 py-0.5 rounded border border-slate-200/60 dark:border-slate-700/40">
+          <span className="font-mono text-[10px] font-bold text-content-muted dark:text-content-subtle bg-surface-2 dark:bg-surface-2/60 px-1.5 py-0.5 rounded border border-line/60 dark:border-line/40">
             {sku.sku_code}
           </span>
           {sku.is_active ? (
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" title="Active" />
           ) : (
-            <span className="h-1.5 w-1.5 rounded-full bg-slate-300 dark:bg-slate-600" title="Inactive" />
+            <span className="h-1.5 w-1.5 rounded-full bg-surface-3 dark:bg-surface-3" title="Inactive" />
           )}
         </div>
-        <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">{sku.description ?? sku.sku_code}</p>
+        <p className="text-sm font-semibold text-content dark:text-content truncate">{sku.description ?? sku.sku_code}</p>
       </div>
 
       {/* Price */}
       <div className="text-right shrink-0 w-20 hidden sm:block">
-        <div className="text-sm font-bold text-slate-800 dark:text-slate-100">{sku.unit_price != null ? formatPrice(Number(sku.unit_price), sku.currency) : "—"}</div>
-        <div className="text-[10px] text-slate-400 dark:text-slate-500">{fields.price}</div>
+        <div className="text-sm font-bold text-content dark:text-content">{sku.unit_price != null ? formatPrice(Number(sku.unit_price), sku.currency) : "—"}</div>
+        <div className="text-[10px] text-content-subtle dark:text-content-muted">{fields.price}</div>
       </div>
 
       {/* Margin */}
@@ -306,7 +307,7 @@ function SkuRow({
         {margin !== null && (
           <>
             <div className={clsx("text-sm font-bold", margin >= 40 ? "text-emerald-600 dark:text-emerald-400" : margin >= 20 ? "text-amber-600 dark:text-amber-400" : "text-rose-500")}>{margin.toFixed(1)}%</div>
-            <div className="text-[10px] text-slate-400 dark:text-slate-500">margin</div>
+            <div className="text-[10px] text-content-subtle dark:text-content-muted">margin</div>
           </>
         )}
       </div>
@@ -316,13 +317,13 @@ function SkuRow({
         <div className={clsx("text-sm font-bold", leadToneClass(sku.lead_time_days))}>
           {sku.lead_time_days != null ? `${sku.lead_time_days}d` : "—"}
         </div>
-        <div className="text-[10px] text-slate-400 dark:text-slate-500">lead time</div>
+        <div className="text-[10px] text-content-subtle dark:text-content-muted">lead time</div>
       </div>
 
       {/* Safety stock */}
       <div className="text-right shrink-0 w-20 hidden lg:block">
-        <div className="text-sm font-bold text-slate-700 dark:text-slate-200">{fmtNumber(sku.safety_stock)}</div>
-        <div className="text-[10px] text-slate-400 dark:text-slate-500">safety stock</div>
+        <div className="text-sm font-bold text-content dark:text-content">{fmtNumber(sku.safety_stock)}</div>
+        <div className="text-[10px] text-content-subtle dark:text-content-muted">safety stock</div>
       </div>
 
       {/* Health */}
@@ -331,11 +332,11 @@ function SkuRow({
       </div>
 
       {/* Updated */}
-      <div className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 w-24 text-right hidden xl:block">
+      <div className="text-[10px] text-content-subtle dark:text-content-muted shrink-0 w-24 text-right hidden xl:block">
         {fmtRelative(sku.updated_at)}
       </div>
 
-      <ChevronRight size={14} className="text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 transition-colors shrink-0" />
+      <ChevronRight size={14} className="text-content-subtle dark:text-content-muted group-hover:text-content-muted dark:group-hover:text-content-subtle transition-colors shrink-0" />
     </button>
   );
 }
@@ -449,24 +450,19 @@ export const SkusPage = () => {
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
           <div
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold text-white mb-3"
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-medium text-accent-fg mb-3"
             style={{ background: gradient }}
           >
             {icon} {displayName}
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            SKU Catalogue
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-xl leading-relaxed">
-            All stock-keeping units for this industry. Each SKU carries cost, pricing, lead time, and safety stock values that flow directly into demand forecasts and replenishment logic.
-          </p>
+          <PageHeader title="SKU Catalogue" description={<> All stock-keeping units for this industry. Each SKU carries cost, pricing, lead time, and safety stock values that flow directly into demand forecasts and replenishment logic. </>} />
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex max-w-full flex-wrap items-center gap-2">
           <Button
             variant="secondary"
             icon={<FileSpreadsheet size={14} />}
             onClick={() => exportApi.skusCsv().catch(() => toast.error("Export failed"))}
-            className="glass border border-slate-200 dark:border-slate-700"
+            className="glass border border-line dark:border-line"
           >
             Export CSV
           </Button>
@@ -474,7 +470,7 @@ export const SkusPage = () => {
             variant="secondary"
             icon={<FileSpreadsheet size={14} />}
             onClick={() => setImportOpen(true)}
-            className="glass border border-slate-200 dark:border-slate-700"
+            className="glass border border-line dark:border-line"
           >
             Import CSV
           </Button>
@@ -504,13 +500,13 @@ export const SkusPage = () => {
               tone === "up" ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400" :
               tone === "warn" ? "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400" :
               tone === "down" ? "bg-rose-50 dark:bg-rose-900/20 text-rose-500 dark:text-rose-400" :
-              "bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400"
+              "bg-accent-soft dark:bg-accent-soft/20 text-accent dark:text-accent"
             )}>
               {ic}
             </div>
-            <div className="text-2xl font-black text-slate-900 dark:text-white">{value}</div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mt-0.5">{label}</div>
-            <div className="text-[10px] text-slate-400 dark:text-slate-500">{sub}</div>
+            <div className="text-2xl font-semibold text-content dark:text-content">{value}</div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-content-subtle dark:text-content-muted mt-0.5">{label}</div>
+            <div className="text-[10px] text-content-subtle dark:text-content-muted">{sub}</div>
           </div>
         ))}
       </div>
@@ -528,7 +524,7 @@ export const SkusPage = () => {
         </div>
 
         {/* Status filter */}
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/60 rounded-xl p-1">
+        <div className="flex items-center gap-1 bg-surface-2 dark:bg-surface-2/60 rounded-xl p-1">
           {(["all", "active", "inactive"] as FilterStatus[]).map((f) => (
             <button
               key={f}
@@ -536,8 +532,8 @@ export const SkusPage = () => {
               className={clsx(
                 "px-3 py-1.5 rounded-lg text-[11px] font-bold capitalize transition-all",
                 filterStatus === f
-                  ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-sm"
-                  : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
+                  ? "bg-surface dark:bg-surface-2 text-content dark:text-content shadow-sm"
+                  : "text-content-subtle dark:text-content-muted hover:text-content-muted dark:hover:text-content-subtle"
               )}
             >
               {f}
@@ -547,13 +543,13 @@ export const SkusPage = () => {
 
         {/* Sort */}
         <div className="flex items-center gap-2">
-          <Filter size={13} className="text-slate-400 dark:text-slate-500" />
+          <Filter size={13} className="text-content-subtle dark:text-content-muted" />
           <select
             value={sortKey}
             onChange={(e) => setSortKey(e.target.value as SortKey)}
             title="Sort SKUs"
             aria-label="Sort SKUs"
-            className="text-xs font-semibold text-slate-600 dark:text-slate-300 bg-transparent border-none outline-none cursor-pointer"
+            className="text-xs font-semibold text-content-muted dark:text-content-subtle bg-transparent border-none outline-none cursor-pointer"
           >
             <option value="updated_at">Recently updated</option>
             <option value="sku_code">SKU code</option>
@@ -564,12 +560,12 @@ export const SkusPage = () => {
         </div>
 
         {/* View toggle */}
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/60 rounded-xl p-1 ml-auto">
+        <div className="flex items-center gap-1 bg-surface-2 dark:bg-surface-2/60 rounded-xl p-1 ml-auto">
           <button
             onClick={() => setViewMode("grid")}
             title="Grid view"
             aria-label="Grid view"
-            className={clsx("p-1.5 rounded-lg transition", viewMode === "grid" ? "bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-slate-100" : "text-slate-400 dark:text-slate-500")}
+            className={clsx("p-1.5 rounded-lg transition", viewMode === "grid" ? "bg-surface dark:bg-surface-2 shadow-sm text-content dark:text-content" : "text-content-subtle dark:text-content-muted")}
           >
             <LayoutGrid size={14} />
           </button>
@@ -577,7 +573,7 @@ export const SkusPage = () => {
             onClick={() => setViewMode("list")}
             title="List view"
             aria-label="List view"
-            className={clsx("p-1.5 rounded-lg transition", viewMode === "list" ? "bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-slate-100" : "text-slate-400 dark:text-slate-500")}
+            className={clsx("p-1.5 rounded-lg transition", viewMode === "list" ? "bg-surface dark:bg-surface-2 shadow-sm text-content dark:text-content" : "text-content-subtle dark:text-content-muted")}
           >
             <List size={14} />
           </button>
@@ -586,9 +582,9 @@ export const SkusPage = () => {
 
       {/* ── Bulk selection bar ── */}
       {selectedIds.size > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-violet-500/10 border border-violet-500/30 backdrop-blur-md animate-fade-in">
-          <div className="flex items-center gap-2 text-xs font-bold text-violet-700 dark:text-violet-300">
-            <span className="h-2 w-2 rounded-full bg-violet-500 animate-pulse" />
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-accent/10 border border-accent/30 backdrop-blur-md animate-fade-in">
+          <div className="flex items-center gap-2 text-xs font-bold text-accent dark:text-accent">
+            <span className="h-2 w-2 rounded-full bg-accent animate-pulse" />
             <span>
               {selectedIds.size} of {skus.length} SKU{selectedIds.size !== 1 ? "s" : ""} selected
             </span>
@@ -625,15 +621,15 @@ export const SkusPage = () => {
       {/* ── SKU Grid / List ── */}
       {skus.length === 0 ? (
         <div className="glass rounded-2xl p-16 text-center">
-          <Package size={32} className="mx-auto text-slate-300 dark:text-slate-600 mb-3" />
-          <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">Your SKU Catalogue is Empty</p>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Import SKUs via CSV to get started.</p>
+          <Package size={32} className="mx-auto text-content-subtle dark:text-content-muted mb-3" />
+          <p className="text-sm font-semibold text-content-muted dark:text-content-subtle">Your SKU Catalogue is Empty</p>
+          <p className="text-xs text-content-subtle dark:text-content-muted mt-1">Import SKUs via CSV to get started.</p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="glass rounded-2xl p-16 text-center">
-          <Package size={32} className="mx-auto text-slate-300 dark:text-slate-600 mb-3" />
-          <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">No SKUs match your search</p>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Try adjusting your filter or search term</p>
+          <Package size={32} className="mx-auto text-content-subtle dark:text-content-muted mb-3" />
+          <p className="text-sm font-semibold text-content-muted dark:text-content-subtle">No SKUs match your search</p>
+          <p className="text-xs text-content-subtle dark:text-content-muted mt-1">Try adjusting your filter or search term</p>
         </div>
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -653,7 +649,7 @@ export const SkusPage = () => {
       ) : (
         <div className="glass rounded-2xl overflow-hidden">
           {/* List header */}
-          <div className="flex items-center gap-4 px-4 py-2.5 border-b border-slate-100 dark:border-slate-700/40 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+          <div className="flex items-center gap-4 px-4 py-2.5 border-b border-line dark:border-line/40 text-[10px] font-bold uppercase tracking-wider text-content-subtle dark:text-content-muted">
             <div className="shrink-0 p-1">
               <input
                 type="checkbox"
@@ -673,7 +669,7 @@ export const SkusPage = () => {
                     });
                   }
                 }}
-                className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500 cursor-pointer block"
+                className="h-4 w-4 rounded border-line-strong text-accent focus:ring-accent cursor-pointer block"
                 aria-label="Select all SKUs"
               />
             </div>
@@ -687,7 +683,7 @@ export const SkusPage = () => {
             <div className="w-24 text-right hidden xl:block">Updated</div>
             <div className="w-4 shrink-0" />
           </div>
-          <div className="divide-y divide-slate-100/60 dark:divide-slate-700/30 p-2">
+          <div className="divide-y divide-line/60 dark:divide-line/30 p-2">
             {filtered.map((sku) => (
               <SkuRow
                 key={sku.id}
@@ -704,8 +700,8 @@ export const SkusPage = () => {
       )}
 
       {/* ── Result count ── */}
-      <p className="text-[11px] text-slate-400 dark:text-slate-500 text-center">
-        Showing <strong className="text-slate-600 dark:text-slate-300">{filtered.length}</strong> of <strong className="text-slate-600 dark:text-slate-300">{skus.length}</strong> SKUs
+      <p className="text-[11px] text-content-subtle dark:text-content-muted text-center">
+        Showing <strong className="text-content-muted dark:text-content-subtle">{filtered.length}</strong> of <strong className="text-content-muted dark:text-content-subtle">{skus.length}</strong> SKUs
       </p>
 
       {/* ── Import Modal ── */}
@@ -744,7 +740,7 @@ export const SkusPage = () => {
         loading={deleteAllMutation.isPending}
         confirmLabel="Delete All SKUs"
         message={
-          <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+          <div className="space-y-2 text-sm text-content-muted dark:text-content-subtle">
             <p>
               Are you sure you want to delete all <strong>{skus.length}</strong> SKUs in the{" "}
               <strong>{displayName}</strong> catalogue?
@@ -766,7 +762,7 @@ export const SkusPage = () => {
         loading={deleteSelectedMutation.isPending}
         confirmLabel={`Delete ${selectedIds.size} SKU${selectedIds.size !== 1 ? "s" : ""}`}
         message={
-          <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+          <div className="space-y-2 text-sm text-content-muted dark:text-content-subtle">
             <p>
               Are you sure you want to delete the <strong>{selectedIds.size}</strong> selected SKUs?
             </p>

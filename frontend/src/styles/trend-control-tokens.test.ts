@@ -14,8 +14,8 @@ describe("Trend control design tokens", () => {
     const activeClasses = trendSource.match(/tab === id \? "([^"]+)"/)?.[1];
     expect(activeClasses).toBeTruthy();
     const css = await compile(activeClasses!);
-    expect(css).toMatch(/background-color:\s*var\(--accent\)/);
-    expect(css).toMatch(/color:\s*var\(--accent-fg\)/);
+    expect(css).toMatch(/background-color:\s*rgb\(var\(--accent-rgb\)/);
+    expect(css).toMatch(/color:\s*rgb\(var\(--accent-fg-rgb\)/);
   });
 
   it("generates CSS for every brand color utility used by the trend and dropdown controls", async () => {

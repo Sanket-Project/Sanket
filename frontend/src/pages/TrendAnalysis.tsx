@@ -44,7 +44,7 @@ function SalesChart({ series }: { series: CompanyTrends["sales"]["series"] }) {
 
 function CompanySales({ data }: { data: CompanyTrends }) {
   const { sales, period } = data;
-  return <section aria-labelledby="company-sales-title" className="rounded-[20px] border border-line bg-surface p-5 sm:p-6">
+  return <section aria-labelledby="company-sales-title" className="rounded-2xl border border-line bg-surface p-5 sm:p-6">
     <div className="mb-5 flex items-start gap-3"><span className="rounded-xl bg-surface-3 p-2.5 text-accent"><BarChart2 size={19} /></span>
       <div><h2 id="company-sales-title" className="font-heading text-lg font-semibold text-content">Company sales</h2><p className="mt-1 text-sm text-content-muted">Actual units from your uploaded sales history.</p></div></div>
     {sales.status !== "available" ? <div className="rounded-xl border border-dashed border-line-strong bg-surface-2 p-5">
@@ -68,7 +68,7 @@ function CompanySales({ data }: { data: CompanyTrends }) {
 }
 
 function ExternalInterest({ data, district, onRefresh, refreshing, notice }: { data: CompanyTrends; district: string; onRefresh: () => void; refreshing: boolean; notice: string }) {
-  return <section aria-labelledby="external-interest-title" className="rounded-[20px] border border-line bg-surface p-5 sm:p-6">
+  return <section aria-labelledby="external-interest-title" className="rounded-2xl border border-line bg-surface p-5 sm:p-6">
     <div className="mb-5 flex items-start gap-3"><span className="rounded-xl bg-surface-3 p-2.5 text-accent"><Globe size={19} /></span><div><h2 id="external-interest-title" className="font-heading text-lg font-semibold text-content">External market interest</h2><p className="mt-1 text-sm leading-relaxed text-content-muted">Relative search interest matched to your catalogue. This index does not measure your sales or market growth.</p></div></div>
     {data.external.items.length === 0 ? <div className="rounded-xl border border-dashed border-line-strong bg-surface-2 p-5"><p className="font-semibold text-content">{district ? "No external data for this district" : "No matching external evidence yet"}</p><p className="mt-2 text-sm leading-relaxed text-content-muted">{district ? "State and city results are kept at their reported level. A district score is shown only when the source reports it." : "External evidence appears here when a source matches your uploaded products or categories."}</p></div> : <>
       <div className="space-y-3">{data.external.items.map((item) => <article key={item.id} className="rounded-xl border border-line p-4">

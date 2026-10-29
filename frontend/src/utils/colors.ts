@@ -2,8 +2,8 @@ import type { IndustryCode, SignalStatus, GxPBatchStatus } from "@/types/api";
 
 /* ════════════════════════════════════════════════════════════════════════════
    Single source of truth for industry accents.
-   These hexes MUST stay in sync with the [data-industry] blocks in
-   styles/index.css (which drive the --accent CSS variable for the whole shell).
+   These semantic aliases follow the global theme in
+   styles/index.css; industry identity never overrides the interaction palette.
    ════════════════════════════════════════════════════════════════════════════ */
 
 export interface IndustryTheme {
@@ -19,33 +19,33 @@ export interface IndustryTheme {
 
 export const INDUSTRY_THEME: Record<IndustryCode, IndustryTheme> = {
   fashion: {
-    accent: "#03363D",
-    accentStrong: "#022429",
-    gradient: "linear-gradient(135deg, #03363D 0%, #1c525a 100%)",
+    accent: "var(--accent)",
+    accentStrong: "var(--accent-strong)",
+    gradient: "var(--accent)",
     display: "Apparel & Fashion",
   },
   electronics: {
-    accent: "#03363D",
-    accentStrong: "#022429",
-    gradient: "linear-gradient(135deg, #054c55 0%, #207e8c 100%)",
+    accent: "var(--accent)",
+    accentStrong: "var(--accent-strong)",
+    gradient: "var(--accent)",
     display: "Consumer Electronics",
   },
   pharma: {
-    accent: "#03363D",
-    accentStrong: "#022429",
-    gradient: "linear-gradient(135deg, #022b31 0%, #29a0b0 100%)",
+    accent: "var(--accent)",
+    accentStrong: "var(--accent-strong)",
+    gradient: "var(--accent)",
     display: "Pharmaceuticals",
   },
   agrocenter: {
-    accent: "#03363D",
-    accentStrong: "#022429",
-    gradient: "linear-gradient(135deg, #03363D 0%, #46929c 100%)",
+    accent: "var(--accent)",
+    accentStrong: "var(--accent-strong)",
+    gradient: "var(--accent)",
     display: "Agricultural Inputs",
   },
   hardware: {
-    accent: "#03363D",
-    accentStrong: "#022429",
-    gradient: "linear-gradient(135deg, #04444d 0%, #5ba7b2 100%)",
+    accent: "var(--accent)",
+    accentStrong: "var(--accent-strong)",
+    gradient: "var(--accent)",
     display: "Hardware & Industrial Supply",
   },
 };

@@ -21,7 +21,7 @@ interface Props {
 
 export const ScenarioBands = ({
   series,
-  accent = "#147D73",
+  accent = "var(--chart-forecast)",
   height = 340,
   showBaseline = true,
 }: Props) => {

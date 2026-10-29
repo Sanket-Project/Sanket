@@ -48,17 +48,17 @@ function Kpi({
   tone?: "default" | "success" | "accent";
 }) {
   const toneCls = {
-    default: "text-slate-400",
+    default: "text-content-subtle",
     success: "text-emerald-500",
-    accent: "text-violet-500",
+    accent: "text-accent",
   }[tone];
   return (
     <Card padding="md">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</span>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-content-subtle">{label}</span>
         <span className={toneCls}>{icon}</span>
       </div>
-      <div className="text-2xl font-black text-slate-900 dark:text-white tabular-nums mt-2">{value}</div>
+      <div className="text-2xl font-semibold text-content dark:text-content tabular-nums mt-2">{value}</div>
     </Card>
   );
 }
@@ -89,11 +89,11 @@ export const LiveSalesPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight text-content dark:text-content flex items-center gap-2">
             <ShoppingCart size={22} className="text-emerald-500" />
             Live Sales
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm text-content-muted dark:text-content-subtle mt-1">
             Real-time order activity from your connected Shopify store.
           </p>
         </div>
@@ -102,10 +102,10 @@ export const LiveSalesPage = () => {
             "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold",
             isConnected
               ? "text-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-300"
-              : "text-slate-500 bg-slate-100 dark:bg-white/5",
+              : "text-content-muted bg-surface-2 dark:bg-surface/5",
           )}
         >
-          <span className={clsx("h-2 w-2 rounded-full", isConnected ? "bg-emerald-500 animate-pulse" : "bg-slate-400")} />
+          <span className={clsx("h-2 w-2 rounded-full", isConnected ? "bg-emerald-500 animate-pulse" : "bg-surface-3")} />
           {isConnected ? "Live" : "Polling"}
         </span>
       </div>
@@ -114,11 +114,11 @@ export const LiveSalesPage = () => {
         /* Empty state */
         <Card padding="lg">
           <div className="flex flex-col items-center text-center py-10">
-            <div className="h-14 w-14 rounded-2xl bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-400 mb-4">
+            <div className="h-14 w-14 rounded-2xl bg-surface-2 dark:bg-surface/5 flex items-center justify-center text-content-subtle mb-4">
               <Plug size={26} />
             </div>
-            <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">No store connected</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-sm">
+            <h3 className="text-base font-bold text-content dark:text-content">No store connected</h3>
+            <p className="text-sm text-content-muted dark:text-content-subtle mt-1 max-w-sm">
               Connect a Shopify store to start monitoring live sales. Orders flow in automatically every few minutes (or instantly via webhooks once deployed).
             </p>
             <Link to="/workspace/integrations" className="mt-5">
@@ -142,7 +142,7 @@ export const LiveSalesPage = () => {
               {data.sparkline_hourly.some((v) => v > 0) ? (
                 <Sparkline data={data.sparkline_hourly} />
               ) : (
-                <div className="h-24 flex items-center justify-center text-sm text-slate-400">
+                <div className="h-24 flex items-center justify-center text-sm text-content-subtle">
                   No sales in the last 24 hours yet.
                 </div>
               )}
@@ -150,25 +150,25 @@ export const LiveSalesPage = () => {
 
             <Card title="Recent Orders" description="Most recent line items">
               {data.recent.length === 0 ? (
-                <div className="text-sm text-slate-400 py-6 text-center">Waiting for the first sale…</div>
+                <div className="text-sm text-content-subtle py-6 text-center">Waiting for the first sale…</div>
               ) : (
                 <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
                   {data.recent.map((r, i) => (
                     <div
                       key={`${r.order_id}-${i}`}
-                      className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-slate-50/70 dark:bg-white/5 border border-slate-200/60 dark:border-white/10"
+                      className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-surface/70 dark:bg-surface/5 border border-line/60 dark:border-white/10"
                     >
                       <div className="min-w-0">
-                        <p className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">
+                        <p className="text-xs font-bold text-content dark:text-content truncate">
                           {r.sku_code ?? "—"}
                         </p>
-                        <p className="text-[10px] text-slate-400 truncate">{r.description ?? r.order_id ?? ""}</p>
+                        <p className="text-[10px] text-content-subtle truncate">{r.description ?? r.order_id ?? ""}</p>
                       </div>
                       <div className="text-right shrink-0">
                         <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 justify-end">
                           <TrendingUp size={11} /> {r.units}×
                         </p>
-                        <p className="text-[10px] text-slate-400">{fmtRelative(r.sale_time)}</p>
+                        <p className="text-[10px] text-content-subtle">{fmtRelative(r.sale_time)}</p>
                       </div>
                     </div>
                   ))}
@@ -177,7 +177,7 @@ export const LiveSalesPage = () => {
             </Card>
           </div>
 
-          <p className="text-[11px] text-slate-400 dark:text-slate-500">
+          <p className="text-[11px] text-content-subtle dark:text-content-muted">
             Updates arrive live over websocket when available, and are refreshed at least every 30s. Polling pulls new orders every 5 minutes; webhooks deliver instantly once SANKET is deployed on a public URL.
           </p>
         </>

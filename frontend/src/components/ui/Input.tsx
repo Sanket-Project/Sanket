@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import type { InputHTMLAttributes, ReactNode } from "react";
-import { forwardRef, useState } from "react";
+import { forwardRef, useId, useState } from "react";
 import { Eye, EyeOff } from "@/components/ui/icons";
 
 interface Props extends InputHTMLAttributes<HTMLInputElement> {
@@ -12,13 +12,14 @@ interface Props extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = forwardRef<HTMLInputElement, Props>(
-  ({ label, error, hint, icon, className, id, type, showPasswordToggle = true, ...rest }, ref) => {
+  ({ label, error, hint, icon, className, id, type, showPasswordToggle = true, "aria-describedby": externalDescription, ...rest }, ref) => {
     const [showPassword, setShowPassword] = useState(false);
+    const generatedId = useId();
 
-    const inputId = id ?? rest.name;
+    const inputId = id ?? rest.name ?? generatedId;
     const errorId = inputId ? `${inputId}-error` : undefined;
     const hintId = inputId ? `${inputId}-hint` : undefined;
-    const describedBy = [error && errorId, !error && hint && hintId]
+    const describedBy = [externalDescription, error && errorId, !error && hint && hintId]
       .filter(Boolean)
       .join(" ") || undefined;
 

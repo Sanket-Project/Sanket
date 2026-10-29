@@ -1,3 +1,5 @@
+import { PlanningHero } from "./PlanningHero";
+import { InventorySnapshot } from "./InventorySnapshot";
 import { Link } from "react-router-dom";
 import { AISummary } from "@/components/ai/AISummary";
 import { WhatsAppStatus } from "@/components/dashboard/WhatsAppStatus";
@@ -64,6 +66,7 @@ function SummaryItem({
   detail,
   tone = "default",
   testId,
+  card = false,
 }: {
   icon: typeof ShoppingBag;
   label: string;
@@ -71,6 +74,7 @@ function SummaryItem({
   detail: string;
   tone?: "default" | "success" | "warning" | "danger" | "info";
   testId?: string;
+  card?: boolean;
 }) {
   const tones = {
     default: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300",
@@ -80,11 +84,11 @@ function SummaryItem({
     info: "bg-sky-50 text-sky-700 dark:bg-sky-500/12 dark:text-sky-300",
   };
   return (
-    <div className="flex items-center gap-3 py-2.5">
+    <div className={card ? "flex min-w-0 items-center gap-3 rounded-2xl border border-line bg-surface p-4" : "flex min-w-0 items-center gap-3 py-3"}>
       <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${tones[tone]}`}><Icon size={17} /></span>
       <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-content-subtle">{label}</p>
-        <p data-testid={testId} className="mt-0.5 font-mono text-lg font-semibold leading-none text-content">{value}</p>
+        <p className="text-xs font-medium text-content-muted">{label}</p>
+        <p data-testid={testId} className={`mt-1 font-heading font-semibold leading-none text-content ${card && value !== "Unavailable" ? "text-2xl" : "text-lg"}`}>{value}</p>
         <p className="mt-0.5 text-xs text-content-muted">{detail}</p>
       </div>
     </div>
@@ -179,23 +183,17 @@ export const PlanningBriefDashboard = () => {
   const plannerName = (decoded?.name as string | undefined)?.split(" ")[0] ?? "Sanket";
 
   return (
-    <div className="animate-fade-in space-y-3">
-      <details open className="rounded-xl border border-line bg-surface px-4 py-2">
-        <summary className="cursor-pointer text-xs font-semibold text-content-muted">AI planning summary (optional)</summary>
-        <div className="pt-2">
-          <AISummary feature="planning_brief" runId={forecast.data?.run_id} contextKey={JSON.stringify([industry, decisions.data, forecast.data?.run_id, quality.data, coverage.data])} />
-        </div>
-      </details>
-      <header className="flex flex-col gap-3 rounded-2xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="planning-dashboard animate-fade-in">
+      <PlanningHero onGenerate={() => forecast.requestRefresh()} generating={forecast.isFetching} brief={
         <div>
-          <h1 className="font-heading text-xl font-semibold tracking-tight text-content">
+          <h2 className="font-heading text-sm font-semibold tracking-tight text-content">
             {decisionsFailed
               ? `Good morning, ${plannerName} — part of your planning brief is unavailable`
               : hasDecision
                 ? `Good morning, ${plannerName} — ${open.length} decision${open.length === 1 ? "" : "s"} need you`
                 : `Good morning, ${plannerName} — your planning brief is ready`}
-          </h1>
-          <p className="mt-0.5 text-sm text-content-muted" role={decisionsFailed ? "alert" : undefined}>
+          </h2>
+          <p className="mt-0.5 text-xs text-content-muted" role={decisionsFailed ? "alert" : undefined}>
             {decisionsFailed
               ? "Decisions could not be loaded — the queue is unknown, not empty. Use Refresh brief to retry."
               : decisions.isPending
@@ -205,6 +203,7 @@ export const PlanningBriefDashboard = () => {
                   : "No open order decision currently requires approval."}
           </p>
         </div>
+      } actions={
         <Button
           variant="secondary"
           size="sm"
@@ -219,19 +218,38 @@ export const PlanningBriefDashboard = () => {
         >
           Refresh brief
         </Button>
-      </header>
+      } />
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Planning metrics">
-        <SummaryItem icon={ShoppingBag} label="Open order decisions" value={decisionsFailed ? unavailable : String(totals?.purchase_orders ?? open.length)} detail={decisionsFailed ? "Decision queue unavailable" : `${(totals?.units_to_order ?? 0).toLocaleString()} units`} />
-        <SummaryItem icon={AlertTriangle} label="Stockout risk" value={decisionsFailed ? unavailable : String(stockoutRisk)} detail="Open items at or below lead time" tone={stockoutRisk ? "danger" : "success"} />
-        <SummaryItem icon={TrendingUp} label="Confidence signal" value={portfolioConfidence == null ? unavailable : `${Math.round(portfolioConfidence)}%`} detail={confidenceBand ? `${confidenceBand}; heuristic, not accuracy` : confidence.data?.reason ?? "Not measured"} tone={confidenceBand === "Low" ? "warning" : "info"} />
-        <SummaryItem icon={Database} label="Data readiness" value={quality.isError ? unavailable : `${criticalIssues} critical`} detail={warnings == null ? "Quality report unavailable" : `${warnings} issues found`} tone={criticalIssues ? "warning" : "success"} />
+      <section className="planning-metrics grid gap-2 sm:grid-cols-2 2xl:grid-cols-4" aria-label="Planning metrics">
+        <SummaryItem card icon={ShoppingBag} label="Open order decisions" value={decisionsFailed ? unavailable : String(totals?.purchase_orders ?? open.length)} detail={decisionsFailed ? "Decision queue unavailable" : `${(totals?.units_to_order ?? 0).toLocaleString()} units`} />
+        <SummaryItem card icon={AlertTriangle} label="Stockout risk" value={decisionsFailed ? unavailable : String(stockoutRisk)} detail="Open items at or below lead time" tone={stockoutRisk ? "danger" : "success"} />
+        <SummaryItem card icon={TrendingUp} label="Confidence signal" value={portfolioConfidence == null ? unavailable : `${Math.round(portfolioConfidence)}%`} detail={confidenceBand ? `${confidenceBand}; heuristic, not accuracy` : confidence.data?.reason ?? "Not measured"} tone={confidenceBand === "Low" ? "warning" : "info"} />
+        <SummaryItem card icon={Database} label="Data readiness" value={quality.isError ? unavailable : `${criticalIssues} critical`} detail={warnings == null ? "Quality report unavailable" : `${warnings} issues found`} tone={criticalIssues ? "warning" : "success"} />
       </section>
 
-      <div className="grid gap-3 xl:grid-cols-[minmax(0,1.9fr)_minmax(290px,0.95fr)]">
-        <div className="min-w-0 space-y-3">
-          <section className={`rounded-2xl border p-4 dark:bg-surface ${hasDecision ? "border-emerald-700/20 bg-[color-mix(in_srgb,var(--surface)_88%,#DFF4EF)]" : "border-sky-700/20 bg-[color-mix(in_srgb,var(--surface)_90%,#E7F2F5)]"}`}>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="planning-body">
+        <div className="planning-main">
+          <section className="planning-forecast rounded-2xl border border-line bg-surface p-5">
+            <div className="mb-1 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="font-heading text-base font-semibold text-content">Forecast snapshot</h2>
+                <p className="mt-0.5 text-xs text-content-muted">Weekly actuals (complete Monday–Sunday UTC weeks) against expected weekly demand. The shaded band is the sum of per-SKU P10–P90 ranges — not a calibrated portfolio interval.</p>
+              </div>
+              <Link to="/workspace/forecasts" className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--accent)]">Open forecast <ArrowRight size={13} /></Link>
+            </div>
+            <ForecastRunStatus forecast={forecast.data} stale={forecast.stale} refreshing={forecast.refreshing} generating={forecast.generating} queued={forecast.refreshStatus?.status === "pending"} waitingForOtherIndustry={forecast.waitingForOtherIndustry} error={forecast.refreshError} />
+            {forecast.isError && forecastRows.length > 0 && <p role="alert" className="text-xs text-content-muted">
+              Saved forecast could not be reloaded; displaying the last saved result. {getErrorMessage(forecast.error)}
+            </p>}
+            {forecast.isError && !forecastRows.length ? (
+              <p role="alert" className="py-6 text-sm text-content-muted">Forecast service unavailable. Open Forecasts to retry; no substitute prediction is shown.</p>
+            ) : forecastRows.length ? (
+              <ForecastChart rows={forecastRows} history={historyRows} height={180} unitLabel="units / week" />
+            ) : <p className="py-6 text-sm text-content-muted">{forecast.isFetching ? "Generating forecast…" : "No forecast available. Upload sufficient sales history to begin."}</p>}
+          </section>
+
+          <section data-has-decision={hasDecision} className={`planning-decision rounded-2xl border p-4 dark:bg-surface ${hasDecision ? "border-emerald-700/20 bg-[color-mix(in_srgb,var(--surface)_88%,#DFF4EF)]" : "border-sky-700/20 bg-[color-mix(in_srgb,var(--surface)_90%,#E7F2F5)]"}`}>
+            <div className="planning-decision-intro flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex min-w-0 gap-3">
                 {productImage && <img
                   src={productImage}
@@ -266,7 +284,7 @@ export const PlanningBriefDashboard = () => {
                 ) : <p className="text-sm text-content-muted">No supporting reasons recorded. Review the decision inputs before acting.</p>}
               </div>
             ) : (
-              <div className="mt-4 border-t border-line pt-3">
+              <div className="planning-readiness mt-4 border-t border-line pt-3">
                 <div className="flex items-center justify-between gap-4">
                   <h3 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-content-subtle">Decision readiness</h3>
                   <span className="text-xs text-content-subtle">No recommendation invented</span>
@@ -279,7 +297,7 @@ export const PlanningBriefDashboard = () => {
               </div>
             )}
 
-            <div className="mt-4 flex flex-col gap-3 border-t border-line pt-3 lg:flex-row lg:items-end lg:justify-between">
+            <div className="planning-next mt-4 flex flex-col gap-3 border-t border-line pt-3 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-content-subtle">{hasDecision ? "Recommendation" : "Next planning step"}</p>
                 <p className="mt-1 font-heading text-xl font-semibold text-content">
@@ -311,29 +329,12 @@ export const PlanningBriefDashboard = () => {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-line bg-surface p-4">
-            <div className="mb-1 flex items-start justify-between gap-4">
-              <div>
-                <h2 className="font-heading text-base font-semibold text-content">Forecast snapshot</h2>
-                <p className="mt-0.5 text-xs text-content-muted">Weekly actuals (complete Monday–Sunday UTC weeks) against expected weekly demand. The shaded band is the sum of per-SKU P10–P90 ranges — not a calibrated portfolio interval.</p>
-              </div>
-              <Link to="/workspace/forecasts" className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--accent)]">Open forecast <ArrowRight size={13} /></Link>
-            </div>
-            <ForecastRunStatus forecast={forecast.data} stale={forecast.stale} refreshing={forecast.refreshing} generating={forecast.generating} queued={forecast.refreshStatus?.status === "pending"} waitingForOtherIndustry={forecast.waitingForOtherIndustry} error={forecast.refreshError} />
-            {forecast.isError && forecastRows.length > 0 && <p role="alert" className="text-xs text-content-muted">
-              Saved forecast could not be reloaded; displaying the last saved result. {getErrorMessage(forecast.error)}
-            </p>}
-            {forecast.isError && !forecastRows.length ? (
-              <p role="alert" className="py-6 text-sm text-content-muted">Forecast service unavailable. Open Forecasts to retry; no substitute prediction is shown.</p>
-            ) : forecastRows.length ? (
-              <ForecastChart rows={forecastRows} history={historyRows} height={180} unitLabel="units / week" />
-            ) : <p className="py-6 text-sm text-content-muted">{forecast.isFetching ? "Generating forecast…" : "No forecast available. Upload sufficient sales history to begin."}</p>}
-          </section>
+
         </div>
 
-        <aside className="min-w-0 space-y-3">
+        <aside className="planning-aside space-y-3">
           <section className="rounded-2xl border border-line bg-surface px-4 py-3">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-content-muted">Planning summary</h2>
+            <h2 className="flex items-center gap-2 pb-2 font-heading text-base font-semibold text-content"><PackageCheck size={18} />Planning summary</h2>
             <div className="mt-1 divide-y divide-line">
               <SummaryItem icon={ShoppingBag} label="Orders due" value={decisionsFailed ? unavailable : String(totals?.purchase_orders ?? open.length)} detail={decisionsFailed ? "decisions could not be loaded" : `${(totals?.units_to_order ?? 0).toLocaleString()} units`} />
               <SummaryItem icon={PackageCheck} label="Revenue at risk (estimate)" value={decisionsFailed || totals?.revenue_protected == null ? unavailable : fmt(totals.revenue_protected)} detail={!decisionsFailed && totals && totals.revenue_protected == null ? "needs a unit price for every open order" : "covered if the open orders are placed"} tone="success" />
@@ -358,16 +359,25 @@ export const PlanningBriefDashboard = () => {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-line bg-surface p-3">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-content-muted">System readiness</h2>
-            <dl className="mt-2 grid gap-2 sm:grid-cols-3 xl:grid-cols-1">
+          <InventorySnapshot skus={coverage.data?.skus} confidence={confidence.data?.skus} unavailable={coverage.isError} />
+
+
+        </aside>
+      </div>
+          <section className="planning-system flex flex-wrap items-center gap-x-8 gap-y-4 rounded-2xl border border-line bg-surface px-5 py-4">
+            <h2 className="font-heading text-sm font-semibold text-content">System readiness</h2>
+            <dl className="grid flex-1 gap-4 sm:grid-cols-3">
               <div className="flex items-center gap-3"><Database size={17} className="text-emerald-600" /><div><dt className="text-xs font-semibold text-content">Data freshness</dt><dd className="text-xs text-content-subtle">{quality.isError ? "Check failed" : quality.data ? "Audit updated" : "Checking sources"}</dd></div></div>
               <div className="flex items-center gap-3"><Plug size={17} className="text-emerald-600" /><div><dt className="text-xs font-semibold text-content">Integrations</dt><dd className="text-xs text-content-subtle">{integrations.isError ? unavailable : integrations.data ? `${integrations.data.connected} connected` : "Checking…"}</dd></div></div>
               <WhatsAppStatus />
             </dl>
           </section>
-        </aside>
-      </div>
+      <details open className="planning-ai-brief rounded-xl border border-line bg-surface px-4 py-2">
+        <summary className="cursor-pointer text-xs font-semibold text-content-muted">AI planning summary (optional)</summary>
+        <div className="pt-2">
+          <AISummary feature="planning_brief" runId={forecast.data?.run_id} contextKey={JSON.stringify([industry, decisions.data, forecast.data?.run_id, quality.data, coverage.data])} />
+        </div>
+      </details>
     </div>
   );
 };

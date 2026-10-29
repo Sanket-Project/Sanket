@@ -234,7 +234,7 @@ const InventoryWorkspace = () => {
           {assumed.length > 0 && <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">Replenishment time assumed: {assumed.join(", ")} days for some SKUs on this page. Add supplier lead times for more precise warnings.</p>}
           {rows.some(row => row.cov?.demand.basis === "period_average" || row.cov?.locations.some(loc => loc.demand_basis === "period_average")) && <p className="mb-4 rounded-lg border border-line px-3 py-3 text-xs text-content-muted">Average-sales estimates are used where dated SKU history is unavailable. Store cover assumes the reported period average continues. Confirm stock dates and supplier lead times before acting; these estimates do not generate purchase or transfer decisions.</p>}
           {selectedSkuIds.size > 0 && (
-            <div className="flex items-center justify-between rounded-xl bg-[var(--accent)]/10 border border-[var(--accent)]/20 px-4 py-2.5 mb-4 text-sm">
+            <div className="flex items-center justify-between rounded-xl bg-accent/10 border border-accent/20 px-4 py-2.5 mb-4 text-sm">
               <span className="font-medium text-content">
                 {selectedSkuIds.size} SKU position{selectedSkuIds.size !== 1 ? "s" : ""} selected
               </span>

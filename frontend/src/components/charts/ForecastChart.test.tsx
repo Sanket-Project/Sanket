@@ -62,6 +62,11 @@ describe("chartSummary (deep audit F16)", () => {
 });
 
 describe("ForecastChart", () => {
+  it("states the interval level and unverified coverage", () => {
+    render(<ForecastChart rows={[row("2026-10-26", 5)]} unitLabel="units / week" />);
+    expect(screen.getByText("80% model interval")).toBeInTheDocument();
+    expect(screen.getByText(/coverage has not been validated/)).toBeInTheDocument();
+  });
   it("names the unit of measure when one is given", () => {
     render(<ForecastChart rows={[row("2026-10-26", 5)]} unitLabel="units / week" />);
     expect(screen.getByText("units / week")).toBeInTheDocument();

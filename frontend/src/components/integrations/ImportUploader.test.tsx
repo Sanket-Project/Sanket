@@ -163,3 +163,22 @@ it("clears a price-currency choice when the workspace changes", async () => {
     expect(screen.getByLabelText("Currency of prices")).toHaveValue("");
   } finally { act(() => useAuthStore.setState({ tenantId: previousTenant })); }
 });
+
+it("requires explicit new SKU creation consent and clears it after mapping edits", async () => {
+  api.analyze.mockResolvedValue({ ...analysis, tables: [{ ...analysis.tables[0], new_skus: ["NEW-1"], new_sku_count: 1 }] });
+  const { container } = render(<ImportUploader kind="sales" />);
+  await userEvent.upload(container.querySelector('input[type="file"]')!, new File(["data"], "a.csv"));
+  expect(await screen.findByText("NEW-1")).toBeInTheDocument();
+  const consent = screen.getByRole("checkbox", { name: /Create new SKUs from the selected mapping/ });
+  const button = screen.getByRole("button", { name: "Import" });
+  expect(consent).not.toBeChecked();
+  expect(button).toBeDisabled();
+  await userEvent.click(consent);
+  expect(button).toBeEnabled();
+  await userEvent.click(button);
+  await waitFor(() => expect(api.upload).toHaveBeenCalledWith(expect.any(File), "sales", expect.any(Object), expect.objectContaining({
+    tableSelections: [expect.objectContaining({ allow_new_skus: true })],
+  })));
+  await userEvent.selectOptions(screen.getByLabelText("Sales: price"), "c1");
+  expect(consent).not.toBeChecked();
+});

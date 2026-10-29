@@ -43,7 +43,7 @@ const STATUS_CONFIG: Record<ProductStatus, { label: string; cls: string; icon: R
   active: { label: "Active", cls: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/40", icon: <CheckCircle2 size={12} /> },
   seasonal: { label: "Seasonal", cls: "text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-800/40", icon: <Clock size={12} /> },
   clearance: { label: "Clearance", cls: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/40", icon: <Tag size={12} /> },
-  pre_launch: { label: "Pre-Launch", cls: "text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-800/40", icon: <Star size={12} /> },
+  pre_launch: { label: "Pre-Launch", cls: "text-accent dark:text-accent bg-accent-soft dark:bg-accent-soft/20 border-accent/20 dark:border-accent/40", icon: <Star size={12} /> },
   discontinued: { label: "Discontinued", cls: "text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800/40", icon: <XCircle size={12} /> },
 };
 
@@ -76,7 +76,7 @@ function SkuMiniCard({ sku, gradient, onClick }: {
       <div className="h-0.5 w-full" style={{ background: gradient }} />
       <div className="p-3.5">
         <div className="flex items-start justify-between gap-2 mb-2">
-          <span className="font-mono text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/60 px-1.5 py-0.5 rounded border border-slate-200/60 dark:border-slate-700/40">
+          <span className="font-mono text-[10px] font-bold text-content-muted dark:text-content-subtle bg-surface-2 dark:bg-surface-2/60 px-1.5 py-0.5 rounded border border-line/60 dark:border-line/40">
             {sku.sku_code}
           </span>
           {sku.is_active ? (
@@ -84,42 +84,42 @@ function SkuMiniCard({ sku, gradient, onClick }: {
               <span className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" /> Active
             </span>
           ) : (
-            <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500">Inactive</span>
+            <span className="text-[8px] font-bold text-content-subtle dark:text-content-muted">Inactive</span>
           )}
         </div>
 
-        <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 leading-snug mb-2.5 line-clamp-2">
+        <p className="text-xs font-semibold text-content dark:text-content leading-snug mb-2.5 line-clamp-2">
           {sku.description ?? sku.sku_code}
         </p>
 
         <div className="grid grid-cols-3 gap-1.5 mb-2.5">
-          <div className="text-center bg-slate-50 dark:bg-slate-800/40 rounded-lg p-1.5">
-            <div className="text-xs font-bold text-slate-800 dark:text-slate-100">
+          <div className="text-center bg-surface dark:bg-surface-2/40 rounded-lg p-1.5">
+            <div className="text-xs font-bold text-content dark:text-content">
               {price != null ? formatPrice(price, sku.currency) : "—"}
             </div>
-            <div className="text-[8px] text-slate-400 dark:text-slate-500">price</div>
+            <div className="text-[8px] text-content-subtle dark:text-content-muted">price</div>
           </div>
-          <div className="text-center bg-slate-50 dark:bg-slate-800/40 rounded-lg p-1.5">
-            <div className={clsx("text-xs font-bold", margin != null ? (margin >= 40 ? "text-emerald-600 dark:text-emerald-400" : margin >= 20 ? "text-amber-600 dark:text-amber-400" : "text-rose-500") : "text-slate-400")}>
+          <div className="text-center bg-surface dark:bg-surface-2/40 rounded-lg p-1.5">
+            <div className={clsx("text-xs font-bold", margin != null ? (margin >= 40 ? "text-emerald-600 dark:text-emerald-400" : margin >= 20 ? "text-amber-600 dark:text-amber-400" : "text-rose-500") : "text-content-subtle")}>
               {margin != null ? `${margin.toFixed(0)}%` : "—"}
             </div>
-            <div className="text-[8px] text-slate-400 dark:text-slate-500">margin</div>
+            <div className="text-[8px] text-content-subtle dark:text-content-muted">margin</div>
           </div>
-          <div className="text-center bg-slate-50 dark:bg-slate-800/40 rounded-lg p-1.5">
+          <div className="text-center bg-surface dark:bg-surface-2/40 rounded-lg p-1.5">
             <div className={clsx("text-xs font-bold", (sku.lead_time_days ?? 0) > 45 ? "text-rose-500" : (sku.lead_time_days ?? 0) > 25 ? "text-amber-600" : "text-emerald-600")}>
               {sku.lead_time_days != null ? `${sku.lead_time_days}d` : "—"}
             </div>
-            <div className="text-[8px] text-slate-400 dark:text-slate-500">lead</div>
+            <div className="text-[8px] text-content-subtle dark:text-content-muted">lead</div>
           </div>
         </div>
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-[9px] text-slate-400 dark:text-slate-500">
-              Safety: <strong className="text-slate-600 dark:text-slate-300">{fmtNumber(sku.safety_stock)}</strong>
+            <span className="text-[9px] text-content-subtle dark:text-content-muted">
+              Safety: <strong className="text-content-muted dark:text-content-subtle">{fmtNumber(sku.safety_stock)}</strong>
             </span>
           </div>
-          <ChevronRight size={12} className="text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 transition-colors" style={{ color: undefined }} />
+          <ChevronRight size={12} className="text-content-subtle dark:text-content-muted group-hover:text-content-muted dark:group-hover:text-content-subtle transition-colors" style={{ color: undefined }} />
         </div>
       </div>
     </button>
@@ -205,14 +205,14 @@ export const ProductDetailPage = () => {
       <div className="flex items-center justify-between">
         <Link
           to="/workspace/products"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-content-subtle dark:text-content-muted hover:text-content dark:hover:text-content transition-colors"
         >
           <ArrowLeft size={14} /> Back to Products
         </Link>
         <div className="flex items-center gap-2">
           <span
             className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full"
-            style={{ background: `${accent}15`, color: accent }}
+            style={{ background: `color-mix(in srgb, ${accent} 8%, transparent)`, color: accent }}
           >
             {industryIcon} {displayName}
           </span>
@@ -253,7 +253,7 @@ export const ProductDetailPage = () => {
                 </>
               )}
             </p>
-            <p className="mt-2 text-xs text-slate-400">This action cannot be undone.</p>
+            <p className="mt-2 text-xs text-content-subtle">This action cannot be undone.</p>
           </>
         }
       />
@@ -265,14 +265,14 @@ export const ProductDetailPage = () => {
         <div className="p-6">
           <div className="flex flex-col md:flex-row gap-6 items-start">
             {/* Product image */}
-            <div className="relative h-40 w-40 rounded-2xl overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/60 dark:to-slate-700/40 border border-slate-200/60 dark:border-slate-700/40 shadow-md group shrink-0">
+            <div className="relative h-40 w-40 rounded-2xl overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/60 dark:to-slate-700/40 border border-line/60 dark:border-line/40 shadow-md group shrink-0">
               <img
                 src={imgUrl}
                 alt={product.name}
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
               <label className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer select-none text-center p-2">
-                <Camera size={18} className="mb-1 text-violet-300" />
+                <Camera size={18} className="mb-1 text-accent" />
                 <span className="text-[10px] font-bold tracking-wide uppercase">Change Photo</span>
                 <input
                   type="file"
@@ -303,21 +303,21 @@ export const ProductDetailPage = () => {
             <div className="flex-1 min-w-0">
               {/* Brand */}
               {product.brand && (
-                <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">{product.brand}</p>
+                <p className="text-xs font-bold text-content-subtle dark:text-content-muted uppercase tracking-widest mb-1">{product.brand}</p>
               )}
 
               {/* Name */}
-              <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mb-1">
+              <h1 className="text-2xl font-semibold text-content dark:text-content tracking-tight mb-1">
                 {product.name}
               </h1>
 
               {/* Category breadcrumb */}
-              <div className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 mb-3">
+              <div className="flex items-center gap-1.5 text-sm text-content-muted dark:text-content-subtle mb-3">
                 <Tag size={12} />
                 <span>{product.category}</span>
                 {product.subcategory && (
                   <>
-                    <ChevronRight size={12} className="text-slate-300 dark:text-slate-600" />
+                    <ChevronRight size={12} className="text-content-subtle dark:text-content-muted" />
                     <span>{product.subcategory}</span>
                   </>
                 )}
@@ -326,17 +326,17 @@ export const ProductDetailPage = () => {
               {/* Badges */}
               <div className="flex flex-wrap items-center gap-2">
                 {product.external_id && (
-                  <span className="flex items-center gap-1 text-[10px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded">
+                  <span className="flex items-center gap-1 text-[10px] font-semibold text-content-muted dark:text-content-subtle bg-surface-2 dark:bg-surface-2/60 border border-line dark:border-line px-2 py-0.5 rounded">
                     <Tag size={9} /> {product.external_id}
                   </span>
                 )}
               </div>
 
               {/* Dates */}
-              <div className="flex flex-wrap gap-4 text-[11px] text-slate-400 dark:text-slate-500 mt-3">
-                <span>Created <strong className="text-slate-600 dark:text-slate-300">{fmtDate(product.created_at)}</strong></span>
-                <span>Updated <strong className="text-slate-600 dark:text-slate-300">{fmtDate(product.updated_at)}</strong> · {fmtRelative(product.updated_at)}</span>
-                <span className="font-mono text-[10px] bg-slate-100 dark:bg-slate-800/60 px-2 py-0.5 rounded border border-slate-200/60 dark:border-slate-700/40">{product.id.slice(0, 20)}…</span>
+              <div className="flex flex-wrap gap-4 text-[11px] text-content-subtle dark:text-content-muted mt-3">
+                <span>Created <strong className="text-content-muted dark:text-content-subtle">{fmtDate(product.created_at)}</strong></span>
+                <span>Updated <strong className="text-content-muted dark:text-content-subtle">{fmtDate(product.updated_at)}</strong> · {fmtRelative(product.updated_at)}</span>
+                <span className="font-mono text-[10px] bg-surface-2 dark:bg-surface-2/60 px-2 py-0.5 rounded border border-line/60 dark:border-line/40">{product.id.slice(0, 20)}…</span>
               </div>
             </div>
           </div>
@@ -358,13 +358,13 @@ export const ProductDetailPage = () => {
                 tone === "up" ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400" :
                 tone === "warn" ? "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400" :
                 tone === "down" ? "bg-rose-50 dark:bg-rose-900/20 text-rose-500 dark:text-rose-400" :
-                "bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400"
+                "bg-accent-soft dark:bg-accent-soft/20 text-accent dark:text-accent"
               )}>
                 {ic}
               </div>
-              <div className="text-xl font-black text-slate-900 dark:text-white">{value}</div>
-              <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{label}</div>
-              <div className="text-[9px] text-slate-400 dark:text-slate-500">{sub}</div>
+              <div className="text-xl font-semibold text-content dark:text-content">{value}</div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-content-subtle dark:text-content-muted">{label}</div>
+              <div className="text-[9px] text-content-subtle dark:text-content-muted">{sub}</div>
             </div>
           ))}
         </div>
@@ -374,11 +374,11 @@ export const ProductDetailPage = () => {
       <div>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Layers size={14} className="text-slate-400 dark:text-slate-500" />
-            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+            <Layers size={14} className="text-content-subtle dark:text-content-muted" />
+            <h2 className="text-sm font-bold text-content dark:text-content">
               SKUs under this product
             </h2>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: `${accent}15`, color: accent }}>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: `color-mix(in srgb, ${accent} 8%, transparent)`, color: accent }}>
               {skus.length}
             </span>
           </div>
@@ -387,7 +387,7 @@ export const ProductDetailPage = () => {
             size="sm"
             icon={<ExternalLink size={12} />}
             onClick={() => navigate("/workspace/skus")}
-            className="text-xs glass border border-slate-200 dark:border-slate-700"
+            className="text-xs glass border border-line dark:border-line"
           >
             View all SKUs
           </Button>
@@ -395,9 +395,9 @@ export const ProductDetailPage = () => {
 
         {skus.length === 0 ? (
           <div className="glass rounded-2xl p-12 text-center">
-            <Package size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-3" />
-            <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">No SKUs yet</p>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+            <Package size={28} className="mx-auto text-content-subtle dark:text-content-muted mb-3" />
+            <p className="text-sm font-semibold text-content-muted dark:text-content-subtle">No SKUs yet</p>
+            <p className="text-xs text-content-subtle dark:text-content-muted mt-1">
               Add SKUs to this product to enable forecasting and inventory tracking.
             </p>
           </div>
@@ -419,14 +419,14 @@ export const ProductDetailPage = () => {
       {Object.keys(product.attributes).length > 0 && (
         <div className="glass rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Tag size={14} className="text-slate-400 dark:text-slate-500" />
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white">Product Attributes</h2>
+            <Tag size={14} className="text-content-subtle dark:text-content-muted" />
+            <h2 className="text-sm font-bold text-content dark:text-content">Product Attributes</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
             {Object.entries(product.attributes).map(([k, v]) => (
-              <div key={k} className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700/40">
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 capitalize">{k.replace(/_/g, " ")}</span>
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate max-w-[55%] text-right">
+              <div key={k} className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-surface dark:bg-surface-2/40 border border-line dark:border-line/40">
+                <span className="text-xs font-semibold text-content-muted dark:text-content-subtle capitalize">{k.replace(/_/g, " ")}</span>
+                <span className="text-xs font-bold text-content dark:text-content truncate max-w-[55%] text-right">
                   {typeof v === "object" ? JSON.stringify(v) : String(v)}
                 </span>
               </div>

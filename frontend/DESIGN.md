@@ -1,195 +1,63 @@
 ---
-version: alpha
-name: SANKET Predictive OS
-description: >-
-  Visual identity for SANKET — a predictive demand-forecasting and supply-chain
-  intelligence platform. Calm, instrument-grade, enterprise. Built on the
-  "Blue Whale" deep teal with a "Jet Stream" pale-teal accent.
-colors:
-  canvas: "#BDD9D7"
-  surface: "#ffffff"
-  surface-2: "#f4f8f8"
-  surface-3: "#e1eeed"
-  text: "#022327"
-  text-muted: "#1a4950"
-  text-subtle: "#4b787e"
-  primary: "#03363D"
-  primary-strong: "#022429"
-  on-primary: "#ffffff"
-  canvas-dark: "#021a1d"
-  surface-dark: "#03363D"
-  surface-2-dark: "#05454e"
-  surface-3-dark: "#085560"
-  text-dark: "#eef7f6"
-  primary-dark: "#BDD9D7"
-  on-primary-dark: "#03363D"
-  border: "rgba(3, 54, 61, 0.08)"
-  border-strong: "rgba(3, 54, 61, 0.16)"
-typography:
-  display-lg:
-    fontFamily: Space Grotesk
-    fontSize: 84px
-    fontWeight: "700"
-    lineHeight: 88px
-    letterSpacing: -0.03em
-  display-md:
-    fontFamily: Space Grotesk
-    fontSize: 48px
-    fontWeight: "700"
-    lineHeight: 52px
-    letterSpacing: -0.02em
-  heading-lg:
-    fontFamily: Space Grotesk
-    fontSize: 24px
-    fontWeight: "600"
-    lineHeight: 32px
-    letterSpacing: -0.01em
-  heading-md:
-    fontFamily: Space Grotesk
-    fontSize: 18px
-    fontWeight: "600"
-    lineHeight: 24px
-  body-lg:
-    fontFamily: IBM Plex Sans
-    fontSize: 18px
-    fontWeight: "400"
-    lineHeight: 28px
-  body-md:
-    fontFamily: IBM Plex Sans
-    fontSize: 16px
-    fontWeight: "400"
-    lineHeight: 24px
-  label-caps:
-    fontFamily: Space Grotesk
-    fontSize: 12px
-    fontWeight: "600"
-    lineHeight: 16px
-    letterSpacing: 0.14em
-  data-mono:
-    fontFamily: IBM Plex Mono
-    fontSize: 13px
-    fontWeight: "500"
-    lineHeight: 18px
-rounded:
-  sm: 12px
-  DEFAULT: 20px
-  pill: 9999px
-spacing:
-  xs: 4px
-  sm: 8px
-  md: 16px
-  lg: 24px
-  xl: 40px
-components:
-  logo-tile:
-    backgroundColor: primary
-    textColor: primary-dark
-    rounded: sm
-  button-primary:
-    backgroundColor: primary
-    textColor: on-primary
-    rounded: sm
-  card:
-    backgroundColor: surface
-    rounded: DEFAULT
+version: 1
+name: SANKET Predictive OS — Premium Minimal
+reference: User-selected dashboard image, 29 October 2026
 ---
 
-## Overview
+# Visual direction
 
-SANKET (Sanskrit *saṅketa*, "signal") turns a company's sales, inventory, and
-live market signals into a single forecast for every SKU. The interface should
-feel like a **precision instrument** — quiet, dense with meaning, trustworthy.
-The mood is closer to a scientific dashboard or an aircraft display than to a
-consumer app: confident, calm, and never decorative for its own sake.
+Follow the user-selected reference: white navigation and panels, a near-white cool canvas, navy typography, deep teal actions, mint selection, fine borders, restrained shadows and compact, readable business information. The current reference supersedes the earlier lavender exploration.
 
-## Colors
+The authoritative implementation is `src/styles/index.css`, consumed by semantic Tailwind colors in `tailwind.config.ts`. Primitive RGB channels feed semantic aliases and opacity-aware utilities; do not duplicate raw colors in page components. Every industry shares the interaction palette while retaining its terminology, features and server-owned scope.
 
-The palette is anchored on a single deep teal and its pale complement, applied
-with high restraint. Color carries information; it is not ornament.
+## Tokens
 
-- **Blue Whale — Primary (`#03363D`):** The brand color. Buttons, the logo tile,
-  active states, and headline ink in light mode. In dark mode it becomes the
-  card surface.
-- **Jet Stream — Accent (`#BDD9D7`):** The pale complement. It is the light-mode
-  canvas and, inverted, the active/brand color in dark mode. The forecast curve
-  in the logo is drawn in Jet Stream.
-- **Surfaces:** Pure white cards float over the Jet Stream canvas in light mode;
-  layered Blue Whale tones (`#03363D` -> `#085560`) stack in dark mode.
-- **Text:** Near-black teal (`#022327`) for primary text, stepping to muted and
-  subtle teals for hierarchy — never pure gray.
+| Role | Light | Dark |
+|---|---|---|
+| Canvas | #F8FAFC | #101D25 |
+| Surface | #FFFFFF | #182A33 |
+| Secondary surface | #F4F8FA | #203842 |
+| Primary text | #10283F | #EAF3F3 |
+| Body/label text | #536B82 | #B6CDD4 |
+| Supporting text | #5B7388 | #99B4BF |
+| Border | #E3EBEF | #2E4A55 |
+| Primary action | #06484B | #8AD5CA |
+| Selected surface | #E0F3EF | #214740 |
+| Recorded chart series | #123548 | #C2DCE3 |
+| Expected chart series | #0A998D | #8AD5CA |
 
-Avoid introducing new hues. The earlier purple/indigo prism and the
-blue-purple-cyan hexagon were off-brand and have been retired in favor of this
-teal system.
+Use success, warning and danger colors for evidenced statuses, accompanied by text/icons. Color alone must not communicate risk. Normal-sized text must pass 4.5:1 contrast against its intended surface. Missing data is unavailable, never an inferred zero or a healthy state.
 
-## Typography
+## Typography and spacing
 
-**Space Grotesk** is the display and heading face — geometric, technical, a
-little editorial. **IBM Plex Sans** carries body and UI text. **IBM Plex Mono**
-is reserved for data: figures, IDs, tickers, and forecast readouts. Headlines
-run tight (negative tracking); all-caps labels run wide (`0.14em`).
+Retain the existing font assets: IBM Plex Sans for UI/body, Space Grotesk for headings, IBM Plex Mono selectively for IDs and aligned data. Page titles are 28px semibold, panel headings 15–18px, body 14px, labels/helper text 12px. Use tabular figures for comparisons. Avoid long uppercase labels and very small tracking-heavy copy.
 
-## Logo
+Use the 4/8/12/16/20/24/32px spacing rhythm. Cards use 20px padding, compact cards 16px, forms 40px controls with larger mobile hit areas, and 12px panel corners. Controls use 8px corners, overlays 16px and the dashboard hero 20px. Static information panels do not lift on hover. Shadows identify floating controls rather than decorate every panel.
 
-The mark is a **forecast peak**: a single rising-and-cresting curve that reads
-as a demand signal peaking, with a node dot marking the predicted apex. It sits
-in a Blue Whale rounded tile with the curve drawn in Jet Stream. The curve also
-quietly implies an *S* for SANKET.
+## Composition
 
-- **Tile:** Blue Whale (`#03363D`), radius `sm`. On dark surfaces the tile may be
-  dropped and the curve drawn directly in Jet Stream.
-- **Curve:** Jet Stream (`#BDD9D7`), rounded caps.
-- **Node:** White apex dot.
-- **Wordmark:** "SANKET" in Space Grotesk, tight tracking, optionally with the
-  "Predictive OS" label-caps kicker.
-- **Clear space:** keep at least the height of the node dot on every side.
-- **Minimum size:** 20px tile. Below that, use the mark without the wordmark.
+The workspace uses a 244px collapsible white navigation rail and a quiet header with the actual navigation finder, breadcrumb, recorded-currency control, theme, alerts and account actions. The industry badge describes the authenticated workspace; it is not a switcher.
 
-## Icons
+The dashboard uses an original editorial hero, compact metrics, the actual-versus-expected forecast as its analytical anchor, a contextual summary and an API-backed inventory snapshot. Catalog and inventory pages prioritize toolbars and working tables/grids. Decisions prioritize evidence and actions. Imports prioritize review, mapping and outcomes. Settings and onboarding prioritize aligned forms and progress. Preserve workflow-specific composition instead of turning every page into identical cards.
 
-Two sets, split by vocabulary, imported from one module —
-`src/components/ui/icons.tsx`. Nothing imports `lucide-react` or
-`react-iconly` directly.
+Complex tables scroll in their own region. The page itself must fit 390/768/1280/1536px widths. Dense navigation and filter controls wrap or scroll within their own boundary.
 
-- **Iconly** (outline set, 1.5px stroke) owns the *generic interface*:
-  navigation and disclosure, identity and account, access, communication,
-  time, actions, media, commerce, and the chart glyphs.
-- **lucide** owns everything Iconly has no answer for: the supply-chain
-  domain (pills, pallets, trucks, warehouses, crops, instruments) and the
-  status ladder.
+## Chart contract
 
-The status ladder — `Info`, `AlertCircle`, `AlertTriangle`, `AlertOctagon`,
-`CheckCircle2`, `XCircle` — stays entirely on lucide. Those glyphs are read
-against each other in alert lists and severity legends, so a set change
-partway up the ladder reads as a bug rather than as a style.
+Use `--chart-actual` for recorded demand and `--chart-forecast` for expected demand, with a dashed predicted line and a labeled P10–P90 band. Preserve null gaps and observed zeros. Provide units, dates, contextual tooltips and exact tabular values where supported. A model interval is nominal, not a measured accuracy claim. Summed SKU quantiles are not calibrated portfolio quantiles; keep that explanation available.
 
-Iconly is drawn at 1.5px rather than lucide’s 2px: its geometry is rounder
-and more compact, so a numerically matching stroke comes out visibly heavier
-at the 16-18px the app actually renders at.
+## Icons and logo
 
-Icons are sized with a numeric `size` prop and coloured by `currentColor`.
-Adding a glyph means adding one line to the icon module, not a new import in
-a page.
+Import every UI icon through `src/components/ui/icons.tsx`; never directly from lucide-react or react-iconly. Iconly owns generic interface vocabulary at 1.5px; lucide owns supply-chain concepts and the complete status ladder. Use numeric sizes and currentColor. Add new symbols centrally.
 
-## Motion
+Reuse `LogoMark`: the forecast peak in the deep teal tile with a pale mint curve and apex node. Never substitute a letter or a newly drawn decorative mark.
 
-Motion is slow and eased, never bouncy. Standard easing is
-`cubic-bezier(0.16, 1, 0.3, 1)` over 400-900ms for entrances. The logo curve may
-"draw on" once on load; it should not loop.
+## Motion and accessibility
 
-## Principles
+Use 120–180ms feedback and restrained 180–240ms disclosures. Respect reduced motion for CSS animation, transitions, smooth scrolling and JS consumers. Avoid perpetual decorative motion and intermediate animated business values. Keep visible focus, associated labels/descriptions, busy announcements, keyboard table activation, tab navigation, Escape handling and mobile drawer focus restoration.
 
-0. **Understand at a glance.** Across dashboards, forecasts, sales analytics,
-   inventory, SKUs, and products, present real data beautifully and explain it
-   simply enough that a five-year-old could understand what is happening.
-   Lead with the meaning, use plain-language labels, and show units, dates,
-   and comparison context beside the numbers. Use clear visual comparisons
-   and progressive disclosure for detail. Simplicity must preserve accuracy:
-   never turn missing data into zero or invent a signal. Show branch-wise
-   sales only when the source identifies branches; otherwise omit that section.
+## Reference and artwork
 
-1. **Instrument, not ornament.** Every element should earn its place by carrying
-   information or aiding a decision.
-2. **One accent, applied sparingly.** Restraint is the brand.
-3. **Data is monospaced.** Numbers align and read like a readout.
-4. **Calm confidence.** Deep teal, generous space, tight type.
+The source image is `C:/Users/admin/Downloads/ChatGPT Image Oct 29, 2026, 02_26_03 PM.png`. Its records, products and numbers are visual examples, not production data. Original generated planning artwork lives in `public/images/planning-hero.png`; the optimized 42KB WebP is the consumed asset. It is decorative, not a representation of a customer's actual stock. Catalog imagery must come from existing product image sources.
+
+Design-review fixtures live only in `e2e/` and are visibly labeled. The production application never imports or mounts them.

@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useState, type FormEvent } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import {
@@ -73,9 +74,9 @@ function savePrefs(prefs: NotifPrefs) {
 
 const Row = ({ label, value, hint }: { label: string; value: React.ReactNode; hint?: string }) => (
   <div className="space-y-1">
-    <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</dt>
-    <dd className="text-slate-700 dark:text-slate-200 font-medium">{value}</dd>
-    {hint && <p className="text-[11px] text-slate-400">{hint}</p>}
+    <dt className="text-[10px] font-bold uppercase tracking-wider text-content-subtle">{label}</dt>
+    <dd className="text-content dark:text-content font-medium">{value}</dd>
+    {hint && <p className="text-[11px] text-content-subtle">{hint}</p>}
   </div>
 );
 
@@ -107,14 +108,14 @@ const Toggle = ({
       type="button"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 ${
-        checked ? "bg-violet-600" : "bg-slate-200 dark:bg-slate-700"
+      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
+        checked ? "bg-accent" : "bg-surface-3 dark:bg-surface-2"
       }`}
     >
       <span className="sr-only">{checked ? "On" : "Off"}</span>
       <span
         aria-hidden="true"
-        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition-transform duration-200 ${
+        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-surface shadow-lg ring-0 transition-transform duration-200 ${
           checked ? "translate-x-5" : "translate-x-0"
         }`}
       />
@@ -161,12 +162,12 @@ const ProfileTab = () => {
               className="h-16 w-16 rounded-2xl bg-gradient-accent flex items-center justify-center shadow-lg shrink-0"
               aria-hidden="true"
             >
-              <span className="text-2xl font-bold text-white">
+              <span className="text-2xl font-bold text-accent-fg">
                 {(displayName || email || "?")[0].toUpperCase()}
               </span>
             </div>
             <div>
-              <p className="font-semibold text-slate-800 dark:text-white text-sm">{email ?? "—"}</p>
+              <p className="font-semibold text-content dark:text-content text-sm">{email ?? "—"}</p>
               <Badge variant="primary" className="mt-1 text-[10px] uppercase tracking-wider font-bold">
                 {role ?? "user"}
               </Badge>
@@ -178,7 +179,7 @@ const ProfileTab = () => {
             label="Display name"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            icon={<User size={14} className="text-slate-400" aria-hidden="true" />}
+            icon={<User size={14} className="text-content-subtle" aria-hidden="true" />}
             placeholder="Your full name"
             aria-required="false"
           />
@@ -198,7 +199,7 @@ const ProfileTab = () => {
             label="Email address"
             value={
               <span className="flex items-center gap-1.5">
-                <Mail size={13} className="text-slate-400 shrink-0" aria-hidden="true" />
+                <Mail size={13} className="text-content-subtle shrink-0" aria-hidden="true" />
                 {email ?? "—"}
               </span>
             }
@@ -207,7 +208,7 @@ const ProfileTab = () => {
           <Row
             label="User ID"
             value={
-              <code className="font-mono text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200/60 dark:border-slate-700">
+              <code className="font-mono text-xs text-content-muted dark:text-content-subtle bg-surface dark:bg-surface-2 px-1.5 py-0.5 rounded border border-line/60 dark:border-line">
                 {userId ?? "—"}
               </code>
             }
@@ -215,7 +216,7 @@ const ProfileTab = () => {
           <Row
             label="Tenant ID"
             value={
-              <code className="font-mono text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200/60 dark:border-slate-700">
+              <code className="font-mono text-xs text-content-muted dark:text-content-subtle bg-surface dark:bg-surface-2 px-1.5 py-0.5 rounded border border-line/60 dark:border-line">
                 {tenantId ?? "—"}
               </code>
             }
@@ -224,7 +225,7 @@ const ProfileTab = () => {
             label="Role"
             value={
               <span className="flex items-center gap-1.5">
-                <ShieldCheck size={13} className="text-violet-500 shrink-0" aria-hidden="true" />
+                <ShieldCheck size={13} className="text-accent shrink-0" aria-hidden="true" />
                 <Badge variant="primary" className="text-[10px] uppercase tracking-wider font-bold">
                   {role ?? "—"}
                 </Badge>
@@ -238,10 +239,10 @@ const ProfileTab = () => {
       <Card title="Password & Security">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+            <p className="text-sm font-semibold text-content dark:text-content">
               Password reset
             </p>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-content-subtle mt-0.5">
               We'll send a secure reset link to your email address.
             </p>
           </div>
@@ -268,7 +269,7 @@ const WorkspaceTab = () => {
           <Row
             label="Tenant ID"
             value={
-              <code className="font-mono text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200/60 dark:border-slate-700">
+              <code className="font-mono text-xs text-content-muted dark:text-content-subtle bg-surface dark:bg-surface-2 px-1.5 py-0.5 rounded border border-line/60 dark:border-line">
                 {tenantId ?? "—"}
               </code>
             }
@@ -286,7 +287,7 @@ const WorkspaceTab = () => {
             label="Default industry"
             value={
               industry ? (
-                <span className="font-bold capitalize text-slate-700 dark:text-slate-200">
+                <span className="font-bold capitalize text-content dark:text-content">
                   {industryDisplay[industry] ?? industry}
                 </span>
               ) : (
@@ -300,7 +301,7 @@ const WorkspaceTab = () => {
 
       <Card title="Subscription">
         <div className="flex items-center justify-between flex-wrap gap-4">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-content-muted dark:text-content-subtle">
             Manage your plan, billing email, and payment method.
           </p>
           <Link to="/workspace/billing">
@@ -434,7 +435,7 @@ const NotificationsTab = () => {
       </Card>
 
       <Card title="In-App Alerts" description="Configure which alerts appear in the notification panel.">
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-content-subtle">
           Coming soon — full alert routing configuration will be available in a future update.
         </p>
       </Card>
@@ -455,17 +456,12 @@ export const SettingsPage = () => {
   return (
     <div className="space-y-6 max-w-3xl">
       <div className="animate-fade-in stagger-1">
-        <h1 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-white">
-          Settings
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">
-          Manage your profile, workspace, and notification preferences.
-        </p>
+        <PageHeader title="Settings" description={<> Manage your profile, workspace, and notification preferences. </>} />
       </div>
 
       {/* Tab bar */}
       <nav
-        className="flex gap-1 p-1 bg-slate-100/80 dark:bg-surface-2 rounded-2xl w-full animate-fade-in stagger-2"
+        className="flex gap-1 overflow-x-auto p-1 bg-surface-2 rounded-2xl w-full animate-fade-in stagger-2"
         role="tablist"
         aria-label="Settings sections"
       >
@@ -473,19 +469,28 @@ export const SettingsPage = () => {
           <button
             key={tab.id}
             role="tab"
+            tabIndex={activeTab === tab.id ? 0 : -1}
             aria-selected={activeTab === tab.id}
             aria-controls={`settings-panel-${tab.id}`}
             id={`settings-tab-${tab.id}`}
             type="button"
             onClick={() => setTab(tab.id)}
-            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-semibold transition-all duration-200 whitespace-nowrap ${
+            onKeyDown={(event) => {
+              const index = TABS.findIndex(item => item.id === tab.id);
+              const next = event.key === "Home" ? 0 : event.key === "End" ? TABS.length - 1 : event.key === "ArrowRight" ? (index + 1) % TABS.length : event.key === "ArrowLeft" ? (index - 1 + TABS.length) % TABS.length : -1;
+              if (next < 0) return;
+              event.preventDefault();
+              setTab(TABS[next].id);
+              document.getElementById(`settings-tab-${TABS[next].id}`)?.focus();
+            }}
+            className={`min-w-24 shrink-0 sm:flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-colors duration-150 whitespace-nowrap ${
               activeTab === tab.id
-                ? "bg-white dark:bg-surface shadow-sm text-slate-800 dark:text-white"
-                : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                ? "bg-surface dark:bg-surface shadow-sm text-content dark:text-content"
+                : "text-content-muted dark:text-content-subtle hover:text-content dark:hover:text-content"
             }`}
           >
             <span aria-hidden="true">{tab.icon}</span>
-            <span className="hidden sm:inline">{tab.label}</span>
+            <span>{tab.label}</span>
           </button>
         ))}
       </nav>

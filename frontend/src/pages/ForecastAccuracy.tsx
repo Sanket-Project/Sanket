@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useState } from "react";
 import { AISummary } from "@/components/ai/AISummary";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -25,10 +26,12 @@ const fmtDay = (iso: string) =>
 
 /** Why forecasts were not scored, in words (keys from GET /forecast/accuracy). */
 const EXCLUSION_TEXT: Record<string, (n: number) => string> = {
+  unvalidated_scenario: (n) => `${n} unvalidated scenario forecast${n === 1 ? "" : "s"}, kept separate from production accuracy`,
   generated_after_period_start: (n) => `${n} forecast${n === 1 ? "" : "s"} made after ${n === 1 ? "its" : "their"} week had begun`,
   trained_on_period: (n) => `${n} forecast${n === 1 ? "" : "s"} whose model had already seen that week`,
   period_not_complete: (n) => `${n} for weeks that have not finished yet`,
   awaiting_actuals: (n) => `${n} for weeks the sales feed has not reached yet`,
+  missing_observation: (n) => `${n} SKU-weeks without recorded observations; later sales do not prove these were zero`,
   legacy_calendar: (n) => `${n} from older runs dated on Sundays, which cannot be matched to a week reliably`,
 };
 
@@ -46,6 +49,31 @@ const Exclusions = ({ excluded }: { excluded: ForecastAccuracyResponse["excluded
     </Card>
   );
 };
+
+const AccuracyScopeNotice = ({ accuracy }: { accuracy: ForecastAccuracyResponse | undefined }) => accuracy?.truncated ? (
+  <div role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+    <p className="font-semibold">Accuracy covers a limited subset</p>
+    <p>The scoring limit was reached. These metrics describe the records inspected, not the full portfolio history.</p>
+  </div>
+) : null;
+
+const BaselineComparison = ({ baselines }: { baselines: ForecastAccuracyResponse["summary"]["baselines"] }) => baselines ? (
+  <Card title="Compared with simple forecasts" description="Each rule and SANKET use matching SKU-weeks and sales dated before the forecast. Historical data availability has not been verified.">
+    <ul className="divide-y divide-line text-sm">
+      {(["last_value", "seasonal_naive"] as const).map((name) => {
+        const score = baselines[name];
+        return <li key={name} className="py-3">
+          <p className="font-medium text-content">{name === "last_value" ? "Repeat the last complete week" : "Repeat the same season last year"}</p>
+          {score.n_obs ? <p className="text-content-muted">
+            {score.n_obs} matching SKU-weeks · rule WAPE {pct(score.wape)} · SANKET WAPE {pct(score.forecast_wape)}
+            {score.wape_skill != null && ` · ${(Math.abs(score.wape_skill) * 100).toFixed(1)}% ${score.wape_skill >= 0 ? "less" : "more"} error`}
+          </p> : <p className="text-content-muted">No matching history is available for a fair comparison.</p>}
+          {score.excluded_missing_history > 0 && <p className="text-xs text-content-subtle">{score.excluded_missing_history} SKU-weeks excluded because their baseline history is missing.</p>}
+        </li>;
+      })}
+    </ul>
+  </Card>
+) : null;
 
 const BacktestPanel = ({ runs }: { runs: ForecastAccuracyResponse["backtest"]["runs"] }) => {
   const industry = useWorkspaceIndustry();
@@ -168,6 +196,7 @@ export const ForecastAccuracyPage = () => {
     return (
       <div className="space-y-6">
         <h1 className="text-3xl font-bold tracking-tight">Production accuracy</h1>
+        <AccuracyScopeNotice accuracy={accuracy} />
         <AccuracyReadiness
           completedRequirements={completedRequirements}
           forecast={{
@@ -219,14 +248,11 @@ export const ForecastAccuracyPage = () => {
           <div className="flex items-center gap-2 text-[var(--accent)] text-sm font-medium uppercase tracking-wider">
             <BarChart3 size={14} /> Forecast Accuracy
           </div>
-          <h1 className="text-3xl font-bold tracking-tight mt-1">Production accuracy</h1>
-          <p className="text-slate-500 mt-1 max-w-2xl">
-            Each forecast week (Monday, UTC) compared with what sold that week, using only forecasts
-            made before the week began. {summary?.points ?? 0} SKU-weeks across {summary?.skus ?? 0} SKUs.
-          </p>
+          <PageHeader title="Production accuracy" description={<> Each forecast week (Monday, UTC) compared with what sold that week, using only forecasts
+            made before the week began. {summary?.points ?? 0} SKU-weeks across {summary?.skus ?? 0} SKUs. </>} />
         </div>
         <div className="text-right">
-          <p className="text-xs text-slate-400 uppercase tracking-wide">Portfolio WAPE</p>
+          <p className="text-xs text-content-subtle uppercase tracking-wide">Portfolio WAPE</p>
           <p className="text-2xl font-bold text-content">{pct(summary?.wape)}</p>
           <p className="text-xs text-content-muted">
             bias {signedPct(summary?.bias_pct)} · P10–P90 coverage {pct(summary?.coverage_p10_p90)}
@@ -234,34 +260,37 @@ export const ForecastAccuracyPage = () => {
         </div>
       </div>
 
+      <AccuracyScopeNotice accuracy={accuracy} />
+      <BaselineComparison baselines={summary?.baselines} />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card title="Average WAPE by model" description="Lower is better">
           {modelAvg.length > 0 ? (
             <CategoryBar data={modelAvg} accent="var(--accent)" />
           ) : (
-            <p className="text-slate-400 text-sm py-8 text-center">No demand in the scored weeks — WAPE is undefined.</p>
+            <p className="text-content-subtle text-sm py-8 text-center">No demand in the scored weeks — WAPE is undefined.</p>
           )}
         </Card>
 
         <Card className="lg:col-span-2" title="Per-SKU accuracy" description="Sorted by WAPE, lowest first">
+          {accuracy?.scope?.detail_truncated && <p className="mb-3 text-xs text-content-subtle">Showing {rows.length} of {accuracy.scope.detail_rows_total} scored SKU-model rows. Portfolio metrics include the whole scored cohort.</p>}
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100">
+                <tr className="border-b border-line">
                   {["SKU", "Model", "WAPE", "Bias", "P10–P90 coverage", "Weeks"].map((h) => (
-                    <th key={h} className="text-left py-2 px-3 text-slate-500 font-medium text-xs">{h}</th>
+                    <th key={h} className="text-left py-2 px-3 text-content-muted font-medium text-xs">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {rows.slice(0, 30).map((row) => (
-                  <tr key={`${row.sku_id}-${row.model_name}`} className="border-b border-slate-50 hover:bg-slate-50/50">
-                    <td className="py-2 px-3 font-mono text-xs text-slate-600">{row.sku_code ?? `${row.sku_id.slice(0, 8)}…`}</td>
+                {rows.map((row) => (
+                  <tr key={`${row.sku_id}-${row.model_name}`} className="border-b border-line hover:bg-surface/50">
+                    <td className="py-2 px-3 font-mono text-xs text-content-muted">{row.sku_code ?? `${row.sku_id.slice(0, 8)}…`}</td>
                     <td className="py-2 px-3"><Badge>{row.model_name}</Badge></td>
                     <td className="py-2 px-3 font-semibold">{pct(row.wape)}</td>
-                    <td className="py-2 px-3 text-slate-500">{signedPct(row.bias_pct)}</td>
-                    <td className="py-2 px-3 text-slate-500">{pct(row.coverage_p10_p90)}</td>
-                    <td className="py-2 px-3 text-slate-500">{row.n_obs}</td>
+                    <td className="py-2 px-3 text-content-muted">{signedPct(row.bias_pct)}</td>
+                    <td className="py-2 px-3 text-content-muted">{pct(row.coverage_p10_p90)}</td>
+                    <td className="py-2 px-3 text-content-muted">{row.n_obs}</td>
                   </tr>
                 ))}
               </tbody>
@@ -280,14 +309,14 @@ export const ForecastAccuracyPage = () => {
             {anomalies.anomalous_skus.slice(0, 10).map((sku) => (
               <div key={sku.sku_id} className="flex items-center justify-between border border-amber-100 bg-amber-50/50 rounded-lg px-4 py-3">
                 <div>
-                  <p className="text-sm font-mono text-slate-700">{sku.sku_id.slice(0, 8)}…</p>
-                  <p className="text-xs text-slate-400">{sku.anomaly_count} anomalous weeks · last {sku.latest_anomaly_date}</p>
+                  <p className="text-sm font-mono text-content">{sku.sku_id.slice(0, 8)}…</p>
+                  <p className="text-xs text-content-subtle">{sku.anomaly_count} anomalous weeks · last {sku.latest_anomaly_date}</p>
                   <AISummary feature="alert_explanation" entityId={sku.sku_id} connector="anomaly" contextKey={JSON.stringify(sku)} />
                 </div>
                 <div className="flex gap-2">
                   {sku.anomaly_rows.slice(0, 3).map((r) => (
                     <div key={r.ds} className="text-right">
-                      <p className="text-xs text-slate-500">{r.ds}</p>
+                      <p className="text-xs text-content-muted">{r.ds}</p>
                       <p className="text-xs font-semibold text-amber-600">score {(r.score * 100).toFixed(0)}%</p>
                     </div>
                   ))}
@@ -325,10 +354,7 @@ function AccuracyReadiness({
         <div className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider text-[var(--accent)]">
           <BarChart3 size={14} /> Forecast accuracy
         </div>
-        <h1 className="mt-1 text-3xl font-bold tracking-tight text-content">Model performance & anomaly log</h1>
-        <p className="mt-1 max-w-2xl text-content-subtle">
-          Accuracy appears only after a forecast can be compared with actual sales. No score is estimated before then.
-        </p>
+        <PageHeader title="Model performance & anomaly log" description={<> Accuracy appears only after a forecast can be compared with actual sales. No score is estimated before then. </>} />
       </div>
 
       <Card padding="none" className="overflow-hidden">

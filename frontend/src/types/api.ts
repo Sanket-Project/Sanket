@@ -394,6 +394,7 @@ export interface HybridForecast {
   industry: IndustryCode;
   horizon_weeks: number;
   generated_at: string;
+  validation_status: "unvalidated_scenario";
   trend: TrendScore;
   explanation: {
     median_shift_pct: number;
@@ -412,7 +413,7 @@ export interface HybridForecast {
 export interface HybridForecastRequest {
   sku_ids?: string[];
   horizon_weeks?: number;
-  include_alerts?: boolean;
+  include_alerts?: false;
   inventory_overrides?: Record<string, { on_hand_units?: number; inbound_units?: number }>;
 }
 

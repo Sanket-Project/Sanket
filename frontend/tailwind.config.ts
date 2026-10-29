@@ -1,5 +1,8 @@
 import type { Config } from "tailwindcss";
 
+// Channel tokens support Tailwind opacity modifiers without losing theme identity.
+const token = (name: string) => `rgb(var(--${name}-rgb) / <alpha-value>)`;
+
 export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   darkMode: "class",
@@ -7,31 +10,31 @@ export default {
     extend: {
       colors: {
         // Token-driven palette (CSS variables defined in styles/index.css)
-        canvas: "var(--canvas)",
+        canvas: token("canvas"),
         surface: {
-          DEFAULT: "var(--surface)",
-          2: "var(--surface-2)",
-          3: "var(--surface-3)",
+          DEFAULT: token("surface"),
+          2: token("surface-2"),
+          3: token("surface-3"),
         },
         line: {
-          DEFAULT: "var(--border)",
-          strong: "var(--border-strong)",
+          DEFAULT: token("border"),
+          strong: token("border-strong"),
         },
         content: {
-          DEFAULT: "var(--text)",
-          muted: "var(--text-muted)",
-          subtle: "var(--text-subtle)",
+          DEFAULT: token("text"),
+          muted: token("text-muted"),
+          subtle: token("text-subtle"),
         },
         accent: {
-          DEFAULT: "var(--accent)",
-          strong: "var(--accent-strong)",
-          fg: "var(--accent-fg)",
-          soft: "var(--accent-soft)",
+          DEFAULT: token("accent"),
+          strong: token("accent-strong"),
+          fg: token("accent-fg"),
+          soft: token("accent-soft"),
           // legacy per-industry refs kept for any stragglers
           fashion: "#e11d74",
           electronics: "#0891b2",
           pharma: "#059669",
-          primary: "var(--accent)",
+          primary: token("accent"),
         },
         ink: {
           900: "#05060A",

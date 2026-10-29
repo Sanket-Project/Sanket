@@ -34,6 +34,7 @@ export const Button = ({
   return (
     <button
       {...rest}
+      aria-busy={loading || rest["aria-busy"] || undefined}
       disabled={disabled || loading}
       className={clsx(variantCls, sizeCls, className)}
     >

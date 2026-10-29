@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/Input";
 import { ScenarioBands } from "@/components/charts/ScenarioBands";
 import { TrendPanel } from "@/components/signals/TrendPanel";
 import { useWorkspaceIndustry } from "@/hooks/useWorkspaceIndustry";
-import { industryAccent } from "@/utils/colors";
 import { fmtCompact } from "@/utils/format";
 import { getErrorMessage } from "@/utils/errors";
 import { ForecastExplainer } from "@/components/charts/ForecastExplainer";
@@ -25,20 +24,19 @@ const STAGE_LABEL: Record<string, string> = {
   data: "Loading SKUs…",
   fit: "Running ML baseline (Chronos)…",
   ensemble: "Fusing trend signals…",
-  validate: "Scanning for shortages…",
+  validate: "Preparing scenario summary…",
   persist: "Finalizing…",
 };
 
 const SCENARIO_COLOR: Record<string, string> = {
   pessimistic: "border-rose-500/20 bg-rose-500/5 text-rose-600 dark:text-rose-400 shadow-rose-500/5",
-  base: "border-violet-500/20 bg-violet-500/5 text-violet-600 dark:text-violet-400 shadow-violet-500/5",
+  base: "border-accent/20 bg-accent/5 text-accent dark:text-accent shadow-sm/5",
   optimistic: "border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 shadow-emerald-500/5",
 };
 
 export const HybridForecastsPage = () => {
   const industry = useWorkspaceIndustry();
   const [horizon, setHorizon] = useState(12);
-  const [includeAlerts, setIncludeAlerts] = useState(true);
   const [result, setResult] = useState<HybridForecast | null>(null);
   const [runId, setRunId] = useState<string | null>(null);
   const [stage, setStage] = useState<string | null>(null);
@@ -59,7 +57,7 @@ export const HybridForecastsPage = () => {
     mutationFn: () =>
       hybridForecastApi.create({
         horizon_weeks: horizon,
-        include_alerts: includeAlerts,
+        include_alerts: false,
       }),
     onSuccess: ({ run_id }) => {
       setResult(null);
@@ -113,7 +111,7 @@ export const HybridForecastsPage = () => {
     if (s.result) {
       setResult(s.result);
       toast.success(
-        `Hybrid forecast generated — ${s.result.series.length} SKUs, ${s.result.alerts_generated} alerts`,
+        `Trend scenario generated for ${s.result.series.length} SKUs`,
       );
     } else if (s.error) {
       toast.error(s.error);
@@ -131,7 +129,7 @@ export const HybridForecastsPage = () => {
   // Busy whenever we're enqueueing or a run is in flight.
   const busy = start.isPending || (!!runId && finishedRef.current !== runId);
 
-  const accent = industryAccent[industry];
+  const accent = "var(--chart-forecast)";
   const visibleSeries = result?.series.slice(0, 6) ?? [];
 
   return (
@@ -140,18 +138,18 @@ export const HybridForecastsPage = () => {
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 animate-fade-in stagger-1">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 dark:from-white dark:via-slate-200 dark:to-white bg-clip-text text-transparent">
+            <h1 className="text-3xl font-semibold tracking-tight text-content">
               Hybrid Forecasts
             </h1>
             <span
-              className="inline-flex items-center gap-1 px-3 py-1 rounded-xl text-[10px] font-bold uppercase tracking-wider text-violet-600 border border-violet-200/50 dark:text-violet-400 dark:border-violet-500/20 shadow-sm"
+              className="inline-flex items-center gap-1 px-3 py-1 rounded-xl text-[10px] font-bold uppercase tracking-wider text-accent border border-accent/50 dark:text-accent dark:border-accent/20 shadow-sm"
               style={{ background: "rgba(124,58,237,0.07)" }}
             >
-              <Sparkles size={11} className="text-violet-500 dark:text-violet-400 animate-pulse" /> Trend-fused
+              <Sparkles size={11} className="text-accent dark:text-accent animate-pulse" /> Trend-fused
             </span>
           </div>
-          <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-2xl">
-            Historical sales baseline projections fused in real-time with live macroeconomic signals, social buzz indices, and search metrics for adaptive inventory matching.
+          <p className="text-sm text-content-muted dark:text-content-subtle leading-relaxed max-w-2xl">
+            Scenario only: recent signals adjust the historical baseline using hand-set assumptions. These changes have not been validated to improve accuracy and do not generate shortage alerts.
           </p>
         </div>
 
@@ -162,12 +160,12 @@ export const HybridForecastsPage = () => {
       {/* ── Configure Run Panel ── */}
       <Card
         title={
-          <span className="flex items-center gap-2 text-slate-800 dark:text-slate-100">
-            <Sparkles size={16} className="text-violet-500" />
-            Adaptive Synthesis Setup
+          <span className="flex items-center gap-2 text-content dark:text-content">
+            <Sparkles size={16} className="text-accent" />
+            Trend scenario setup
           </span>
         }
-        description="Adjusts the ML baseline with recent market signals — only when there are enough of them to measure."
+        description="Explore assumed changes to the baseline. Use validated forecasts and current stock for ordering decisions."
         className="card-hover-premium shadow-md shadow-slate-100 dark:shadow-none animate-fade-in stagger-2"
       >
         <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mt-2">
@@ -179,25 +177,26 @@ export const HybridForecastsPage = () => {
               max={52}
               value={horizon}
               onChange={(e) => setHorizon(Number(e.target.value))}
-              className="input bg-white/50 dark:bg-slate-900/50"
+              className="input bg-surface/50 dark:bg-surface/50"
             />
           </div>
           <div>
             <label className="label">Industry Scope</label>
-            <div className="input flex items-center justify-between bg-white/50 dark:bg-slate-900/50">
-              <span className="capitalize font-semibold text-slate-700 dark:text-slate-200">{industry}</span>
-              <Badge variant="info" className="text-[9px] font-extrabold uppercase bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
+            <div className="input flex items-center justify-between bg-surface/50 dark:bg-surface/50">
+              <span className="capitalize font-semibold text-content dark:text-content">{industry}</span>
+              <Badge variant="info" className="text-[9px] font-semibold uppercase bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
                 {industry}
               </Badge>
             </div>
           </div>
           <div className="flex items-center select-none pt-4 md:pt-8">
-            <label className="flex items-center gap-2.5 text-xs font-bold text-slate-500 dark:text-slate-400 select-none cursor-pointer">
+            <label className="flex items-center gap-2.5 text-xs font-bold text-content-muted dark:text-content-subtle select-none cursor-not-allowed">
               <input
                 type="checkbox"
-                checked={includeAlerts}
-                onChange={(e) => setIncludeAlerts(e.target.checked)}
-                className="w-4 h-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500 dark:bg-slate-900 dark:border-slate-800 accent-violet-600 tactile-press"
+                checked={false}
+                disabled
+                title="Operational alerts are disabled for unvalidated scenarios"
+                className="w-4 h-4 rounded border-line-strong text-accent focus:ring-accent dark:bg-surface dark:border-line accent-violet-600 tactile-press"
               />
               Generate shortage alerts
             </label>
@@ -209,7 +208,7 @@ export const HybridForecastsPage = () => {
               onClick={() => start.mutate()}
               className="w-full btn-primary group tactile-press py-3 font-semibold"
             >
-              Run hybrid forecast
+              Run scenario
             </Button>
           </div>
         </div>
@@ -218,18 +217,18 @@ export const HybridForecastsPage = () => {
       {/* ── Running/Pending State ── */}
       {busy && (
         <div
-          className="rounded-3xl border p-12 flex flex-col items-center gap-5 glass animate-pulse"
+          className="rounded-2xl border p-12 flex flex-col items-center gap-5 glass animate-pulse"
           style={{
-            borderColor: "rgba(124,58,237,0.15)",
+            borderColor: "var(--accent-ring)",
           }}
         >
           <div className="relative h-16 w-16 flex items-center justify-center">
-            <div className="absolute inset-0 rounded-full border-4 border-violet-100 dark:border-slate-800 border-t-violet-500 animate-spin" />
-            <Sparkles size={20} className="text-violet-500 animate-bounce" />
+            <div className="absolute inset-0 rounded-full border-4 border-accent/20 dark:border-line border-t-violet-500 animate-spin" />
+            <Sparkles size={20} className="text-accent animate-bounce" />
           </div>
           <div className="text-center max-w-sm">
-            <p className="text-base font-bold text-slate-800 dark:text-white">{STAGE_LABEL[stage ?? "queued"] ?? "Synthesizing Demand Projections…"}</p>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 leading-relaxed">
+            <p className="text-base font-bold text-content dark:text-content">{STAGE_LABEL[stage ?? "queued"] ?? "Synthesizing Demand Projections…"}</p>
+            <p className="text-xs text-content-subtle dark:text-content-muted mt-1 leading-relaxed">
               Running in the background — this can take up to a minute. You can keep working; results appear here automatically.
             </p>
             {staleQueue && (
@@ -277,27 +276,27 @@ export const HybridForecastsPage = () => {
                   <div
                     key={key}
                     className={clsx(
-                      "rounded-3xl border p-5 flex flex-col justify-between card-hover-premium backdrop-blur-md shadow-lg transition duration-300",
+                      "rounded-2xl border p-5 flex flex-col justify-between card-hover-premium backdrop-blur-md shadow-lg transition duration-300",
                       SCENARIO_COLOR[key],
                     )}
                   >
                     <div>
                       <div className="flex items-center justify-between mb-4">
-                        <span className="text-[10px] font-extrabold tracking-widest uppercase">
+                        <span className="text-[10px] font-semibold tracking-widest uppercase">
                           {s.label}
                         </span>
-                        <div className="h-6 w-6 rounded-lg bg-white/20 dark:bg-black/10 flex items-center justify-center border border-white/10">
+                        <div className="h-6 w-6 rounded-lg bg-surface/20 dark:bg-black/10 flex items-center justify-center border border-white/10">
                           <Icon size={12} />
                         </div>
                       </div>
-                      <div className="text-3xl font-extrabold tracking-tight tabular-nums text-slate-800 dark:text-white leading-none">
+                      <div className="text-3xl font-semibold tracking-tight tabular-nums text-content dark:text-content leading-none">
                         {fmtCompact(Math.round(s.horizon_total))}
                       </div>
-                      <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-bold">
+                      <div className="text-[10px] text-content-subtle dark:text-content-muted mt-1 font-bold">
                         Combined Portfolio · {horizon} Weeks
                       </div>
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-5 leading-relaxed italic border-t border-slate-100 dark:border-slate-800 pt-3 line-clamp-4">
+                    <p className="text-xs text-content-muted dark:text-content-subtle mt-5 leading-relaxed italic border-t border-line dark:border-line pt-3 line-clamp-4">
                       "{s.narrative}"
                     </p>
                   </div>
@@ -312,14 +311,14 @@ export const HybridForecastsPage = () => {
               <Card
                 key={s.sku_id}
                 title={
-                  <span className="font-mono text-xs text-slate-700 dark:text-slate-300 font-bold bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded border border-slate-200/50 dark:border-slate-800">
+                  <span className="font-mono text-xs text-content dark:text-content-subtle font-bold bg-surface-2 dark:bg-surface-2/80 px-2 py-0.5 rounded border border-line/50 dark:border-line">
                     {s.sku_code ?? s.sku_id.slice(0, 12)}
                   </span>
                 }
                 description={
-                  <span className="flex items-center gap-1 text-xs text-slate-400 mt-0.5">
-                    <Sparkles size={11} className="text-violet-400" />
-                    Probabilistic band intervals (Low vs Median vs High)
+                  <span className="flex items-center gap-1 text-xs text-content-subtle mt-0.5">
+                    <Sparkles size={11} className="text-accent" />
+                    Scenario bands (Low, Median, High). Coverage is unvalidated.
                   </span>
                 }
                 className="card-hover-premium shadow-md shadow-slate-100 dark:shadow-none"
@@ -338,7 +337,7 @@ export const HybridForecastsPage = () => {
                   <Badge variant="danger" className="text-[10px] font-bold tracking-wider px-3 py-1 bg-rose-500/10 text-rose-500 dark:text-rose-400 border border-rose-500/20 uppercase animate-pulse">
                     {result.alerts_generated} {result.alerts_generated === 1 ? "Alert" : "Alerts"} Fired
                   </Badge>
-                  <span className="text-slate-600 dark:text-slate-400 font-medium">
+                  <span className="text-content-muted dark:text-content-subtle font-medium">
                     Supply chain vulnerabilities detected. Planners should check the Shortage Alerts portal.
                   </span>
                 </div>
@@ -358,36 +357,36 @@ export const HybridForecastsPage = () => {
       {/* ── Empty State ── */}
       {!result && !busy && (
         <div
-          className="rounded-3xl border p-12 flex flex-col items-center justify-center text-center animate-fade-in stagger-3"
+          className="rounded-2xl border p-12 flex flex-col items-center justify-center text-center animate-fade-in stagger-3"
           style={{
             background:
-              "linear-gradient(145deg, rgba(255,255,255,0.7) 0%, rgba(245,243,255,0.4) 100%)",
-            borderColor: "rgba(226,232,240,0.6)",
-            boxShadow: "0 4px 30px rgba(124,58,237,0.02)",
+              "var(--surface)",
+            borderColor: "var(--border)",
+            boxShadow: "var(--shadow-sm)",
           }}
         >
           <div
             className="h-16 w-16 rounded-2xl flex items-center justify-center mb-5 border shadow-md"
             style={{
-              background: "linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)",
-              borderColor: "rgba(124,58,237,0.15)",
-              boxShadow: "0 8px 24px rgba(124,58,237,0.08)",
+              background: "var(--accent-soft)",
+              borderColor: "var(--accent-ring)",
+              boxShadow: "none",
             }}
           >
-            <Sparkles size={26} className="text-violet-500 dark:text-violet-400" />
+            <Sparkles size={26} className="text-accent dark:text-accent" />
           </div>
           <div className="max-w-md">
-            <h3 className="text-base font-extrabold text-slate-800 dark:text-white mb-2">No hybrid projections active</h3>
-            <p className="text-xs text-slate-400 dark:text-slate-400 leading-relaxed">
-              Synthesize historic baseline records with live social sentiment, search momentum, and commodity spikes to predict supply coverage vulnerabilities.
+            <h3 className="text-base font-semibold text-content dark:text-content mb-2">No hybrid projections active</h3>
+            <p className="text-xs text-content-subtle dark:text-content-subtle leading-relaxed">
+              Explore how assumed signal adjustments change the baseline. These scenarios have not demonstrated improved forecast accuracy.
             </p>
           </div>
           
-          <div className="flex flex-wrap justify-center items-center gap-6 text-[10px] font-bold uppercase tracking-wider text-slate-400/80 dark:text-slate-500 mt-6 pt-5 border-t border-slate-100 dark:border-slate-800 w-full max-w-md">
+          <div className="flex flex-wrap justify-center items-center gap-6 text-[10px] font-bold uppercase tracking-wider text-content-subtle/80 dark:text-content-muted mt-6 pt-5 border-t border-line dark:border-line w-full max-w-md">
             {[
               { icon: "📊", text: "P10/P50/P90 bands" },
               { icon: "📡", text: "Signal Integration" },
-              { icon: "🔔", text: "Automatic Shortage Triggers" },
+              { icon: "📋", text: "Scenario review" },
             ].map(({ icon, text }) => (
               <span key={text} className="flex items-center gap-2">
                 <span className="text-xs">{icon}</span> {text}

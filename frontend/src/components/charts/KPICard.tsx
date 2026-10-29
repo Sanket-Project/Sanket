@@ -14,7 +14,7 @@ interface Props {
 
 // Tone → status dot
 const TONE_DOT = {
-  default: "bg-slate-300 dark:bg-slate-600",
+  default: "bg-surface-3 dark:bg-surface-3",
   warning: "bg-amber-500",
   danger: "bg-rose-500",
   success: "bg-emerald-500",
@@ -46,15 +46,15 @@ export const KPICard = memo(function KPICard({
   subtitle,
   sparkPoints,
 }: Props) {
-  const sparkColor = "var(--accent)";
+  const sparkColor = "var(--chart-actual)";
   const sparkPath = sparkPoints ? buildSparkPath(sparkPoints) : null;
   const gid = `spark-${label.replace(/\W/g, "")}`;
 
   return (
-    <div className="relative rounded-[20px] bg-surface border border-line p-6 shadow-sm transition-all duration-200 ease-out hover:shadow-md hover:border-line-strong">
+    <div className="relative min-w-0 rounded-2xl bg-surface border border-line p-5 shadow-sm">
       {/* Header row */}
       <div className="flex items-center justify-between mb-3.5">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-content-subtle">
+        <span className="text-xs font-medium text-content-muted">
           {label}
         </span>
         <div className="flex items-center gap-2">

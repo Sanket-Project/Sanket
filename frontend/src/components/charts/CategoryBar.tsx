@@ -13,10 +13,10 @@ interface Props {
   height?: number;
 }
 
-export const CategoryBar = ({ data, accent = "#7C3AED", height = 240 }: Props) => {
+export const CategoryBar = ({ data, accent = "var(--chart-actual)", height = 240 }: Props) => {
   if (!data.length) {
     return (
-      <div className="text-center text-slate-500 py-8 text-sm">
+      <div className="text-center text-content-muted py-8 text-sm">
         No categories with data yet.
       </div>
     );
@@ -33,26 +33,26 @@ export const CategoryBar = ({ data, accent = "#7C3AED", height = 240 }: Props) =
           dataKey="category"
           type="category"
           width={140}
-          stroke="#64748b"
-          tick={{ fontSize: 12, fill: "#64748b" }}
+          stroke="var(--text-muted)"
+          tick={{ fontSize: 12, fill: "var(--text-muted)" }}
           tickLine={false}
           axisLine={false}
         />
         <Tooltip
           cursor={{ fill: "rgba(148,163,184,0.08)" }}
           contentStyle={{
-            background: "#ffffff",
-            border: "1px solid #e2e8f0",
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
             borderRadius: 8,
             fontSize: 12,
-            color: "#0f172a",
+            color: "var(--text)",
           }}
         />
         <Bar
           dataKey="count"
           fill={accent}
           radius={[4, 4, 4, 4]}
-          isAnimationActive={true}
+          isAnimationActive={false}
           animationDuration={800}
           animationEasing="ease-out"
         />
