@@ -37,3 +37,39 @@ it("QueryBoundary renders loading, error, empty and data in turn", () => {
   rerender(view({ ...base, isLoading: false, data: [0, 0] }));
   expect(screen.getByText("2 rows")).toBeInTheDocument();
 });
+
+it("QueryBoundary keeps cached data on a failed refresh and says so", () => {
+  const refetch = vi.fn();
+  render(
+    <QueryBoundary query={{ data: [1, 2, 3], isLoading: false, isError: true, refetch }}>
+      {(d) => <p>{d.length} rows</p>}
+    </QueryBoundary>,
+  );
+  expect(screen.getByText("3 rows")).toBeInTheDocument();
+  expect(screen.getByRole("status")).toHaveTextContent("Showing the last loaded data — refresh failed.");
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+  expect(refetch).toHaveBeenCalledOnce();
+});
+
+it("QueryBoundary renders the idle slot for a disabled query, not an error", () => {
+  render(
+    <QueryBoundary query={{ data: undefined, isLoading: false, isError: false, status: "pending", fetchStatus: "idle" }} idle={<p>Pick a product first</p>}>
+      {() => <p>data</p>}
+    </QueryBoundary>,
+  );
+  expect(screen.getByText("Pick a product first")).toBeInTheDocument();
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+});
+
+it("QueryBoundary error state retries through refetch", () => {
+  const refetch = vi.fn();
+  render(
+    <QueryBoundary query={{ data: undefined, isLoading: false, isError: true, error: new Error("boom"), refetch }}>
+      {() => <p>data</p>}
+    </QueryBoundary>,
+  );
+  expect(screen.getByRole("alert")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+  expect(refetch).toHaveBeenCalledOnce();
+});

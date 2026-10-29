@@ -33,15 +33,33 @@ export const UnavailableState = ({ title, reason, action }: { title: string; rea
   </div>
 );
 
-interface QueryLike<T> { data: T | undefined; isLoading: boolean; isError: boolean; error?: unknown; refetch?: () => unknown }
+interface QueryLike<T> {
+  data: T | undefined; isLoading: boolean; isError: boolean; error?: unknown; refetch?: () => unknown;
+  status?: "pending" | "error" | "success"; fetchStatus?: "fetching" | "paused" | "idle";
+}
 
-export function QueryBoundary<T>({ query, loading, isEmpty, empty, errorTitle, children }: {
-  query: QueryLike<T>; loading?: ReactNode; isEmpty?: (data: T) => boolean; empty?: ReactNode; errorTitle?: string; children: (data: T) => ReactNode;
+/**
+ * Cached data wins: a failed background refresh keeps the last data on screen with a
+ * small note. A disabled query (pending + idle) renders `idle`, not an error.
+ */
+export function QueryBoundary<T>({ query, loading, idle = null, isEmpty, empty, errorTitle, children }: {
+  query: QueryLike<T>; loading?: ReactNode; idle?: ReactNode; isEmpty?: (data: T) => boolean; empty?: ReactNode; errorTitle?: string; children: (data: T) => ReactNode;
 }) {
-  if (query.isLoading) return <>{loading ?? <LoadingState />}</>;
-  if (query.isError || query.data === undefined) {
-    return <ErrorState title={errorTitle} message={query.error ? getErrorMessage(query.error, "The server did not respond.") : undefined} onRetry={query.refetch ? () => void query.refetch?.() : undefined} />;
+  const retry = query.refetch ? () => void query.refetch?.() : undefined;
+  if (query.data !== undefined) {
+    const content = isEmpty?.(query.data) ? (empty ?? null) : children(query.data);
+    if (!query.isError) return <>{content}</>;
+    return (
+      <>
+        <p role="status" className="mb-2 text-xs text-content-subtle">
+          Showing the last loaded data — refresh failed.
+          {retry && <> <button type="button" onClick={retry} className="focus-ring rounded font-medium text-accent underline underline-offset-2">Try again</button></>}
+        </p>
+        {content}
+      </>
+    );
   }
-  if (isEmpty?.(query.data)) return <>{empty ?? null}</>;
-  return <>{children(query.data)}</>;
+  if (query.isLoading) return <>{loading ?? <LoadingState />}</>;
+  if (query.status === "pending" && query.fetchStatus === "idle") return <>{idle}</>;
+  return <ErrorState title={errorTitle} message={query.error ? getErrorMessage(query.error, "The server did not respond.") : undefined} onRetry={retry} />;
 }

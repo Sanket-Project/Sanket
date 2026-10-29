@@ -73,7 +73,7 @@ Use the shared kit before writing page-local UI. All live in `src/components/ui/
 | Filters | `FilterBar` + `Select` / `SegmentedControl` | Native select. Segmented control for 2–5 views. |
 | Views on one page | `Tabs` | WAI-ARIA tabs; arrow keys move focus, Enter selects. |
 | Grouping without a card | `Section` | Heading, hairline divider, actions. |
-| Loading, error, unavailable | `LoadingState`, `ErrorState`, `UnavailableState`, `QueryBoundary` | Never render 0 for missing data. QueryBoundary: enabled queries only. |
+| Loading, error, unavailable | `LoadingState`, `ErrorState`, `UnavailableState`, `QueryBoundary` | Never render 0 for missing data. QueryBoundary: cached data stays on a failed refresh with a stale note; a disabled (idle) query renders `idle`, not an error. |
 | Detail or history panel | `Drawer` | Shares focus handling with `Modal` (`useDialogFocus`). |
 | A chart | `components/charts/kit`: `ChartFrame`, `ChartTooltip`, `ChartLegend`, `AXIS_PROPS`, `GRID_PROPS`, `formatDateTick`, `formatCompact`, `useCurrencyTick` | Tooltip order: actual, expected, range, lower, upper. Currency axes use `useCurrencyTick(currency)` so ticks match the app's money display. |
 | Type | `.t-page .t-section .t-card .t-kpi .t-label .t-body .t-table` | Instead of `text-[Npx]`. |
